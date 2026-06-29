@@ -20,7 +20,15 @@
 
 ### Added
 
+- `pyproject.toml` — pip-installable `hupy` package using `setuptools.build_meta`
+- `hupy/__init__.py` — package entry point
+- `AGENTS.md` — agent behavioral instructions: setup commands, code style, testing, and PR rules
+- `CONTEXT.md` — architecture overview, module responsibility table, and annotation marker tiers
+- `.gitignore` — Python bytecode, build artifacts, venv dirs, and local agent override files
+
 ### Changed
+
+- rewrote `README.md` with structured sections: features, tech stack, project layout, build and test, acknowledgments
 
 ### Deprecated
 
@@ -28,9 +36,11 @@
 
 ### Fixed
 
+- build backend corrected from `setuptools.backends.legacy:build` to `setuptools.build_meta`
+
 ### Security
 
-[unreleased]: https://github.com/kami-lel/kamilog/compare/v1.0.0...dev
+[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.1.0...dev
 
 
 
