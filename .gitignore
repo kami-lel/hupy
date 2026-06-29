@@ -1,0 +1,14 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# venv
+venv/
+.venv/
+
+# local agent overrides
+AGENTS.local.md
+CONTEXT.local.md
