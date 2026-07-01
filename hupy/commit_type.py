@@ -9,6 +9,13 @@ from enum import Flag, auto
 
 import git
 
+
+from hupy.kamilog import getLogger
+
+# logger  ######################################################################
+logger = getLogger(__package__)
+
+
 # constants  ###################################################################
 
 MAIN_BRANCH = "main"
@@ -97,22 +104,29 @@ def get_current_commit_type(repo_path="."):
     gd = repo.git_dir
 
     if not _has_state(gd, "MERGE_HEAD"):
+        logger.debug("detect regular commit")
         return CommitType.OTHER_COMMIT
 
     lines = _read_merge_head(gd)
     if len(lines) != 1:  # octopus merge
+        logger.debug("detect octopus merge")
         return CommitType.OTHER_MERGE
 
     sha = lines[0]
     target = _get_target_branch(repo)
 
     if _is_pull_merge(repo, sha, target):
+        logger.debug("detect pull merge")
         return CommitType.OTHER_MERGE
 
     source = _get_source_branch(repo, sha)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
+        logger.debug("detect Feature Finish merge")
         return CommitType.FEATURE_FINISH
     if source == DEV_BRANCH and target == MAIN_BRANCH:
+        logger.debug("detect Version Release merge")
         return CommitType.VERSION_RELEASE
+
+    logger.debug("detect regular merge")
     return CommitType.OTHER_MERGE
