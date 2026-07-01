@@ -9,10 +9,13 @@ from enum import Flag, auto
 
 import git
 
-# helpers  #####################################################################
+# constants  ###################################################################
+
+MAIN_BRANCH = "main"
+DEV_BRANCH = "develop"
 
 
-class CommitType(Flag):  # =====================================================
+class CommitType(Flag):  #######################################################
     """
     represent the type of an in-progress git commit with two-level
     hierarchy: level 1 distinguishes merges from other commits;
@@ -33,8 +36,32 @@ class CommitType(Flag):  # =====================================================
     OTHER_MERGE = MERGE | _OTHER_MERGE
 
 
+# helper functions  ############################################################
+
+
 def _has_state(git_dir, name):
     return os.path.isfile(os.path.join(git_dir, name))
+
+
+def _read_merge_head(git_dir):
+    path = os.path.join(git_dir, "MERGE_HEAD")
+    # pylint: disable-next=unspecified-encoding
+    with open(path) as f:
+        return [ln.strip() for ln in f if ln.strip()]
+
+
+def _get_source_branch(repo, sha):
+    for branch in repo.branches:
+        if branch.commit.hexsha == sha:
+            return branch.name
+    return repo.git.name_rev("--name-only", sha)
+
+
+def _get_target_branch(repo):
+    try:
+        return repo.active_branch.name
+    except TypeError:
+        return None  # detached HEAD
 
 
 # Public API ###################################################################
@@ -57,8 +84,19 @@ def get_current_commit_type(repo_path="."):
     """
     repo = git.Repo(repo_path, search_parent_directories=True)
     gd = repo.git_dir
-    if _has_state(gd, "MERGE_HEAD"):
-        return CommitType.OTHER_MERGE  # FIXME implement actual logic
 
-    # BUG it fail to understand remote branch pull
-    return CommitType.OTHER_COMMIT
+    if not _has_state(gd, "MERGE_HEAD"):
+        return CommitType.OTHER_COMMIT
+
+    lines = _read_merge_head(gd)
+    if len(lines) != 1:  # octopus merge
+        return CommitType.OTHER_MERGE
+
+    source = _get_source_branch(repo, lines[0])
+    target = _get_target_branch(repo)
+
+    if source != MAIN_BRANCH and target == DEV_BRANCH:
+        return CommitType.FEATURE_FINISH
+    if source == DEV_BRANCH and target == MAIN_BRANCH:
+        return CommitType.VERSION_RELEASE
+    return CommitType.OTHER_MERGE
