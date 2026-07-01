@@ -64,6 +64,17 @@ def _get_target_branch(repo):
         return None  # detached HEAD
 
 
+def _is_pull_merge(repo, sha, target_branch):
+    for remote in repo.remotes:
+        try:
+            ref = remote.refs[target_branch]
+            if ref.commit.hexsha == sha:
+                return True
+        except IndexError:
+            continue
+    return False
+
+
 # Public API ###################################################################
 def get_current_commit_type(repo_path="."):
     """
@@ -92,8 +103,13 @@ def get_current_commit_type(repo_path="."):
     if len(lines) != 1:  # octopus merge
         return CommitType.OTHER_MERGE
 
-    source = _get_source_branch(repo, lines[0])
+    sha = lines[0]
     target = _get_target_branch(repo)
+
+    if _is_pull_merge(repo, sha, target):
+        return CommitType.OTHER_MERGE
+
+    source = _get_source_branch(repo, sha)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
         return CommitType.FEATURE_FINISH
