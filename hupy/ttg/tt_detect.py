@@ -1,7 +1,8 @@
 """
 tt_detect.py
 
-define ``TriageTag`` flag enum with triage tag instances and groups
+triage tag detection and flag enum with instances, groups, and
+search utilities for finding tags in lines and staged git diffs
 """
 
 import re
@@ -9,6 +10,11 @@ import subprocess
 from enum import Flag, auto
 
 # constants  ###################################################################
+
+_TT_PATTERN = (
+    r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|"
+    r"todo|fixme|hack|bug)\b"
+)
 
 _TT_STR_TO_NAME = {
     "TODO": "LOUD_TODO",
@@ -68,24 +74,25 @@ class TriageTagType(Flag):  # ==================================================
     # Public Methods  **********************************************************
 
     @classmethod
-    def from_str(cls, tag_str):
+    def find_first_in_line(cls, line):
         """
-        convert string to TriageTagType member.
+        find first triage tag in a line.
 
-        map string representations of triage tags (in any tier case)
-        to the corresponding enum member.
+        scan a line for the first occurrence of a triage tag and
+        return the corresponding ``TriageTagType`` member.
 
 
-        :param tag_str: triage tag as string (e.g. "TODO", "todo", "Todo")
-        :type tag_str: str
-        :return: the matching ``TriageTagType`` member
-        :rtype: TriageTagType
-        :raises ValueError: if ``tag_str`` is not a valid triage tag
+        :param line: line of text to scan
+        :type line: str
+        :return: the first ``TriageTagType`` member found, or ``None``
+        :rtype: TriageTagType or None
         """
-        if tag_str not in _TT_STR_TO_NAME:
-            raise ValueError("invalid triage tag: {}".format(tag_str))
+        match = re.search(_TT_PATTERN, line)
+        if not match:
+            return None
 
-        member_name = _TT_STR_TO_NAME[tag_str]
+        tag_text = match.group(1)
+        member_name = _TT_STR_TO_NAME[tag_text]
         return getattr(cls, member_name)
 
 
@@ -116,17 +123,12 @@ def detect_triage_tags_in_staged_file(file_path):
         return []
 
     results = []
-    tag_pattern = r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|todo|fixme|hack|bug)\b"  # noqa: E501
 
     for line in diff_output.split("\n"):
         if line.startswith("+") and not line.startswith("+++"):
             added_line = line[1:]
-            for match in re.finditer(tag_pattern, added_line):
-                tag_text = match.group(1)
-                try:
-                    tag_member = TriageTagType.from_str(tag_text)
-                    results.append((tag_member, added_line))
-                except ValueError:
-                    pass
+            tag_member = TriageTagType.find_first_in_line(added_line)
+            if tag_member:
+                results.append((tag_member, added_line))
 
     return results
