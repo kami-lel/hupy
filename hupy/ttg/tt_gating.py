@@ -5,6 +5,8 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
+import subprocess
+
 from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import getLogger
 from .commit_type import CommitType, get_current_commit_type
@@ -14,11 +16,54 @@ from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
 
 
+# TODO need unit test
+# TODO need demos
+
 # helpers  #####################################################################
 
 
 def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
-    pass  # TODO
+    try:
+        cached_files = (
+            subprocess.check_output(
+                ("git", "diff", "--cached", "--name-only"),
+                text=True,
+                stderr=subprocess.PIPE,
+                cwd=repo_root,
+            )
+            .strip()
+            .split("\n")
+        )
+    except subprocess.CalledProcessError:
+        logger.skip("unable to get git cached files")
+        return
+
+    filtered_results = {}
+
+    for file_path in cached_files:
+        if not file_path:
+            continue
+
+        tags_in_file = detect_triage_tags_in_staged_file(file_path)
+        filtered = TriageTagType.filter_by_group(
+            [tag for tag, _ in tags_in_file],
+            filtering_tt_group,
+        )
+
+        if filtered:
+            filtered_results[file_path] = [
+                (tag, line) for tag, line in tags_in_file if tag in filtered
+            ]
+
+    if filtered_results:
+        logger.fail("triage tags found")
+        for file_path, results in filtered_results.items():
+            logger.debug("file: {}".format(file_path))
+            for tag, line in results:
+                logger.debug("  {} {}".format(tag.name, line.strip()))
+        raise SystemExit(1)
+
+    logger.pass_("no gating TT found")
 
 
 # Public API  ##################################################################
