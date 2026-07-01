@@ -9,11 +9,11 @@ from enum import Flag, auto
 
 import git
 
-
+from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import getLogger
 
 # logger  ######################################################################
-logger = getLogger(__package__)
+logger = getLogger(PROJ_LOGGER_NAME + ".commit_type")
 
 
 # constants  ###################################################################
