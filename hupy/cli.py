@@ -9,7 +9,7 @@ from hupy.kamilog import (
     set_logging_level_by_verbosity,
     getLogger,
 )
-from .tt_gating import perform_triage_tags_gating
+from hupy.ttg.tt_gating import perform_triage_tags_gating
 
 __all__ = ("cli_parser", "cli_subparser")
 

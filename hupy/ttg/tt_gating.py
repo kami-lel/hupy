@@ -5,9 +5,9 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
-from . import PROJ_LOGGER_NAME
+from .. import PROJ_LOGGER_NAME
+from ..kamilog import getLogger
 from .commit_type import CommitType, get_current_commit_type
-from .kamilog import getLogger
 
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
 
