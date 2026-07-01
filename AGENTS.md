@@ -20,6 +20,25 @@ pip install -e ".[dev]"
 - boolean functions and variables start with `is_` or `has_`: `is_protected`, `has_marker`
 - constants in `UPPER_CASE_WITH_UNDERSCORES`
 - max 80 chars per line
+- **no type hints** — no parameter annotations, no return annotations, no variable annotations
+- **no f-strings** — use `str.format()` for all string formatting
+
+## Docstring Style
+
+Sphinx/reStructuredText style throughout:
+
+- **public functions and methods** — always include a docstring
+- **private functions** (prefixed `_`) — optional; add one when the name alone is unclear
+- **classes** — always include a docstring under the `class` line; it also documents `__init__` args
+- **`__init__`** — never has its own docstring
+- **module** — first line is the filename, then a blank line, then a brief description
+
+Field order: `:param:` / `:type:` per arg, then `:raises:`, then `:return:` / `:rtype:`, then `:example:`
+
+Two accepted forms:
+
+- *Form 1* — summary, blank line, multi-line description, **two blank lines**, fields
+- *Form 2* — summary, **two blank lines**, fields
 
 ## Testing Instructions
 
@@ -47,4 +66,5 @@ Test files mirror source: `hupy/foo.py` → `tests/test_foo.py`
 
 - update `AGENTS.md` when commands, conventions, or constraints change
 - update `CONTEXT.md` when architecture, module boundaries, or design decisions change
+- update `docs/` when module-level diagrams or reference pages change
 - never duplicate content between the two files
