@@ -83,7 +83,7 @@ def _is_pull_merge(repo, sha, target_branch):
 
 
 # Public API ###################################################################
-def get_current_commit_type(repo_path="."):
+def get_current_commit_type(repo_path):
     """
     return the type of the current in-progress commit
 
