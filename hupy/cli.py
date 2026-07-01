@@ -3,11 +3,17 @@
 import os
 from argparse import ArgumentParser
 
-from .kamilog import add_verbose_arguments, set_logging_level_by_verbosity
+from .kamilog import (
+    add_verbose_arguments,
+    set_logging_level_by_verbosity,
+    getLogger,
+)
 from .tt_gating import logger as tt_gating_logger, perform_triage_tags_gating
 
 __all__ = ("cli_parser", "cli_subparser")
 
+
+logger = getLogger(__package__)
 
 # main parse  ##################################################################
 
@@ -31,6 +37,7 @@ cli_subparser = cli_parser.add_subparsers(title="subcommands")
 def _tt_gating_main(args):
     # dispatch for the ``triage_tag_gating`` subcommand
     set_logging_level_by_verbosity(args, logger=tt_gating_logger)
+    set_logging_level_by_verbosity(args, logger=logger)
     perform_triage_tags_gating(os.getcwd())
 
 

@@ -8,7 +8,7 @@ block commits that introduce triage tags on protected branches
 from .commit_type import CommitType, get_current_commit_type
 from .kamilog import getLogger
 
-logger = getLogger(__name__)
+logger = getLogger("hupy TTG")
 
 
 def perform_triage_tags_gating(repo_root):
@@ -20,5 +20,20 @@ def perform_triage_tags_gating(repo_root):
             subdirectories
     :type repo_root: str
     """
+    logger.enter("perform TTG")
+
     commit_type = get_current_commit_type(repo_root)
-    pass  # TODO reimplement TT Gating
+    # pylint: disable-next=logging-format-interpolation
+    logger.debug("find commit type={}".format(commit_type))
+
+    if CommitType.FEATURE_FINISH in commit_type:
+        pass  # TODO
+
+    elif CommitType.VERSION_RELEASE in commit_type:
+        pass  # TODO
+
+    else:
+        logger.skip("irrelevant commit/merge type")
+        return
+
+    logger.pass_("finish TTG")
