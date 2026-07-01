@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hupy"
+name = "HUPy"
 version = "0.1.0"
 description = "Hooks Utility Python — git hook utilities for commit quality enforcement"
 readme = "README.md"

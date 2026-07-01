@@ -783,6 +783,9 @@ def getLogger(name=None, *, datefmt=None, relative_to=None):
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
+    if logger.name and "." in logger.name:
+        logger.propagate = False
+
     return logger
 
 
