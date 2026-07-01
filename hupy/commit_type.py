@@ -19,19 +19,14 @@ class CommitType(Flag):  # =====================================================
     level 2 further categorizes merges by strategy
     """
 
-    _OTHER_COMMIT = auto()
     _FEATURE_FINISH = auto()
     _VERSION_RELEASE = auto()
     _OTHER_MERGE = auto()
-    _CHERRY_PICK = auto()
-    _REVERT = auto()
-    _INITIAL = auto()
-    _REGULAR = auto()
 
     # Public Member  -----------------------------------------------------------
 
     MERGE = auto()
-    OTHER_COMMIT = _OTHER_COMMIT
+    OTHER_COMMIT = auto()
 
     FEATURE_FINISH = MERGE | _FEATURE_FINISH
     VERSION_RELEASE = MERGE | _VERSION_RELEASE
