@@ -27,9 +27,6 @@ def _perform_triage_tags_gating_by_pattern(regex_pattern):
     pass  # TODO
 
 
-# FIXME opmz logger conditions
-
-
 # Public API  ##################################################################
 
 

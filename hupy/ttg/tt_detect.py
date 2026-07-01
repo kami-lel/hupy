@@ -1,15 +1,21 @@
-################################################################################
-# hupy/tt_detect.py
-#
-# triage tag detection and grouping utilities
-################################################################################
+"""
+tt_detect.py
+
+define ``TriageTag`` flag enum with triage tag instances and groups
+"""
 
 from enum import Flag, auto
 
 
 class TriageTag(Flag):  # ======================================================
     """
-    triage tag flags in three tiers (Loud, Steady, Quiet)
+    triage tag flags organized in three tiers (Loud, Steady, Quiet).
+
+    Each tier represents the visibility and urgency of the triage tag.
+    Loud tier (all-caps) flags are most urgent, Steady tier (capitalized)
+    are standard, and Quiet tier (lowercase) are lowest priority. Flags are
+    grouped by kind (TODO, FIXME, HACK, BUG) and by tier (LOUDS, STEADYS,
+    QUIETS) for convenient filtering and querying.
     """
 
     # TT instances  ------------------------------------------------------------

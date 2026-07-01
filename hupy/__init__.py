@@ -10,4 +10,4 @@ PROJ_LOGGER_NAME = "HU"
 
 # Todo improve commit message
 
-# FIXME opmz logger conditions
+# FIXME opmz all logger print outs
