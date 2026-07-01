@@ -16,9 +16,6 @@ from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
 
 
-# TODO need unit test
-# TODO need demos
-
 # helpers  #####################################################################
 
 
@@ -44,7 +41,9 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         if not file_path:
             continue
 
-        tags_in_file = detect_triage_tags_in_staged_file(file_path)
+        tags_in_file = detect_triage_tags_in_staged_file(
+            file_path, repo_root=repo_root
+        )
         filtered = TriageTagType.filter_by_group(
             [tag for tag, _ in tags_in_file],
             filtering_tt_group,

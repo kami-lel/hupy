@@ -119,7 +119,7 @@ class TriageTagType(Flag):  # ==================================================
 # todo detect TT with respect of code comment by file type
 
 
-def detect_triage_tags_in_staged_file(file_path):
+def detect_triage_tags_in_staged_file(file_path, repo_root=None):
     """
     detect triage tags in staged additions.
 
@@ -128,8 +128,12 @@ def detect_triage_tags_in_staged_file(file_path):
     Quiet).
 
 
-    :param file_path: path to the file to scan
+    :param file_path: path to the file to scan, relative to
+            ``repo_root`` when given
     :type file_path: str
+    :param repo_root: path to the git repository or any of its
+            subdirectories; defaults to the current directory
+    :type repo_root: str or None
     :return: list of tuples ``(tag_member, line)`` for detected tags
     :rtype: list
     """
@@ -138,6 +142,7 @@ def detect_triage_tags_in_staged_file(file_path):
             ("git", "diff", "--cached", "--", file_path),
             text=True,
             stderr=subprocess.PIPE,
+            cwd=repo_root,
         )
     except subprocess.CalledProcessError:
         return []
