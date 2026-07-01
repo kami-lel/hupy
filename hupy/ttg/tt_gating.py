@@ -5,25 +5,18 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
-from .. import PROJ_LOGGER_NAME
-from ..kamilog import getLogger
+from hupy import PROJ_LOGGER_NAME
+from hupy.kamilog import getLogger
 from .commit_type import CommitType, get_current_commit_type
+from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
-
-
-# constants  ###################################################################
-
-
-# TODO
-_FEATURE_FINISH_GATING_TT_PATTERN = r""
-_VERSION_RELEASE_GATING_TT_PATTERN = r""
 
 
 # helpers  #####################################################################
 
 
-def _perform_triage_tags_gating_by_pattern(regex_pattern):
+def _perform_triage_tags_by_filtering_group(filtering_tt_group):
     pass  # TODO
 
 
@@ -47,14 +40,12 @@ def perform_triage_tags_gating(repo_root):
 
     if CommitType.FEATURE_FINISH in commit_type:
         logger.debug("on Feature Finish")
-        _perform_triage_tags_gating_by_pattern(
-            _FEATURE_FINISH_GATING_TT_PATTERN
-        )
+        _perform_triage_tags_by_filtering_group(TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
         logger.debug("on Version Release")
-        _perform_triage_tags_gating_by_pattern(
-            _VERSION_RELEASE_GATING_TT_PATTERN
+        _perform_triage_tags_by_filtering_group(
+            TriageTagType.LOUDS | TriageTagType.STEADYS
         )
 
     else:
