@@ -116,6 +116,9 @@ class TriageTagType(Flag):  # ==================================================
 # Public API  ##################################################################
 
 
+# todo detect TT with respect of code comment by file type
+
+
 def detect_triage_tags_in_staged_file(file_path):
     """
     detect triage tags in staged additions.

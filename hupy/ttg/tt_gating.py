@@ -10,13 +10,14 @@ from hupy.kamilog import getLogger
 from .commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
+# logger  ######################################################################
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
 
 
 # helpers  #####################################################################
 
 
-def _perform_triage_tags_by_filtering_group(filtering_tt_group):
+def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
     pass  # TODO
 
 
@@ -40,12 +41,12 @@ def perform_triage_tags_gating(repo_root):
 
     if CommitType.FEATURE_FINISH in commit_type:
         logger.debug("on Feature Finish")
-        _perform_triage_tags_by_filtering_group(TriageTagType.LOUDS)
+        _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
         logger.debug("on Version Release")
         _perform_triage_tags_by_filtering_group(
-            TriageTagType.LOUDS | TriageTagType.STEADYS
+            repo_root, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
 
     else:
