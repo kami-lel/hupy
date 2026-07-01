@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-01*
+*Last updated: 2026-07-01 — added cli module, refined tt_gating, comprehensive test suite for commit_type*
 
 ## Project Overview
 
@@ -16,8 +16,10 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 
 | Module | Status | Responsibility |
 |---|---|---|
+| `cli` | **implemented** | argument parsing, subcommand dispatch, CLI entrypoint |
 | `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression |
+| `tt_gating` | **in progress** | gate commits by triage tag presence on protected branches |
 | `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches |
 | `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit |
 | `improve_commit_message` | not yet implemented | generate better messages for merge commit types |
@@ -29,6 +31,18 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 - **simple defaults** — sensible behavior out of the box
 
 ## Module Details
+
+### `cli`
+
+Argument parser and entrypoint for the `hupy` command-line tool.
+
+**Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action)
+
+- **main parser** — prog name and description sourced from `__package__` and module docstring
+- **subcommand parsers** — registered at module load time; each owns its own argument setup and dispatch function
+- **current subcommands** — `triage_tag_gating` / `ttg` (alias): calls `perform_triage_tags_gating(os.getcwd())` with verbosity level applied
+
+Dispatch follows a standard pattern: subcommand dispatch functions receive the parsed `argparse.Namespace` and call the corresponding utility function.
 
 ### `commit_type`
 
@@ -53,6 +67,18 @@ Classification logic (in order):
 Module-level constants `MAIN_BRANCH = "main"` and `DEV_BRANCH = "develop"` control branch name matching. `CHERRY_PICK_HEAD` and `REVERT_HEAD` detection is present in git but the corresponding `CommitType` members are not yet defined.
 
 Reference diagram: `docs/commit_type_hierarchy.md`
+
+Bug fix in 0.1.0: `_is_pull_merge(repo, sha, target_branch)` now returns `False` early if `target_branch` is `None` (detached HEAD) to avoid `TypeError` when accessing `remote.refs[None]`.
+
+### `tt_gating`
+
+Triage tag (TT) gating — blocks commits that introduce annotation markers on protected branches.
+
+**Public API**: `perform_triage_tags_gating(repo_root)` — detect current commit type and block if it introduces TT markers disallowed on the target branch
+
+Module-level logger is shared with `cli` for consistent verbosity control.
+
+Status: **in progress** — core `perform_triage_tags_gating()` stub in place; CLI wiring complete; TT detection and blocking logic not yet implemented.
 
 ### `kamilog`
 
@@ -94,9 +120,21 @@ Full taxonomy is defined in the global `CLAUDE.md` under **Triage Tags**.
 ```
 hupy/                        # installable package
   __init__.py
+  cli.py                     # argument parsing & dispatch
   commit_type.py             # implemented
-  kamilog.py                 # implemented
+  kamilog.py                 # implemented (vendored)
+  tt_gating.py               # in progress
+tests/
+  commit_type_test.py        # comprehensive unit tests w/ pytest fixtures
+  testee/
+    default_repo.bundle      # minimal git bundle fixture for repo cloning
 docs/
   commit_type_hierarchy.md   # CommitType enum diagram
 pyproject.toml
 ```
+
+### Testing Infrastructure
+
+- **pytest fixtures** (`repo_dir`, `repo`) — clone the default bundle and provide repo access; fixtures are scoped per-test and auto-cleaned by `tmp_path`
+- **git bundle fixture** (`tests/testee/default_repo.bundle`) — 259-byte single-file repo fixture; tests clone it and dynamically construct scenarios (branches, commits, MERGE_HEAD state)
+- **test pattern** — one test class per public function; helper functions for common operations (`_commit`, `_write_merge_head`, `_sha`)

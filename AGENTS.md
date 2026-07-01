@@ -45,7 +45,7 @@ Two accepted forms:
 Scope runs to changed modules, not the full suite:
 
 ```bash
-pytest tests/test_<module>.py
+pytest tests/<module>_test.py
 ```
 
 Full suite (pre-merge only):
@@ -54,7 +54,9 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test files mirror source: `hupy/foo.py` → `tests/test_foo.py`
+Test files follow the pattern: `hupy/foo.py` → `tests/foo_test.py`
+
+Tests use pytest fixtures (`repo_dir`, `repo`) and a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
 
 ## PR & Commit Instructions
 
