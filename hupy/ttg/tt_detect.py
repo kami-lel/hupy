@@ -12,8 +12,7 @@ from enum import Flag, auto
 # constants  ###################################################################
 
 _TT_PATTERN = (
-    r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|"
-    r"todo|fixme|hack|bug)\b"
+    r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|" r"todo|fixme|hack|bug)\b"
 )
 
 _TT_STR_TO_NAME = {
@@ -71,6 +70,12 @@ class TriageTagType(Flag):  # ==================================================
     STEADYS = STEADY_TODO | STEADY_FIXME | STEADY_HACK | STEADY_BUG
     QUIETS = QUIET_TODO | QUIET_FIXME | QUIET_HACK | QUIET_BUG
 
+    # private methods  *********************************************************
+
+    @classmethod
+    def _filter_by_group(cls, tags, group):
+        return [tag for tag in tags if tag in group]
+
     # Public Methods  **********************************************************
 
     @classmethod
@@ -94,6 +99,32 @@ class TriageTagType(Flag):  # ==================================================
         tag_text = match.group(1)
         member_name = _TT_STR_TO_NAME[tag_text]
         return getattr(cls, member_name)
+
+    @classmethod
+    def filter_for_feature_finish(cls, tags):
+        """
+        filter tags by Loud tier for Feature Finish commits
+
+
+        :param tags: ``TriageTagType`` members to filter
+        :type tags: iterable
+        :return: tags in Loud tier only
+        :rtype: list
+        """
+        return cls._filter_by_group(tags, cls.LOUDS)
+
+    @classmethod
+    def filter_for_version_release(cls, tags):
+        """
+        filter tags by Loud and Steady tiers for Version Release commits
+
+
+        :param tags: ``TriageTagType`` members to filter
+        :type tags: iterable
+        :return: tags in Loud or Steady tiers
+        :rtype: list
+        """
+        return cls._filter_by_group(tags, cls.LOUDS | cls.STEADYS)
 
 
 # Public API  ##################################################################
