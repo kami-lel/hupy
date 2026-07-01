@@ -19,7 +19,6 @@ class CommitType(Flag):  # =====================================================
     level 2 further categorizes merges by strategy
     """
 
-    _MERGE = auto()
     _OTHER_COMMIT = auto()
     _FEATURE_FINISH = auto()
     _VERSION_RELEASE = auto()
@@ -31,12 +30,12 @@ class CommitType(Flag):  # =====================================================
 
     # Public Member  -----------------------------------------------------------
 
-    MERGE = _MERGE
+    MERGE = auto()
     OTHER_COMMIT = _OTHER_COMMIT
 
-    FEATURE_FINISH = _MERGE | _FEATURE_FINISH
-    VERSION_RELEASE = _MERGE | _VERSION_RELEASE
-    OTHER_MERGE = _MERGE | _OTHER_MERGE
+    FEATURE_FINISH = MERGE | _FEATURE_FINISH
+    VERSION_RELEASE = MERGE | _VERSION_RELEASE
+    OTHER_MERGE = MERGE | _OTHER_MERGE
 
 
 def _has_state(git_dir, name):
