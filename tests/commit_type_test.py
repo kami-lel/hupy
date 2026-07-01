@@ -91,7 +91,9 @@ class TestGetCurrentCommitType:
         sha_feature = _sha(repo_dir, "feature/x")
         repo.git.checkout("-q", "develop")
         _write_merge_head(repo_dir, sha_feature)
-        assert get_current_commit_type(str(repo_dir)) == CommitType.FEATURE_FINISH
+        assert (
+            get_current_commit_type(str(repo_dir)) == CommitType.FEATURE_FINISH
+        )
 
     def test_version_release_merge(self, repo, repo_dir):
         repo.git.checkout("-q", "-b", "develop")
@@ -99,7 +101,9 @@ class TestGetCurrentCommitType:
         sha_develop = _sha(repo_dir, "develop")
         repo.git.checkout("-q", "main")
         _write_merge_head(repo_dir, sha_develop)
-        assert get_current_commit_type(str(repo_dir)) == CommitType.VERSION_RELEASE
+        assert (
+            get_current_commit_type(str(repo_dir)) == CommitType.VERSION_RELEASE
+        )
 
     def test_main_to_develop_boundary_is_other_merge(self, repo, repo_dir):
         sha_main = _sha(repo_dir, "main")
