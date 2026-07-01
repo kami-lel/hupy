@@ -29,7 +29,7 @@ class CommitType(Flag):  # =====================================================
     _INITIAL = auto()
     _REGULAR = auto()
 
-    # Public Instances  --------------------------------------------------------
+    # Public Member  -----------------------------------------------------------
 
     MERGE = _MERGE
     OTHER_COMMIT = _OTHER_COMMIT
@@ -55,25 +55,16 @@ def get_current_commit_type(repo_path="."):
     :raises git.InvalidGitRepositoryError: if no git repository is
             found at or above ``repo_path``
     :raises git.NoSuchPathError: if ``repo_path`` does not exist
-    :return: a ``CommitType`` member identifying the in-progress
-            commit; one of ``FEATURE_FINISH``, ``VERSION_RELEASE``,
-            ``OTHER_MERGE``, ``CHERRY_PICK``, ``REVERT``, ``INITIAL``,
-            or ``REGULAR``
+    :return: a public member of ``CommitType``
     :rtype: CommitType
     :example:
     >>> get_current_commit_type()
-    <CommitType.REGULAR: ...>
+    <CommitType.OTHER_COMMIT: ...>
     """
     repo = git.Repo(repo_path, search_parent_directories=True)
     gd = repo.git_dir
     if _has_state(gd, "MERGE_HEAD"):
-        return CommitType.OTHER_MERGE
-    if _has_state(gd, "CHERRY_PICK_HEAD"):
-        return CommitType.CHERRY_PICK
-    if _has_state(gd, "REVERT_HEAD"):
-        return CommitType.REVERT
-    try:
-        repo.head.commit  # raises ValueError on empty repo
-    except ValueError:
-        return CommitType.INITIAL
-    return CommitType.REGULAR
+        return CommitType.OTHER_MERGE  # FIXME implement actual logic
+
+    # BUG it fail to understand remote branch pull
+    return CommitType.OTHER_COMMIT
