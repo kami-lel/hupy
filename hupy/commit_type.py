@@ -72,6 +72,8 @@ def _get_target_branch(repo):
 
 
 def _is_pull_merge(repo, sha, target_branch):
+    if target_branch is None:
+        return False
     for remote in repo.remotes:
         try:
             ref = remote.refs[target_branch]
