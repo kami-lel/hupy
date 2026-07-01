@@ -9,5 +9,3 @@ define the ``hupy`` package entry point
 # Todo reimplement ensure file modified
 
 # Todo improve commit message
-
-# TODO add kamilog
