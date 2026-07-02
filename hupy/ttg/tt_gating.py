@@ -9,7 +9,7 @@ import subprocess
 
 from hupy.kamilog import getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
-from .commit_type import CommitType, get_current_commit_type
+from ..commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
 # logger  ######################################################################
