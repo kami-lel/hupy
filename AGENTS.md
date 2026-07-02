@@ -46,6 +46,7 @@ Scope runs to changed modules, not the full suite:
 
 ```bash
 pytest tests/<module>_test.py
+pytest tests/<pkg>/
 ```
 
 Full suite (pre-merge only):
@@ -54,7 +55,7 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test file naming: top-level modules mirror directly (`hupy/commit_type.py` → `tests/commit_type_test.py`); nested-package modules nest (`hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group when one module covers many behaviors).
+Test file naming: test layout mirrors source layout — top-level modules map directly (`hupy/commit_type.py` → `tests/commit_type_test.py`); packages nest (`hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group); when a package's tests need fixtures from another test directory (e.g., `tests/pch/` needs `tests/ttg/prep_repo.py`), import cross-directory rather than colocating test files by fixture convenience.
 
 Tests use a `repo_dir` pytest fixture (`tests/conftest.py` or `tests/<pkg>/conftest.py`) plus a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
 
