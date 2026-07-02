@@ -24,7 +24,6 @@ logger = getLogger(PCH_LOGGER_NAME)
 # helpers  #####################################################################
 
 # TODO unit tests
-# FIXME pch debug lines
 
 
 def _gen_feature_finish_header_content(repo):
@@ -61,15 +60,15 @@ def _prepend_commit_header_by_type(is_feature_finish, repo_root):
                 else content_lines
             )
             target.append(line)
-    logger.debug("content_lines=%r", content_lines)
 
     if is_feature_finish:
         header = _gen_feature_finish_header_content(repo)
     else:
         header = _gen_version_release_header_content()
 
+    logger.debug("generated header:\n" + header)
+
     content_lines = [header, ""] + content_lines
-    logger.debug("content_lines=%r", content_lines)
 
     directory = os.path.dirname(commit_editmsg_path) or "."
     fd, tmp_path = tempfile.mkstemp(dir=directory, prefix="commit-msg.")
