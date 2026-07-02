@@ -1,9 +1,9 @@
 """
 prep_repo.py
 
-prepare temporary git repositories that reproduce the six TTG
-(triage tag gating) commit scenarios, for reuse by unit tests and
-by the ``examples/ttg`` demo scripts
+prepare temporary git repositories that reproduce the TTG (triage
+tag gating) commit-type buckets, for reuse by unit tests and by the
+``examples/ttg`` demo scripts
 """
 
 import shutil
@@ -18,6 +18,13 @@ from hupy.ttg.commit_type import DEV_BRANCH, MAIN_BRANCH
 _TESTEE_ROOT = Path(__file__).parent.parent / "testee"
 _BUNDLE_PATH = _TESTEE_ROOT / "default_repo.bundle"
 _FIXTURES_ROOT = _TESTEE_ROOT / "ttg"
+
+COMMIT_BUCKETS = (
+    "non_merge_commit",
+    "regular_merge",
+    "feature_finish",
+    "version_release",
+)
 
 SCENARIOS = (
     "non_merge_commit",
@@ -49,64 +56,79 @@ def _stage_fixture(repo_dir, filename, fixture_name):
     repo.index.add([filename])
 
 
-def _setup_non_merge_commit(repo_dir):
+def _setup_non_merge_commit(repo_dir, files):
     # regular commit in progress (no MERGE_HEAD): TTG must skip
-    # regardless of the TT tier staged here
-    _stage_fixture(repo_dir, "feature.py", "non_merge_commit_feature.py")
+    # regardless of the TT tier(s) staged here
+    for filename, fixture_name in files.items():
+        _stage_fixture(repo_dir, filename, fixture_name)
 
 
-def _setup_irrelevant_merge(repo_dir):
+def _setup_regular_merge(repo_dir, files):
     # merge between two unrelated, non-protected branches: TTG must
     # skip regardless of commit type detail
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", "hotfix")
-    _commit_fixture(repo_dir, "hotfix.py", "irrelevant_merge_hotfix.py")
+    for filename, fixture_name in files.items():
+        _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.checkout("-q", "-b", "release")
     _commit_fixture(repo_dir, "release.py", "irrelevant_merge_release.py")
     repo.git.merge("--no-commit", "--no-ff", "hotfix")
 
 
-def _setup_feature_finish(repo_dir, fixture_name):
+def _setup_feature_finish(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     _commit_fixture(repo_dir, "develop.py", "feature_finish_develop.py")
     repo.git.checkout("-q", "-b", "feature/x")
-    _commit_fixture(repo_dir, "feature.py", fixture_name)
+    for filename, fixture_name in files.items():
+        _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", DEV_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", "feature/x")
 
 
-def _setup_version_release(repo_dir, fixture_name):
+def _setup_version_release(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
-    _commit_fixture(repo_dir, "release.py", fixture_name)
+    for filename, fixture_name in files.items():
+        _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
 
 
-_SCENARIO_SETUP_FUNCS = {
+_BUCKET_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
-    "irrelevant_merge": _setup_irrelevant_merge,
+    "regular_merge": _setup_regular_merge,
+    "feature_finish": _setup_feature_finish,
+    "version_release": _setup_version_release,
+}
+
+# legacy scenario -> (bucket, default files) presets, kept so the
+# ``examples/ttg`` bash demos and the CLI below keep working unchanged
+_LEGACY_SCENARIO_PRESETS = {
+    "non_merge_commit": (
+        "non_merge_commit",
+        {"feature.py": "non_merge_commit_feature.py"},
+    ),
+    "irrelevant_merge": (
+        "regular_merge",
+        {"hotfix.py": "irrelevant_merge_hotfix.py"},
+    ),
     "feature_finish_loud": (
-        lambda repo_dir: _setup_feature_finish(
-            repo_dir, "feature_finish_loud.py"
-        )
+        "feature_finish",
+        {"feature.py": "feature_finish_loud.py"},
     ),
     "feature_finish_steady_only": (
-        lambda repo_dir: _setup_feature_finish(
-            repo_dir, "feature_finish_steady_only.py"
-        )
+        "feature_finish",
+        {"feature.py": "feature_finish_steady_only.py"},
     ),
     "version_release_steady": (
-        lambda repo_dir: _setup_version_release(
-            repo_dir, "version_release_steady.py"
-        )
+        "version_release",
+        {"release.py": "version_release_steady.py"},
     ),
     "version_release_quiet_only": (
-        lambda repo_dir: _setup_version_release(
-            repo_dir, "version_release_quiet_only.py"
-        )
+        "version_release",
+        {"release.py": "version_release_quiet_only.py"},
     ),
 }
 
@@ -114,9 +136,37 @@ _SCENARIO_SETUP_FUNCS = {
 # Public API  ##################################################################
 
 
+def prepare_repo_with_files(dest_dir, commit_bucket, files):
+    """
+    prepare a temporary repository for one of the TTG commit-type
+    buckets, staging/committing an arbitrary file manifest.
+
+
+    :param dest_dir: destination directory for the cloned repo;
+            must not already exist, or be empty if it does
+    :type dest_dir: str
+    :param commit_bucket: commit-type bucket, one of ``COMMIT_BUCKETS``
+    :type commit_bucket: str
+    :param files: mapping of filename to fixture file name (resolved
+            under ``tests/testee/ttg``); each entry is staged or
+            committed according to ``commit_bucket``'s scaffold
+    :type files: dict
+    :raises ValueError: if ``commit_bucket`` is not a known bucket
+    :return: path to the prepared repository
+    :rtype: str
+    """
+    if commit_bucket not in _BUCKET_SETUP_FUNCS:
+        raise ValueError("unknown commit bucket: {}".format(commit_bucket))
+
+    git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
+    _BUCKET_SETUP_FUNCS[commit_bucket](dest_dir, files)
+    return str(dest_dir)
+
+
 def prepare_repo(dest_dir, scenario):
     """
-    prepare a temporary repository for one of the TTG scenarios.
+    prepare a temporary repository for one of the legacy named TTG
+    scenarios; kept for the ``examples/ttg`` demo scripts.
 
 
     :param dest_dir: destination directory for the cloned repo;
@@ -128,12 +178,11 @@ def prepare_repo(dest_dir, scenario):
     :return: path to the prepared repository
     :rtype: str
     """
-    if scenario not in _SCENARIO_SETUP_FUNCS:
+    if scenario not in _LEGACY_SCENARIO_PRESETS:
         raise ValueError("unknown scenario: {}".format(scenario))
 
-    git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
-    _SCENARIO_SETUP_FUNCS[scenario](dest_dir)
-    return str(dest_dir)
+    commit_bucket, files = _LEGACY_SCENARIO_PRESETS[scenario]
+    return prepare_repo_with_files(dest_dir, commit_bucket, files)
 
 
 def _main():
