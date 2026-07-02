@@ -22,18 +22,41 @@ logger = getLogger(PCH_LOGGER_NAME)
 # TODO unit tests
 
 
-# BUG wrong implementations
+def _gen_feature_finish_header_content(repo):
+    """
+    generate header content for Feature Finish commit type.
+
+    :param repo: git repository object
+    :type repo: git.Repo
+    :return: header string with Feature Finish and feature branch name
+    :rtype: str
+    """
+    merge_head_path = os.path.join(repo.git_dir, "MERGE_HEAD")
+
+    # FIXME use the function
+    # FIXME update set up example
+
+    if os.path.exists(merge_head_path):
+        with open(merge_head_path, encoding="utf-8") as f:
+            merge_commit_sha = f.read().strip()
+        for ref in repo.references:
+            if ref.commit.hexsha.startswith(merge_commit_sha):
+                branch_name = ref.name.split("/")[-1]
+                return f"Feature Finish: {branch_name}"
+
+    return "Feature Finish"
+
+
+def _gen_version_release_header_content():
+    """
+    generate header content for Version Release commit type.
+    """
+    return "Version Release"  # FIXME get version
+
+
 def _prepend_commit_header_by_type(is_feature_finish, repo_root):
     """
     prepend a header line and a blank line to the commit message file.
-
-
-    :param is_feature_finish: ``True`` for a Feature Finish merge,
-            ``False`` for a Version Release merge
-    :type is_feature_finish: bool
-    :param repo_root: path to the git repository or any of its
-            subdirectories
-    :type repo_root: str
     """
     repo = git.Repo(repo_root, search_parent_directories=True)
     commit_editmsg_path = os.path.join(repo.git_dir, "COMMIT_EDITMSG")
@@ -52,7 +75,11 @@ def _prepend_commit_header_by_type(is_feature_finish, repo_root):
             target.append(line)
     logger.debug("content_lines=%r", content_lines)
 
-    header = ""
+    if is_feature_finish:
+        header = _gen_feature_finish_header_content(repo)
+    else:
+        header = _gen_version_release_header_content()
+
     content_lines = [header, ""] + content_lines
     logger.debug("content_lines=%r", content_lines)
 
