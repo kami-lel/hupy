@@ -3,10 +3,10 @@
 # ttg-fail-version_release_demo.bash
 #
 # demo: Version Release merge (develop into main) staging three
-# files — a.py with a STEADY "# Todo steady marker" comment, b.py
-# with no tags, and c.py with a QUIET "# todo quiet marker" comment
+# files — a.py with 1 LOUD tag, b.py with 1 LOUD and 2 STEADY tags
+# (multiple TT in a single file), and c.py with a QUIET tag
 # expected result: fail (Version Release gates Loud and Steady tiers;
-# only a.py's Steady tag is reported, c.py's Quiet tag is not)
+# both a.py and b.py's gating tags are reported, c.py's Quiet tag is not)
 
 set -euo pipefail
 
@@ -24,9 +24,9 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 "$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
-printf "scenario:\tVersion Release, multiple files (steady + clean + quiet)\n"
+printf "scenario:\tVersion Release, multiple files with multiple gating TT\n"
 printf "expected:\tFAIL\n"
-printf "reason:\tSteady \"# Todo steady marker\" comment in a.py\n"
+printf "reason:\tLoud/Steady tags in both a.py and b.py (multiple files, multiple TT)\n"
 echo
 
 "$PYTHON" -m hupy.kamilog lp c "TTG" "="
@@ -36,14 +36,14 @@ cd "$DEMO_REPO_1"
 cd - >/dev/null
 echo
 
-"$PYTHON" -m hupy.kamilog lp c "TTG w/ -v" "-"
+"$PYTHON" -m hupy.kamilog lp c "TTG w/ -v" "="
 DEMO_REPO_2="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_2"
 "$PYTHON" -m hupy triage_tag_gating -v || true
 cd - >/dev/null
 echo
 
-"$PYTHON" -m hupy.kamilog lp c "TTG w/ -vvv" "-"
+"$PYTHON" -m hupy.kamilog lp c "TTG w/ -vvv" "="
 DEMO_REPO_3="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_3"
 "$PYTHON" -m hupy triage_tag_gating -vvv || true

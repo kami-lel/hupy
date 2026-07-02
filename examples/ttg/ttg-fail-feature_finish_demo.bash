@@ -3,10 +3,10 @@
 # ttg-fail-feature_finish_demo.bash
 #
 # demo: Feature Finish merge (feature/x into develop) staging three
-# files — a.py with a LOUD "# TODO loud marker" comment, b.py with
-# no tags, and c.py with a STEADY "# Todo steady marker" comment
-# expected result: fail (Feature Finish gates the Loud tier; only
-# a.py's Loud tag is reported, c.py's Steady tag is not)
+# files — a.py with 1 LOUD tag, b.py with 2 LOUD tags (multiple TT
+# in a single file), and c.py with a QUIET tag
+# expected result: fail (Feature Finish gates the Loud tier; both
+# a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
 
 set -euo pipefail
 
@@ -24,9 +24,9 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 "$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
-printf "scenario:\tFeature Finish, multiple files (loud + clean + steady)\n"
+printf "scenario:\tFeature Finish, multiple files with multiple Loud TT\n"
 printf "expected:\tFAIL\n"
-printf "reason:\tLoud \"# TODO loud marker\" comment in a.py\n"
+printf "reason:\tLoud tags in both a.py and b.py (multiple files, multiple TT)\n"
 echo
 
 "$PYTHON" -m hupy.kamilog lp c "TTG" "="

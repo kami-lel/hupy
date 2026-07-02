@@ -120,8 +120,8 @@ _LEGACY_SCENARIO_PRESETS = {
         "feature_finish",
         {
             "a.py": "tt_loud_only.py",
-            "b.py": "tt_none.py",
-            "c.py": "tt_steady_only.py",
+            "b.py": "tt_2loud.py",
+            "c.py": "tt_quiet_only.py",
         },
     ),
     "feature_finish_pass": (
@@ -131,8 +131,8 @@ _LEGACY_SCENARIO_PRESETS = {
     "version_release_fail": (
         "version_release",
         {
-            "a.py": "tt_steady_only.py",
-            "b.py": "tt_none.py",
+            "a.py": "tt_loud_only.py",
+            "b.py": "tt_1loud_2steady.py",
             "c.py": "tt_quiet_only.py",
         },
     ),
