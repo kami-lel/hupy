@@ -1,12 +1,14 @@
 """
-kamilog: Customized Logging Output Module
+kamilog.py
 
-Provides Python loggers with structured output, custom log levels,
-ANSI 16-color support, and flexible timestamp options.
+Lightweight Python logging wrapper with custom log levels, structured output,
+ANSI colored logging, verbosity control, line-padding utilities, and CLI.
 
-Q.v. https://github.com/kami-lel/kamilog
+Q.v. https://github.com/kami-lel/kamilog for Project Main Page
+Q.v. https://github.com/kami-lel/kamilog/tree/main/docs for Documentation
 """
 
+from argparse import ArgumentParser
 import logging
 import sys
 import time
@@ -48,15 +50,21 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "1.7.0"
+__version__ = "1.8.0"
 __author__ = "kamiLeL"
 
 
 # enum  ########################################################################
-
-
 class _CustomLogLevel(IntEnum):
-    """custom log level with padded display name."""
+    """
+    custom log level IntEnum with padded 5-char display name.
+
+
+    :param value: numeric log level (used as the enum's int value)
+    :type value: int
+    :param display: padded 5-character display string for formatter output
+    :type display: str
+    """
 
     def __new__(cls, value, display):
         obj = int.__new__(cls, value)
@@ -104,15 +112,11 @@ class AnsiColor(Enum):  # =====================================================
 
 class AnsiRenderer:  # =========================================================
     """
-    ANSI color renderer; detects TTY at construction time and applies
-    color codes through its public methods.
-
-    when ``stream`` is ``None`` or is not a TTY, all coloring methods
-    return their input text unchanged.
+    TTY-aware ANSI color code renderer, detects TTY status at construction
 
 
-    :param stream: output stream used for TTY detection; ``None``
-            disables color unconditionally
+    :param stream: output stream used for TTY detection;
+            ``None`` disables color unconditionally
     :type stream: IO or None
     """
 
@@ -141,18 +145,16 @@ class AnsiRenderer:  # =========================================================
         """
         apply ANSI color code to text, optionally with bold.
 
-        returns the colored text if color is enabled; otherwise
-        returns text unchanged.
-
 
         :param text: text to colorize
         :type text: str
         :param color: ANSI color to apply
         :type color: AnsiColor
-        :param use_bold: whether to apply bold formatting; defaults to
-                ``False``
+        :param use_bold: whether to apply bold formatting;
+                defaults to ``False``
         :type use_bold: bool
-        :return: colored text, or ``text`` unchanged when disabled
+        :return: ``text`` with color applied if color is enabled;
+                otherwise ``text`` unchanged
         :rtype: str
         """
         if not self._enabled:
@@ -168,15 +170,11 @@ class AnsiRenderer:  # =========================================================
 
     def color_level(self, text, levelno):
         """
-        apply bold and level-specific ANSI color to ``text``.
+        apply bold and level-specific ANSI color to ``text``
 
 
-        :param text: text to colorize
-        :type text: str
         :param levelno: numeric log level used to select the color
         :type levelno: int
-        :return: colored text, or ``text`` unchanged when disabled
-        :rtype: str
         """
         color = self._LEVEL_COLORS.get(levelno)
         if color is None:
@@ -184,12 +182,13 @@ class AnsiRenderer:  # =========================================================
         return self.color(text, color, use_bold=True)
 
     def color_grey(self, text):
-        """apply bright-black (grey) ANSI color to ``text``."""
+        """
+        apply bright-black (grey) ANSI color to ``text``
+        """
         return self.color(text, AnsiColor.GREY)
 
 
-# logger  ######################################################################
-
+# Custom Logging  ##############################################################
 
 # constants  ===================================================================
 
@@ -207,7 +206,7 @@ FAIL = _CustomLogLevel.FAIL  # 45
 CRITICAL = logging.CRITICAL  # 50
 
 
-# datetime formats  ============================================================
+# Datetime Formats  ============================================================
 DATEFMT_TIME = "%H:%M:%S"
 DATEFMT_TIME_MS = "%H:%M:%S.{ms}"
 DATEFMT_DATETIME = "%Y-%m-%d %H:%M:%S"
@@ -216,26 +215,15 @@ DATEFMT_DATETIME_MS = "%Y-%m-%d %H:%M:%S.{ms}"
 
 class KamiLogger(logging.Logger):  # ===========================================
     """
-    Logger subclass extending :class:`logging.Logger` with six additional levels.
+    logger subclass extending :class:`logging.Logger` with custom levels.
 
-    Custom levels (in numeric order between standard ones):
-
-    - ``ENTER`` (11): entering a hook or test case
-    - ``SKIP``  (12): skipping a hook or test case
-    - ``PASS``  (21): hook or test case passed
-    - ``SUCC``  (22): task or operation succeeded
-    - ``DONE``  (25): task or operation completed
-    - ``FAIL``  (45): hook or test case failed
-
-    Use :func:`getLogger` to obtain a configured instance.
+    provides convenience methods for test and hook workflows;
+    obtain instances via :func:`getlogger`
     """
 
     def enter(self, message, *args, **kwargs):
         """
-        Log at ``ENTER`` level (11): entering a hook or test case.
-
-        :param message: log message
-        :type message: str
+        log at ``ENTER`` level (11): entering a hook or test case.
         """
         if self.isEnabledFor(_CustomLogLevel.ENTER):
             self._log(
@@ -244,10 +232,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def skip(self, message, *args, **kwargs):
         """
-        Log at ``SKIP`` level (12): skipping a hook or test case.
-
-        :param message: log message
-        :type message: str
+        log at ``SKIP`` level (12): skipping a hook or test case.
         """
         if self.isEnabledFor(_CustomLogLevel.SKIP):
             self._log(
@@ -256,10 +241,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def pass_(self, message, *args, **kwargs):
         """
-        Log at ``PASS`` level (21): hook or test case passed.
-
-        :param message: log message
-        :type message: str
+        log at ``PASS`` level (21): hook or test case passed.
         """
         if self.isEnabledFor(_CustomLogLevel.PASS):
             self._log(
@@ -268,10 +250,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def succ(self, message, *args, **kwargs):
         """
-        Log at ``SUCC`` level (22): task or operation succeeded.
-
-        :param message: log message
-        :type message: str
+        log at ``SUCC`` level (22): task or operation succeeded.
         """
         if self.isEnabledFor(_CustomLogLevel.SUCC):
             self._log(
@@ -280,10 +259,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def done(self, message, *args, **kwargs):
         """
-        Log at ``DONE`` level (25): task or operation completed.
-
-        :param message: log message
-        :type message: str
+        log at ``DONE`` level (25): task or operation completed.
         """
         if self.isEnabledFor(_CustomLogLevel.DONE):
             self._log(
@@ -292,10 +268,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def fail(self, message, *args, **kwargs):
         """
-        Log at ``FAIL`` level (45): hook or test case failed.
-
-        :param message: log message
-        :type message: str
+        log at ``FAIL`` level (45): hook or test case failed.
         """
         if self.isEnabledFor(_CustomLogLevel.FAIL):
             self._log(
@@ -308,7 +281,7 @@ logging.setLoggerClass(KamiLogger)
 logging.root.__class__ = KamiLogger
 
 
-# log formatting  #=============================================================
+# log formatting  # ============================================================
 
 
 _PADDED_LEVELNAME_MAP = {
@@ -330,21 +303,14 @@ class _LogFormatEngine:  # *****************************************************
     """
     core log-line formatting logic, independent of ``logging.Formatter``.
 
-    builds each log line from its constituent parts — optional timestamp,
-    5-char padded level name, source label, and message — applying ANSI
-    color codes when enabled. exposed via ``_LogFormatter.engine`` so
-    external callers can reach ``count_prefix_chars`` without going
-    through the adapter.
-
 
     :param palette: color palette controlling ANSI output
     :type palette: _AnsiRenderer
     :param datefmt: strftime format string for wall-clock timestamps;
-            ignored when ``relative_to`` is set; ``None`` disables
-            timestamps
+            ``None`` disables timestamps
     :type datefmt: str or None
     :param relative_to: Unix timestamp used as the epoch for relative
-            time display; mutually exclusive with ``datefmt``
+            time display
     :type relative_to: float or None
     """
 
@@ -358,9 +324,6 @@ class _LogFormatEngine:  # *****************************************************
     def count_prefix_chars(self, record):
         """
         return the count of printable characters before the message text.
-
-        accounts for the optional timestamp, 5-char padded level name,
-        and source label; ANSI escape codes are excluded from the count.
 
 
         :param record: log record to measure
@@ -415,10 +378,6 @@ class _LogFormatEngine:  # *****************************************************
         """
         build the main log line from a record's parts.
 
-        produces the ``LEVEL source: message`` line with optional
-        timestamp prefix. does not handle exc_info or stack_info —
-        those are appended by the ``_LogFormatter`` adapter.
-
 
         :param record: log record to format
         :type record: logging.LogRecord
@@ -447,32 +406,16 @@ class _LogFormatEngine:  # *****************************************************
     # helpers  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     def _fmt_asctime(self, asctime):
-        """
-        :param asctime: pre-formatted datetime string
-        :type asctime: str
-        :return: asctime in grey, or plain if color disabled
-        :rtype: str
-        """
+        """color ``asctime`` grey."""
         return self._palette.color_grey(asctime)
 
     def _fmt_level(self, levelno):
-        """
-        :param levelno: numeric logging level
-        :type levelno: int
-        :return: 5-char padded level name, colored and bold if enabled
-        :rtype: str
-        """
+        """build the padded, colored level-name segment."""
         padded = _PADDED_LEVELNAME_MAP.get(levelno, str(levelno).ljust(5)[:5])
         return self._palette.color_level(padded, levelno)
 
     def _fmt_source(self, name):
-        """
-        :param name: logger name
-        :type name: str
-        :return: ``"name:"`` in grey, or ``":"`` in grey if name is
-                root or absent
-        :rtype: str
-        """
+        """build the colored source-label segment."""
         if not name or name == "root":
             return self._palette.color_grey(":")
         return "{}{}".format(
@@ -481,12 +424,7 @@ class _LogFormatEngine:  # *****************************************************
         )
 
     def _fmt_relative(self, created):
-        """
-        :param created: Unix timestamp of the log record
-        :type created: float
-        :return: elapsed time as ``+HH:MM:SS.mmm`` or ``-HH:MM:SS.mmm``
-        :rtype: str
-        """
+        """format elapsed time relative to ``_relative_to``."""
         delta = created - self._relative_to
         sign = "-" if delta < 0 else "+"
         delta = abs(delta)
@@ -499,13 +437,6 @@ class _LogFormatEngine:  # *****************************************************
 class _LogFormatter(Formatter):  # *********************************************
     """
     ``logging.Formatter`` adapter wrapping ``_LogFormatEngine``.
-
-    delegates all line-building and timestamp logic to an internal
-    ``_LogFormatEngine`` instance exposed via the ``engine`` property.
-    the ``_AnsiRenderer`` controlling color output is accessible via
-    ``palette``. exc_info and stack_info appending are handled here
-    because they depend on ``Formatter.formatException`` and
-    ``Formatter.formatStack``.
 
 
     :param stream: forwarded to ``_AnsiRenderer`` for TTY detection;
@@ -570,18 +501,11 @@ class _DiffOnlyEngine:  # ******************************************************
     """
     engine for diff-only compression of log message text.
 
-    maintains a sliding window of prior messages; once the window is
-    full, compresses character runs common to all of them into ``〃\\t``
-    markers aligned to 8-column boundaries from the rendered line start.
-    prefix-width measurement and marker coloring use ``formatter``
-    directly.
-
 
     :param formatter: formatter used to measure the prefix width and
             apply ``color_grey`` to compression markers
     :type formatter: _LogFormatter
-    :param window: number of prior messages held for comparison;
-            compression activates once this many messages have been seen
+    :param window: number of prior messages held for comparison
     :type window: int
     """
 
@@ -619,20 +543,7 @@ class _DiffOnlyEngine:  # ******************************************************
 
     def _compress(self, record, message):
         """
-        compress positions in ``message`` matching ``_common`` into
-        ``〃\\t`` markers.
-
-        aligns each marker to the next multiple-of-8 column measured
-        from the rendered line start (prefix + message offset); runs
-        too short to fit one full block after alignment are kept as-is.
-
-
-        :param record: log record used to measure the prefix width
-        :type record: logging.LogRecord
-        :param message: raw message text to compress
-        :type message: str
-        :return: compressed message string
-        :rtype: str
+        compress positions matching ``_common`` into ``〃\\t`` markers.
         """
         block = self._COMPRESSION_BLOCK_SIZE
         trail = self._PRESERVED_TRAILING_CHARS
@@ -677,10 +588,6 @@ class _DiffOnlyEngine:  # ******************************************************
         """
         process ``record`` and return the (possibly compressed) message.
 
-        if the history window is not yet full, the raw message is
-        returned unchanged. once full, character positions common to
-        all history messages are compressed into ``〃\\t`` markers.
-
 
         :param record: log record being processed
         :type record: logging.LogRecord
@@ -702,10 +609,6 @@ class _DiffOnlyEngine:  # ******************************************************
 class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
     """
     ``logging.Filter`` adapter that applies ``_DiffOnlyEngine`` to records.
-
-    delegates all compression logic to an internal ``_DiffOnlyEngine``
-    instance; ``filter()`` mutates ``record.msg`` in place with the
-    result.
 
 
     :param formatter: forwarded to ``_DiffOnlyEngine`` for prefix-width
@@ -735,14 +638,17 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
         return True
 
 
-# logger Public API  ===========================================================
+# Logger Public API  ===========================================================
 
 
 # pylint: disable-next=invalid-name
 def getLogger(name=None, *, datefmt=None, relative_to=None):
     """
+    return a configured :class:`KamiLogger` for ``name``, creating it if needed.
+
+
     :param name: logger name
-    :type name: str
+    :type name: str, optional
     :param datefmt: strftime format for timestamps; ignored when ``relative_to`` is set;
             defaults to ``None`` (no timestamp)
     :type datefmt: str, optional
@@ -783,9 +689,6 @@ def getLogger(name=None, *, datefmt=None, relative_to=None):
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
-    if logger.name and "." in logger.name:
-        logger.propagate = False
-
     return logger
 
 
@@ -796,20 +699,7 @@ def getLogger(name=None, *, datefmt=None, relative_to=None):
 
 def _calc_logging_level_from_verbosity(verbosity):
     """
-    Map a verbosity integer to a logging level.
-
-    - ``3`` or more: ``DEBUG`` (10)
-    - ``2``: ``SUCC`` (15)
-    - ``1``: ``INFO`` (20)
-    - ``0``: ``DONE`` (25)
-    - ``-1``: ``WARNING`` (30)
-    - ``-2``: ``ERROR`` (40)
-    - ``-3`` or less: ``CRITICAL`` (50)
-
-    :param verbosity: net verbosity count (positive = more verbose)
-    :type verbosity: int
-    :return: logging level constant
-    :rtype: int
+    map a verbosity integer to a logging level
     """
     if verbosity >= 3:
         return logging.DEBUG
@@ -829,15 +719,7 @@ def _calc_logging_level_from_verbosity(verbosity):
 
 def _calc_logging_level_from_verbosity_namespace(namespace):
     """
-    Extract verbosity from a parsed namespace and return the corresponding
-    logging level.
-
-    Verbosity defaults to 0; each ``-v`` adds 1, each ``-q`` subtracts 1.
-
-    :param namespace: parsed namespace containing ``verbose`` and/or ``quiet`` counts
-    :type namespace: argparse.Namespace
-    :return: logging level constant
-    :rtype: int
+    extract verbosity from namespace and return the logging level
     """
     verbosity = 0
     if hasattr(namespace, "verbose"):
@@ -852,9 +734,8 @@ def _calc_logging_level_from_verbosity_namespace(namespace):
 
 def add_verbose_arguments(parser):
     """
-    Add ``-v``/``--verbose`` and ``-q``/``--quiet`` options to ``parser``.
+    add ``-v``/``--verbose`` and ``-q``/``--quiet`` options to ``parser``.
 
-    Each ``-v`` increases verbosity by 1; each ``-q`` decreases by 1.
 
     :param parser: argument parser to extend
     :type parser: argparse.ArgumentParser
@@ -877,7 +758,8 @@ def add_verbose_arguments(parser):
 
 def set_logging_level_by_verbosity(namespace, *, logger=None, logger_name=None):
     """
-    Set the logging level of a logger based on verbosity flags.
+    set the logging level of a logger based on verbosity flags.
+
 
     :param namespace: parsed namespace containing ``--verbose`` and/or ``--quiet`` counts
     :type namespace: argparse.Namespace
@@ -909,6 +791,14 @@ def _print_line_padding_generic(
     flush=False,
     renderer=None,
 ):
+    """
+    print ``content`` padded to ``line_width``
+
+
+    :param mode: text alignment:
+            ``"c"`` centered, ``"l"`` left-justified, ``"r"`` right-justified
+    :type mode: str
+    """
     if "\n" in content:
         raise ValueError("param content must be a single line")
     if len(content) > line_width:
@@ -925,21 +815,21 @@ def _print_line_padding_generic(
     if renderer is None:
         renderer = AnsiRenderer(file)
 
-    if mode == 1:  # left justified
+    if mode == "l":  # left justified
         remaining = line_width - len(content) - len(_CONTENT_SPACING)
         padded_content = (
             content
             + _CONTENT_SPACING
             + renderer.color_grey(padding * remaining)
         )
-    elif mode == 2:  # right justified
+    elif mode == "r":  # right justified
         remaining = line_width - len(content) - len(_CONTENT_SPACING)
         padded_content = (
             renderer.color_grey(padding * remaining)
             + _CONTENT_SPACING
             + content
         )
-    else:  # centered
+    else:  # centered (mode == "c")
         remaining = line_width - len(content) - len(_CONTENT_SPACING) * 2
         left = remaining // 2
         right = remaining - left
@@ -963,9 +853,7 @@ def print_line_padding_centered(*args, **kwargs):
     print ``content`` centered, filling both sides with ``padding`` to
     reach ``line_width``.
 
-    when the remaining width is odd, the extra character goes to the right.
-    odd remainder example with ``line_width=11``:
-    ``==  hi  ===``
+    when the remaining width is odd, the extra character goes to the right
 
 
     :param content: text to print; must be a single, non-empty line no
@@ -993,7 +881,7 @@ def print_line_padding_centered(*args, **kwargs):
     >>> print_line_padding_centered("hi", "=", line_width=20)
     =======  hi  =======
     """
-    return _print_line_padding_generic(0, *args, **kwargs)
+    return _print_line_padding_generic("c", *args, **kwargs)
 
 
 def print_line_padding_left_just(*args, **kwargs):
@@ -1008,7 +896,7 @@ def print_line_padding_left_just(*args, **kwargs):
     >>> print_line_padding_left_just("hi", "=", line_width=20)
     hi  ================
     """
-    return _print_line_padding_generic(1, *args, **kwargs)
+    return _print_line_padding_generic("l", *args, **kwargs)
 
 
 def print_line_padding_right_just(*args, **kwargs):
@@ -1023,4 +911,79 @@ def print_line_padding_right_just(*args, **kwargs):
     >>> print_line_padding_right_just("hi", "=", line_width=20)
     ================  hi
     """
-    return _print_line_padding_generic(2, *args, **kwargs)
+    return _print_line_padding_generic("r", *args, **kwargs)
+
+
+# CLI  #########################################################################
+
+# main parser  =================================================================
+
+cli_parser = ArgumentParser(
+    prog=__name__,
+    description="kamilog CLI: utilities for formatted output and logging",
+)
+cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
+cli_subparser = cli_parser.add_subparsers(title="subcommands")
+
+# line padding parser  =========================================================
+
+_LINE_PADDING_DESC = "print content padded to line width"
+
+
+def _line_padding_parser_main(args):
+    mode_map = {"center": "c", "left": "l", "right": "r"}
+    mode = mode_map.get(args.mode, args.mode)
+    file = sys.stderr if args.stderr else sys.stdout
+    _print_line_padding_generic(
+        mode,
+        args.content,
+        args.padding,
+        line_width=args.line_width,
+        file=file,
+    )
+
+
+line_padding_parser = cli_subparser.add_parser(
+    "line_padding",
+    help=_LINE_PADDING_DESC,
+    description=_LINE_PADDING_DESC,
+    aliases=["lp"],
+)
+
+line_padding_parser.add_argument(
+    "mode",
+    choices=["c", "l", "r", "center", "left", "right"],
+    help="text alignment: c/center, l/left(-justified), r/right(-justified)",
+)
+line_padding_parser.add_argument(
+    "content",
+    metavar="CONTENT",
+    help="text to print; must be a single line no longer than line-width",
+)
+line_padding_parser.add_argument(
+    "padding",
+    metavar="PADDING",
+    help="single printable non-space fill character (e.g., #, -, =)",
+)
+line_padding_parser.add_argument(
+    "-w",
+    "--line-width",
+    type=int,
+    default=80,
+    metavar="LINE_WIDTH",
+    help="total character width of output line; default 80",
+)
+line_padding_parser.add_argument(
+    "-e",
+    "--stderr",
+    action="store_true",
+    help="print to stderr (instead of stdout)",
+)
+
+line_padding_parser.set_defaults(func=_line_padding_parser_main)
+
+
+# Entry Point  =================================================================
+if __name__ == "__main__":
+    parsed_args = cli_parser.parse_args()
+    parsed_args.func(parsed_args)
