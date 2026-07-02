@@ -6,6 +6,7 @@ prepare temporary git repositories that reproduce the six TTG
 by the ``examples/ttg`` demo scripts
 """
 
+import shutil
 import tempfile
 from argparse import ArgumentParser
 from pathlib import Path
@@ -16,6 +17,7 @@ from hupy.ttg.commit_type import DEV_BRANCH, MAIN_BRANCH
 
 _TESTEE_ROOT = Path(__file__).parent.parent / "testee"
 _BUNDLE_PATH = _TESTEE_ROOT / "default_repo.bundle"
+_FIXTURES_ROOT = _TESTEE_ROOT / "ttg"
 
 SCENARIOS = (
     "non_merge_commit",
@@ -43,6 +45,15 @@ def _stage_file(repo_dir, filename, content):
     repo.index.add([filename])
 
 
+def _commit_fixture(repo_dir, filename, fixture_name):
+    src = str(_FIXTURES_ROOT / fixture_name)
+    dst = str(Path(repo_dir) / filename)
+    shutil.copyfile(src, dst)
+    repo = git.Repo(str(repo_dir))
+    repo.index.add([filename])
+    repo.index.commit("add {}".format(filename))
+
+
 def _setup_non_merge_commit(repo_dir):
     # regular commit in progress (no MERGE_HEAD): TTG must skip
     # regardless of the TT tier staged here
@@ -61,20 +72,20 @@ def _setup_irrelevant_merge(repo_dir):
     repo.git.merge("--no-commit", "--no-ff", "hotfix")
 
 
-def _setup_feature_finish(repo_dir, tag_line):
+def _setup_feature_finish(repo_dir, fixture_name):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     _commit_file(repo_dir, "develop.py", "# develop base\n")
     repo.git.checkout("-q", "-b", "feature/x")
-    _commit_file(repo_dir, "feature.py", tag_line)
+    _commit_fixture(repo_dir, "feature.py", fixture_name)
     repo.git.checkout("-q", DEV_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", "feature/x")
 
 
-def _setup_version_release(repo_dir, tag_line):
+def _setup_version_release(repo_dir, fixture_name):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
-    _commit_file(repo_dir, "release.py", tag_line)
+    _commit_fixture(repo_dir, "release.py", fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
 
@@ -83,16 +94,24 @@ _SCENARIO_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
     "irrelevant_merge": _setup_irrelevant_merge,
     "feature_finish_loud": (
-        lambda repo_dir: _setup_feature_finish(repo_dir, "# TODO gate me\n")
+        lambda repo_dir: _setup_feature_finish(
+            repo_dir, "feature_finish_loud.py"
+        )
     ),
     "feature_finish_steady_only": (
-        lambda repo_dir: _setup_feature_finish(repo_dir, "# Todo skip me\n")
+        lambda repo_dir: _setup_feature_finish(
+            repo_dir, "feature_finish_steady_only.py"
+        )
     ),
     "version_release_steady": (
-        lambda repo_dir: _setup_version_release(repo_dir, "# Fixme gate me\n")
+        lambda repo_dir: _setup_version_release(
+            repo_dir, "version_release_steady.py"
+        )
     ),
     "version_release_quiet_only": (
-        lambda repo_dir: _setup_version_release(repo_dir, "# todo skip me\n")
+        lambda repo_dir: _setup_version_release(
+            repo_dir, "version_release_quiet_only.py"
+        )
     ),
 }
 
