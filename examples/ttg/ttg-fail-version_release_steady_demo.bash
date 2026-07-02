@@ -27,7 +27,7 @@ printf "expected:\tFAIL\n"
 printf "reason:\tSteady \"# Fixme gate me\" comment\n"
 echo
 
-"$PYTHON" -m hupy.kamilog lp c "TTG" "-"
+"$PYTHON" -m hupy.kamilog lp c "TTG" "="
 DEMO_REPO_1="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_1"
 "$PYTHON" -m hupy triage_tag_gating || true

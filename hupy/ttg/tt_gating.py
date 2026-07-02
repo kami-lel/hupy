@@ -80,15 +80,13 @@ def perform_triage_tags_gating(repo_root):
     logger.enter("perform TTG")
 
     commit_type = get_current_commit_type(repo_root)
-    # pylint: disable-next=logging-format-interpolation
-    logger.debug("commit type={}".format(commit_type))
 
     if CommitType.FEATURE_FINISH in commit_type:
-        logger.debug("on Feature Finish")
+        logger.info("TTG for Feature Finish merge")
         _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
-        logger.debug("on Version Release")
+        logger.info("TTG for Version Release merge")
         _perform_triage_tags_by_filtering_group(
             repo_root, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
