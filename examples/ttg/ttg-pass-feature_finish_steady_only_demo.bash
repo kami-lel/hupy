@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 #
-# feature_finish_steady_only_demo.bash
+# ttg-pass-feature_finish_steady_only_demo.bash
 #
 # demo: Feature Finish merge (feature/x into develop) staging only
 # a STEADY "# Todo skip me" comment (no Loud tags)
-# expected TTG result: PASSED (Feature Finish only gates the Loud
-# tier, so Steady tags are allowed through), exit code 0
+# expected result: pass
 
 set -euo pipefail
 
@@ -20,21 +19,29 @@ else
     export PYTHONPATH="$REPO_ROOT:${PYTHONPATH:-}"
 fi
 
-"$PYTHON" -m hupy.kamilog lp c \
-  "preparing demo repo (scenario: $SCENARIO)" "#"
-DEMO_REPO="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
-"$PYTHON" -m hupy.kamilog lp l "demo repo: $DEMO_REPO" "-"
+DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
+
+"$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
+printf "scenario:\tFeature Finish with steady TT\n"
+printf "expected:\tPASS\n"
 echo
 
-"$PYTHON" -m hupy.kamilog lp c \
-  "running: python -m hupy triage_tag_gating -vvv" "-"
-cd "$DEMO_REPO"
-if "$PYTHON" -m hupy triage_tag_gating -vvv; then
-    EXIT_CODE=0
-else
-    EXIT_CODE=$?
-fi
-
+"$PYTHON" -m hupy.kamilog lp c "TTG" "-"
+DEMO_REPO_1="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
+cd "$DEMO_REPO_1"
+"$PYTHON" -m hupy triage_tag_gating || true
+cd - >/dev/null
 echo
-"$PYTHON" -m hupy.kamilog lp c \
-  "TTG exit code: $EXIT_CODE (expected: 0, commit allowed)" "-"
+
+"$PYTHON" -m hupy.kamilog lp c "TTG w/ -v" "-"
+DEMO_REPO_2="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
+cd "$DEMO_REPO_2"
+"$PYTHON" -m hupy triage_tag_gating -v || true
+cd - >/dev/null
+echo
+
+"$PYTHON" -m hupy.kamilog lp c "TTG w/ -vvv" "-"
+DEMO_REPO_3="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
+cd "$DEMO_REPO_3"
+"$PYTHON" -m hupy triage_tag_gating -vvv || true
+cd - >/dev/null
