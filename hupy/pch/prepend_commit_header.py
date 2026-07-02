@@ -24,6 +24,7 @@ logger = getLogger(PCH_LOGGER_NAME)
 # helpers  #####################################################################
 
 # TODO unit tests
+# FIXME pch debug lines
 
 
 def _gen_feature_finish_header_content(repo):
@@ -38,7 +39,7 @@ def _gen_version_release_header_content():
     """
     generate header content for Version Release commit type.
     """
-    return "Version Release"  # FIXME get version
+    return "Version Release"  # Fixme get version
 
 
 def _prepend_commit_header_by_type(is_feature_finish, repo_root):
@@ -101,11 +102,11 @@ def prepend_commit_header(repo_root):
     commit_type = get_current_commit_type(repo_root)
 
     if CommitType.FEATURE_FINISH in commit_type:
-        logger.info("prepending header on Feature Finish merge")
+        logger.debug("prepending header on Feature Finish merge")
         _prepend_commit_header_by_type(True, repo_root)
 
     elif CommitType.VERSION_RELEASE in commit_type:
-        logger.info("prepending header on Version Release merge")
+        logger.debug("prepending header on Version Release merge")
         _prepend_commit_header_by_type(False, repo_root)
 
     else:
