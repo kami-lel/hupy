@@ -10,5 +10,6 @@
     "**/hooks_utility/*/**",
     "**/node_modules/*/**",
     "tests/testee/**",
+    "examples/ttg/**",
   ],
 }
