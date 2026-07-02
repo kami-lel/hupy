@@ -26,10 +26,6 @@ def _pch_main(args):
 def register_cli_pch_parser(cli_subparser):
     """
     register the ``prepend_commit_header`` subcommand parser.
-
-
-    :param cli_subparser: subparsers action from the main argument parser
-    :type cli_subparser: argparse._SubParsersAction
     """
     pch_parser = cli_subparser.add_parser(
         "prepend_commit_header",

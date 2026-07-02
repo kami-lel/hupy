@@ -29,10 +29,6 @@ def _tt_gating_main(args):
 def register_cli_ttg_parser(cli_subparser):
     """
     register the ``triage_tag_gating`` subcommand parser.
-
-
-    :param cli_subparser: subparsers action from the main argument parser
-    :type cli_subparser: argparse._SubParsersAction
     """
     tt_gating_parser = cli_subparser.add_parser(
         "triage_tag_gating",
