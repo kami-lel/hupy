@@ -16,6 +16,9 @@ from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
 
 
+# TODO opmz loggers for skip
+# TODO opmz loggers for pass
+
 # helpers  #####################################################################
 
 
@@ -32,7 +35,6 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             .split("\n")
         )
     except subprocess.CalledProcessError as e:
-        # TODO unit test for this
         logger.critical("unable to get git cached files")
         raise SystemExit(1) from e
 

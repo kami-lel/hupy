@@ -152,7 +152,6 @@ def detect_triage_tags_in_staged_file(file_path, repo_root=None):
             cwd=repo_root,
         )
     except subprocess.CalledProcessError as e:
-        # TODO unit test for this
         logger.critical("unable to get git diff for file: %s", file_path)
         raise SystemExit(1) from e
 
