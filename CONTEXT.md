@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-02 — completed the `ttg` package (tt_detect, tt_gating), reworked kamilog into comment-banner + CLI form, unified TTG logger*
+*Last updated: 2026-07-02 — refactored commit_type to top-level module; moved test file; cleaned up module hierarchy*
 
 ## Project Overview
 
@@ -17,8 +17,8 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | Module | Status | Responsibility |
 |---|---|---|
 | `cli` | **implemented** | argument parsing, subcommand dispatch, CLI entrypoint |
+| `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
-| `ttg.commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
 | `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches |
@@ -33,7 +33,7 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 
 ## Module Details
 
-### `ttg.commit_type`
+### `commit_type`
 
 Identifies the type of an in-progress git commit by inspecting git state files.
 
@@ -72,7 +72,7 @@ Scans staged git diffs for triage tag annotation markers.
 
 Triage tag (TT) gating — blocks commits that introduce annotation markers on protected branches.
 
-**Public API**: `perform_triage_tags_gating(repo_root)` — detect current commit type via `commit_type`, then gate on the tag tiers appropriate to that merge type
+**Public API**: `perform_triage_tags_gating(repo_root)` — detect current commit type via the top-level `commit_type` module, then gate on the tag tiers appropriate to that merge type
 
 Gating policy by commit type:
 
@@ -140,18 +140,18 @@ hupy/                             # installable package
   __init__.py                     # PROJ_LOGGER_NAME = "HU"
   __main__.py                     # `python -m hupy` entry point
   cli.py                          # argument parsing & dispatch
+  commit_type.py                  # classify in-progress commits
   kamilog.py                      # vendored logging module (v2.1.0)
   ttg/                            # Triage Tag Gating package
     __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
-    commit_type.py                # classify in-progress commits
     tt_detect.py                  # scan staged diffs for TT markers
     tt_gating.py                  # gate commits by TT tier
 examples/ttg/                     # 6 runnable demo scripts (fail/pass/skip)
 tests/
-  ttg/                            # mirrors hupy/ttg/
+  commit_type_test.py             # 9 tests for get_current_commit_type
+  ttg/                            # TTG-specific tests
     conftest.py                   # shared `repo_dir` fixture
     prep_repo.py                  # scenario repo generator (CLI + importable)
-    ttg-commit_type_test.py
     ttg-tt_detect_test.py
     ttg-tt_gating_feature_finish_test.py
     ttg-tt_gating_version_release_test.py
