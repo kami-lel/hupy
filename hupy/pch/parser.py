@@ -1,0 +1,40 @@
+"""
+parser.py
+
+prepend commit header CLI parser and subcommand registration
+"""
+
+from hupy import PROJ_LOGGER_NAME
+from hupy.kamilog import (
+    add_verbose_arguments,
+    set_logging_level_by_verbosity,
+)
+
+
+def _pch_main(args):
+    """
+    dispatch for the ``prepend_commit_header`` subcommand.
+
+
+    :param args: parsed arguments from argparse
+    :type args: argparse.Namespace
+    """
+    set_logging_level_by_verbosity(args, logger_name=PROJ_LOGGER_NAME)
+    # TODO implement prepend_commit_header functionality
+
+
+def register_cli_pch_parser(cli_subparser):
+    """
+    register the ``prepend_commit_header`` subcommand parser.
+
+
+    :param cli_subparser: subparsers action from the main argument parser
+    :type cli_subparser: argparse._SubParsersAction
+    """
+    pch_parser = cli_subparser.add_parser(
+        "prepend_commit_header",
+        aliases=["pch"],
+        help="generate better commit message headers for merge commits",
+    )
+    add_verbose_arguments(pch_parser)
+    pch_parser.set_defaults(func=_pch_main)
