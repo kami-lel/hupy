@@ -23,12 +23,10 @@ fi
 
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
-printf "%s\n\n%s\n%s\n%s\n" \
-    "$DEMO_SCRIPT" \
-    "scenario:	Version Release, multiple files with multiple gating TT" \
-    "expected:	FAIL" \
-    "reason:	Loud/Steady tags in both a.py and b.py (multiple files, multiple TT)" \
-    | "$PYTHON" -m hupy.kamilog cb0
+printf "%s\n" "$DEMO_SCRIPT" | "$PYTHON" -m hupy.kamilog cb0
+printf "scenario:\tVersion Release, multiple files with multiple gating TT\n"
+printf "expected:\tFAIL\n"
+printf "reason:\tLoud/Steady tags in both a.py and b.py (multiple files, multiple TT)\n"
 echo
 
 printf "TTG" | "$PYTHON" -m hupy.kamilog cb c "#"

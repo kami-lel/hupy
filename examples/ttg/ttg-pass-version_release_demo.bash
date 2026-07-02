@@ -22,11 +22,9 @@ fi
 
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
-printf "%s\n\n%s\n%s\n" \
-    "$DEMO_SCRIPT" \
-    "scenario:	Version Release, multiple files (quiet only, no loud/steady)" \
-    "expected:	PASS" \
-    | "$PYTHON" -m hupy.kamilog cb0
+printf "%s\n" "$DEMO_SCRIPT" | "$PYTHON" -m hupy.kamilog cb0
+printf "scenario:\tVersion Release, multiple files (quiet only, no loud/steady)\n"
+printf "expected:\tPASS\n"
 echo
 
 printf "TTG" | "$PYTHON" -m hupy.kamilog cb c "#"

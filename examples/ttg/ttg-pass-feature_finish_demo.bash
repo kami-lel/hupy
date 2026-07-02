@@ -23,11 +23,9 @@ fi
 
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
-printf "%s\n\n%s\n%s\n" \
-    "$DEMO_SCRIPT" \
-    "scenario:	Feature Finish, multiple files (steady + quiet, no loud)" \
-    "expected:	PASS" \
-    | "$PYTHON" -m hupy.kamilog cb0
+printf "%s\n" "$DEMO_SCRIPT" | "$PYTHON" -m hupy.kamilog cb0
+printf "scenario:\tFeature Finish, multiple files (steady + quiet, no loud)\n"
+printf "expected:\tPASS\n"
 echo
 
 printf "TTG" | "$PYTHON" -m hupy.kamilog cb c "#"
