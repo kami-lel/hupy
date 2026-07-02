@@ -23,8 +23,6 @@ logger = getLogger(PCH_LOGGER_NAME)
 
 # helpers  #####################################################################
 
-# TODO unit tests
-
 
 def _gen_feature_finish_header_content(repo):
     """
