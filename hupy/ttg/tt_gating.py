@@ -96,7 +96,7 @@ def perform_triage_tags_gating(repo_root):
         )
 
     else:
-        logger.skip("irrelevant commit/merge type")
+        logger.skip("regular commit/merge")
         return
 
     logger.pass_("no gated TT found")
