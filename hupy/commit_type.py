@@ -82,17 +82,16 @@ def _is_pull_merge(repo, sha, target_branch):
 # Public API ###################################################################
 
 
-def get_source_branch(repo_path):
+def get_source_branch(repo):
     """
     get the source branch name of the current merge
 
 
-    :param repo_path: path to the git repository or any of its subdirectories
-    :type repo_path: str
+    :param repo: git repository object
+    :type repo: git.Repo
     :return: name of the source branch being merged
     :rtype: str
     """
-    repo = git.Repo(repo_path, search_parent_directories=True)
     merge_head_path = os.path.join(repo.git_dir, "MERGE_HEAD")
     with open(merge_head_path, encoding="utf-8") as f:
         sha = f.read().strip()
@@ -138,7 +137,7 @@ def get_current_commit_type(repo_path):
         logger.debug("detect pull merge")
         return CommitType.OTHER_MERGE
 
-    source = get_source_branch(repo_path)
+    source = get_source_branch(repo)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
         logger.debug("detect Feature Finish merge")

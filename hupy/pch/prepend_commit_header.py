@@ -11,7 +11,11 @@ import git
 
 from hupy.kamilog import getLogger
 from . import PCH_LOGGER_NAME
-from ..commit_type import CommitType, get_current_commit_type
+from ..commit_type import (
+    CommitType,
+    get_current_commit_type,
+    get_source_branch,
+)
 
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
@@ -25,26 +29,9 @@ logger = getLogger(PCH_LOGGER_NAME)
 def _gen_feature_finish_header_content(repo):
     """
     generate header content for Feature Finish commit type.
-
-    :param repo: git repository object
-    :type repo: git.Repo
-    :return: header string with Feature Finish and feature branch name
-    :rtype: str
     """
-    merge_head_path = os.path.join(repo.git_dir, "MERGE_HEAD")
-
-    # FIXME use the function
-    # FIXME update set up example
-
-    if os.path.exists(merge_head_path):
-        with open(merge_head_path, encoding="utf-8") as f:
-            merge_commit_sha = f.read().strip()
-        for ref in repo.references:
-            if ref.commit.hexsha.startswith(merge_commit_sha):
-                branch_name = ref.name.split("/")[-1]
-                return f"Feature Finish: {branch_name}"
-
-    return "Feature Finish"
+    branch_name = get_source_branch(repo)
+    return "Feature Finish: {}".format(branch_name)
 
 
 def _gen_version_release_header_content():
