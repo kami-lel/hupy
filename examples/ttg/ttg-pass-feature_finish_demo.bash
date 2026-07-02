@@ -2,7 +2,7 @@
 #
 # ttg-pass-feature_finish_demo.bash
 #
-# demo: Feature Finish merge (feature/x into develop) staging two
+# demo: Feature Finish merge (add-user-authentication into develop) staging two
 # files — a.py with a STEADY "# Todo steady marker" comment and
 # b.py with a QUIET "# todo quiet marker" comment (no Loud tags
 # anywhere)

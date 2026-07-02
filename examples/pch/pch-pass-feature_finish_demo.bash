@@ -2,7 +2,7 @@
 #
 # pch-pass-feature_finish_demo.bash
 #
-# demo: Feature Finish merge (feature/x into develop) with the
+# demo: Feature Finish merge (add-user-authentication into develop) with the
 # in-progress merge message copied into COMMIT_EDITMSG (mirroring
 # what git itself does before invoking the commit-msg hook)
 # expected result: header prepended to COMMIT_EDITMSG
@@ -23,7 +23,7 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 printf "%s\n" "$DEMO_SCRIPT" | "$PYTHON" -m hupy.kamilog cb0
-printf "scenario:\tFeature Finish merge (feature/x into develop)\n"
+printf "scenario:\tFeature Finish merge (add-user-authentication into develop)\n"
 printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
 echo
 

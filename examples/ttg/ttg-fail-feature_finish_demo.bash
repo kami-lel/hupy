@@ -2,7 +2,7 @@
 #
 # ttg-fail-feature_finish_demo.bash
 #
-# demo: Feature Finish merge (feature/x into develop) staging three
+# demo: Feature Finish merge (add-user-authentication into develop) staging three
 # files — a.py with 1 LOUD tag, b.py with 2 LOUD tags (multiple TT
 # in a single file), and c.py with a QUIET tag
 # expected result: fail (Feature Finish gates the Loud tier; both
