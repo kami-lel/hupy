@@ -1,5 +1,5 @@
 """
-ttg-commit_type_test.py
+commit_type_test.py
 
 tests for the `get_current_commit_type` function in `commit_type.py`
 """
@@ -9,9 +9,9 @@ from pathlib import Path
 import git
 import pytest
 
-from hupy.ttg.commit_type import CommitType, get_current_commit_type
+from hupy.commit_type import CommitType, get_current_commit_type
 
-_TESTEE_ROOT = Path(__file__).parent.parent / "testee"
+_TESTEE_ROOT = Path(__file__).parent / "testee"
 
 
 # fixtures  #####################################################################

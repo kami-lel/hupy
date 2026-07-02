@@ -1,7 +1,7 @@
 """
 __init__.py
 
-triage tag gating and commit type detection module
+triage tag gating module
 """
 
 from hupy import PROJ_LOGGER_NAME
