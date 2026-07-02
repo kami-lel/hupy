@@ -8,7 +8,7 @@ block commits that introduce triage tags on protected branches
 import subprocess
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.kamilog import getLogger, gen_line_padding_centered
+from hupy.kamilog import getLogger, gen_comment_banner_centered
 from .commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
@@ -61,7 +61,7 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         logger.fail("gated Triage Tags found")
         msg_lines = [""]
         for file_path, results in filtered_results.items():
-            msg_lines.append(gen_line_padding_centered(file_path, "-"))
+            msg_lines.append(gen_comment_banner_centered(file_path, "-"))
             for _, line in results:
                 # todo print gated TT in colored highlighting
                 msg_lines.append(line.strip())
