@@ -32,19 +32,6 @@ SCENARIOS = (
 # helpers  #####################################################################
 
 
-def _commit_file(repo_dir, filename, content):
-    (Path(repo_dir) / filename).write_text(content)
-    repo = git.Repo(str(repo_dir))
-    repo.index.add([filename])
-    repo.index.commit("add {}".format(filename))
-
-
-def _stage_file(repo_dir, filename, content):
-    (Path(repo_dir) / filename).write_text(content)
-    repo = git.Repo(str(repo_dir))
-    repo.index.add([filename])
-
-
 def _commit_fixture(repo_dir, filename, fixture_name):
     src = str(_FIXTURES_ROOT / fixture_name)
     dst = str(Path(repo_dir) / filename)
@@ -54,10 +41,18 @@ def _commit_fixture(repo_dir, filename, fixture_name):
     repo.index.commit("add {}".format(filename))
 
 
+def _stage_fixture(repo_dir, filename, fixture_name):
+    src = str(_FIXTURES_ROOT / fixture_name)
+    dst = str(Path(repo_dir) / filename)
+    shutil.copyfile(src, dst)
+    repo = git.Repo(str(repo_dir))
+    repo.index.add([filename])
+
+
 def _setup_non_merge_commit(repo_dir):
     # regular commit in progress (no MERGE_HEAD): TTG must skip
     # regardless of the TT tier staged here
-    _stage_file(repo_dir, "feature.py", "# TODO should be ignored\n")
+    _stage_fixture(repo_dir, "feature.py", "non_merge_commit_feature.py")
 
 
 def _setup_irrelevant_merge(repo_dir):
@@ -65,17 +60,17 @@ def _setup_irrelevant_merge(repo_dir):
     # skip regardless of commit type detail
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", "hotfix")
-    _commit_file(repo_dir, "hotfix.py", "# fix\n")
+    _commit_fixture(repo_dir, "hotfix.py", "irrelevant_merge_hotfix.py")
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.checkout("-q", "-b", "release")
-    _commit_file(repo_dir, "release.py", "# release\n")
+    _commit_fixture(repo_dir, "release.py", "irrelevant_merge_release.py")
     repo.git.merge("--no-commit", "--no-ff", "hotfix")
 
 
 def _setup_feature_finish(repo_dir, fixture_name):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
-    _commit_file(repo_dir, "develop.py", "# develop base\n")
+    _commit_fixture(repo_dir, "develop.py", "feature_finish_develop.py")
     repo.git.checkout("-q", "-b", "feature/x")
     _commit_fixture(repo_dir, "feature.py", fixture_name)
     repo.git.checkout("-q", DEV_BRANCH)
