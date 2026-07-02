@@ -4,7 +4,7 @@ commit_type.py
 identify the type of an in-progress git commit
 """
 
-# Todo level up commit type & expose as CLI
+# TODO level up commit type & expose as CLI
 
 import os
 from enum import Flag, auto
