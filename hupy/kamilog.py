@@ -2,13 +2,13 @@
 kamilog.py
 
 Lightweight Python logging wrapper with custom log levels, structured output,
-ANSI colored logging, verbosity control, line-padding utilities, and CLI.
+ANSI colored logging, verbosity control, comment banner utilities, and CLI.
 
 Q.v. https://github.com/kami-lel/kamilog for Project Main Page
 Q.v. https://github.com/kami-lel/kamilog/tree/main/docs for Documentation
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging
 import sys
 import time
@@ -42,15 +42,16 @@ __all__ = (
     "DATEFMT_TIME_MS",
     "DATEFMT_DATETIME",
     "DATEFMT_DATETIME_MS",
-    # line padding
-    "gen_line_padding_centered",
-    "gen_line_padding_left_just",
-    "gen_line_padding_right_just",
+    # comment banner
+    "gen_comment_banner_centered",
+    "gen_comment_banner_left_just",
+    "gen_comment_banner_right_just",
+    "gen_comment_banner_zero",
 )
 
 
 # metadata  ####################################################################
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "kamiLeL"
 
 
@@ -774,13 +775,14 @@ def set_logging_level_by_verbosity(namespace, *, logger=None, logger_name=None):
     logger.setLevel(_calc_logging_level_from_verbosity_namespace(namespace))
 
 
-# Line Padding  ################################################################
+# Comment Banner  #############################################################
 
 
 _CONTENT_SPACING = "  "
+_PADDING_MAP = {1: "#", 2: "=", 3: "*", 4: "+", 5: "-"}
 
 
-def _gen_line_padding_generic(
+def _gen_comment_banner_generic(
     mode,
     content,
     padding,
@@ -797,6 +799,11 @@ def _gen_line_padding_generic(
             ``"c"`` centered, ``"l"`` left-justified, ``"r"`` right-justified
     :type mode: str
     """
+    if isinstance(padding, int):
+        if padding not in _PADDING_MAP:
+            raise ValueError("param padding int must be 1~5")
+        padding = _PADDING_MAP[padding]
+
     if "\n" in content:
         raise ValueError("param content must be a single line")
     if len(content) > line_width:
@@ -842,10 +849,10 @@ def _gen_line_padding_generic(
     return padded_content
 
 
-# Line Padding Public API  =====================================================
+# Comment Banner Public API  ==================================================
 
 
-def gen_line_padding_centered(*args, **kwargs):
+def gen_comment_banner_centered(*args, **kwargs):
     """
     generate a line with ``content`` centered,
     filling both sides with ``padding`` to reach ``line_width``.
@@ -856,8 +863,9 @@ def gen_line_padding_centered(*args, **kwargs):
     :param content: text to pad; must be a single, non-empty line no
             longer than ``line_width``
     :type content: str
-    :param padding: single printable non-space fill character
-    :type padding: str
+    :param padding: single printable non-space fill character, or int 1-5
+            (1: #, 2: =, 3: *, 4: +, 5: -)
+    :type padding: str or int
     :param line_width: total output width; defaults to ``80``
     :type line_width: int
     :param file: output stream, used only for ANSI TTY detection;
@@ -870,44 +878,101 @@ def gen_line_padding_centered(*args, **kwargs):
     :rtype: str
     :raises ValueError: if ``content`` contains ``"\\n"`` or exceeds
             ``line_width``; if ``padding`` is not exactly one printable
-            non-space character
+            non-space character or outside range 1-5 if int
     :example:
-    >>> gen_line_padding_centered("hi", "=", line_width=20)
+    >>> gen_comment_banner_centered("hi", "=", line_width=20)
+    '=======  hi  ======='
+    >>> gen_comment_banner_centered("hi", 2, line_width=20)
     '=======  hi  ======='
     """
-    return _gen_line_padding_generic("c", *args, **kwargs)
+    return _gen_comment_banner_generic("c", *args, **kwargs)
 
 
-def gen_line_padding_left_just(*args, **kwargs):
+def gen_comment_banner_left_just(*args, **kwargs):
     """
     generate a line with ``content`` left-justified,
     filling the right with ``padding``.
 
-    see :func:`gen_line_padding_centered` for parameter and error
+    see :func:`gen_comment_banner_centered` for parameter and error
     details.
 
 
     :example:
-    >>> gen_line_padding_left_just("hi", "=", line_width=20)
+    >>> gen_comment_banner_left_just("hi", "=", line_width=20)
+    'hi  ================'
+    >>> gen_comment_banner_left_just("hi", 2, line_width=20)
     'hi  ================'
     """
-    return _gen_line_padding_generic("l", *args, **kwargs)
+    return _gen_comment_banner_generic("l", *args, **kwargs)
 
 
-def gen_line_padding_right_just(*args, **kwargs):
+def gen_comment_banner_right_just(*args, **kwargs):
     """
     generate a line with ``content`` right-justified,
     filling the left with ``padding``.
 
-    see :func:`gen_line_padding_centered` for parameter and error
+    see :func:`gen_comment_banner_centered` for parameter and error
     details.
 
 
     :example:
-    >>> gen_line_padding_right_just("hi", "=", line_width=20)
+    >>> gen_comment_banner_right_just("hi", "=", line_width=20)
+    '================  hi'
+    >>> gen_comment_banner_right_just("hi", 2, line_width=20)
     '================  hi'
     """
-    return _gen_line_padding_generic("r", *args, **kwargs)
+    return _gen_comment_banner_generic("r", *args, **kwargs)
+
+
+def gen_comment_banner_zero(
+    lines, *, line_width=80, file=sys.stdout, renderer=None
+):
+    """
+    generate a multi-line boxed comment banner (CB0).
+
+    wraps each line with `# `, framed by top and bottom `#` rulers
+
+
+    :param lines: lines to include in the banner
+    :type lines: iterable of str
+    :param line_width: total output width; defaults to ``80``
+    :type line_width: int
+    :param file: output stream, used only for ANSI TTY detection;
+            defaults to ``sys.stdout``
+    :type file: IO
+    :param renderer: ANSI color renderer;
+            if ``None``, created from ``file`` argument
+    :type renderer: AnsiRenderer or None
+    :return: multi-line boxed banner as a string
+    :rtype: str
+    :raises ValueError: any line contains ``"\\n"`` or exceeds
+            ``line_width - 2`` (reserved for `# ` prefix)
+    :example:
+    >>> gen_comment_banner_zero(["line 1", "line 2"], line_width=20)
+    ####################
+    # line 1
+    # line 2
+    ####################
+    """
+    if renderer is None:
+        renderer = AnsiRenderer(file)
+
+    ruler = renderer.color_grey("#" * line_width)
+    formatted_lines = [ruler]
+
+    for line in lines:
+        if "\n" in line:
+            raise ValueError("param lines must not contain newlines")
+        if len(line) > line_width - 2:
+            raise ValueError(
+                "param line length {} exceeds line_width - 2 {}".format(
+                    len(line), line_width - 2
+                )
+            )
+        formatted_lines.append(renderer.color_grey("# ") + line)
+
+    formatted_lines.append(ruler)
+    return "\n".join(formatted_lines)
 
 
 # CLI  #########################################################################
@@ -921,18 +986,19 @@ cli_parser = ArgumentParser(
 cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
 cli_subparser = cli_parser.add_subparsers(title="subcommands")
 
-# line padding parser  =========================================================
+# comment banner parser  =======================================================
 
-_LINE_PADDING_DESC = "print content padded to line width"
+_COMMENT_BANNER_HELP = "print stdin content padded to line width"
 
 
-def _line_padding_parser_main(args):
+def _comment_banner_parser_main(args):
     mode_map = {"center": "c", "left": "l", "right": "r"}
     mode = mode_map.get(args.mode, args.mode)
     file = sys.stderr if args.stderr else sys.stdout
-    line = _gen_line_padding_generic(
+    content = sys.stdin.readline().rstrip("\n")  # single line from stdin
+    line = _gen_comment_banner_generic(
         mode,
-        args.content,
+        content,
         args.padding,
         line_width=args.line_width,
         file=file,
@@ -940,29 +1006,31 @@ def _line_padding_parser_main(args):
     print(line, file=file)
 
 
-line_padding_parser = cli_subparser.add_parser(
-    "line_padding",
-    help=_LINE_PADDING_DESC,
-    description=_LINE_PADDING_DESC,
-    aliases=["lp"],
+comment_banner_parser = cli_subparser.add_parser(
+    "comment_banner",
+    help=_COMMENT_BANNER_HELP,
+    description=(
+        _COMMENT_BANNER_HELP
+        + "\n\ncontent is read from stdin, as a single line\n\n"
+        "example:\n"
+        "  echo 'hello world' | python kamilog.py cb c '=' -w 20"
+    ),
+    formatter_class=RawDescriptionHelpFormatter,
+    aliases=["cb"],
 )
 
-line_padding_parser.add_argument(
+comment_banner_parser.add_argument(
     "mode",
     choices=["c", "l", "r", "center", "left", "right"],
     help="text alignment: c/center, l/left(-justified), r/right(-justified)",
 )
-line_padding_parser.add_argument(
-    "content",
-    metavar="CONTENT",
-    help="text to print; must be a single line no longer than line-width",
-)
-line_padding_parser.add_argument(
+
+comment_banner_parser.add_argument(
     "padding",
     metavar="PADDING",
-    help="single printable non-space fill character (e.g., #, -, =)",
+    help="fill char, or int 1~5 for CB1~CB5 preset (1:#/2:=/3:*/4:+/5:-)",
 )
-line_padding_parser.add_argument(
+comment_banner_parser.add_argument(
     "-w",
     "--line-width",
     type=int,
@@ -970,14 +1038,61 @@ line_padding_parser.add_argument(
     metavar="LINE_WIDTH",
     help="total character width of output line; default 80",
 )
-line_padding_parser.add_argument(
+comment_banner_parser.add_argument(
     "-e",
     "--stderr",
     action="store_true",
     help="print to stderr (instead of stdout)",
 )
 
-line_padding_parser.set_defaults(func=_line_padding_parser_main)
+comment_banner_parser.set_defaults(func=_comment_banner_parser_main)
+
+
+# cb0 parser  ==================================================================
+
+_CB0_HELP = "print multi-line boxed comment banner (CB0)"
+
+
+def _comment_banner_zero_parser_main(args):
+    file = sys.stderr if args.stderr else sys.stdout
+    lines = sys.stdin.read().splitlines()  # all lines from stdin
+    banner = gen_comment_banner_zero(
+        lines,
+        line_width=args.line_width,
+        file=file,
+    )
+    print(banner, file=file)
+
+
+comment_banner_zero_parser = cli_subparser.add_parser(
+    "comment_banner_zero",
+    help=_CB0_HELP,
+    description=(
+        _CB0_HELP
+        + "\n\nlines are read from stdin, one banner line per stdin line\n\n"
+        "example:\n"
+        "  printf 'line 1\\nline 2\\n' | python kamilog.py cb0 -w 20"
+    ),
+    formatter_class=RawDescriptionHelpFormatter,
+    aliases=["cb0"],
+)
+
+comment_banner_zero_parser.add_argument(
+    "-w",
+    "--line-width",
+    type=int,
+    default=80,
+    metavar="LINE_WIDTH",
+    help="total character width of output line; default 80",
+)
+comment_banner_zero_parser.add_argument(
+    "-e",
+    "--stderr",
+    action="store_true",
+    help="print to stderr (instead of stdout)",
+)
+
+comment_banner_zero_parser.set_defaults(func=_comment_banner_zero_parser_main)
 
 
 # Entry Point  =================================================================

@@ -62,10 +62,9 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         msg_lines = [""]
         for file_path, results in filtered_results.items():
             msg_lines.append(gen_line_padding_centered(file_path, "-"))
-            for tag, line in results:
-                # BUG do not include tag name
+            for _, line in results:
                 # todo print gated TT in colored highlighting
-                msg_lines.append("{}  {}".format(tag.name, line.strip()))
+                msg_lines.append(line.strip())
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)
 
