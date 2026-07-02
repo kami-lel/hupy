@@ -45,7 +45,7 @@ Two accepted forms:
 Scope runs to changed modules, not the full suite:
 
 ```bash
-pytest tests/<module>_test.py
+pytest tests/<pkg>/<pkg>-<module>_test.py
 ```
 
 Full suite (pre-merge only):
@@ -54,9 +54,9 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test files follow the pattern: `hupy/foo.py` → `tests/foo_test.py`
+Test files follow the pattern: `hupy/<pkg>/foo.py` → `tests/<pkg>/<pkg>-foo_test.py` (e.g. `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group when one module covers many behaviors).
 
-Tests use pytest fixtures (`repo_dir`, `repo`) and a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
+Tests use a `repo_dir` pytest fixture (`tests/<pkg>/conftest.py`) plus a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
 
 ## PR & Commit Instructions
 
@@ -68,5 +68,4 @@ Tests use pytest fixtures (`repo_dir`, `repo`) and a shared git bundle fixture (
 
 - update `AGENTS.md` when commands, conventions, or constraints change
 - update `CONTEXT.md` when architecture, module boundaries, or design decisions change
-- update `docs/` when module-level diagrams or reference pages change
 - never duplicate content between the two files
