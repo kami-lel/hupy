@@ -10,5 +10,5 @@ PROJ_LOGGER_NAME = "HU"
 
 # Todo improve commit message
 
-# FIXME opmz all logger print outs
-# FIXME use logger error instead of current implementation?
+# FIXME FIXME opmz all logger print outs
+# FIXME FIXME use logger error instead of current implementation?

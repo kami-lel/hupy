@@ -20,6 +20,8 @@ def repo_dir(tmp_path):
 
 # tests  ########################################################################
 
+# TODO more comprehensive unit tests
+
 
 class TestPerformTriageTagsGating:
     def test_non_merge_commit_is_skipped(self, repo_dir):
