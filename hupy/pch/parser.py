@@ -4,6 +4,8 @@ parser.py
 prepend commit header CLI parser and subcommand registration
 """
 
+import os
+
 from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import (
     add_verbose_arguments,

@@ -51,7 +51,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 __author__ = "kamiLeL"
 
 
@@ -996,10 +996,11 @@ def _comment_banner_parser_main(args):
     mode = mode_map.get(args.mode, args.mode)
     file = sys.stderr if args.stderr else sys.stdout
     content = sys.stdin.readline().rstrip("\n")  # single line from stdin
+    padding = int(args.padding) if args.padding in "12345" else args.padding
     line = _gen_comment_banner_generic(
         mode,
         content,
-        args.padding,
+        padding,
         line_width=args.line_width,
         file=file,
     )
