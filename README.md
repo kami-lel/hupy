@@ -2,7 +2,10 @@
 
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
-<!-- Fixme write readme w/ installation & usage -->
+<!-- FIXME write readme w/ installation & usage
+TODO method to configs
+TODO example of how to use
+-->
 
 > [!NOTE]
 > Python reimplementation of the original bash `hooks_utility.sh`. Currently in **prototype**.
