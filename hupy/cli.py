@@ -7,14 +7,10 @@ from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import (
     add_verbose_arguments,
     set_logging_level_by_verbosity,
-    getLogger,
 )
 from hupy.ttg.tt_gating import perform_triage_tags_gating
 
 __all__ = ("cli_parser", "cli_subparser")
-
-
-proj_logger = getLogger(PROJ_LOGGER_NAME)
 
 # main parse  ##################################################################
 
