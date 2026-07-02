@@ -3,8 +3,9 @@
 # ttg-skip-irrelevant_merge_demo.bash
 #
 # demo: merging two unrelated, non-protected branches (hotfix into
-# release), staging a Loud fix comment along the way
-# expected result: skip
+# release); the hotfix side stages two files — a.py with a LOUD
+# "# TODO loud marker" comment and b.py with no tags at all
+# expected result: skip (merge type is not Feature Finish or Version Release)
 
 set -euo pipefail
 
@@ -22,7 +23,7 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 "$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
-printf "scenario:\tIrrelevant merge (hotfix to release)\n"
+printf "scenario:\tIrrelevant merge (hotfix to release), multiple files (loud + clean)\n"
 printf "expected:\tSKIP\n"
 echo
 

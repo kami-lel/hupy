@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 #
-# ttg-pass-version_release_quiet_only_demo.bash
+# ttg-pass-version_release_demo.bash
 #
-# demo: Version Release merge (develop into main) staging only a
-# QUIET "# todo skip me" comment (no Loud or Steady tags)
+# demo: Version Release merge (develop into main) staging two files
+# — a.py and b.py, each with only a QUIET "# todo quiet marker"
+# comment (no Loud or Steady tags anywhere)
 # expected result: pass
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SCENARIO="version_release_quiet_only"
+SCENARIO="version_release_pass"
 
 if [ -x "$REPO_ROOT/venv/bin/python3" ]; then
     PYTHON="$REPO_ROOT/venv/bin/python3"
@@ -22,7 +23,7 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 "$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
-printf "scenario:\tVersion Release with quiet TT\n"
+printf "scenario:\tVersion Release, multiple files (quiet only, no loud/steady)\n"
 printf "expected:\tPASS\n"
 echo
 

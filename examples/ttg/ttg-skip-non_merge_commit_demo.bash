@@ -2,8 +2,9 @@
 #
 # ttg-skip-non_merge_commit_demo.bash
 #
-# demo: a regular (non-merge) commit stages a Loud TODO
-# expected result: skip
+# demo: a regular (non-merge) commit stages two files — a.py with a
+# LOUD "# TODO loud marker" comment and b.py with no tags at all
+# expected result: skip (TTG only gates in-progress merges)
 
 set -euo pipefail
 
@@ -21,7 +22,7 @@ fi
 DEMO_SCRIPT="$(basename "${BASH_SOURCE[0]}")"
 
 "$PYTHON" -m hupy.kamilog lp c "$DEMO_SCRIPT" "#"
-printf "scenario:\tNon-merge commit\n"
+printf "scenario:\tNon-merge commit, multiple files (loud + clean)\n"
 printf "expected:\tSKIP\n"
 echo
 

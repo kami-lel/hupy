@@ -29,10 +29,10 @@ COMMIT_BUCKETS = (
 SCENARIOS = (
     "non_merge_commit",
     "irrelevant_merge",
-    "feature_finish_loud",
-    "feature_finish_steady_only",
-    "version_release_steady",
-    "version_release_quiet_only",
+    "feature_finish_fail",
+    "feature_finish_pass",
+    "version_release_fail",
+    "version_release_pass",
 )
 
 
@@ -104,31 +104,41 @@ _BUCKET_SETUP_FUNCS = {
 }
 
 # legacy scenario -> (bucket, default files) presets, kept so the
-# ``examples/ttg`` bash demos and the CLI below keep working unchanged
+# ``examples/ttg`` bash demos and the CLI below keep working unchanged.
+# each preset mirrors the most file-and-tag-heavy unit test case for
+# its bucket (see tests/ttg/ttg-tt_gating_*_test.py)
 _LEGACY_SCENARIO_PRESETS = {
     "non_merge_commit": (
         "non_merge_commit",
-        {"feature.py": "non_merge_commit_feature.py"},
+        {"a.py": "tt_loud_only.py", "b.py": "tt_none.py"},
     ),
     "irrelevant_merge": (
         "regular_merge",
-        {"hotfix.py": "irrelevant_merge_hotfix.py"},
+        {"a.py": "tt_loud_only.py", "b.py": "tt_none.py"},
     ),
-    "feature_finish_loud": (
+    "feature_finish_fail": (
         "feature_finish",
-        {"feature.py": "feature_finish_loud.py"},
+        {
+            "a.py": "tt_loud_only.py",
+            "b.py": "tt_none.py",
+            "c.py": "tt_steady_only.py",
+        },
     ),
-    "feature_finish_steady_only": (
+    "feature_finish_pass": (
         "feature_finish",
-        {"feature.py": "feature_finish_steady_only.py"},
+        {"a.py": "tt_steady_only.py", "b.py": "tt_quiet_only.py"},
     ),
-    "version_release_steady": (
+    "version_release_fail": (
         "version_release",
-        {"release.py": "version_release_steady.py"},
+        {
+            "a.py": "tt_steady_only.py",
+            "b.py": "tt_none.py",
+            "c.py": "tt_quiet_only.py",
+        },
     ),
-    "version_release_quiet_only": (
+    "version_release_pass": (
         "version_release",
-        {"release.py": "version_release_quiet_only.py"},
+        {"a.py": "tt_quiet_only.py", "b.py": "tt_quiet_only.py"},
     ),
 }
 
