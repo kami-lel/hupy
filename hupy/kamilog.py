@@ -51,7 +51,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 __author__ = "kamiLeL"
 
 
@@ -73,9 +73,9 @@ class _CustomLogLevel(IntEnum):
         obj.display = display
         return obj
 
-    ENTER = (11, "ENTER")
-    SKIP = (12, "SKIP ")
-    SUCC = (15, "SUCC.")
+    ENTER = (15, "ENTER")
+    SKIP = (16, "SKIP ")
+    SUCC = (17, "SUCC.")
     PASS = (21, "PASS ")
     DONE = (25, "DONE ")
     FAIL = (45, "FAIL ")
@@ -195,9 +195,9 @@ class AnsiRenderer:  # =========================================================
 
 NOTSET = logging.NOTSET  # 0
 DEBUG = logging.DEBUG  # 10
-ENTER = _CustomLogLevel.ENTER  # 11
-SKIP = _CustomLogLevel.SKIP  # 12
-SUCC = _CustomLogLevel.SUCC  # 15
+ENTER = _CustomLogLevel.ENTER  # 15
+SKIP = _CustomLogLevel.SKIP  # 16
+SUCC = _CustomLogLevel.SUCC  # 17
 INFO = logging.INFO  # 20
 PASS = _CustomLogLevel.PASS  # 21
 DONE = _CustomLogLevel.DONE  # 25
@@ -224,7 +224,7 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def enter(self, message, *args, **kwargs):
         """
-        log at ``ENTER`` level (11): entering a hook or test case.
+        log at ``ENTER`` level (15): entering a hook or test case.
         """
         if self.isEnabledFor(_CustomLogLevel.ENTER):
             self._log(
@@ -233,11 +233,20 @@ class KamiLogger(logging.Logger):  # ===========================================
 
     def skip(self, message, *args, **kwargs):
         """
-        log at ``SKIP`` level (12): skipping a hook or test case.
+        log at ``SKIP`` level (16): skipping a hook or test case.
         """
         if self.isEnabledFor(_CustomLogLevel.SKIP):
             self._log(
                 _CustomLogLevel.SKIP, message, args, stacklevel=2, **kwargs
+            )
+
+    def succ(self, message, *args, **kwargs):
+        """
+        log at ``SUCC`` level (17): task or operation succeeded.
+        """
+        if self.isEnabledFor(_CustomLogLevel.SUCC):
+            self._log(
+                _CustomLogLevel.SUCC, message, args, stacklevel=2, **kwargs
             )
 
     def pass_(self, message, *args, **kwargs):
@@ -247,15 +256,6 @@ class KamiLogger(logging.Logger):  # ===========================================
         if self.isEnabledFor(_CustomLogLevel.PASS):
             self._log(
                 _CustomLogLevel.PASS, message, args, stacklevel=2, **kwargs
-            )
-
-    def succ(self, message, *args, **kwargs):
-        """
-        log at ``SUCC`` level (22): task or operation succeeded.
-        """
-        if self.isEnabledFor(_CustomLogLevel.SUCC):
-            self._log(
-                _CustomLogLevel.SUCC, message, args, stacklevel=2, **kwargs
             )
 
     def done(self, message, *args, **kwargs):
@@ -705,7 +705,7 @@ def _calc_logging_level_from_verbosity(verbosity):
     if verbosity >= 3:
         return logging.DEBUG
     elif verbosity == 2:
-        return SUCC
+        return ENTER
     elif verbosity == 1:
         return logging.INFO
     elif verbosity == 0:
@@ -996,10 +996,11 @@ def _comment_banner_parser_main(args):
     mode = mode_map.get(args.mode, args.mode)
     file = sys.stderr if args.stderr else sys.stdout
     content = sys.stdin.readline().rstrip("\n")  # single line from stdin
+    padding = int(args.padding) if args.padding in "12345" else args.padding
     line = _gen_comment_banner_generic(
         mode,
         content,
-        args.padding,
+        padding,
         line_width=args.line_width,
         file=file,
     )

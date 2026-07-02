@@ -4,7 +4,7 @@ commit_type.py
 identify the type of an in-progress git commit
 """
 
-# Todo consider expose commit type as part of CLI
+# todo consider expose commit type as part of cli
 
 import os
 from enum import Flag, auto
@@ -21,7 +21,7 @@ logger = getLogger(PROJ_LOGGER_NAME + ".commit_type")
 # constants  ###################################################################
 
 MAIN_BRANCH = "main"
-DEV_BRANCH = "develop"
+DEV_BRANCH = "dev"
 
 
 class CommitType(Flag):  #######################################################
@@ -59,13 +59,6 @@ def _read_merge_head(git_dir):
         return [ln.strip() for ln in f if ln.strip()]
 
 
-def _get_source_branch(repo, sha):
-    for branch in repo.branches:
-        if branch.commit.hexsha == sha:
-            return branch.name
-    return repo.git.name_rev("--name-only", sha)
-
-
 def _get_target_branch(repo):
     try:
         return repo.active_branch.name
@@ -87,6 +80,27 @@ def _is_pull_merge(repo, sha, target_branch):
 
 
 # Public API ###################################################################
+
+
+def get_source_branch(repo):
+    """
+    get the source branch name of the current merge
+
+
+    :param repo: git repository object
+    :type repo: git.Repo
+    :return: name of the source branch being merged
+    :rtype: str
+    """
+    merge_head_path = os.path.join(repo.git_dir, "MERGE_HEAD")
+    with open(merge_head_path, encoding="utf-8") as f:
+        sha = f.read().strip()
+    for branch in repo.branches:
+        if branch.commit.hexsha == sha:
+            return branch.name
+    return repo.git.name_rev("--name-only", sha)
+
+
 def get_current_commit_type(repo_path):
     """
     return the type of the current in-progress commit
@@ -101,7 +115,7 @@ def get_current_commit_type(repo_path):
     :return: a public member of ``CommitType``
     :rtype: CommitType
     :example:
-    >>> get_current_commit_type()
+    >>> get_current_commit_type(repo_path)
     <CommitType.OTHER_COMMIT: ...>
     """
     repo = git.Repo(repo_path, search_parent_directories=True)
@@ -123,7 +137,7 @@ def get_current_commit_type(repo_path):
         logger.debug("detect pull merge")
         return CommitType.OTHER_MERGE
 
-    source = _get_source_branch(repo, sha)
+    source = get_source_branch(repo)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
         logger.debug("detect Feature Finish merge")

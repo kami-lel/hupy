@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-02 — refactored commit_type to top-level module; moved test file; cleaned up module hierarchy*
+*Last updated: 2026-07-02 — added PCH (Prepend Commit Header) module and comprehensive test suite; refactored CLI parsers into separate modules; fixed branch-name mismatch in commit_type_test.py*
 
 ## Project Overview
 
@@ -19,11 +19,11 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | `cli` | **implemented** | argument parsing, subcommand dispatch, CLI entrypoint |
 | `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
+| `pch` | **implemented** | prepend header lines to in-progress commit messages for Feature Finish and Version Release merges |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
 | `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches |
 | `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit |
-| `improve_commit_message` | not yet implemented | generate better messages for merge commit types |
 
 ### Design Principles
 
@@ -53,9 +53,23 @@ Classification logic (in order):
 5. source == `DEV_BRANCH` and target == `MAIN_BRANCH` → `VERSION_RELEASE`
 6. all other merges → `OTHER_MERGE`
 
-Module-level constants `MAIN_BRANCH = "main"` and `DEV_BRANCH = "develop"` control branch name matching. `CHERRY_PICK_HEAD` and `REVERT_HEAD` detection is present in git but the corresponding `CommitType` members are not yet defined.
+Module-level constants `MAIN_BRANCH = "main"` and `DEV_BRANCH = "dev"` control branch name matching. `CHERRY_PICK_HEAD` and `REVERT_HEAD` detection is present in git but the corresponding `CommitType` members are not yet defined.
 
 `_is_pull_merge(repo, sha, target_branch)` returns `False` early if `target_branch` is `None` (detached HEAD) to avoid `TypeError` when accessing `remote.refs[None]`.
+
+### `pch`
+
+Prepend Commit Header — rewrites in-progress commit messages to prepend informational headers for merge commits.
+
+**Public API**: `prepend_commit_header(repo_root)` — detect current commit type via the top-level `commit_type` module, then prepend an appropriate header and rewrite `.git/COMMIT_EDITMSG`
+
+Header generation logic:
+
+- `FEATURE_FINISH` merge → `"Feature Finish: <source-branch-name>"` + blank line + original message
+- `VERSION_RELEASE` merge → `"Version Release"` + blank line + original message
+- all other commit types → file left untouched, no exception
+
+The rewrite separates comment lines (starting with `#`) from content, placing all comments after the content block to preserve git's template comments. Non-destructive on failure: if the atomic write via `os.replace()` fails, the original file is untouched and the temporary file is cleaned up.
 
 ### `ttg.tt_detect`
 
@@ -91,8 +105,11 @@ Argument parser and entrypoint for the `hupy` command-line tool.
 **Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action)
 
 - **main parser** — prog name and description sourced from `__package__` and module docstring
-- **subcommand parsers** — registered at module load time; each owns its own argument setup and dispatch function
-- **current subcommands** — `triage_tag_gating` / `ttg` (alias): calls `perform_triage_tags_gating(os.getcwd())`, after applying `-v`/`-q` verbosity to the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger — child loggers (`"HU.TTG"`, `"HU.commit_type"`) inherit this level since they set none of their own
+- **subcommand parsers** — registered at module load time in separate modules (`ttg/parser.py`, `pch/parser.py`); each owns its own argument setup and dispatch function
+- **current subcommands**:
+  - `triage_tag_gating` / `ttg` (alias) — calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity
+  - `prepend_commit_header` / `pch` (alias) — calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity
+- **verbosity** — `-v`/`-q` flags apply to the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.commit_type"`) inherit this level since they set none of their own
 
 Dispatch follows a standard pattern: subcommand dispatch functions receive the parsed `argparse.Namespace` and call the corresponding utility function.
 
@@ -142,13 +159,27 @@ hupy/                             # installable package
   cli.py                          # argument parsing & dispatch
   commit_type.py                  # classify in-progress commits
   kamilog.py                      # vendored logging module (v2.1.0)
+  pch/                            # Prepend Commit Header package
+    __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"
+    parser.py                     # CLI parser for pch subcommand
+    prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG
   ttg/                            # Triage Tag Gating package
     __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
+    parser.py                     # CLI parser for ttg subcommand
     tt_detect.py                  # scan staged diffs for TT markers
     tt_gating.py                  # gate commits by TT tier
-examples/ttg/                     # 6 runnable demo scripts (fail/pass/skip)
+examples/
+  pch/                            # 4 runnable PCH demo scripts (passes & skips)
+  ttg/                            # 6 runnable TTG demo scripts (fail/pass/skip)
 tests/
   commit_type_test.py             # 9 tests for get_current_commit_type
+  pch/                            # PCH-specific tests
+    conftest.py                   # shared `repo_dir` fixture, sys.path shim
+    pch_helpers.py                # COMMIT_EDITMSG seed/read helpers
+    pch-prepend_commit_header_skip_test.py
+    pch-prepend_commit_header_feature_finish_test.py
+    pch-prepend_commit_header_version_release_test.py
+    pch-prepend_commit_header_error_test.py
   ttg/                            # TTG-specific tests
     conftest.py                   # shared `repo_dir` fixture
     prep_repo.py                  # scenario repo generator (CLI + importable)

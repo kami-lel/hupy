@@ -80,11 +80,11 @@ def _setup_feature_finish(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     _commit_fixture(repo_dir, "develop.py", "feature_finish_develop.py")
-    repo.git.checkout("-q", "-b", "feature/x")
+    repo.git.checkout("-q", "-b", "add-user-authentication")
     for filename, fixture_name in files.items():
         _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", DEV_BRANCH)
-    repo.git.merge("--no-commit", "--no-ff", "feature/x")
+    repo.git.merge("--no-commit", "--no-ff", "add-user-authentication")
 
 
 def _setup_version_release(repo_dir, files):
