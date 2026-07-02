@@ -9,6 +9,7 @@ from hupy.kamilog import (
     add_verbose_arguments,
     set_logging_level_by_verbosity,
 )
+from hupy.pch import prepend_commit_header
 
 
 def _pch_main(args):
@@ -20,7 +21,7 @@ def _pch_main(args):
     :type args: argparse.Namespace
     """
     set_logging_level_by_verbosity(args, logger_name=PROJ_LOGGER_NAME)
-    # TODO implement prepend_commit_header functionality
+    prepend_commit_header(os.getcwd())
 
 
 def register_cli_pch_parser(cli_subparser):
