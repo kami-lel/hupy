@@ -20,13 +20,32 @@ pip install -e ".[dev]"
 - boolean functions and variables start with `is_` or `has_`: `is_protected`, `has_marker`
 - constants in `UPPER_CASE_WITH_UNDERSCORES`
 - max 80 chars per line
+- **no type hints** — no parameter annotations, no return annotations, no variable annotations
+- **no f-strings** — use `str.format()` for all string formatting
+
+## Docstring Style
+
+Sphinx/reStructuredText style throughout:
+
+- **public functions and methods** — always include a docstring
+- **private functions** (prefixed `_`) — optional; add one when the name alone is unclear
+- **classes** — always include a docstring under the `class` line; it also documents `__init__` args
+- **`__init__`** — never has its own docstring
+- **module** — first line is the filename, then a blank line, then a brief description
+
+Field order: `:param:` / `:type:` per arg, then `:raises:`, then `:return:` / `:rtype:`, then `:example:`
+
+Two accepted forms:
+
+- *Form 1* — summary, blank line, multi-line description, **two blank lines**, fields
+- *Form 2* — summary, **two blank lines**, fields
 
 ## Testing Instructions
 
 Scope runs to changed modules, not the full suite:
 
 ```bash
-pytest tests/test_<module>.py
+pytest tests/<pkg>/<pkg>-<module>_test.py
 ```
 
 Full suite (pre-merge only):
@@ -35,7 +54,9 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test files mirror source: `hupy/foo.py` → `tests/test_foo.py`
+Test files follow the pattern: `hupy/<pkg>/foo.py` → `tests/<pkg>/<pkg>-foo_test.py` (e.g. `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group when one module covers many behaviors).
+
+Tests use a `repo_dir` pytest fixture (`tests/<pkg>/conftest.py`) plus a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
 
 ## PR & Commit Instructions
 
