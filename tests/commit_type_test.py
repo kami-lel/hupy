@@ -73,42 +73,42 @@ class TestGetCurrentCommitType:
         assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
 
     def test_pull_merge_is_other_merge(self, repo, repo_dir):
-        repo.git.checkout("-q", "-b", "develop")
-        _commit(repo_dir, "develop")
-        sha_develop = _sha(repo_dir, "develop")
+        repo.git.checkout("-q", "-b", "dev")
+        _commit(repo_dir, "dev")
+        sha_dev = _sha(repo_dir, "dev")
         repo.git.remote("remove", "origin")
         repo.git.remote("add", "origin", "https://example.invalid/repo.git")
-        repo.git.update_ref("refs/remotes/origin/develop", sha_develop)
-        repo.git.checkout("-q", "develop")
-        _write_merge_head(repo_dir, sha_develop)
+        repo.git.update_ref("refs/remotes/origin/dev", sha_dev)
+        repo.git.checkout("-q", "dev")
+        _write_merge_head(repo_dir, sha_dev)
         assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
 
     def test_feature_finish_merge(self, repo, repo_dir):
-        repo.git.checkout("-q", "-b", "develop")
-        _commit(repo_dir, "develop")
+        repo.git.checkout("-q", "-b", "dev")
+        _commit(repo_dir, "dev")
         repo.git.checkout("-q", "-b", "add-user-authentication")
         _commit(repo_dir, "feature")
         sha_feature = _sha(repo_dir, "add-user-authentication")
-        repo.git.checkout("-q", "develop")
+        repo.git.checkout("-q", "dev")
         _write_merge_head(repo_dir, sha_feature)
         assert (
             get_current_commit_type(str(repo_dir)) == CommitType.FEATURE_FINISH
         )
 
     def test_version_release_merge(self, repo, repo_dir):
-        repo.git.checkout("-q", "-b", "develop")
-        _commit(repo_dir, "develop")
-        sha_develop = _sha(repo_dir, "develop")
+        repo.git.checkout("-q", "-b", "dev")
+        _commit(repo_dir, "dev")
+        sha_dev = _sha(repo_dir, "dev")
         repo.git.checkout("-q", "main")
-        _write_merge_head(repo_dir, sha_develop)
+        _write_merge_head(repo_dir, sha_dev)
         assert (
             get_current_commit_type(str(repo_dir)) == CommitType.VERSION_RELEASE
         )
 
-    def test_main_to_develop_boundary_is_other_merge(self, repo, repo_dir):
+    def test_main_to_dev_boundary_is_other_merge(self, repo, repo_dir):
         sha_main = _sha(repo_dir, "main")
-        repo.git.checkout("-q", "-b", "develop")
-        _commit(repo_dir, "develop")
+        repo.git.checkout("-q", "-b", "dev")
+        _commit(repo_dir, "dev")
         _write_merge_head(repo_dir, sha_main)
         assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
 
