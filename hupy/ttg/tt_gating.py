@@ -7,17 +7,14 @@ block commits that introduce triage tags on protected branches
 
 import subprocess
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import getLogger, gen_comment_banner_centered
+from ..ttg import TTG_LOGGER_NAME
 from .commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
 # logger  ######################################################################
-logger = getLogger(PROJ_LOGGER_NAME + ".TTG")
+logger = getLogger(TTG_LOGGER_NAME)
 
-
-# TODO opmz loggers for skip
-# TODO opmz loggers for pass
 
 # helpers  #####################################################################
 

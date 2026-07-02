@@ -9,11 +9,11 @@ import re
 import subprocess
 from enum import Flag, auto
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.kamilog import getLogger
+from hupy.ttg import TTG_LOGGER_NAME
 
 # logger  ######################################################################
-logger = getLogger(PROJ_LOGGER_NAME + ".TTD")
+logger = getLogger(TTG_LOGGER_NAME)
 
 
 # constants  ###################################################################
@@ -144,6 +144,8 @@ def detect_triage_tags_in_staged_file(file_path, repo_root=None):
     :return: list of tuples ``(tag_member, line)`` for detected tags
     :rtype: list
     """
+    logger.debug("search TT in: " + str(file_path))
+
     try:
         diff_output = subprocess.check_output(
             ("git", "diff", "--cached", "--", file_path),
