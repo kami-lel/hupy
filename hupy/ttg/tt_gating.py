@@ -6,9 +6,10 @@ block commits that introduce triage tags on protected branches
 """
 
 import subprocess
+import sys
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.kamilog import getLogger
+from hupy.kamilog import getLogger, print_line_padding_centered
 from .commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
@@ -31,9 +32,9 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             .strip()
             .split("\n")
         )
-    except subprocess.CalledProcessError:
-        logger.skip("unable to get git cached files")
-        return
+    except subprocess.CalledProcessError as e:
+        logger.critical("unable to get git cached files")
+        raise SystemExit(1) from e
 
     filtered_results = {}
 
@@ -55,14 +56,15 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             ]
 
     if filtered_results:
-        logger.fail("triage tags found")
+        logger.fail("gated Triage Tags found")
+        msg_lines = [""]
         for file_path, results in filtered_results.items():
-            logger.debug("file: {}".format(file_path))
+            # BUG this is wrong, wait kamilog to have better support
+            print_line_padding_centered(file_path, "-", file=sys.stderr)
             for tag, line in results:
-                logger.debug("  {} {}".format(tag.name, line.strip()))
+                msg_lines.append("{}  {}".format(tag.name, line.strip()))
+        logger.info("\n".join(msg_lines))
         raise SystemExit(1)
-
-    logger.pass_("no gating TT found")
 
 
 # Public API  ##################################################################
@@ -77,16 +79,16 @@ def perform_triage_tags_gating(repo_root):
             subdirectories
     :type repo_root: str
     """
-    logger.enter("perform TTG")
+    logger.enter("performing TTG")
 
     commit_type = get_current_commit_type(repo_root)
 
     if CommitType.FEATURE_FINISH in commit_type:
-        logger.info("TTG for Feature Finish merge")
+        logger.info("TTG on Feature Finish merge")
         _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
-        logger.info("TTG for Version Release merge")
+        logger.info("TTG on Version Release merge")
         _perform_triage_tags_by_filtering_group(
             repo_root, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
@@ -95,4 +97,4 @@ def perform_triage_tags_gating(repo_root):
         logger.skip("irrelevant commit/merge type")
         return
 
-    logger.pass_("finish TTG")
+    logger.pass_("no gated TT found")
