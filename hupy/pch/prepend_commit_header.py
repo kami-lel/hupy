@@ -19,10 +19,10 @@ logger = getLogger(PCH_LOGGER_NAME)
 
 # helpers  #####################################################################
 
-# TODO example & unit tests
+# TODO unit tests
 
 
-# BUG probably wrong
+# BUG wrong implementations
 def _prepend_commit_header_by_type(is_feature_finish, repo_root):
     """
     prepend a header line and a blank line to the commit message file.
