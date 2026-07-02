@@ -9,6 +9,13 @@ import re
 import subprocess
 from enum import Flag, auto
 
+from hupy import PROJ_LOGGER_NAME
+from hupy.kamilog import getLogger
+
+# logger  ######################################################################
+logger = getLogger(PROJ_LOGGER_NAME + ".TTD")
+
+
 # constants  ###################################################################
 
 _TT_PATTERN = (
@@ -144,8 +151,10 @@ def detect_triage_tags_in_staged_file(file_path, repo_root=None):
             stderr=subprocess.PIPE,
             cwd=repo_root,
         )
-    except subprocess.CalledProcessError:
-        return []
+    except subprocess.CalledProcessError as e:
+        # TODO unit test for this
+        logger.critical("unable to get git diff for file: %s", file_path)
+        raise SystemExit(1) from e
 
     results = []
 

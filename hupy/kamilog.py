@@ -43,14 +43,14 @@ __all__ = (
     "DATEFMT_DATETIME",
     "DATEFMT_DATETIME_MS",
     # line padding
-    "print_line_padding_centered",
-    "print_line_padding_left_just",
-    "print_line_padding_right_just",
+    "gen_line_padding_centered",
+    "gen_line_padding_left_just",
+    "gen_line_padding_right_just",
 )
 
 
 # metadata  ####################################################################
-__version__ = "1.8.0"
+__version__ = "2.0.0"
 __author__ = "kamiLeL"
 
 
@@ -780,19 +780,17 @@ def set_logging_level_by_verbosity(namespace, *, logger=None, logger_name=None):
 _CONTENT_SPACING = "  "
 
 
-def _print_line_padding_generic(
+def _gen_line_padding_generic(
     mode,
     content,
     padding,
     *,
     line_width=80,
-    end="\n",
     file=sys.stdout,
-    flush=False,
     renderer=None,
 ):
     """
-    print ``content`` padded to ``line_width``
+    return ``content`` padded to ``line_width``
 
 
     :param mode: text alignment:
@@ -841,77 +839,75 @@ def _print_line_padding_generic(
             + renderer.color_grey(padding * right)
         )
 
-    print(padded_content, end=end, file=file, flush=flush)
-    return renderer
+    return padded_content
 
 
 # Line Padding Public API  =====================================================
 
 
-def print_line_padding_centered(*args, **kwargs):
+def gen_line_padding_centered(*args, **kwargs):
     """
-    print ``content`` centered, filling both sides with ``padding`` to
-    reach ``line_width``.
+    generate a line with ``content`` centered,
+    filling both sides with ``padding`` to reach ``line_width``.
 
     when the remaining width is odd, the extra character goes to the right
 
 
-    :param content: text to print; must be a single, non-empty line no
+    :param content: text to pad; must be a single, non-empty line no
             longer than ``line_width``
     :type content: str
     :param padding: single printable non-space fill character
     :type padding: str
     :param line_width: total output width; defaults to ``80``
     :type line_width: int
-    :param end: appended after output; defaults to ``"\\n"``
-    :type end: str
-    :param file: output stream; defaults to ``sys.stdout``
+    :param file: output stream, used only for ANSI TTY detection;
+            defaults to ``sys.stdout``
     :type file: IO
-    :param flush: forcibly flush the stream; defaults to ``False``
-    :type flush: bool
     :param renderer: ANSI color renderer;
             if ``None``, created from ``file`` argument
     :type renderer: AnsiRenderer or None
-    :return: ANSI color renderer instance
-    :rtype: AnsiRenderer
+    :return: padded line content
+    :rtype: str
     :raises ValueError: if ``content`` contains ``"\\n"`` or exceeds
             ``line_width``; if ``padding`` is not exactly one printable
             non-space character
     :example:
-    >>> print_line_padding_centered("hi", "=", line_width=20)
-    =======  hi  =======
+    >>> gen_line_padding_centered("hi", "=", line_width=20)
+    '=======  hi  ======='
     """
-    return _print_line_padding_generic("c", *args, **kwargs)
+    return _gen_line_padding_generic("c", *args, **kwargs)
 
 
-def print_line_padding_left_just(*args, **kwargs):
+def gen_line_padding_left_just(*args, **kwargs):
     """
-    print ``content`` left-justified, filling the right with ``padding``.
+    generate a line with ``content`` left-justified,
+    filling the right with ``padding``.
 
-    see :func:`print_line_padding_centered` for parameter and error
+    see :func:`gen_line_padding_centered` for parameter and error
     details.
 
 
     :example:
-    >>> print_line_padding_left_just("hi", "=", line_width=20)
-    hi  ================
+    >>> gen_line_padding_left_just("hi", "=", line_width=20)
+    'hi  ================'
     """
-    return _print_line_padding_generic("l", *args, **kwargs)
+    return _gen_line_padding_generic("l", *args, **kwargs)
 
 
-def print_line_padding_right_just(*args, **kwargs):
+def gen_line_padding_right_just(*args, **kwargs):
     """
-    print ``content`` right-justified, filling the left with ``padding``.
+    generate a line with ``content`` right-justified,
+    filling the left with ``padding``.
 
-    see :func:`print_line_padding_centered` for parameter and error
+    see :func:`gen_line_padding_centered` for parameter and error
     details.
 
 
     :example:
-    >>> print_line_padding_right_just("hi", "=", line_width=20)
-    ================  hi
+    >>> gen_line_padding_right_just("hi", "=", line_width=20)
+    '================  hi'
     """
-    return _print_line_padding_generic("r", *args, **kwargs)
+    return _gen_line_padding_generic("r", *args, **kwargs)
 
 
 # CLI  #########################################################################
@@ -934,13 +930,14 @@ def _line_padding_parser_main(args):
     mode_map = {"center": "c", "left": "l", "right": "r"}
     mode = mode_map.get(args.mode, args.mode)
     file = sys.stderr if args.stderr else sys.stdout
-    _print_line_padding_generic(
+    line = _gen_line_padding_generic(
         mode,
         args.content,
         args.padding,
         line_width=args.line_width,
         file=file,
     )
+    print(line, file=file)
 
 
 line_padding_parser = cli_subparser.add_parser(

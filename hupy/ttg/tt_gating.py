@@ -6,10 +6,9 @@ block commits that introduce triage tags on protected branches
 """
 
 import subprocess
-import sys
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.kamilog import getLogger, print_line_padding_centered
+from hupy.kamilog import getLogger, gen_line_padding_centered
 from .commit_type import CommitType, get_current_commit_type
 from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
@@ -33,6 +32,7 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             .split("\n")
         )
     except subprocess.CalledProcessError as e:
+        # TODO unit test for this
         logger.critical("unable to get git cached files")
         raise SystemExit(1) from e
 
@@ -59,8 +59,7 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         logger.fail("gated Triage Tags found")
         msg_lines = [""]
         for file_path, results in filtered_results.items():
-            # BUG this is wrong, wait kamilog to have better support
-            print_line_padding_centered(file_path, "-", file=sys.stderr)
+            msg_lines.append(gen_line_padding_centered(file_path, "-"))
             for tag, line in results:
                 msg_lines.append("{}  {}".format(tag.name, line.strip()))
         logger.info("\n".join(msg_lines))
