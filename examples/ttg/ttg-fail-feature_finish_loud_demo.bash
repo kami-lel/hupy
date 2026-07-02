@@ -20,12 +20,14 @@ else
     export PYTHONPATH="$REPO_ROOT:${PYTHONPATH:-}"
 fi
 
-echo "== preparing demo repo (scenario: $SCENARIO) =="
+"$PYTHON" -m hupy.kamilog lp c \
+  "preparing demo repo (scenario: $SCENARIO)" "#"
 DEMO_REPO="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
-echo "demo repo: $DEMO_REPO"
+"$PYTHON" -m hupy.kamilog lp l "demo repo: $DEMO_REPO" "-"
 echo
 
-echo "== running: python -m hupy triage_tag_gating -vvv =="
+"$PYTHON" -m hupy.kamilog lp c \
+  "running: python -m hupy triage_tag_gating -vvv" "-"
 cd "$DEMO_REPO"
 if "$PYTHON" -m hupy triage_tag_gating -vvv; then
     EXIT_CODE=0
@@ -34,4 +36,5 @@ else
 fi
 
 echo
-echo "== TTG exit code: $EXIT_CODE (expected: 1, commit blocked) =="
+"$PYTHON" -m hupy.kamilog lp c \
+  "TTG exit code: $EXIT_CODE (expected: 1, commit blocked)" "-"
