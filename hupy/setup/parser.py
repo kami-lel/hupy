@@ -39,35 +39,6 @@ _HOOKS_TEMPLATES_DIR = (
 # helpers  #####################################################################
 
 
-def _copy_hooks_scripts(hooks_dir, force):
-    """
-    copy the default HUPy hooks scripts into ``hooks_dir``.
-
-
-    :param hooks_dir: destination directory for the hooks scripts
-    :type hooks_dir: pathlib.Path
-    :param force: override ``hooks_dir`` if it already exists
-    :type force: bool
-    :raises SystemExit: if ``hooks_dir`` already exists and ``force``
-            is ``False``
-    """
-    if hooks_dir.exists():
-        if not force:
-            logger.critical(
-                "hooks dir already exists: {} "
-                "(use -f/--force to override)".format(hooks_dir)
-            )
-            raise SystemExit(1)
-        logger.warning(
-            "overriding existing hooks scripts in: {}".format(hooks_dir)
-        )
-    else:
-        hooks_dir.mkdir(parents=True)
-
-    for template_file in _HOOKS_TEMPLATES_DIR.iterdir():
-        shutil.copy2(template_file, hooks_dir / template_file.name)
-
-
 def _init_main(args):
     """
     dispatch for the ``init`` subcommand.
@@ -83,7 +54,24 @@ def _init_main(args):
     hooks_dir = args.hooks_dir or root_path / "scripts" / "hupy-hooks"
     force = args.force
 
-    _copy_hooks_scripts(hooks_dir, force)
+    # copy hooks scripts  ------------------------------------------------------
+    # TODO mpv printed msg
+    if hooks_dir.exists():
+        if not force:
+            logger.critical(
+                "hooks dir already exists: {} "
+                "(use -f/--force to override)".format(hooks_dir)
+            )
+            raise SystemExit(1)
+
+        logger.warning(
+            "overriding existing hooks scripts in: {}".format(hooks_dir)
+        )
+    else:
+        hooks_dir.mkdir(parents=True)
+
+    for template_file in _HOOKS_TEMPLATES_DIR.iterdir():
+        shutil.copy2(template_file, hooks_dir / template_file.name)
 
     # TODO set up git hooksPath
     logger.done("HUPy Initialized for: {}".format(root_path))
