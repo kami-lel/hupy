@@ -1,12 +1,12 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-02 — added PCH (Prepend Commit Header) module and comprehensive test suite; refactored CLI parsers into separate modules; fixed branch-name mismatch in commit_type_test.py*
+*Last updated: 2026-07-05 — re-audited full source tree against docs; corrected stale status line (pch/improve_commit_message) and wrong `kamilog` level numbers (`ENTER`/`SKIP`/`SUCC`); noted in-code and README TODO/FIXME markers as gaps throughout Module Details; recorded the Hook Integration Model decision (bash script over the `pre-commit` framework)*
 
 ## Project Overview
 
 **hupy** (Hooks Utility Python) is a Python reimplementation of the bash `hooks_utility.sh` — a toolkit of utilities called from git hook scripts to enforce commit quality and branch hygiene.
 
-Status: **prototype** — `commit_type`, `kamilog`, `cli`, and the `ttg` package (Triage Tag Gating) are implemented; `branch_protection`, `ensure_file_edited`, and `improve_commit_message` are not yet started.
+Status: **prototype** — `commit_type`, `kamilog`, `cli`, `pch` (Prepend Commit Header), and the `ttg` package (Triage Tag Gating) are implemented; `branch_protection` and `ensure_file_edited` are not yet started.
 
 Package: `HUPy` (import name `hupy`) · build: `setuptools` · install: `pip install -e ".[dev]"` · dependency: `gitpython>=3.1`
 
@@ -22,14 +22,22 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | `pch` | **implemented** | prepend header lines to in-progress commit messages for Feature Finish and Version Release merges |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
-| `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches |
-| `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit |
+| `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches; README also flags a related scenario, blocking *direct* (non-merge) commits to `main` |
+| `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit; a bash-era utility being ported, per the `# Todo reimplement ensure file modified` marker in `hupy/__init__.py` |
 
 ### Design Principles
 
 - **composable** — each utility works alone or combined inside a hook script
 - **stateless** — relies on git state and file diffs; no persistent storage
 - **simple defaults** — sensible behavior out of the box
+
+### Hook Integration Model
+
+**Decision**: consumers wire `hupy` into git by copying a plain bash script into `.git/hooks/<name>` that calls the CLI directly (e.g. `python -m hupy ttg`, `python -m hupy pch`) — not by packaging `hupy` as a `pre-commit` (pre-commit.com) framework hook.
+
+Rejected the `pre-commit`-framework route: it would add a hard dependency on an external hook manager (install, `.pre-commit-config.yaml`, `rev:` pinning) on top of `hupy` itself, and its own packaging burden (`.pre-commit-hooks.yaml`, `language: python` entry points) — at odds with the *composable*/*simple defaults* principles above and with `hupy`'s bash-script origin. A `.pre-commit-hooks.yaml` may be revisited later as an optional secondary path, but is not planned work.
+
+Not yet implemented: `examples/{pch,ttg}/*.bash` today are demo/test scripts (see Testing Infrastructure) run standalone for scenario walkthroughs, not install-ready hook scripts a user copies into `.git/hooks/`; an installable example script is future work.
 
 ## Module Details
 
@@ -57,6 +65,8 @@ Module-level constants `MAIN_BRANCH = "main"` and `DEV_BRANCH = "dev"` control b
 
 `_is_pull_merge(repo, sha, target_branch)` returns `False` early if `target_branch` is `None` (detached HEAD) to avoid `TypeError` when accessing `remote.refs[None]`.
 
+Not yet exposed as its own CLI subcommand (`# todo consider expose commit type as part of cli`) — currently only consumed internally by `pch` and `ttg`.
+
 ### `pch`
 
 Prepend Commit Header — rewrites in-progress commit messages to prepend informational headers for merge commits.
@@ -66,10 +76,12 @@ Prepend Commit Header — rewrites in-progress commit messages to prepend inform
 Header generation logic:
 
 - `FEATURE_FINISH` merge → `"Feature Finish: <source-branch-name>"` + blank line + original message
-- `VERSION_RELEASE` merge → `"Version Release"` + blank line + original message
+- `VERSION_RELEASE` merge → `"Version Release"` + blank line + original message (no version number yet — `# Fixme get version` in `_gen_version_release_header_content`)
 - all other commit types → file left untouched, no exception
 
 The rewrite separates comment lines (starting with `#`) from content, placing all comments after the content block to preserve git's template comments. Non-destructive on failure: if the atomic write via `os.replace()` fails, the original file is untouched and the temporary file is cleaned up.
+
+README flags a planned scenario not yet covered by `examples/pch/`/`tests/pch/`: keeping a feature branch up to date by merging `dev` back *into* it (as opposed to the Feature Finish direction, feature → `dev`).
 
 ### `ttg.tt_detect`
 
@@ -81,6 +93,8 @@ Scans staged git diffs for triage tag annotation markers.
 
 - `TriageTagType.find_first_in_line(line)` — first tag match in a line, or `None`
 - `TriageTagType.filter_by_group(tags, group)` — keep only tags belonging to a group (e.g. `LOUDS`, `TODOS | STEADYS`)
+
+Detection is a plain regex word-boundary match on the whole added line — it does not check whether the match sits inside a comment for the file's language (`# todo detect TT with respect of code comment by file type`), so a tag appearing in a string literal or non-comment context would still register.
 
 ### `ttg.tt_gating`
 
@@ -94,7 +108,7 @@ Gating policy by commit type:
 - `VERSION_RELEASE` → gates `LOUDS | STEADYS`
 - anything else → skipped, no gating
 
-On a gated match, `_perform_triage_tags_by_filtering_group` builds a report (file name banners via `kamilog.gen_comment_banner_centered`, `"-"` fill) and raises `SystemExit(1)`.
+On a gated match, `_perform_triage_tags_by_filtering_group` builds a report (file name banners via `kamilog.gen_comment_banner_centered`, `"-"` fill) and raises `SystemExit(1)`. The reported lines are plain text — no highlighting on the matched tag itself yet (`# todo print gated TT in colored highlighting`).
 
 `tt_gating` and `tt_detect` share one logger, `TTG_LOGGER_NAME` (`"HU.TTG"`), defined in `hupy/ttg/__init__.py` **before** the `from .tt_gating import ...` line — `tt_gating` imports `TTG_LOGGER_NAME` back from the package `__init__`, so the definition must precede the import or it fails with a circular-import `ImportError`. `commit_type` keeps its own separate logger (`"HU.commit_type"`).
 
@@ -133,9 +147,9 @@ Custom log levels (numeric order):
 
 | level | value | meaning |
 |---|---|---|
-| `ENTER` | 11 | entering a hook or test case |
-| `SKIP` | 12 | skipping a hook or test case |
-| `SUCC` | 15 | task or operation succeeded |
+| `ENTER` | 15 | entering a hook or test case |
+| `SKIP` | 16 | skipping a hook or test case |
+| `SUCC` | 17 | task or operation succeeded |
 | `PASS` | 21 | hook or test case passed |
 | `DONE` | 25 | task or operation completed |
 | `FAIL` | 45 | hook or test case failed |

@@ -7,6 +7,10 @@ TODO method to configs
 TODO example of how to use
 -->
 
+
+<!-- todo add PCH more scenario eg keep up feature branch with dev -->
+<!-- todo ban direct commit to main -->
+
 > [!NOTE]
 > Python reimplementation of the original bash `hooks_utility.sh`. Currently in **prototype**.
 
