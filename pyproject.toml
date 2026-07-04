@@ -17,4 +17,4 @@ where = ["."]
 include = ["hupy*"]
 
 [tool.setuptools.package-data]
-hupy = ["hupy-hooks/*.bash"]
+hupy = ["default-hupy-hooks/*.bash"]

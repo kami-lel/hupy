@@ -33,7 +33,7 @@ performs:
 """
 
 _HOOKS_TEMPLATES_DIR = (
-    pathlib.Path(__file__).resolve().parent.parent / "hupy-hooks"
+    pathlib.Path(__file__).resolve().parent.parent / "default-hupy-hooks"
 )
 
 # helpers  #####################################################################
