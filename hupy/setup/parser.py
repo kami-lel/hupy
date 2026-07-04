@@ -68,18 +68,11 @@ def _copy_hooks_scripts(hooks_dir, force):
         shutil.copy2(template_file, target_path)
 
 
-def _configure_repo_hooks_path(root_path, hooks_dir):
+def _configure_repo_hooks_path(repo, hooks_dir):
     """
-    configure git's ``core.hooksPath`` for the repo at ``root_path``
+    configure git's ``core.hooksPath`` for ``repo``
     """
     logger.enter("configure git hooks path")
-
-    try:
-        # TODO move up
-        repo = git.Repo(root_path, search_parent_directories=True)
-    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
-        logger.exception("not a git repository: {}".format(root_path))
-        raise SystemExit(1) from e
 
     try:
         with repo.config_writer() as writer:
@@ -102,17 +95,24 @@ def _init_main(args):
     set_logging_level_by_verbosity(args, logger=logger)
 
     root_path = args.repo_root
-    hooks_dir = args.hooks_dir or root_path / "scripts" / "hupy-hooks"
-
-    logger.enter("HUPy Initialization for: {}".format(root_path))
-    logger.debug("hook scripts dir: {}".format(hooks_dir))
-
     force = args.force
 
-    _copy_hooks_scripts(hooks_dir, force)
-    _configure_repo_hooks_path(root_path, hooks_dir)
+    try:
+        repo = git.Repo(root_path, search_parent_directories=True)
+    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
+        logger.exception("not a Git repository: {}".format(root_path))
+        raise SystemExit(1) from e
 
-    logger.done("HUPy Initialized for: {}".format(root_path))
+    repo_root = pathlib.Path(repo.working_tree_dir)
+    hooks_dir = args.hooks_dir or (repo_root / "scripts" / "hupy-hooks")
+
+    logger.enter("HUPy Initialization for: {}".format(repo_root))
+    logger.debug("hook scripts dir: {}".format(hooks_dir))
+
+    _copy_hooks_scripts(hooks_dir, force)
+    _configure_repo_hooks_path(repo, hooks_dir)
+
+    logger.done("HUPy Initialized for: {}".format(repo_root))
 
 
 # Public API  ##################################################################
@@ -127,7 +127,7 @@ def register_cli_init_parser(cli_subparser):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    init_parser.add_argument(
+    init_parser.add_argument(  # BUG wrong description
         "repo_root",
         metavar="REPO_ROOT",
         nargs="?",
