@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-05 — re-audited full source tree against docs; corrected stale status line (pch/improve_commit_message) and wrong `kamilog` level numbers (`ENTER`/`SKIP`/`SUCC`); noted in-code and README TODO/FIXME markers as gaps throughout Module Details*
+*Last updated: 2026-07-05 — re-audited full source tree against docs; corrected stale status line (pch/improve_commit_message) and wrong `kamilog` level numbers (`ENTER`/`SKIP`/`SUCC`); noted in-code and README TODO/FIXME markers as gaps throughout Module Details; recorded the Hook Integration Model decision (bash script over the `pre-commit` framework)*
 
 ## Project Overview
 
@@ -30,6 +30,14 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 - **composable** — each utility works alone or combined inside a hook script
 - **stateless** — relies on git state and file diffs; no persistent storage
 - **simple defaults** — sensible behavior out of the box
+
+### Hook Integration Model
+
+**Decision**: consumers wire `hupy` into git by copying a plain bash script into `.git/hooks/<name>` that calls the CLI directly (e.g. `python -m hupy ttg`, `python -m hupy pch`) — not by packaging `hupy` as a `pre-commit` (pre-commit.com) framework hook.
+
+Rejected the `pre-commit`-framework route: it would add a hard dependency on an external hook manager (install, `.pre-commit-config.yaml`, `rev:` pinning) on top of `hupy` itself, and its own packaging burden (`.pre-commit-hooks.yaml`, `language: python` entry points) — at odds with the *composable*/*simple defaults* principles above and with `hupy`'s bash-script origin. A `.pre-commit-hooks.yaml` may be revisited later as an optional secondary path, but is not planned work.
+
+Not yet implemented: `examples/{pch,ttg}/*.bash` today are demo/test scripts (see Testing Infrastructure) run standalone for scenario walkthroughs, not install-ready hook scripts a user copies into `.git/hooks/`; an installable example script is future work.
 
 ## Module Details
 
