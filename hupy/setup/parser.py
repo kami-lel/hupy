@@ -3,6 +3,7 @@
 import argparse
 import os
 import pathlib
+import shutil
 
 from hupy.setup import SETUP_LOGGER_NAME
 
@@ -31,7 +32,40 @@ performs:
   instead of default untracked .git/hooks/
 """
 
+_HOOKS_TEMPLATES_DIR = (
+    pathlib.Path(__file__).resolve().parent.parent / "hupy-hooks"
+)
+
 # helpers  #####################################################################
+
+
+def _copy_hooks_scripts(hooks_dir, force):
+    """
+    copy the default HUPy hooks scripts into ``hooks_dir``.
+
+
+    :param hooks_dir: destination directory for the hooks scripts
+    :type hooks_dir: pathlib.Path
+    :param force: override ``hooks_dir`` if it already exists
+    :type force: bool
+    :raises SystemExit: if ``hooks_dir`` already exists and ``force``
+            is ``False``
+    """
+    if hooks_dir.exists():
+        if not force:
+            logger.critical(
+                "hooks dir already exists: {} "
+                "(use -f/--force to override)".format(hooks_dir)
+            )
+            raise SystemExit(1)
+        logger.warning(
+            "overriding existing hooks scripts in: {}".format(hooks_dir)
+        )
+    else:
+        hooks_dir.mkdir(parents=True)
+
+    for template_file in _HOOKS_TEMPLATES_DIR.iterdir():
+        shutil.copy2(template_file, hooks_dir / template_file.name)
 
 
 def _init_main(args):
@@ -47,10 +81,12 @@ def _init_main(args):
     logger.enter("HUPy Initialization")
     root_path = args.repo_root
     hooks_dir = args.hooks_dir or root_path / "scripts" / "hupy-hooks"
-    # TODO TODO mpl setups
-    logger.done(
-        "HUPy Initialized for: {} (hooks dir: {})".format(root_path, hooks_dir)
-    )
+    force = args.force
+
+    _copy_hooks_scripts(hooks_dir, force)
+
+    # TODO set up git hooksPath
+    logger.done("HUPy Initialized for: {}".format(root_path))
 
 
 # Public API  ##################################################################
@@ -84,6 +120,14 @@ def register_cli_init_parser(cli_subparser):
         type=pathlib.Path,
         default=None,
         help="specify alternative folder to place all HUPy hooks scripts",
+    )
+
+    init_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="override existing hooks scripts",
     )
 
     add_verbose_arguments(init_parser)

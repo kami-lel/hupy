@@ -1,0 +1,1 @@
+# TODO write default prepare-commit-msg.bash
