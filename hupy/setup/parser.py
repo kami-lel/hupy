@@ -5,6 +5,8 @@ import os
 import pathlib
 import shutil
 
+import git
+
 from hupy.setup import SETUP_LOGGER_NAME
 
 
@@ -14,6 +16,7 @@ from hupy.kamilog import (
     getLogger,
 )
 
+# TODO unit tests
 # logger  ######################################################################
 
 logger = getLogger(SETUP_LOGGER_NAME)
@@ -39,25 +42,14 @@ _HOOKS_TEMPLATES_DIR = (
 # helpers  #####################################################################
 
 
-def _init_main(args):
+def _copy_hooks_scripts(hooks_dir, force):
     """
-    dispatch for the ``init`` subcommand.
-
-
-    :param args: parsed arguments from argparse
-    :type args: argparse.Namespace
+    copy the default HUPy hooks scripts into ``hooks_dir``
     """
-    set_logging_level_by_verbosity(args, logger=logger)
-
-    logger.enter("HUPy Initialization")
-    root_path = args.repo_root
-    hooks_dir = args.hooks_dir or root_path / "scripts" / "hupy-hooks"
-    force = args.force
-
-    # copy hooks scripts  ------------------------------------------------------
+    logger.enter("copy hooks scripts")
     if hooks_dir.exists():
         if not force:
-            logger.critical(
+            logger.error(
                 "hooks dir already exists (use --force to override): {}".format(
                     hooks_dir
                 )
@@ -75,8 +67,50 @@ def _init_main(args):
         logger.debug("hook script copied: {}".format(target_path))
         shutil.copy2(template_file, target_path)
 
-    # set up git hooksPath  ----------------------------------------------------
-    # TODO set up git hooksPath
+
+def _configure_repo_hooks_path(root_path, hooks_dir):
+    """
+    configure git's ``core.hooksPath`` for the repo at ``root_path``
+    """
+    logger.enter("configure git hooks path")
+
+    try:
+        # TODO move up
+        repo = git.Repo(root_path, search_parent_directories=True)
+    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
+        logger.exception("not a git repository: {}".format(root_path))
+        raise SystemExit(1) from e
+
+    try:
+        with repo.config_writer() as writer:
+            writer.set_value("core", "hooksPath", str(hooks_dir))
+    except Exception as e:
+        logger.exception(
+            "failed to set core.hooksPath to: {}".format(hooks_dir)
+        )
+        raise SystemExit(1) from e
+
+
+def _init_main(args):
+    """
+    dispatch for the ``init`` subcommand.
+
+
+    :param args: parsed arguments from argparse
+    :type args: argparse.Namespace
+    """
+    set_logging_level_by_verbosity(args, logger=logger)
+
+    root_path = args.repo_root
+    hooks_dir = args.hooks_dir or root_path / "scripts" / "hupy-hooks"
+
+    logger.enter("HUPy Initialization for: {}".format(root_path))
+    logger.debug("hook scripts dir: {}".format(hooks_dir))
+
+    force = args.force
+
+    _copy_hooks_scripts(hooks_dir, force)
+    _configure_repo_hooks_path(root_path, hooks_dir)
 
     logger.done("HUPy Initialized for: {}".format(root_path))
 
