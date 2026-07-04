@@ -127,14 +127,14 @@ def register_cli_init_parser(cli_subparser):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    init_parser.add_argument(  # BUG wrong description
+    init_parser.add_argument(
         "repo_root",
         metavar="REPO_ROOT",
         nargs="?",
         type=pathlib.Path,
         default=pathlib.Path(os.getcwd()),
         help=(
-            "path to the git repository to initialize; "
+            "path to the git repository (or any of its subdirectories;) "
             "default=current working directory"
         ),
     )
