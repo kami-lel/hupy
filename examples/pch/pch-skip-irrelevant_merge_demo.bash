@@ -30,19 +30,19 @@ echo
 printf "PCH" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_1="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_1"
-"$PYTHON" -m hupy prepend_commit_header || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header || true
 cd - >/dev/null
 echo
 
 printf "PCH w/ -v" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_2="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_2"
-"$PYTHON" -m hupy prepend_commit_header -v || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header -v || true
 cd - >/dev/null
 echo
 
 printf "PCH w/ -vvv" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_3="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_3"
-"$PYTHON" -m hupy prepend_commit_header -vvv || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header -vvv || true
 cd - >/dev/null

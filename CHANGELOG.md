@@ -20,6 +20,11 @@
 
 ### Added
 
+- `hupy/setup/` package — `init` CLI subcommand: copies the default hook scripts from `hupy/default-hupy-hooks/` into `REPO_ROOT/scripts/hupy-hooks/` (or `--hooks-dir`), then sets that path as the repo's `core.hooksPath`; supports `-f`/`--force` to override an existing hooks dir with a warning
+- `hupy/default-hupy-hooks/` — default hook script templates packaged with `hupy` (`pre-commit.bash`, `prepare-commit-msg.bash`), bundled via `[tool.setuptools.package-data]` in `pyproject.toml`
+- `tests/setup/` — pytest suite for the `init` CLI subcommand: fresh-copy and executable-bit checks, existing-dir abort without `-f`/override with `-f`, `--hooks-dir` override, `core.hooksPath` success and failure paths, subdirectory-invocation resolution to the true repo root, not-a-git-repo/nonexistent-path errors, and `-v`/`-q` smoke checks; 15 tests
+- `docs/ttg_doc.md`, `docs/pch_doc.md` — placeholder docs linked from `README.md`'s new Usage section
+- `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then customize the copied hook scripts) and Usage section linking to the new `docs/` pages
 - `hupy/pch/` package — Prepend Commit Header (PCH): `prepend_commit_header.py` rewrites in-progress commit messages to prepend a header line for Feature Finish and Version Release merges, `parser.py` wires up the `prepend_commit_header`/`pch` CLI subcommand
 - `examples/pch/` — four runnable demo scripts: Feature Finish and Version Release passes, plus skipped scenarios (non-merge commit, irrelevant merge)
 - `tests/pch/` — comprehensive pytest suite for `prepend_commit_header()`; covers Feature Finish and Version Release header selection, message formatting edge cases (comment regrouping, Unicode round-trip, empty messages), error paths (missing `COMMIT_EDITMSG`, atomic write failures), and skip paths (non-merge, regular merge); 15 tests
@@ -44,6 +49,8 @@
 - moved test file `tests/ttg/ttg-commit_type_test.py` to `tests/commit_type_test.py` to match module location
 - `hupy/kamilog.py` — adjusted custom log levels to better distinguish hook/test state: `ENTER` 15, `SKIP` 16, `SUCC` 17, `PASS` 21, `DONE` 25, `FAIL` 45
 - `hupy/cli.py` — separated TTG CLI parser into `hupy/ttg/parser.py`; PCH parser now lives in `hupy/pch/parser.py`; root parser retains subcommand dispatch
+- **CLI subcommand tree restructured to mirror git hook stage names**: `triage_tag_gating`/`ttg` is now `pre-commit triage-tag-gating`, and `prepend_commit_header`/`pch` is now `prepare-commit-msg prepend-commit-header`; each stage also gained `start`/`end` stub subcommands (`pass  # TODO`) for future cross-cutting setup/teardown; the previous flat top-level `ttg`/`pch` aliases were dropped
+- `examples/ttg/*.bash` and `examples/pch/*.bash` — updated CLI invocations to the new nested subcommand names
 
 ### Deprecated
 

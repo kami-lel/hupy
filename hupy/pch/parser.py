@@ -1,7 +1,7 @@
 """
 parser.py
 
-prepend commit header CLI parser and subcommand registration
+prepend-commit-header CLI parser and subcommand registration
 """
 
 import os
@@ -16,7 +16,7 @@ from hupy.pch import prepend_commit_header
 
 def _pch_main(args):
     """
-    dispatch for the ``prepend_commit_header`` subcommand.
+    dispatch for the ``prepend-commit-header`` subcommand.
 
 
     :param args: parsed arguments from argparse
@@ -28,11 +28,11 @@ def _pch_main(args):
 
 def register_cli_pch_parser(cli_subparser):
     """
-    register the ``prepend_commit_header`` subcommand parser.
+    register the ``prepend-commit-header`` subcommand parser onto the
+    given (``prepare-commit-msg`` stage) subparser.
     """
     pch_parser = cli_subparser.add_parser(
-        "prepend_commit_header",
-        aliases=["pch"],
+        "prepend-commit-header",
         help="generate better commit message headers for merge commits",
     )
     add_verbose_arguments(pch_parser)

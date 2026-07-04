@@ -1,7 +1,7 @@
 """
 parser.py
 
-triage_tag_gating CLI parser and subcommand registration
+triage-tag-gating CLI parser and subcommand registration
 """
 
 import os
@@ -16,7 +16,7 @@ from hupy.ttg.tt_gating import perform_triage_tags_gating
 
 def _tt_gating_main(args):
     """
-    dispatch for the ``triage_tag_gating`` subcommand.
+    dispatch for the ``triage-tag-gating`` subcommand.
 
 
     :param args: parsed arguments from argparse
@@ -28,11 +28,11 @@ def _tt_gating_main(args):
 
 def register_cli_ttg_parser(cli_subparser):
     """
-    register the ``triage_tag_gating`` subcommand parser.
+    register the ``triage-tag-gating`` subcommand parser onto the
+    given (``pre-commit`` stage) subparser.
     """
     tt_gating_parser = cli_subparser.add_parser(
-        "triage_tag_gating",
-        aliases=["ttg"],
+        "triage-tag-gating",
         help="gate commits by triage tag presence on protected branches",
     )
     add_verbose_arguments(tt_gating_parser)

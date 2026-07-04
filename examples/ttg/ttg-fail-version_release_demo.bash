@@ -32,19 +32,19 @@ echo
 printf "TTG" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_1="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_1"
-"$PYTHON" -m hupy triage_tag_gating || true
+"$PYTHON" -m hupy pre-commit triage-tag-gating || true
 cd - >/dev/null
 echo
 
 printf "TTG w/ -v" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_2="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_2"
-"$PYTHON" -m hupy triage_tag_gating -v || true
+"$PYTHON" -m hupy pre-commit triage-tag-gating -v || true
 cd - >/dev/null
 echo
 
 printf "TTG w/ -vvv" | "$PYTHON" -m hupy.kamilog cb c "#"
 DEMO_REPO_3="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cd "$DEMO_REPO_3"
-"$PYTHON" -m hupy triage_tag_gating -vvv || true
+"$PYTHON" -m hupy pre-commit triage-tag-gating -vvv || true
 cd - >/dev/null
