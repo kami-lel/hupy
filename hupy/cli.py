@@ -48,7 +48,7 @@ def _pre_commit_start_main(_):
     :param _: parsed arguments (unused)
     :type _: argparse.Namespace
     """
-    pass  # TODO mpl pre-commit start
+    pass  # Todo mpl pre-commit start
 
 
 def _pre_commit_end_main(_):
@@ -59,7 +59,7 @@ def _pre_commit_end_main(_):
     :param _: parsed arguments (unused)
     :type _: argparse.Namespace
     """
-    pass  # TODO mpl pre-commit end
+    pass  # Todo mpl pre-commit end
 
 
 def _register_cli_pre_commit_parser(cli_subparser):
@@ -110,7 +110,7 @@ def _prepare_commit_msg_start_main(_):
     :param _: parsed arguments (unused)
     :type _: argparse.Namespace
     """
-    pass  # TODO mpl prepare-commit-msg start
+    pass  # Todo mpl prepare-commit-msg start
 
 
 def _prepare_commit_msg_end_main(_):
@@ -121,7 +121,7 @@ def _prepare_commit_msg_end_main(_):
     :param _: parsed arguments (unused)
     :type _: argparse.Namespace
     """
-    pass  # TODO mpl prepare-commit-msg end
+    pass  # Todo mpl prepare-commit-msg end
 
 
 def _register_cli_prepare_commit_msg_parser(cli_subparser):
@@ -165,8 +165,6 @@ register_cli_init_parser(cli_subparser)
 _register_cli_pre_commit_parser(cli_subparser)
 _register_cli_prepare_commit_msg_parser(cli_subparser)
 
-
-# TODO write & include default hupy-hooks in python package
 
 # Todo find version feature
 
