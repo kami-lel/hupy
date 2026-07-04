@@ -39,6 +39,7 @@ register_cli_pch_parser(cli_subparser)
 
 # TODO add init subcommand which: copy hooks & git hooks configs
 # TODO write & include default hupy-hooks in python package
+# TODO refactor cli hupy pre-commit ... etc.
 
 # Todo find version feature
 
