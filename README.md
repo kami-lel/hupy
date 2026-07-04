@@ -4,6 +4,9 @@
 
 <!-- Fixme write readme w/ installation & usage -->
 
+
+<!-- Todo add PCH more scenario eg keep up feature branch with dev -->
+
 > [!NOTE]
 > Python reimplementation of the original bash `hooks_utility.sh`. Currently in **prototype**.
 
