@@ -35,3 +35,6 @@ cli_subparser = cli_parser.add_subparsers(title="subcommands")
 # register subcommands
 register_cli_ttg_parser(cli_subparser)
 register_cli_pch_parser(cli_subparser)
+
+
+# todo add configs and/or dry run feature

@@ -20,6 +20,7 @@ logger = getLogger(PROJ_LOGGER_NAME + ".commit_type")
 
 # constants  ###################################################################
 
+# todo make branch names configurable
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
 
@@ -80,6 +81,8 @@ def _is_pull_merge(repo, sha, target_branch):
 
 
 # Public API ###################################################################
+
+# todo save values to cached, which is reset per commit
 
 
 def get_source_branch(repo):
