@@ -36,7 +36,7 @@ BEFORE_FILE_1="$DEMO_REPO_1/.git/COMMIT_EDITMSG.before"
 cp "$DEMO_REPO_1/.git/MERGE_MSG" "$DEMO_REPO_1/.git/COMMIT_EDITMSG"
 cp "$DEMO_REPO_1/.git/COMMIT_EDITMSG" "$BEFORE_FILE_1"
 cd "$DEMO_REPO_1"
-"$PYTHON" -m hupy prepend_commit_header || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header || true
 cd - >/dev/null
 echo
 
@@ -44,7 +44,7 @@ printf "PCH w/ -v" | "$PYTHON" -m hupy.kamilog cb c "="
 DEMO_REPO_2="$("$PYTHON" "$REPO_ROOT/tests/ttg/prep_repo.py" --scenario "$SCENARIO")"
 cp "$DEMO_REPO_2/.git/MERGE_MSG" "$DEMO_REPO_2/.git/COMMIT_EDITMSG"
 cd "$DEMO_REPO_2"
-"$PYTHON" -m hupy prepend_commit_header -v || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header -v || true
 cd - >/dev/null
 echo
 
@@ -54,7 +54,7 @@ BEFORE_FILE_3="$DEMO_REPO_3/.git/COMMIT_EDITMSG.before"
 cp "$DEMO_REPO_3/.git/MERGE_MSG" "$DEMO_REPO_3/.git/COMMIT_EDITMSG"
 cp "$DEMO_REPO_3/.git/COMMIT_EDITMSG" "$BEFORE_FILE_3"
 cd "$DEMO_REPO_3"
-"$PYTHON" -m hupy prepend_commit_header -vvv || true
+"$PYTHON" -m hupy prepare-commit-msg prepend-commit-header -vvv || true
 cd - >/dev/null
 echo
 

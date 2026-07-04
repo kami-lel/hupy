@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-05 — re-audited full source tree against docs; corrected stale status line (pch/improve_commit_message) and wrong `kamilog` level numbers (`ENTER`/`SKIP`/`SUCC`); noted in-code and README TODO/FIXME markers as gaps throughout Module Details; expanded the Hook Integration Model with the finalized design — tracked `scripts/hupy-hooks/` script, `core.hooksPath`, comment-toggle config, planned `hupy init` subcommand, and rejected `.hupy.toml`/`pre-commit`-framework alternatives*
+*Last updated: 2026-07-05 — re-audited full source tree against docs; corrected stale status line (pch/improve_commit_message) and wrong `kamilog` level numbers (`ENTER`/`SKIP`/`SUCC`); noted in-code and README TODO/FIXME markers as gaps throughout Module Details; expanded the Hook Integration Model with the finalized design (tracked `scripts/hupy-hooks/` scripts per git hook stage, `core.hooksPath`, comment-toggle config, planned `hupy init` subcommand, rejected `.hupy.toml`/`pre-commit`-framework alternatives); restructured the `cli` module's subcommand tree to mirror git hook stage names (`pre-commit`/`prepare-commit-msg` groups with `start`/`end` stubs) and added the `setup` package for the new `init` subcommand stub*
 
 ## Project Overview
 
@@ -20,6 +20,7 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
 | `pch` | **implemented** | prepend header lines to in-progress commit messages for Feature Finish and Version Release merges |
+| `setup` | **stub** | `init` subcommand parser only; dispatch is `pass  # TODO` — no scaffolding/`core.hooksPath` logic yet |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
 | `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches; README also flags a related scenario, blocking *direct* (non-merge) commits to `main` |
@@ -33,9 +34,14 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 
 ### Hook Integration Model
 
-**Decision**: consumers wire `hupy` into git with a plain bash script, tracked in the consuming repo at `scripts/hupy-hooks/<hook-name>` (e.g. `scripts/hupy-hooks/pre-commit`), that calls the CLI directly in sequence (e.g. `python -m hupy ttg`, then `python -m hupy pch`).
+**Decision**: consumers wire `hupy` into git with a plain bash script per hook stage, tracked in the consuming repo at `scripts/hupy-hooks/<hook-name>`, that calls the CLI directly in sequence. Since `ttg` and `pch` run at different git hook stages (see `cli` in Module Details), this is **two tracked files**, not one:
 
-- **Config surface = the script itself.** There is no separate `.hupy.toml`/YAML/INI/env-var config file. A feature is enabled by its CLI-call line being present; a user disables a feature by commenting that line out. Execution order is simply the line order — both the toggle state and the sequence are visible by reading the file top to bottom, with no separate schema to keep in sync.
+- `scripts/hupy-hooks/pre-commit` — calls `python -m hupy pre-commit start`, then `python -m hupy pre-commit triage-tag-gating`, then `python -m hupy pre-commit end`
+- `scripts/hupy-hooks/prepare-commit-msg` — calls `python -m hupy prepare-commit-msg start`, then `python -m hupy prepare-commit-msg prepend-commit-header`, then `python -m hupy prepare-commit-msg end`
+
+`git config core.hooksPath` looks for a file named exactly after the hook type in the target directory, which is why the file names above must match the git hook names precisely — and why the CLI's `pre-commit`/`prepare-commit-msg` subcommand groups (added to `cli.py` to match this) are named after the git hook stages rather than the tool names.
+
+- **Config surface = the script itself.** There is no separate `.hupy.toml`/YAML/INI/env-var config file. A feature is enabled by its CLI-call line being present; a user disables a feature by commenting that line out. Execution order is simply the line order — both the toggle state and the sequence are visible by reading the file top to bottom, with no separate schema to keep in sync. The `start`/`end` stub subcommands bookending each stage exist for future cross-cutting setup/teardown (e.g. a banner around the whole stage's output); no behavior yet.
 - **Calls the CLI, not internal functions.** The script invokes `python -m hupy <subcommand>` rather than importing `hupy.ttg`/`hupy.pch` Python functions directly, because the CLI subcommands are `hupy`'s stable, documented public interface — internal function signatures carry no such guarantee.
 - **Tracked via `core.hooksPath`, not `.git/hooks/` directly.** `.git/hooks/` is never committed by git, so a script placed there is per-clone and invisible to teammates. Instead, the tracked `scripts/hupy-hooks/` directory is pointed to by `git config core.hooksPath scripts/hupy-hooks`, making the hook script (and any comment-toggles in it) a normal, reviewable, version-controlled file. Symlinking tracked files into `.git/hooks/` was considered and rejected — same one-time-setup burden as `core.hooksPath`, but fragile on Windows (requires symlink privileges/`core.symlinks`).
 - **Planned `hupy init` CLI subcommand** (not yet implemented) to remove the manual setup step: runs `git config core.hooksPath scripts/hupy-hooks` and scaffolds `scripts/hupy-hooks/` from a template if missing, so onboarding a repo to `hupy` is one documented command instead of a git-config incantation a new contributor has to know or look up.
@@ -126,11 +132,23 @@ Argument parser and entrypoint for the `hupy` command-line tool.
 
 **Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action)
 
+The subcommand tree mirrors git hook stage names, so the CLI shape matches the `scripts/hupy-hooks/<hook-name>` scripts described in the Hook Integration Model — each stage group is the CLI grouping that a corresponding tracked hook script calls into line by line:
+
+```
+hupy init
+hupy pre-commit [start | triage-tag-gating | end]
+hupy prepare-commit-msg [start | prepend-commit-header | end]
+```
+
 - **main parser** — prog name and description sourced from `__package__` and module docstring
-- **subcommand parsers** — registered at module load time in separate modules (`ttg/parser.py`, `pch/parser.py`); each owns its own argument setup and dispatch function
-- **current subcommands**:
-  - `triage_tag_gating` / `ttg` (alias) — calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity
-  - `prepend_commit_header` / `pch` (alias) — calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity
+- **`init`** — registered by the `setup` package's `setup/parser.py` (`register_cli_init_parser`), mirroring the `ttg`/`pch` pattern of each subcommand area owning its own parser module; dispatch is a stub (`pass  # TODO`), not yet implemented
+- **`pre-commit` / `prepare-commit-msg`** — each is a stage *group*, registered directly in `cli.py` (not delegated to a subpackage, since neither stage is itself a single tool): it creates the group parser (with its own `start`/`end` stub subcommands, also `pass  # TODO`) and its own nested subparsers action, then delegates registration of the one real tool per stage to that tool's own module:
+  - `pre-commit triage-tag-gating` — registered by `ttg/parser.py`'s `register_cli_ttg_parser(subparser)`, called with the `pre-commit` group's subparsers action (not the top-level one); calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity
+  - `prepare-commit-msg prepend-commit-header` — registered by `pch/parser.py`'s `register_cli_pch_parser(subparser)`, called with the `prepare-commit-msg` group's subparsers action; calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity
+  - invoking a stage group with no further subcommand (e.g. bare `hupy pre-commit`) prints that group's own help, mirroring how the root parser handles no subcommand at all
+- **dispatch functions are always module-level**, never nested inside their `register_cli_*_parser` function — including the `pre-commit`/`prepare-commit-msg` group's own "no subcommand given" handler, which needs its parser instance to call `.print_help()`. Since that instance only exists once `add_parser()` runs inside the register function, it's threaded through via `parser.set_defaults(func=_pre_commit_main, parser=pre_commit_parser)` and read back as `args.parser` inside the module-level `_pre_commit_main(args)` — avoiding a closure defined inside the register function.
+- **`start`/`end` stubs** exist per stage as placeholders for future cross-cutting setup/teardown (e.g. banner logging around the whole stage); no behavior yet
+- **no aliases** — the previous flat top-level `ttg`/`pch` short aliases were dropped in this restructure; the full hyphenated names are the only way to invoke each tool now
 - **verbosity** — `-v`/`-q` flags apply to the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.commit_type"`) inherit this level since they set none of their own
 
 Dispatch follows a standard pattern: subcommand dispatch functions receive the parsed `argparse.Namespace` and call the corresponding utility function.
@@ -185,6 +203,9 @@ hupy/                             # installable package
     __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"
     parser.py                     # CLI parser for pch subcommand
     prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG
+  setup/                          # init subcommand package (stub)
+    __init__.py                   # SETUP_LOGGER_NAME = "HU.init"
+    parser.py                     # CLI parser for init subcommand; dispatch is pass # TODO
   ttg/                            # Triage Tag Gating package
     __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
     parser.py                     # CLI parser for ttg subcommand

@@ -20,6 +20,7 @@
 
 ### Added
 
+- `hupy/setup/` package — `init` CLI subcommand parser (stub); dispatch is `pass  # TODO`, no scaffolding/`core.hooksPath` logic yet
 - `hupy/pch/` package — Prepend Commit Header (PCH): `prepend_commit_header.py` rewrites in-progress commit messages to prepend a header line for Feature Finish and Version Release merges, `parser.py` wires up the `prepend_commit_header`/`pch` CLI subcommand
 - `examples/pch/` — four runnable demo scripts: Feature Finish and Version Release passes, plus skipped scenarios (non-merge commit, irrelevant merge)
 - `tests/pch/` — comprehensive pytest suite for `prepend_commit_header()`; covers Feature Finish and Version Release header selection, message formatting edge cases (comment regrouping, Unicode round-trip, empty messages), error paths (missing `COMMIT_EDITMSG`, atomic write failures), and skip paths (non-merge, regular merge); 15 tests
@@ -44,6 +45,8 @@
 - moved test file `tests/ttg/ttg-commit_type_test.py` to `tests/commit_type_test.py` to match module location
 - `hupy/kamilog.py` — adjusted custom log levels to better distinguish hook/test state: `ENTER` 15, `SKIP` 16, `SUCC` 17, `PASS` 21, `DONE` 25, `FAIL` 45
 - `hupy/cli.py` — separated TTG CLI parser into `hupy/ttg/parser.py`; PCH parser now lives in `hupy/pch/parser.py`; root parser retains subcommand dispatch
+- **CLI subcommand tree restructured to mirror git hook stage names**: `triage_tag_gating`/`ttg` is now `pre-commit triage-tag-gating`, and `prepend_commit_header`/`pch` is now `prepare-commit-msg prepend-commit-header`; each stage also gained `start`/`end` stub subcommands (`pass  # TODO`) for future cross-cutting setup/teardown; the previous flat top-level `ttg`/`pch` aliases were dropped
+- `examples/ttg/*.bash` and `examples/pch/*.bash` — updated CLI invocations to the new nested subcommand names
 
 ### Deprecated
 
