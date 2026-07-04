@@ -16,7 +16,6 @@ from hupy.kamilog import (
     getLogger,
 )
 
-# TODO unit tests
 # logger  ######################################################################
 
 logger = getLogger(SETUP_LOGGER_NAME)

@@ -22,6 +22,7 @@
 
 - `hupy/setup/` package — `init` CLI subcommand: copies the default hook scripts from `hupy/default-hupy-hooks/` into `REPO_ROOT/scripts/hupy-hooks/` (or `--hooks-dir`), then sets that path as the repo's `core.hooksPath`; supports `-f`/`--force` to override an existing hooks dir with a warning
 - `hupy/default-hupy-hooks/` — default hook script templates packaged with `hupy` (`pre-commit.bash`, `prepare-commit-msg.bash`), bundled via `[tool.setuptools.package-data]` in `pyproject.toml`
+- `tests/setup/` — pytest suite for the `init` CLI subcommand: fresh-copy and executable-bit checks, existing-dir abort without `-f`/override with `-f`, `--hooks-dir` override, `core.hooksPath` success and failure paths, subdirectory-invocation resolution to the true repo root, not-a-git-repo/nonexistent-path errors, and `-v`/`-q` smoke checks; 15 tests
 - `docs/ttg_doc.md`, `docs/pch_doc.md` — placeholder docs linked from `README.md`'s new Usage section
 - `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then customize the copied hook scripts) and Usage section linking to the new `docs/` pages
 - `hupy/pch/` package — Prepend Commit Header (PCH): `prepend_commit_header.py` rewrites in-progress commit messages to prepend a header line for Feature Finish and Version Release merges, `parser.py` wires up the `prepend_commit_header`/`pch` CLI subcommand
