@@ -55,25 +55,29 @@ def _init_main(args):
     force = args.force
 
     # copy hooks scripts  ------------------------------------------------------
-    # TODO mpv printed msg
     if hooks_dir.exists():
         if not force:
             logger.critical(
-                "hooks dir already exists: {} "
-                "(use -f/--force to override)".format(hooks_dir)
+                "hooks dir already exists (use --force to override): {}".format(
+                    hooks_dir
+                )
             )
             raise SystemExit(1)
 
         logger.warning(
-            "overriding existing hooks scripts in: {}".format(hooks_dir)
+            "override existing hooks scripts in: {}".format(hooks_dir)
         )
     else:
         hooks_dir.mkdir(parents=True)
 
     for template_file in _HOOKS_TEMPLATES_DIR.iterdir():
-        shutil.copy2(template_file, hooks_dir / template_file.name)
+        target_path = hooks_dir / template_file.name
+        logger.debug("hook script copied: {}".format(target_path))
+        shutil.copy2(template_file, target_path)
 
+    # set up git hooksPath  ----------------------------------------------------
     # TODO set up git hooksPath
+
     logger.done("HUPy Initialized for: {}".format(root_path))
 
 
