@@ -24,8 +24,12 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_verbosity(SETUP_LOGGER_NAME)
+    set_logging_level_by_verbosity(args, logger=logger)
+
+    logger.enter("HUPy Initialization")
+    root_path = "abc"
     # TODO TODO mpl setups
+    logger.done("HUPy Initialized for: {}".format(root_path))
 
 
 # Public API  ##################################################################
