@@ -1,3 +1,3 @@
 # `.hupy.config.json` File Documentation
 
-<!-- TODO write doc -->
+<!-- Todo write doc -->
