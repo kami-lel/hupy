@@ -35,18 +35,14 @@ def grep_repo_version():
     :rtype: str
     """
     config = load_hupy_config(os.getcwd())
+
+    if config.ver_grep.is_unconfigured():
+        return ""
+
     version_file = config.ver_grep.version_file
     logger.debug("version_file:\t{}".format(version_file))
     pattern = config.ver_grep.version_line_pattern
     logger.debug("version_line_pattern:\t{}".format(pattern))
-
-    # FIXME move this warn to model validation
-    if str(version_file) in ("", ".") or not pattern.strip():
-        logger.warning(
-            "ver_grep is not configured:\n"
-            "set version_file and version_line_pattern in HUPy config file"
-        )
-        return ""
 
     if not version_file.exists():
         logger.error("version file not found: {}".format(version_file))
