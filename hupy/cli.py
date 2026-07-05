@@ -52,7 +52,7 @@ def _pre_commit_start_main(_):
     """
     dispatch for the ``pre-commit start`` subcommand.
     """
-    pass  # Todo mpl pre-commit start
+    pass  # TODO mpl pre-commit start
 
 
 def _register_pre_commit_start_parser(subparser):
@@ -71,7 +71,7 @@ def _pre_commit_end_main(_):
     """
     dispatch for the ``pre-commit end`` subcommand.
     """
-    pass  # Todo mpl pre-commit end
+    pass  # TODO mpl pre-commit end
 
 
 def _register_pre_commit_end_parser(subparser):
@@ -115,7 +115,7 @@ def _prepare_commit_msg_start_main(_):
     """
     dispatch for the ``prepare-commit-msg start`` subcommand.
     """
-    pass  # Todo mpl prepare-commit-msg start
+    pass  # TODO mpl prepare-commit-msg start
 
 
 def _register_prepare_commit_msg_start_parser(subparser):
@@ -135,12 +135,8 @@ _PREPARE_COMMIT_MSG_END_DOC = "mark end of prepare-commit-msg stage"
 def _prepare_commit_msg_end_main(_):
     """
     dispatch for the ``prepare-commit-msg end`` subcommand.
-
-
-    :param _: parsed arguments (unused)
-    :type _: argparse.Namespace
     """
-    pass  # Todo mpl prepare-commit-msg end
+    pass  # TODO mpl prepare-commit-msg end
 
 
 def _register_prepare_commit_msg_end_parser(subparser):

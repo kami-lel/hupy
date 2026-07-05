@@ -1,1 +1,1 @@
-# Todo write default prepare-commit-msg.bash
+# TODO write default prepare-commit-msg.bash
