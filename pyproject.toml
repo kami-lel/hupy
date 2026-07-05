@@ -7,7 +7,7 @@ name = "HUPy"
 version = "0.1.0"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
-dependencies = ["gitpython>=3.1", "pydantic>=2"]
+dependencies = ["GitPython>=3.1", "pydantic>=2"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
