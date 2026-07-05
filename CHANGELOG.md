@@ -27,10 +27,10 @@
 - `hupy/setup/cli_init.py` — `init` CLI subcommand: copies the two default hook stub scripts into the repo's actual hooks directory (`core.hooksPath` if configured, otherwise `.git/hooks/`; override with `--hooks-dir`) and writes a default `.hupy.config.json` at the repository root; `-f`/`--force` overrides an existing hook stub and/or config file
 - `hupy/hook-stubs/` — default hook stub scripts packaged with `hupy` (`pre-commit`, `prepare-commit-msg`), each a thin wrapper invoking `python -m hupy <stage>`
 - `hupy/config/.hupy.config.json` — default HUPy config template (JSON, tracks enabled features and their order per hook stage), packaged alongside the hook stubs
-- `docs/hupy_config_doc.md` — placeholder doc for `.hupy.config.json`, linked from `README.md`
+- `docs/hupy_config_doc.md` — reference for `.hupy.config.json`: the `hupy_version`/`default_logger_verbosity`/`ver_grep` fields, the verbosity→log-level mapping, and a `ver_grep` setup guide with common `version_line_pattern` examples
 - `tests/setup/` — pytest suite for the `init` CLI subcommand and its helpers: hook-stub copy (fresh dir, unrelated pre-existing dir contents, per-file conflict abort/`-f` override), config-file write (fresh/conflict/`-f`), hooks-dir resolution (default `.git/hooks`, honoring configured `core.hooksPath`, relative and absolute), and end-to-end CLI coverage (`--hooks-dir` override beating a configured `core.hooksPath`, subdirectory resolution, non-atomic partial-write case, not-a-git-repo/nonexistent-path errors, `-v`/`-q` smoke checks); 25 tests
-- `docs/ttg_doc.md`, `docs/pch_doc.md` — placeholder docs linked from `README.md`'s new Usage section
-- `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then see `docs/hupy_config_doc.md` for customizing behavior) and Usage section linking to the new `docs/` pages
+- `docs/ttg_doc.md`, `docs/pch_doc.md` — user-facing docs for the two hook features: TTG's triage-tag tiers and per-merge gating (Loud on Feature Finish, Loud+Steady on Version Release), and PCH's Feature Finish / Version Release commit headers
+- `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then see `docs/hupy_config_doc.md` for customizing behavior) and a Usage section that explains the hooks run automatically after `hupy init`, with a Mermaid diagram of the `pre-commit`→TTG / `prepare-commit-msg`→PCH commit flow and links to the per-feature `docs/` pages
 - `hupy/pch/` package — Prepend Commit Header (PCH): `prepend_commit_header.py` rewrites in-progress commit messages to prepend a header line for Feature Finish and Version Release merges, `parser.py` wires up the `prepend_commit_header`/`pch` CLI subcommand
 - `examples/pch/` — four runnable demo scripts: Feature Finish and Version Release passes, plus skipped scenarios (non-merge commit, irrelevant merge)
 - `tests/pch/` — comprehensive pytest suite for `prepend_commit_header()`; covers Feature Finish and Version Release header selection, message formatting edge cases (comment regrouping, Unicode round-trip, empty messages), error paths (missing `COMMIT_EDITMSG`, atomic write failures), and skip paths (non-merge, regular merge); 15 tests
@@ -52,7 +52,7 @@
 - `tests/ver_grep_test.py` — 11 tests for `grep_repo_version` (capture-group matching, first-match-wins, not-configured returns `""`, missing file / no matching line raise `SystemExit`)
 - `tests/pch/pch-prepend_commit_header_version_release_test.py` — `TestVersionReleaseHeaderWithVersion`: 3 new tests covering the `"Version Release: <version>"` header when `ver_grep` resolves a version (semver and non-semver strings)
 - `tests/cli/cli-cli_init_copy_hook_stubs_test.py` — `TestCopyHookStubsInterpreterPath`: 3 new tests asserting the `{{PYTHON}}` placeholder is replaced with `sys.executable` in installed stubs, the baked path is absolute, and the packaged templates still carry the placeholder
-- `.hupy.config.json` — this repo now dogfoods `hupy` on itself (tracked config at the repo root, hook stubs installed into `.git/hooks/` via `hupy init`)
+- `.hupy.config.json` — this repo now dogfoods `hupy` on itself (tracked config at the repo root, hook stubs installed into `.git/hooks/` via `hupy init`); `ver_grep` reads the project version from `pyproject.toml` (`^version = "(.*)"`), so Version Release headers read `Version Release: <version>`
 
 ### Changed
 
