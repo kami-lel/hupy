@@ -10,6 +10,7 @@ import tempfile
 import git
 
 from hupy.kamilog import getLogger
+from hupy.ver_grep import grep_repo_version
 from . import PCH_LOGGER_NAME
 from ..commit_type import (
     CommitType,
@@ -37,7 +38,10 @@ def _gen_version_release_header_content():
     """
     generate header content for Version Release commit type.
     """
-    return "Version Release"  # FIXME get version
+    version = grep_repo_version()
+    if version:
+        return "Version Release: {}".format(version)
+    return "Version Release"
 
 
 def _prepend_commit_header_by_type(is_feature_finish, repo_root):

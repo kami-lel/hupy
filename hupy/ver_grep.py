@@ -36,7 +36,9 @@ def grep_repo_version():
     """
     config = load_hupy_config(os.getcwd())
     version_file = config.ver_grep.version_file
+    logger.debug("version_file:\t{}".format(version_file))
     pattern = config.ver_grep.version_line_pattern
+    logger.debug("version_line_pattern:\t{}".format(pattern))
 
     if str(version_file) in ("", ".") or not pattern.strip():
         logger.warning(
@@ -54,7 +56,10 @@ def grep_repo_version():
     for line in content.splitlines():
         match = re.search(pattern, line)
         if match:
-            return match.group(1)
+            logger.debug("matched line:\n{}".format(line))
+            version = match.group(1)
+            logger.debug("version grepped:\t{}".format(version))
+            return version
 
     logger.error(
         "no line matches pattern in {}: {}".format(version_file, pattern)
