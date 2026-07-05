@@ -13,7 +13,7 @@ from hupy.setup import SETUP_LOGGER_NAME
 
 from hupy.kamilog import (
     add_verbose_arguments,
-    set_logging_level_by_verbosity,
+    set_logging_level_by_namespace,
     getLogger,
 )
 
@@ -88,7 +88,7 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_verbosity(args, logger=logger)
+    set_logging_level_by_namespace(args, logger=logger)
 
     root_path = args.repo_root
     force = args.force
