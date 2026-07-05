@@ -89,7 +89,16 @@ See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **cust
 
 ## 🚀 Usage
 
-<!-- TODO explain hooks how it works -->
+Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature:
+
+```mermaid
+flowchart TD
+    commit([git commit]) --> pre[/pre-commit hook/]
+    pre --> ttg[[Triage Tag Gating]]
+    ttg --> prep[/prepare-commit-msg hook/]
+    prep --> pch[[Prepend Commit Header]]
+    pch --> done([commit created])
+```
 
 See the per-feature docs for detailed usage:
 
