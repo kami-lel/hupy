@@ -1,9 +1,5 @@
 """initialize HUPy in the current repository"""
 
-# FIXME whole module implements the superseded scripts/hupy-hooks/ +
-# core.hooksPath design; rework to write .hupy.config.json + .git/hooks/
-# stubs per the current Hook Integration Model in CONTEXT.md
-
 import argparse
 import os
 import pathlib
@@ -27,6 +23,7 @@ logger = getLogger(SETUP_LOGGER_NAME)
 
 # constants  ###################################################################
 
+# FIXME update description
 
 _DESCRIPTION = __doc__ + """
 
