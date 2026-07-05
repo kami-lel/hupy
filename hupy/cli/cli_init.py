@@ -1,7 +1,5 @@
 """initialize HUPy in the current repository"""
 
-# FIXME FIXME cli refactorization
-
 import argparse
 import os
 import pathlib
