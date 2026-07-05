@@ -44,12 +44,11 @@ def _pre_commit_main(args):
         args, verbosity=config.default_logger_verbosity
     )
 
-    logger.info("Perform HUPy hooks")
-    logger.enter("Start of pre-commit stage")
+    logger.enter("Start pre-commit stage")
 
     perform_triage_tags_gating(os.getcwd())
 
-    logger.succ("End of pre-commit stage")
+    logger.done("pre-commit HUPy hooks")
 
 
 def _register_pre_commit_parser(subparser):
@@ -78,12 +77,11 @@ def _prepare_commit_msg_main(args):
         args, verbosity=config.default_logger_verbosity
     )
 
-    logger.enter("Start of prepare-commit-msg stage")
+    logger.enter("Start prepare-commit-msg stage")
 
     prepend_commit_header(os.getcwd())
 
-    logger.succ("End of prepare-commit-msg stage")
-    logger.done("HUPy hooks Finished")
+    logger.done("prepare-commit-msg HUPy hooks")
 
 
 def _register_prepare_commit_msg_parser(subparser):
