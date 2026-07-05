@@ -4,7 +4,7 @@ __main__.py
 entry point for ``python -m hupy``
 """
 
-from hupy.cli import cli_parser
+from hupy.cli.cli_main import cli_parser
 
 
 def main():

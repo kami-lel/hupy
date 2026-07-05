@@ -32,7 +32,7 @@ def write_default_config(repo_root, force):
             raise SystemExit(1)
 
         logger.warning(
-            "override existing HUPy config file: {}".format(config_path)
+            "overwrite existing HUPy config file: {}".format(config_path)
         )
 
     logger.debug("HUPy config file written: {}".format(config_path))

@@ -3,9 +3,9 @@
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
 <!--
+Bug missing feature such that direct bash command can be used
 todo add PCH more scenario eg keep up feature branch with dev
 todo ban direct commit to main
-Todo set up self for HUPy
 -->
 
 > [!NOTE]
@@ -88,6 +88,8 @@ See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **cust
 
 
 ## 🚀 Usage
+
+<!-- Todo explain hooks how it works -->
 
 See the per-feature docs for detailed usage:
 

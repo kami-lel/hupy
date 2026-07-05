@@ -46,6 +46,13 @@
 - `hupy/ttg/` package — Triage Tag Gating (TTG): `tt_detect.py` scans staged files for annotation markers, `tt_gating.py` blocks commits that introduce gated-tier tags on protected branches
 - `examples/ttg/` — six runnable demo scripts covering fail, pass, and skip scenarios across Feature Finish and Version Release merges
 - `tests/ttg/` — pytest suite for `commit_type`, `tt_detect`, and `tt_gating` (feature finish, version release, non-merge commit, regular merge, and error-path coverage), with a shared `prep_repo.py` scenario-fixture generator and a `tests/testee/default_repo.bundle` git bundle fixture
+- `hupy/ver_grep.py` — `grep_repo_version()`: regex-extracts a version string from a configured file (the pattern's first capturing group), returning `""` when `ver_grep` is unconfigured, or `raise SystemExit(1)` if the version file is missing or the pattern matches no line; own logger `VER_GREP_LOGGER_NAME` (`"HU.VerGrep"`)
+- `hupy/config/model.py` — `_VerGrep` sub-model (`version_file: pathlib.Path`, `version_line_pattern: str`, both empty by default) nested under `HupyConfig.ver_grep`; `is_unconfigured()` reports whether either field is left at its empty default; a `model_validator(mode="after")` warns via the new `CONFIG_LOGGER_NAME` logger (`"HU.config-json"`, `hupy/config/__init__.py`) whenever an unconfigured instance is created
+- `hupy/cli/` package — replaces the former flat `hupy/cli.py` and absorbs the former `hupy/setup/` package: `cli_main.py` (main parser + subcommand registration), `cli_init.py` (the `init` subcommand, moved from `hupy/setup/cli_init.py`, now also exporting `load_git_repo(repo_path)`), `cli_pre_commit.py` / `cli_prepare_commit_msg.py` (the `pre-commit`/`prepare-commit-msg` dispatch functions, split out of the old `cli.py`)
+- `tests/ver_grep_test.py` — 11 tests for `grep_repo_version` (capture-group matching, first-match-wins, not-configured returns `""`, missing file / no matching line raise `SystemExit`)
+- `tests/pch/pch-prepend_commit_header_version_release_test.py` — `TestVersionReleaseHeaderWithVersion`: 3 new tests covering the `"Version Release: <version>"` header when `ver_grep` resolves a version (semver and non-semver strings)
+- `tests/cli/cli-cli_init_copy_hook_stubs_test.py` — `TestCopyHookStubsInterpreterPath`: 3 new tests asserting the `{{PYTHON}}` placeholder is replaced with `sys.executable` in installed stubs, the baked path is absolute, and the packaged templates still carry the placeholder
+- `.hupy.config.json` — this repo now dogfoods `hupy` on itself (tracked config at the repo root, hook stubs installed into `.git/hooks/` via `hupy init`)
 
 ### Changed
 
@@ -65,6 +72,11 @@
 - `hupy/cli.py` — separated TTG CLI parser into `hupy/ttg/parser.py`; PCH parser now lives in `hupy/pch/parser.py`; root parser retains subcommand dispatch
 - **CLI subcommand tree restructured to mirror git hook stage names**: `triage_tag_gating`/`ttg` is now `pre-commit triage-tag-gating`, and `prepend_commit_header`/`pch` is now `prepare-commit-msg prepend-commit-header`; each stage also gained `start`/`end` stub subcommands (`pass  # TODO`) for future cross-cutting setup/teardown; the previous flat top-level `ttg`/`pch` aliases were dropped
 - `examples/ttg/*.bash` and `examples/pch/*.bash` — updated CLI invocations to the new nested subcommand names
+- `hupy/config/load_config.py` — renamed `load_config` to `load_hupy_config`; it now resolves the actual repo root via `load_git_repo(repo_path)` (so it works from any subdirectory, mirroring `init`) and caches the loaded/validated `HupyConfig` instance so the file is read from disk only once per process
+- `hupy/pch/prepend_commit_header.py` — `_gen_version_release_header_content()` now calls `grep_repo_version()`; the header becomes `"Version Release: <version>"` when a version is available, falling back to plain `"Version Release"` otherwise
+- `hupy/hook-stubs/{pre-commit,prepare-commit-msg}` — templates now invoke `"{{PYTHON}}" -m hupy <stage>` instead of `python -m hupy <stage> "$@"`; `_copy_hook_stubs` substitutes `{{PYTHON}}` with `sys.executable` (the interpreter running `hupy init`) when installing, so the hook always runs under the Python `hupy` is installed in — fixes hooks failing with `ModuleNotFoundError: No module named 'git'` when triggered without an activated venv on `PATH` (e.g. from an IDE's built-in git integration); note the installed stubs no longer forward `"$@"`, since `hupy`'s stage dispatch reads `.git/COMMIT_EDITMSG` directly rather than via argv
+- `pyproject.toml` — dependency name corrected to canonical `GitPython>=3.1` casing (was `gitpython>=3.1`)
+- `hupy/cli/cli_init.py` (formerly `hupy/setup/cli_init.py`) — extracted `load_git_repo(repo_path)`, reused by both `init` and `load_hupy_config`
 
 ### Deprecated
 
@@ -73,6 +85,9 @@
 - packaged static template `hupy/config/.hupy.config.json` and its `pyproject.toml` package-data entry — config is now generated dynamically from `HupyConfig` defaults
 - `hupy/pch/cli_pch.py`, `hupy/ttg/cli_ttg.py` — folded into the flattened `hupy/cli.py`
 - `tests/setup/setup-cli_init_write_default_config_test.py` — coverage folded into `setup-cli_init_init_cli_test.py`, asserting against `HupyConfig` defaults instead of the removed static template
+- `hupy/setup/` package — folded into `hupy/cli/`; `SETUP_LOGGER_NAME` replaced by a plain `PROJ_LOGGER_NAME + ".init"` logger name defined inline in `cli_init.py`
+- `hupy/cli.py` — split into `hupy/cli/cli_main.py`, `cli_pre_commit.py`, `cli_prepare_commit_msg.py`
+- `tests/setup/` — moved to `tests/cli/`, files renamed to the `cli-cli_init_*` naming convention (mirrors the `hupy/cli/cli_init.py` move); `setup_helpers.py` renamed to `cli_helpers.py`
 
 ### Fixed
 
