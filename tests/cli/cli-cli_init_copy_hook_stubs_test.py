@@ -2,15 +2,20 @@
 cli-cli_init_copy_hook_stubs_test.py
 
 tests for `_copy_hook_stubs`: fresh dir, pre-existing (but unrelated)
-dir contents, per-file conflict abort without --force, and override
-with --force
+dir contents, per-file conflict abort without --force, override with
+--force, and baking the interpreter path into the installed stubs
 """
 
 import os
+import sys
 
 import pytest
 
-from hupy.cli.cli_init import _HOOK_STUBS_DIR, _copy_hook_stubs
+from hupy.cli.cli_init import (
+    _HOOK_STUBS_DIR,
+    _PYTHON_PLACEHOLDER,
+    _copy_hook_stubs,
+)
 
 _STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
 
@@ -18,10 +23,19 @@ _STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
 # helpers  ######################################################################
 
 
+def _expected_content(stub_file):
+    """template content with the interpreter placeholder substituted."""
+    return stub_file.read_text(encoding="utf-8").replace(
+        _PYTHON_PLACEHOLDER, sys.executable
+    )
+
+
 def _assert_matches_templates(hooks_dir):
     for stub_file in _HOOK_STUBS_DIR.iterdir():
         copied = hooks_dir / stub_file.name
-        assert copied.read_bytes() == stub_file.read_bytes()
+        assert copied.read_text(encoding="utf-8") == _expected_content(
+            stub_file
+        )
 
 
 # tests  ########################################################################
@@ -43,6 +57,34 @@ class TestCopyHookStubsFreshDir:
 
         for name in _STUB_NAMES:
             assert os.access(str(hooks_dir / name), os.X_OK)
+
+
+class TestCopyHookStubsInterpreterPath:
+    def test_placeholder_is_replaced_with_sys_executable(self, tmp_path):
+        hooks_dir = tmp_path / "hooks"
+
+        _copy_hook_stubs(hooks_dir, force=False)
+
+        for name in _STUB_NAMES:
+            content = (hooks_dir / name).read_text(encoding="utf-8")
+            assert _PYTHON_PLACEHOLDER not in content
+            assert sys.executable in content
+
+    def test_baked_interpreter_is_an_absolute_path(self, tmp_path):
+        hooks_dir = tmp_path / "hooks"
+
+        _copy_hook_stubs(hooks_dir, force=False)
+
+        for name in _STUB_NAMES:
+            content = (hooks_dir / name).read_text(encoding="utf-8")
+            assert '"{}"'.format(sys.executable) in content
+        assert os.path.isabs(sys.executable)
+
+    def test_templates_still_carry_the_placeholder(self, tmp_path):
+        for stub_file in _HOOK_STUBS_DIR.iterdir():
+            assert _PYTHON_PLACEHOLDER in stub_file.read_text(
+                encoding="utf-8"
+            )
 
 
 class TestCopyHookStubsPreExistingDir:
