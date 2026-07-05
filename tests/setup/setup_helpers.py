@@ -2,12 +2,8 @@
 setup_helpers.py
 
 helpers for invoking the `init` CLI subcommand in isolation, and for
-inspecting the resulting git config
+inspecting/seeding the resulting git config
 """
-
-# FiXME helpers (esp. read_hooks_path) target the superseded
-# core.hooksPath design; rework once `init` writes .hupy.config.json +
-# .git/hooks/ stubs instead, per CONTEXT.md's Hook Integration Model
 
 from argparse import ArgumentParser
 
@@ -30,11 +26,21 @@ def run_init_cli(args_list):
     args.func(args)
 
 
-def read_hooks_path(repo_dir):
+def get_configured_hooks_path(repo_dir):
     """
     return the configured ``core.hooksPath`` for the repo at
-    ``repo_dir``.
+    ``repo_dir``, or ``None`` if unset.
     """
     repo = git.Repo(str(repo_dir))
     with repo.config_reader() as reader:
-        return reader.get_value("core", "hooksPath")
+        return reader.get_value("core", "hooksPath", default="") or None
+
+
+def set_configured_hooks_path(repo_dir, value):
+    """
+    configure ``core.hooksPath`` to ``value`` for the repo at
+    ``repo_dir``, simulating a pre-existing user configuration.
+    """
+    repo = git.Repo(str(repo_dir))
+    with repo.config_writer() as writer:
+        writer.set_value("core", "hooksPath", str(value))
