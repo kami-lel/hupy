@@ -6,7 +6,7 @@
 
 ```json
 {
-  "hupy_version": "0.1.0",
+  "hupy_version": "1.0.0",
   "default_logger_verbosity": 1,
   "ver_grep": {
     "version_file": ".",
@@ -36,9 +36,9 @@ The pattern runs per line (`re.search`); the first matching line wins. Escape an
 
 | Version file | Example line | `version_line_pattern` (JSON) |
 |---|---|---|
-| `pyproject.toml` | `version = "0.1.0"` | `"^version = \"(.*)\""` |
-| `package.json` | `"version": "0.1.0",` | `"\"version\": \"(.*)\""` |
-| `hupy/__init__.py` | `__version__ = "0.1.0"` | `"__version__ = \"(.*)\""` |
-| `VERSION` | `0.1.0` | `"(.*)"` |
+| `pyproject.toml` | `version = "1.0.0"` | `"^version = \"(.*)\""` |
+| `package.json` | `"version": "1.0.0",` | `"\"version\": \"(.*)\""` |
+| `hupy/__init__.py` | `__version__ = "1.0.0"` | `"__version__ = \"(.*)\""` |
+| `VERSION` | `1.0.0` | `"(.*)"` |
 
 Anchor with `^` when several `version`-like lines exist.

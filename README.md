@@ -10,7 +10,7 @@ todo toggle direct commit to dev
 -->
 
 > [!NOTE]
-> Python reimplementation of the original bash `hooks_utility.sh`. Currently in **prototype**.
+> Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 
 
