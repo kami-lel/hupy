@@ -2,11 +2,18 @@
 
 from argparse import ArgumentParser
 
+from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.pch.parser import register_cli_pch_parser
 from hupy.setup.parser import register_cli_init_parser
 from hupy.ttg.parser import register_cli_ttg_parser
 
 __all__ = ("cli_parser", "cli_subparser")
+
+
+# logger  ######################################################################
+
+
+logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
 
 # main parser  #################################################################
@@ -52,7 +59,10 @@ def _pre_commit_start_main(_):
     """
     dispatch for the ``pre-commit start`` subcommand.
     """
-    pass  # TODO mpl pre-commit start
+    logger.setLevel(kamilog.DEBUG)  # HACK
+    # TODO verbosity
+    logger.info("Perform HUPy hooks")
+    logger.enter("Start of pre-commit stage")
 
 
 def _register_pre_commit_start_parser(subparser):
@@ -71,7 +81,7 @@ def _pre_commit_end_main(_):
     """
     dispatch for the ``pre-commit end`` subcommand.
     """
-    pass  # TODO mpl pre-commit end
+    logger.succ("End of pre-commit stage")
 
 
 def _register_pre_commit_end_parser(subparser):
@@ -115,7 +125,7 @@ def _prepare_commit_msg_start_main(_):
     """
     dispatch for the ``prepare-commit-msg start`` subcommand.
     """
-    pass  # TODO mpl prepare-commit-msg start
+    logger.enter("Start of prepare-commit-msg stage")
 
 
 def _register_prepare_commit_msg_start_parser(subparser):
@@ -136,7 +146,8 @@ def _prepare_commit_msg_end_main(_):
     """
     dispatch for the ``prepare-commit-msg end`` subcommand.
     """
-    pass  # TODO mpl prepare-commit-msg end
+    logger.succ("Start of prepare-commit-msg stage")
+    logger.done("HUPy hooks Finished")
 
 
 def _register_prepare_commit_msg_end_parser(subparser):
