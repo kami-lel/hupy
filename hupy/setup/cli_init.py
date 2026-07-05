@@ -20,6 +20,7 @@ from hupy.kamilog import (
 # logger  ######################################################################
 
 logger = getLogger(SETUP_LOGGER_NAME)
+logger.propagate = False
 
 
 # constants  ###################################################################

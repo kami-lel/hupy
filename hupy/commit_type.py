@@ -16,6 +16,7 @@ from hupy.kamilog import getLogger
 
 # logger  ######################################################################
 logger = getLogger(PROJ_LOGGER_NAME + ".commit_type")
+logger.propagate = False
 
 
 # constants  ###################################################################
