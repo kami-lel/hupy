@@ -26,8 +26,8 @@ logger = getLogger(PROJ_LOGGER_NAME)
 # Public API  ##################################################################
 
 
-# TODO TODO make singleton/static
-# TODO TODO hupy takes a repo?
+# TODO make singleton/static
+# TODO hupy takes a repo?
 
 
 def load_hupy_config(repo_root):

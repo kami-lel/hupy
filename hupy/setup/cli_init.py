@@ -1,5 +1,7 @@
 """initialize HUPy in the current repository"""
 
+# FIXME FIXME cli refactorization
+
 import argparse
 import os
 import pathlib
@@ -7,8 +9,8 @@ import shutil
 
 import git
 
+from hupy import PROJ_LOGGER_NAME
 from hupy.config.write_config import write_default_config
-from hupy.setup import SETUP_LOGGER_NAME
 
 
 from hupy.kamilog import (
@@ -19,8 +21,12 @@ from hupy.kamilog import (
 
 # logger  ######################################################################
 
-logger = getLogger(SETUP_LOGGER_NAME)
+
+logger = getLogger(PROJ_LOGGER_NAME + ".init")
 logger.propagate = False
+
+root_logger = getLogger(PROJ_LOGGER_NAME)
+root_logger.propagate = False
 
 
 # constants  ###################################################################
@@ -90,14 +96,10 @@ def _init_main(args):
     """
     set_logging_level_by_namespace(args, logger=logger)
 
-    root_path = args.repo_root
+    repo_path = args.repo_root
     force = args.force
 
-    try:
-        repo = git.Repo(root_path, search_parent_directories=True)
-    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
-        logger.exception("not a Git repository: {}".format(root_path))
-        raise SystemExit(1) from e
+    repo = load_git_repo(repo_path)
 
     repo_root = pathlib.Path(repo.working_tree_dir)
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
@@ -112,6 +114,27 @@ def _init_main(args):
 
 
 # Public API  ##################################################################
+
+
+def load_git_repo(repo_path):
+    """
+    load the Git repository containing ``repo_path``, searching
+    parent directories if ``repo_path`` itself is not a repo root.
+
+
+    :param repo_path: path to the repo root, or to any path inside it
+    :type repo_path: str
+    :raises SystemExit: ``repo_path`` is not inside a Git repository
+    :return: the loaded repository
+    :rtype: git.Repo
+    """
+    try:
+        return git.Repo(repo_path, search_parent_directories=True)
+    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
+        root_logger.exception("not a Git repository: {}".format(repo_path))
+        raise SystemExit(1) from e
+
+
 def register_cli_init_parser(cli_subparser):
     """
     register the ``init`` subcommand parser.
