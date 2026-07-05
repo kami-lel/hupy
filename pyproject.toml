@@ -16,5 +16,9 @@ dev = ["pytest"]
 where = ["."]
 include = ["hupy*"]
 
+# Fixme package-data target is superseded — new design needs a packaged
+# default .hupy.config.json template alongside thin .git/hooks/ stub
+# templates, not full toggle-script *.bash files; see CONTEXT.md's
+# Hook Integration Model
 [tool.setuptools.package-data]
 hupy = ["default-hupy-hooks/*.bash"]

@@ -1,5 +1,9 @@
 """initialize HUPy in the current repository"""
 
+# Fixme whole module implements the superseded scripts/hupy-hooks/ +
+# core.hooksPath design; rework to write .hupy.config.json + .git/hooks/
+# stubs per the current Hook Integration Model in CONTEXT.md
+
 import argparse
 import os
 import pathlib
@@ -42,6 +46,8 @@ _HOOKS_TEMPLATES_DIR = (
 
 
 def _copy_hooks_scripts(hooks_dir, force):
+    # Fixme superseded — replace with writing a default .hupy.config.json
+    # plus copying thin stubs straight into .git/hooks/, no hooks_dir
     """
     copy the default HUPy hooks scripts into ``hooks_dir``
     """
@@ -68,6 +74,8 @@ def _copy_hooks_scripts(hooks_dir, force):
 
 
 def _configure_repo_hooks_path(repo, hooks_dir):
+    # Fixme superseded — core.hooksPath is no longer set under the new
+    # design; hooks go directly into the default .git/hooks/ location
     """
     configure git's ``core.hooksPath`` for ``repo``
     """
@@ -103,6 +111,8 @@ def _init_main(args):
         raise SystemExit(1) from e
 
     repo_root = pathlib.Path(repo.working_tree_dir)
+    # Fixme hooks_dir/scripts-hupy-hooks resolution is superseded; new
+    # design writes .git/hooks/ stubs directly, no hooks_dir needed
     hooks_dir = args.hooks_dir or (repo_root / "scripts" / "hupy-hooks")
 
     logger.enter("HUPy Initialization for: {}".format(repo_root))
@@ -138,6 +148,8 @@ def register_cli_init_parser(cli_subparser):
         ),
     )
 
+    # Fixme --hooks-dir is superseded — no longer applicable once hooks
+    # move to the fixed .git/hooks/ location
     init_parser.add_argument(
         "--hooks-dir",
         dest="hooks_dir",

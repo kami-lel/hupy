@@ -1,12 +1,12 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-05 — `setup`/`init` is now fully implemented (copies `hupy/default-hupy-hooks/` templates, sets `core.hooksPath`, `-f`/`--force` override, subdirectory-safe via `repo.working_tree_dir`) and covered by `tests/setup/`; updated the status line, module table, Hook Integration Model, Package Layout, and Testing Infrastructure accordingly, and added a `setup` Module Details entry (previous rounds: re-audited source tree against docs, restructured `cli`'s subcommand tree to mirror git hook stages, recorded the Hook Integration Model design)*
+*Last updated: 2026-07-05 — reversed the Hook Integration Model: `hupy init` now writes a tracked, dot-prefixed `.hupy.config.json` (JSON, repo root) as the config surface, plus two thin stub scripts written directly into the untracked `.git/hooks/pre-commit`/`prepare-commit-msg` (no more tracked `scripts/hupy-hooks/` directory, no more `core.hooksPath`); the declarative-config rejection is superseded and the `core.hooksPath`-required-for-tracking rationale no longer applies since the config itself is what's tracked now. This is a **documented design change only** — `setup`'s code still implements the prior `scripts/hupy-hooks/` + `core.hooksPath` approach and has not been updated yet; updated the status line, module table, Hook Integration Model, `setup` Module Details, Package Layout, and Testing Infrastructure to flag this gap (previous rounds: `setup`/`init` implemented copying `hupy/default-hupy-hooks/` templates and setting `core.hooksPath`, covered by `tests/setup/`; before that, re-audited source tree against docs and restructured `cli`'s subcommand tree to mirror git hook stages)*
 
 ## Project Overview
 
 **hupy** (Hooks Utility Python) is a Python reimplementation of the bash `hooks_utility.sh` — a toolkit of utilities called from git hook scripts to enforce commit quality and branch hygiene.
 
-Status: **prototype** — `commit_type`, `kamilog`, `cli`, `pch` (Prepend Commit Header), `setup` (`init` subcommand), and the `ttg` package (Triage Tag Gating) are implemented; `branch_protection` and `ensure_file_edited` are not yet started.
+Status: **prototype** — `commit_type`, `kamilog`, `cli`, `pch` (Prepend Commit Header), `setup` (`init` subcommand), and the `ttg` package (Triage Tag Gating) are implemented; `branch_protection` and `ensure_file_edited` are not yet started. `setup`'s implementation currently reflects a **superseded design** (see Hook Integration Model) — a redesign to a tracked `.hupy.config.json` plus `.git/hooks/` stubs is documented but not yet implemented in code.
 
 Package: `HUPy` (import name `hupy`) · build: `setuptools` · install: `pip install -e ".[dev]"` · dependency: `gitpython>=3.1`
 
@@ -20,7 +20,7 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
 | `pch` | **implemented** | prepend header lines to in-progress commit messages for Feature Finish and Version Release merges |
-| `setup` | **implemented** | `init` subcommand: copies the default hook script templates and configures `core.hooksPath` for a repo |
+| `setup` | **implemented (design superseded)** | `init` subcommand: currently copies the default hook script templates and configures `core.hooksPath` for a repo; redesign to write a tracked `.hupy.config.json` plus `.git/hooks/` stubs is documented but not yet implemented |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
 | `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches; README also flags a related scenario, blocking *direct* (non-merge) commits to `main` |
@@ -34,24 +34,31 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 
 ### Hook Integration Model
 
-**Decision**: consumers wire `hupy` into git with a plain bash script per hook stage, tracked in the consuming repo at `scripts/hupy-hooks/<hook-name>`, that calls the CLI directly in sequence. Since `ttg` and `pch` run at different git hook stages (see `cli` in Module Details), this is **two tracked files**, not one:
+**Status**: this section documents the **current design** (superseding the prior `scripts/hupy-hooks/` + `core.hooksPath` model, kept below under *Superseded design* for its still-relevant rejections). **Not yet implemented** — `setup`'s code on disk still implements the superseded model; see `setup` in Module Details.
 
-- `scripts/hupy-hooks/pre-commit` — calls `python -m hupy pre-commit start`, then `python -m hupy pre-commit triage-tag-gating`, then `python -m hupy pre-commit end`
-- `scripts/hupy-hooks/prepare-commit-msg` — calls `python -m hupy prepare-commit-msg start`, then `python -m hupy prepare-commit-msg prepend-commit-header`, then `python -m hupy prepare-commit-msg end`
+**Decision**: `hupy init` sets a repo up with two artifacts instead of one:
 
-`git config core.hooksPath` looks for a file named exactly after the hook type in the target directory, which is why the file names above must match the git hook names precisely — and why the CLI's `pre-commit`/`prepare-commit-msg` subcommand groups (added to `cli.py` to match this) are named after the git hook stages rather than the tool names.
+1. A tracked, dot-prefixed config file at the repo root, **`.hupy.config.json`** (JSON) — this is now the config surface: which features (`ttg`, `pch`, and future ones) are enabled, and in what order they run per hook stage. Being tracked/committed, it's reviewable and shared across clones the same way any other project file is.
+2. Two thin stub scripts written directly into the untracked `.git/hooks/`: `.git/hooks/pre-commit` and `.git/hooks/prepare-commit-msg`. Each stub does nothing but invoke the corresponding CLI stage group — `python -m hupy pre-commit` / `python -m hupy prepare-commit-msg` — which then reads `.hupy.config.json` to decide what to run and in what order.
 
-- **Config surface = the script itself.** There is no separate `.hupy.toml`/YAML/INI/env-var config file. A feature is enabled by its CLI-call line being present; a user disables a feature by commenting that line out. Execution order is simply the line order — both the toggle state and the sequence are visible by reading the file top to bottom, with no separate schema to keep in sync. The `start`/`end` stub subcommands bookending each stage exist for future cross-cutting setup/teardown (e.g. a banner around the whole stage's output); no behavior yet.
-- **Calls the CLI, not internal functions.** The script invokes `python -m hupy <subcommand>` rather than importing `hupy.ttg`/`hupy.pch` Python functions directly, because the CLI subcommands are `hupy`'s stable, documented public interface — internal function signatures carry no such guarantee.
-- **Tracked via `core.hooksPath`, not `.git/hooks/` directly.** `.git/hooks/` is never committed by git, so a script placed there is per-clone and invisible to teammates. Instead, the tracked `scripts/hupy-hooks/` directory is pointed to by `git config core.hooksPath scripts/hupy-hooks`, making the hook script (and any comment-toggles in it) a normal, reviewable, version-controlled file. Symlinking tracked files into `.git/hooks/` was considered and rejected — same one-time-setup burden as `core.hooksPath`, but fragile on Windows (requires symlink privileges/`core.symlinks`).
-- **`hupy init` CLI subcommand** (implemented — see `setup` in Module Details) automates the setup step: copies the default hook script templates into `scripts/hupy-hooks/` (or `--hooks-dir`) and runs `git config core.hooksPath` for that path, so onboarding a repo to `hupy` is one documented command instead of a git-config incantation a new contributor has to know or look up.
-- **Enforcement caveat**: none of the above is enforceable, only convenient — git hooks are client-side and opt-in (`git commit --no-verify` bypasses them entirely, and a developer can simply never run `hupy init`). Guaranteed enforcement, if ever needed, requires a server-side mechanism (CI required-checks, branch protection, or a self-hosted server's `pre-receive` hook), independent of this model.
+- **Config surface = `.hupy.config.json`, not the hook script.** This reverses the prior "config surface = the script itself" decision. The hook stub is now a fixed, content-free trampoline; enabling/disabling a feature and controlling its order both become a JSON edit, not a bash edit. This does mean `hupy` must now ship and maintain a config-loading path (parsing, validation, defaults) that didn't exist before — see *Superseded design* below for why that used to be considered not worth it.
+- **Dot-prefixed naming (`.hupy.config.json`, not `hupy.config.json`)**: chosen by analogy to the Python ecosystem's single-purpose tool-config dotfiles (`.flake8`, `.pylintrc`, `.coveragerc`, `.isort.cfg`), and specifically to `.pre-commit-config.yaml` — the closest sibling in the ecosystem (same domain: tracked, root-level git-hook-orchestration config) and the exact framework rejected below as a dependency. Visible top-level docs in this repo (`AGENTS.md`, `CHANGELOG.md`, `CONTEXT.md`) were considered as a naming precedent and rejected — those are human-authored prose meant to be read, not tool-consumed config.
+- **`.git/hooks/` directly, no `core.hooksPath` redirection.** The prior model avoided `.git/hooks/` because it's never tracked by git, so anything meaningful placed there (the toggle logic itself) would be invisible to teammates — hence redirecting `core.hooksPath` at a tracked directory. That problem is now solved differently: the hook *scripts* carry no meaningful content (just a fixed call-through), so it no longer matters that `.git/hooks/` itself isn't tracked — the actual reviewable content lives in the tracked `.hupy.config.json` instead. This removes the need for `core.hooksPath` entirely.
+- **Calls the CLI, not internal functions.** Unchanged from the prior design: the stub invokes `python -m hupy <subcommand>` rather than importing `hupy.ttg`/`hupy.pch` Python functions directly, because the CLI subcommands are `hupy`'s stable, documented public interface.
+- **`hupy init` CLI subcommand** (not yet implemented under this design — see `setup` in Module Details) is expected to: write a default `.hupy.config.json` if none exists (or refuse/`--force`-overwrite if one does, mirroring the prior `-f`/`--force` behavior), and write the two `.git/hooks/` stubs. No `core.hooksPath` configuration step remains.
+- **Enforcement caveat**: unchanged — none of the above is enforceable, only convenient. Git hooks are client-side and opt-in (`git commit --no-verify` bypasses them entirely, and a developer can simply never run `hupy init`). Guaranteed enforcement, if ever needed, requires a server-side mechanism (CI required-checks, branch protection, or a self-hosted server's `pre-receive` hook), independent of this model.
 
-Rejected the `pre-commit`-framework route (pre-commit.com): it would add a hard dependency on an external hook manager (install, `.pre-commit-config.yaml`, `rev:` pinning) on top of `hupy` itself, plus its own packaging burden (`.pre-commit-hooks.yaml`, `language: python` entry points, `pass_filenames: false` on every hook since neither `ttg` nor `pch` accept positional file args, and a second `pre-commit install --hook-type prepare-commit-msg` for `pch` specifically since it needs that stage) — at odds with the *composable*/*simple defaults* principles above and with `hupy`'s bash-script origin. Wrapping `hupy` as a `.pre-commit-hooks.yaml` hook is technically easy and may be revisited later as an optional secondary path, but is not planned work; note it would not, by itself, solve configurability — `hupy`'s CLI today has no flags beyond `-v`/`-q`.
+#### Superseded design
 
-Rejected a declarative config file (`.hupy.toml` or similar) for now: it would require `hupy` to ship and maintain a config-loading module (parsing, validation, defaults-merging) that doesn't exist today, and TOML tables have no inherent execution order (would need an explicit `sequence = [...]` key to recover what the bash script's line order gives for free). The two implemented features (`ttg`, `pch`) are boolean and order-sensitive, which the comment-toggle script handles natively. **Revisit once `ensure_file_edited` is built** — its config is inherently tabular (file-pattern → required line-range pairs), which bash variables can only encode clumsily; that is the natural trigger point to reconsider a declarative config file rather than building one preemptively.
+The following was the prior decision (now replaced above), kept for its still-relevant rejections of alternatives:
 
-`examples/{pch,ttg}/*.bash` remain demo/test scripts (see Testing Infrastructure) run standalone for scenario walkthroughs — they are not, and were never meant to be, the install-ready hook scripts described above. The actual install-ready templates live at `hupy/default-hupy-hooks/{pre-commit,prepare-commit-msg}.bash`, packaged via `[tool.setuptools.package-data]` and copied into place by `hupy init`; **not yet implemented**: their script bodies are still placeholders (`# TODO write default pre-commit.bash` / `# TODO write default prepare-commit-msg.bash`), not the actual sequential `python -m hupy pre-commit ...` / `python -m hupy prepare-commit-msg ...` calls described above.
+Consumers used to wire `hupy` into git with a plain bash script per hook stage, tracked in the consuming repo at `scripts/hupy-hooks/<hook-name>`, calling the CLI directly in sequence, with `git config core.hooksPath scripts/hupy-hooks` pointing git at that tracked directory (`git config core.hooksPath` looks for a file named exactly after the hook type in the target directory — why the CLI's `pre-commit`/`prepare-commit-msg` subcommand groups are named after the git hook stages). Feature enable/disable was a comment-toggle on the CLI-call line inside that tracked script, and execution order was simply the line order. Symlinking tracked files into `.git/hooks/` was considered and rejected at the time — same one-time-setup burden as `core.hooksPath`, but fragile on Windows (requires symlink privileges/`core.symlinks`).
+
+Rejected the `pre-commit`-framework route (pre-commit.com): it would add a hard dependency on an external hook manager (install, `.pre-commit-config.yaml`, `rev:` pinning) on top of `hupy` itself, plus its own packaging burden (`.pre-commit-hooks.yaml`, `language: python` entry points, `pass_filenames: false` on every hook since neither `ttg` nor `pch` accept positional file args, and a second `pre-commit install --hook-type prepare-commit-msg` for `pch` specifically since it needs that stage) — at odds with the *composable*/*simple defaults* principles above and with `hupy`'s bash-script origin. Wrapping `hupy` as a `.pre-commit-hooks.yaml` hook is technically easy and may be revisited later as an optional secondary path, but is not planned work.
+
+Previously rejected a declarative config file (`.hupy.toml` or similar): the reasoning at the time was that it would require a config-loading module (parsing, validation, defaults-merging) that didn't exist, and that TOML tables have no inherent execution order (would need an explicit `sequence = [...]` key to recover what the bash script's line order gave for free). **This rejection is now reversed** — the current design (above) adopts `.hupy.config.json` as the config surface, with execution order expressed explicitly in the JSON structure rather than relied upon implicitly. The originally-cited trigger for revisiting (`ensure_file_edited`'s inherently tabular config) has not yet been reached; the reversal instead comes from wanting the config, not the hook script, to be the reviewable/version-controlled surface.
+
+`examples/{pch,ttg}/*.bash` remain demo/test scripts (see Testing Infrastructure) run standalone for scenario walkthroughs — they are not, and were never meant to be, install-ready hook scripts, and this is unaffected by the redesign. The previously-described install-ready templates at `hupy/default-hupy-hooks/{pre-commit,prepare-commit-msg}.bash` are superseded in role: under the new design, any packaged template content would back the thin `.git/hooks/` stubs (and a default `.hupy.config.json`) rather than a full toggle script — see Package Layout for the current state of these files, which still contain their original placeholder content pending the redesign's implementation.
 
 ## Module Details
 
@@ -99,7 +106,9 @@ README flags a planned scenario not yet covered by `examples/pch/`/`tests/pch/`:
 
 ### `setup`
 
-Implements the `init` CLI subcommand: onboards a repository onto `hupy` by copying the default hook scripts and configuring git to run them.
+Implements the `init` CLI subcommand: onboards a repository onto `hupy`.
+
+**Currently implemented (superseded design)** — copies the default hook scripts into a tracked `scripts/hupy-hooks/` directory and configures `core.hooksPath` to point at it:
 
 **Public API**: `register_cli_init_parser(cli_subparser)`
 
@@ -116,6 +125,15 @@ Implements the `init` CLI subcommand: onboards a repository onto `hupy` by copyi
 Known gap: `REPO_ROOT`'s default is `pathlib.Path(os.getcwd())` evaluated once, when `register_cli_init_parser` runs at module-import time — not per invocation. In a long-lived process (or across a test session that imports `hupy.cli`/`hupy.setup.parser` once) this default is frozen to whatever the cwd was at first import, not the cwd at call time, despite the help text's "default=current working directory" implying otherwise. `tests/setup/` works around this by always passing `REPO_ROOT` explicitly rather than relying on the default.
 
 Default hook script templates live at `hupy/default-hupy-hooks/{pre-commit,prepare-commit-msg}.bash` (see Hook Integration Model for their current placeholder-only content) and are bundled via `[tool.setuptools.package-data]` in `pyproject.toml` (`hupy = ["default-hupy-hooks/*.bash"]`).
+
+**Designed, not yet implemented** — the redesigned flow (see Hook Integration Model) that this section's code is expected to move to:
+
+1. resolve the repo root the same subdirectory-safe way as today (via `repo.working_tree_dir`)
+2. write a default `.hupy.config.json` at the repo root if none exists — refusing (or `--force`-overwriting) if one is already present, mirroring today's existing/`-f` handling for `hooks_dir`
+3. write the two hook stubs directly to `.git/hooks/pre-commit` and `.git/hooks/prepare-commit-msg` (each just invoking `python -m hupy pre-commit` / `python -m hupy prepare-commit-msg`), executable
+4. no `core.hooksPath` configuration step — git already looks in `.git/hooks/` by default
+
+The exact shape of `.hupy.config.json` (schema, defaults, how `ttg`/`pch` read it) is not yet designed beyond "tracks which features are enabled and their order per stage" — left open for when this is implemented.
 
 ### `ttg.tt_detect`
 
@@ -152,7 +170,7 @@ Argument parser and entrypoint for the `hupy` command-line tool.
 
 **Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action)
 
-The subcommand tree mirrors git hook stage names, so the CLI shape matches the `scripts/hupy-hooks/<hook-name>` scripts described in the Hook Integration Model — each stage group is the CLI grouping that a corresponding tracked hook script calls into line by line:
+The subcommand tree mirrors git hook stage names, so the CLI shape matches the `.git/hooks/<hook-name>` stub scripts described in the Hook Integration Model — each stage group is the CLI grouping that a corresponding hook stub calls into:
 
 ```
 hupy init
@@ -219,6 +237,9 @@ hupy/                             # installable package
   cli.py                          # argument parsing & dispatch
   commit_type.py                  # classify in-progress commits
   default-hupy-hooks/              # default hook script templates (packaged data)
+                                    # design change pending: content role shifts from
+                                    # full toggle scripts to thin .git/hooks/ stubs
+                                    # (see Hook Integration Model); not yet updated
     pre-commit.bash                # placeholder — TODO write default pre-commit.bash
     prepare-commit-msg.bash        # placeholder — TODO write default prepare-commit-msg.bash
   kamilog.py                      # vendored logging module (v2.1.0)
@@ -276,4 +297,4 @@ pyproject.toml
 - **git bundle fixture** (`tests/testee/default_repo.bundle`) — minimal single-file repo fixture; `prep_repo.py` clones it and dynamically constructs scenarios (branches, commits, MERGE_HEAD state, staged files from `tests/testee/ttg/*.py`)
 - **`tests/ttg/prep_repo.py`** — shared between tests and `examples/ttg/*.bash` demos; also runnable standalone via `--scenario <name>`, printing the prepared repo path so demos can `cd` into it
 - **test file naming** — nested-package modules follow `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py` (e.g. `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group)
-- **`tests/setup/`** — unlike `ttg`/`pch` (which test their public function directly), `setup`'s meaningful public surface is the CLI wiring itself, so `setup_helpers.run_init_cli(args_list)` builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_ROOT` explicitly rather than relying on its default, since that default is frozen at module-import time (see `setup` in Module Details).
+- **`tests/setup/`** — unlike `ttg`/`pch` (which test their public function directly), `setup`'s meaningful public surface is the CLI wiring itself, so `setup_helpers.run_init_cli(args_list)` builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_ROOT` explicitly rather than relying on its default, since that default is frozen at module-import time (see `setup` in Module Details). These tests currently exercise the **superseded** `scripts/hupy-hooks/`/`core.hooksPath` behavior; they'll need rework once `init` moves to the `.hupy.config.json` + `.git/hooks/` stub design (see Hook Integration Model).

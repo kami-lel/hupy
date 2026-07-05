@@ -6,6 +6,10 @@ end-to-end tests for the `init` CLI subcommand: default hooks dir,
 resolution, and error paths for non-git or nonexistent targets
 """
 
+# Fixme exercises the superseded scripts/hupy-hooks/ + core.hooksPath +
+# --hooks-dir flow end-to-end; rework around .hupy.config.json +
+# .git/hooks/ stubs, per CONTEXT.md's Hook Integration Model
+
 import pytest
 
 from setup_helpers import read_hooks_path, run_init_cli

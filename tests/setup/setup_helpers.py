@@ -5,12 +5,15 @@ helpers for invoking the `init` CLI subcommand in isolation, and for
 inspecting the resulting git config
 """
 
+# FiXME helpers (esp. read_hooks_path) target the superseded
+# core.hooksPath design; rework once `init` writes .hupy.config.json +
+# .git/hooks/ stubs instead, per CONTEXT.md's Hook Integration Model
+
 from argparse import ArgumentParser
 
 import git
 
 from hupy.setup.parser import register_cli_init_parser
-
 
 # Public API  ##################################################################
 
