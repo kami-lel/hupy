@@ -89,6 +89,8 @@ See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **cust
 
 ## 🚀 Usage
 
+<!-- Todo explain hooks how it works -->
+
 See the per-feature docs for detailed usage:
 
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
