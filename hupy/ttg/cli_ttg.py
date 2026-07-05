@@ -1,5 +1,5 @@
 """
-parser.py
+cli_ttg.py
 
 triage-tag-gating CLI parser and subcommand registration
 """

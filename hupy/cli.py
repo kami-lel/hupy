@@ -3,9 +3,9 @@
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.pch.parser import register_cli_pch_parser
+from hupy.pch.cli_pch import register_cli_pch_parser
 from hupy.setup.cli_init import register_cli_init_parser
-from hupy.ttg.parser import register_cli_ttg_parser
+from hupy.ttg.cli_ttg import register_cli_ttg_parser
 
 __all__ = ("cli_parser", "cli_subparser")
 

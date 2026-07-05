@@ -1,5 +1,5 @@
 """
-parser.py
+cli_pch.py
 
 prepend-commit-header CLI parser and subcommand registration
 """
