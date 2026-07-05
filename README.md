@@ -93,10 +93,20 @@ Once `hupy init` has installed the stubs, the hooks are **fully automatic** — 
 
 ```mermaid
 flowchart TD
-    commit([git commit]) --> pre[/pre-commit hook/]
-    pre --> ttg[[Triage Tag Gating]]
-    ttg --> prep[/prepare-commit-msg hook/]
-    prep --> pch[[Prepend Commit Header]]
+    commit([git commit])
+
+    %% pre-commit stage
+    subgraph precommit [pre-commit stage]
+        pre[/pre-commit hook/] --> ttg[[Triage Tag Gating]]
+    end
+
+    %% prepare-commit-msg stage
+    subgraph preparemsg [prepare-commit-msg stage]
+        prep[/prepare-commit-msg hook/] --> pch[[Prepend Commit Header]]
+    end
+
+    commit --> pre
+    ttg --> prep
     pch --> done([commit created])
 ```
 
