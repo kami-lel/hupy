@@ -20,11 +20,13 @@
 
 ### Added
 
-- `hupy/setup/` package — `init` CLI subcommand: copies the default hook scripts from `hupy/default-hupy-hooks/` into `REPO_ROOT/scripts/hupy-hooks/` (or `--hooks-dir`), then sets that path as the repo's `core.hooksPath`; supports `-f`/`--force` to override an existing hooks dir with a warning
-- `hupy/default-hupy-hooks/` — default hook script templates packaged with `hupy` (`pre-commit.bash`, `prepare-commit-msg.bash`), bundled via `[tool.setuptools.package-data]` in `pyproject.toml`
-- `tests/setup/` — pytest suite for the `init` CLI subcommand: fresh-copy and executable-bit checks, existing-dir abort without `-f`/override with `-f`, `--hooks-dir` override, `core.hooksPath` success and failure paths, subdirectory-invocation resolution to the true repo root, not-a-git-repo/nonexistent-path errors, and `-v`/`-q` smoke checks; 15 tests
+- `hupy/setup/cli_init.py` — `init` CLI subcommand: copies the two default hook stub scripts into the repo's actual hooks directory (`core.hooksPath` if configured, otherwise `.git/hooks/`; override with `--hooks-dir`) and writes a default `.hupy.config.json` at the repository root; `-f`/`--force` overrides an existing hook stub and/or config file
+- `hupy/hook-stubs/` — default hook stub scripts packaged with `hupy` (`pre-commit`, `prepare-commit-msg`), each a thin wrapper invoking `python -m hupy <stage>`
+- `hupy/config/.hupy.config.json` — default HUPy config template (JSON, tracks enabled features and their order per hook stage), packaged alongside the hook stubs
+- `docs/hupy_config_doc.md` — placeholder doc for `.hupy.config.json`, linked from `README.md`
+- `tests/setup/` — pytest suite for the `init` CLI subcommand and its helpers: hook-stub copy (fresh dir, unrelated pre-existing dir contents, per-file conflict abort/`-f` override), config-file write (fresh/conflict/`-f`), hooks-dir resolution (default `.git/hooks`, honoring configured `core.hooksPath`, relative and absolute), and end-to-end CLI coverage (`--hooks-dir` override beating a configured `core.hooksPath`, subdirectory resolution, non-atomic partial-write case, not-a-git-repo/nonexistent-path errors, `-v`/`-q` smoke checks); 25 tests
 - `docs/ttg_doc.md`, `docs/pch_doc.md` — placeholder docs linked from `README.md`'s new Usage section
-- `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then customize the copied hook scripts) and Usage section linking to the new `docs/` pages
+- `README.md` — Installation section (clone+`pip install` or `pip install` directly from GitHub, then `hupy init`, then see `docs/hupy_config_doc.md` for customizing behavior) and Usage section linking to the new `docs/` pages
 - `hupy/pch/` package — Prepend Commit Header (PCH): `prepend_commit_header.py` rewrites in-progress commit messages to prepend a header line for Feature Finish and Version Release merges, `parser.py` wires up the `prepend_commit_header`/`pch` CLI subcommand
 - `examples/pch/` — four runnable demo scripts: Feature Finish and Version Release passes, plus skipped scenarios (non-merge commit, irrelevant merge)
 - `tests/pch/` — comprehensive pytest suite for `prepend_commit_header()`; covers Feature Finish and Version Release header selection, message formatting edge cases (comment regrouping, Unicode round-trip, empty messages), error paths (missing `COMMIT_EDITMSG`, atomic write failures), and skip paths (non-merge, regular merge); 15 tests
