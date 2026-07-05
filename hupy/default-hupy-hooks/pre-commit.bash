@@ -1,4 +1,4 @@
-# TODO write default pre-commit.bash
+# Todo write default pre-commit.bash
 
 
 

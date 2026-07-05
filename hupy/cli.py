@@ -59,8 +59,7 @@ def _pre_commit_start_main(_):
     """
     dispatch for the ``pre-commit start`` subcommand.
     """
-    logger.setLevel(kamilog.DEBUG)  # HACK
-    # TODO verbosity
+    # Todo verbosity
     logger.info("Perform HUPy hooks")
     logger.enter("Start of pre-commit stage")
 
