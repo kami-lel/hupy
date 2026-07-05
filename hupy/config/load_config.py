@@ -10,6 +10,7 @@ import pathlib
 from pydantic import ValidationError
 
 from hupy import PROJ_LOGGER_NAME
+from hupy.cli.cli_init import load_git_repo
 from hupy.config import CONFIG_FILENAME
 from hupy.config.model import HupyConfig
 from hupy.kamilog import getLogger
@@ -23,23 +24,39 @@ __all__ = ("load_hupy_config",)
 logger = getLogger(PROJ_LOGGER_NAME)
 
 
+# cache  #######################################################################
+
+# pylint: disable-next=invalid-name
+_config_cache = None
+
+
 # Public API  ##################################################################
-
-
-# TODO make singleton/static
-# TODO hupy takes a repo?
-
-
-def load_hupy_config(repo_root):
+def load_hupy_config(repo_path):
     """
-    load and validate the HUPy config file (``.hupy.config.json``) at
-    ``repo_root``; exits the process if the file is missing or
-    malformed
+    load and validate the HUPy config file (``.hupy.config.json``)
+    from the Git repository containing ``repo_path``, caching the
+    result so it only loads from disk once; exits the process if the
+    file is missing or malformed.
+
+
+    :param repo_path: path to the repo root, or to any path inside it
+    :type repo_path: str
+    :raises SystemExit: config file not found or is malformed
+    :return: the loaded and validated configuration
+    :rtype: HupyConfig
     """
-    config_path = pathlib.Path(repo_root) / CONFIG_FILENAME
+    # pylint: disable-next=global-statement
+    global _config_cache
+
+    if _config_cache is not None:
+        return _config_cache
+
+    repo = load_git_repo(repo_path)
+    config_path = pathlib.Path(repo.working_tree_dir) / CONFIG_FILENAME
 
     try:
-        return HupyConfig.model_validate_json(config_path.read_text())
+        _config_cache = HupyConfig.model_validate_json(config_path.read_text())
+        return _config_cache
     except FileNotFoundError as e:
         logger.error("HUPy config file not found: {}".format(config_path))
         raise SystemExit(1) from e
