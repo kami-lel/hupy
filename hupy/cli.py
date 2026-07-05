@@ -1,11 +1,13 @@
 """CLI of HUPy (Hooks Utility Python): git hook utilities for commit quality enforcement"""
 
+import os
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.pch.parser import register_cli_pch_parser
+from hupy.config.load_config import load_config
+from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.setup.cli_init import register_cli_init_parser
-from hupy.ttg.parser import register_cli_ttg_parser
+from hupy.ttg.tt_gating import perform_triage_tags_gating
 
 __all__ = ("cli_parser", "cli_subparser")
 
@@ -27,10 +29,26 @@ cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
 cli_subparser = cli_parser.add_subparsers(title="subcommands")
 
 
-# pre-commit subparser  ########################################################
+# pre-commit parser  ###########################################################
 
 
-_PRE_COMMIT_DOC = "utilities for pre-commit git hook stage"
+_PRE_COMMIT_DOC = "run pre-commit stage hooks"
+
+
+def _pre_commit_main(args):
+    """
+    dispatch for the ``pre-commit`` subcommand: execute triage tag gating.
+    """
+    config = load_config(os.getcwd())
+    kamilog.set_logging_level_by_namespace(
+        args, verbosity=config.default_logger_verbosity
+    )
+
+    logger.enter("Start pre-commit stage")
+
+    perform_triage_tags_gating(os.getcwd())
+
+    logger.done("pre-commit HUPy hooks")
 
 
 def _register_pre_commit_parser(subparser):
@@ -39,60 +57,31 @@ def _register_pre_commit_parser(subparser):
         help=_PRE_COMMIT_DOC,
         description=_PRE_COMMIT_DOC,
     )
-    pre_commit_parser.set_defaults(
-        func=lambda _: pre_commit_parser.print_help(), parser=pre_commit_parser
+    kamilog.add_verbose_arguments(pre_commit_parser)
+    pre_commit_parser.set_defaults(func=_pre_commit_main)
+
+
+# prepare-commit-msg parser  ###################################################
+
+
+_PREPARE_COMMIT_MSG_DOC = "run prepare-commit-msg stage hooks"
+
+
+def _prepare_commit_msg_main(args):
+    """
+    dispatch for the ``prepare-commit-msg`` subcommand: execute prepend
+    commit header.
+    """
+    config = load_config(os.getcwd())
+    kamilog.set_logging_level_by_namespace(
+        args, verbosity=config.default_logger_verbosity
     )
 
-    pre_commit_subparser = pre_commit_parser.add_subparsers(title="subcommands")
+    logger.enter("Start prepare-commit-msg stage")
 
-    _register_pre_commit_start_parser(pre_commit_subparser)
-    register_cli_ttg_parser(pre_commit_subparser)
-    _register_pre_commit_end_parser(pre_commit_subparser)
+    prepend_commit_header(os.getcwd())
 
-
-# pre-commit start  ============================================================
-
-_PRE_COMMIT_START_DOC = "mark start of pre-commit stage"
-
-
-def _pre_commit_start_main(_):
-    """
-    dispatch for the ``pre-commit start`` subcommand.
-    """
-    # Todo verbosity
-    logger.info("Perform HUPy hooks")
-    logger.enter("Start of pre-commit stage")
-
-
-def _register_pre_commit_start_parser(subparser):
-    start_parser = subparser.add_parser(
-        "start", help=_PRE_COMMIT_START_DOC, description=_PRE_COMMIT_START_DOC
-    )
-    start_parser.set_defaults(func=_pre_commit_start_main)
-
-
-# pre-commit end  ==============================================================
-
-_PRE_COMMIT_END_DOC = "mark end of pre-commit stage"
-
-
-def _pre_commit_end_main(_):
-    """
-    dispatch for the ``pre-commit end`` subcommand.
-    """
-    logger.succ("End of pre-commit stage")
-
-
-def _register_pre_commit_end_parser(subparser):
-    end_parser = subparser.add_parser(
-        "end", help=_PRE_COMMIT_END_DOC, description=_PRE_COMMIT_END_DOC
-    )
-    end_parser.set_defaults(func=_pre_commit_end_main)
-
-
-# prepare-commit-msg subparser  ################################################
-
-_PREPARE_COMMIT_MSG_DOC = "utilities for prepare-commit-msg git hook stage"
+    logger.done("prepare-commit-msg HUPy hooks")
 
 
 def _register_prepare_commit_msg_parser(subparser):
@@ -101,64 +90,12 @@ def _register_prepare_commit_msg_parser(subparser):
         help=_PREPARE_COMMIT_MSG_DOC,
         description=_PREPARE_COMMIT_MSG_DOC,
     )
-    prepare_commit_msg_parser.set_defaults(
-        func=lambda _: prepare_commit_msg_parser.print_help(),
-        parser=prepare_commit_msg_parser,
-    )
-
-    prepare_commit_msg_subparser = prepare_commit_msg_parser.add_subparsers(
-        title="subcommands"
-    )
-
-    _register_prepare_commit_msg_start_parser(prepare_commit_msg_subparser)
-    register_cli_pch_parser(prepare_commit_msg_subparser)
-    _register_prepare_commit_msg_end_parser(prepare_commit_msg_subparser)
-
-
-# prepare-commit-msg start  =====================================================
-
-_PREPARE_COMMIT_MSG_START_DOC = "mark start of prepare-commit-msg stage"
-
-
-def _prepare_commit_msg_start_main(_):
-    """
-    dispatch for the ``prepare-commit-msg start`` subcommand.
-    """
-    logger.enter("Start of prepare-commit-msg stage")
-
-
-def _register_prepare_commit_msg_start_parser(subparser):
-    start_parser = subparser.add_parser(
-        "start",
-        help=_PREPARE_COMMIT_MSG_START_DOC,
-        description=_PREPARE_COMMIT_MSG_START_DOC,
-    )
-    start_parser.set_defaults(func=_prepare_commit_msg_start_main)
-
-
-# prepare-commit-msg end  =======================================================
-
-_PREPARE_COMMIT_MSG_END_DOC = "mark end of prepare-commit-msg stage"
-
-
-def _prepare_commit_msg_end_main(_):
-    """
-    dispatch for the ``prepare-commit-msg end`` subcommand.
-    """
-    logger.succ("Start of prepare-commit-msg stage")
-    logger.done("HUPy hooks Finished")
-
-
-def _register_prepare_commit_msg_end_parser(subparser):
-    end_parser = subparser.add_parser(
-        "end",
-        help=_PREPARE_COMMIT_MSG_END_DOC,
-        description=_PREPARE_COMMIT_MSG_END_DOC,
-    )
-    end_parser.set_defaults(func=_prepare_commit_msg_end_main)
+    kamilog.add_verbose_arguments(prepare_commit_msg_parser)
+    prepare_commit_msg_parser.set_defaults(func=_prepare_commit_msg_main)
 
 
 # register subparsers  #########################################################
+
 register_cli_init_parser(cli_subparser)
 _register_pre_commit_parser(cli_subparser)
 _register_prepare_commit_msg_parser(cli_subparser)

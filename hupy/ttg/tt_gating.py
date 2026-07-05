@@ -14,6 +14,7 @@ from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)
+logger.propagate = False
 
 
 # helpers  #####################################################################

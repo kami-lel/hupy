@@ -19,6 +19,7 @@ from ..commit_type import (
 
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
+logger.propagate = False
 
 
 # helpers  #####################################################################

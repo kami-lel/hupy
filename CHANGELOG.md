@@ -20,6 +20,10 @@
 
 ### Added
 
+- `hupy/config/model.py` — `HupyConfig` pydantic model, the schema for `.hupy.config.json`: `hupy_version` (defaulted from the installed package version) and `default_logger_verbosity` (base logging verbosity applied before `-v`/`-q` offsets)
+- `hupy/config/load_config.py` — `load_config(repo_root)`: loads and validates `.hupy.config.json` against `HupyConfig`, exiting the process on a missing or malformed file
+- `hupy/config/write_config.py` — `write_default_config(repo_root, force)`: writes `.hupy.config.json` generated from `HupyConfig` defaults
+- `hupy/kamilog.py` — `set_logging_level_by_namespace(namespace, *, verbosity=0, logger=None, logger_name=None)`: applies a namespace's `-v`/`-q` counts as an offset atop a base `verbosity`
 - `hupy/setup/cli_init.py` — `init` CLI subcommand: copies the two default hook stub scripts into the repo's actual hooks directory (`core.hooksPath` if configured, otherwise `.git/hooks/`; override with `--hooks-dir`) and writes a default `.hupy.config.json` at the repository root; `-f`/`--force` overrides an existing hook stub and/or config file
 - `hupy/hook-stubs/` — default hook stub scripts packaged with `hupy` (`pre-commit`, `prepare-commit-msg`), each a thin wrapper invoking `python -m hupy <stage>`
 - `hupy/config/.hupy.config.json` — default HUPy config template (JSON, tracks enabled features and their order per hook stage), packaged alongside the hook stubs
@@ -45,6 +49,14 @@
 
 ### Changed
 
+- `hupy/cli.py` — `pre-commit`/`prepare-commit-msg` now load `.hupy.config.json` via `load_config()` and set the root logger level from `config.default_logger_verbosity` combined with `-v`/`-q` through `set_logging_level_by_namespace`, instead of a flags-only `set_logging_level_by_verbosity`
+- `hupy/kamilog.py` — `set_logging_level_by_verbosity` now takes a plain verbosity int instead of an argparse namespace; namespace handling moved to the new `set_logging_level_by_namespace`
+- `hupy/kamilog.py` — `getLogger()` now defaults to `datefmt=DATEFMT_TIME` (timestamps on) instead of `None`
+- `hupy/commit_type.py`, `hupy/pch/prepend_commit_header.py`, `hupy/setup/cli_init.py`, `hupy/ttg/tt_gating.py` — disabled logger propagation (`logger.propagate = False`) so each module's own stdout/stderr handlers don't double-print through the root logger's handlers
+- `hupy/setup/cli_init.py` — `init` now generates `.hupy.config.json` dynamically from `HupyConfig` defaults via `write_default_config()`, instead of copying the packaged static template
+- `pyproject.toml` — added `pydantic>=2` dependency
+- shortened the `pre-commit`/`prepare-commit-msg` stage log messages (`enter`/`succ`/`done`)
+- **CLI subcommand tree flattened**: dropped the nested `start`/`<tool-name>`/`end` hook-stage subcommands in favor of `pre-commit`/`prepare-commit-msg` directly calling `perform_triage_tags_gating`/`prepend_commit_header`; `hupy/pch/parser.py`/`hupy/ttg/parser.py` were briefly renamed to `cli_pch.py`/`cli_ttg.py` before being folded into `hupy/cli.py` and removed
 - rewrote `README.md` with structured sections: features, tech stack, project layout, build and test, acknowledgments
 - `pyproject.toml` — package metadata name corrected from `hupy` to `HUPy`; added `gitpython>=3.1` dependency
 - refactored `commit_type` from `hupy/ttg/commit_type.py` to top-level `hupy/commit_type.py`; it is a general commit-classification utility, not TTG-specific
@@ -57,6 +69,10 @@
 ### Deprecated
 
 ### Removed
+
+- packaged static template `hupy/config/.hupy.config.json` and its `pyproject.toml` package-data entry — config is now generated dynamically from `HupyConfig` defaults
+- `hupy/pch/cli_pch.py`, `hupy/ttg/cli_ttg.py` — folded into the flattened `hupy/cli.py`
+- `tests/setup/setup-cli_init_write_default_config_test.py` — coverage folded into `setup-cli_init_init_cli_test.py`, asserting against `HupyConfig` defaults instead of the removed static template
 
 ### Fixed
 

@@ -20,6 +20,7 @@ __all__ = (
     "getLogger",
     "KamiLogger",
     "add_verbose_arguments",
+    "set_logging_level_by_namespace",
     "set_logging_level_by_verbosity",
     # ANSI color
     "AnsiColor",
@@ -51,7 +52,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.2.0"
+__version__ = "2.3.1"
 __author__ = "kamiLeL"
 
 
@@ -506,24 +507,27 @@ class _DiffOnlyEngine:  # ******************************************************
     :param formatter: formatter used to measure the prefix width and
             apply ``color_grey`` to compression markers
     :type formatter: _LogFormatter
-    :param window: number of prior messages held for comparison
-    :type window: int
+    :param threshold: number of prior messages held for comparison
+    :type threshold: int
     """
 
     _COMPRESSION_BLOCK_SIZE = 8
-    _PRESERVED_TRAILING_CHARS = 2
+    _FALLBACK_TAB_SPAN = 2
     _COMPRESSION_MARKER = "〃\t"
+    _MARKER_CHAR = "〃"
+    _MARKER_WIDTH = 2  # rendered columns of _MARKER_CHAR
+    _LEADER_MARKER_MIN = 4  # leader shorter than this becomes bare "\t"
 
-    def __init__(self, formatter, window=3):
+    def __init__(self, formatter, threshold=3):
         self._formatter = formatter
-        self._history = deque(maxlen=window)
+        self._history = deque(maxlen=threshold)
         # _common[i] = shared char at position i across all history,
         # or None where messages diverge or lengths differ
         self._common: list = []
 
     def _update_common(self):
         """
-        recompute ``_common`` from the current ``_history`` window
+        recompute ``_common`` from the current ``_history`` messages
         """
         history = list(self._history)
         if not history:
@@ -542,12 +546,51 @@ class _DiffOnlyEngine:  # ******************************************************
                 )
         self._common = common
 
+    @staticmethod
+    def _is_word_char(ch):
+        """
+        report whether ``ch`` is a word character (``0-9A-Za-z`` or ``-_``)
+        """
+        return (ch.isascii() and ch.isalnum()) or ch in "-_"
+
+    def _find_cut(self, message, run_s, run_e, prefix_len):
+        """
+        find cut position ending the replaceable part of a common run.
+
+        scans backward from the run end for the nearest word-boundary
+        character (any non-word char); the cut lands on that character
+        itself, so the boundary symbol prints intact with the tail.
+        the scan reaches back at most ``_FALLBACK_TAB_SPAN`` tab stops,
+        falling back to that tab-aligned floor when no boundary exists
+        within the span
+
+
+        :param message: full message text being compressed
+        :type message: str
+        :param run_s: start index of the common run
+        :type run_s: int
+        :param run_e: end index (exclusive) of the common run
+        :type run_e: int
+        :param prefix_len: printable prefix width before the message
+        :type prefix_len: int
+        :return: cut index in ``[run_s, run_e]``; text before it is
+                replaceable, text from it stays printed
+        :rtype: int
+        """
+        block = self._COMPRESSION_BLOCK_SIZE
+        col_e = prefix_len + run_e
+        floor_col = (col_e // block - self._FALLBACK_TAB_SPAN) * block
+        cut_min = max(run_s, floor_col - prefix_len)
+        for b in range(run_e - 1, cut_min - 1, -1):
+            if not self._is_word_char(message[b]):
+                return b
+        return cut_min
+
     def _compress(self, record, message):
         """
         compress positions matching ``_common`` into ``〃\\t`` markers.
         """
         block = self._COMPRESSION_BLOCK_SIZE
-        trail = self._PRESERVED_TRAILING_CHARS
         prefix_len = self._formatter.engine.count_prefix_chars(record)
         n_common = len(self._common)
         is_common = [
@@ -568,21 +611,43 @@ class _DiffOnlyEngine:  # ******************************************************
                 while i < msg_len and is_common[i]:
                     i += 1
                 run_e = i
+                cut = self._find_cut(message, run_s, run_e, prefix_len)
                 col_offset = (prefix_len + run_s) % block
                 padding = (block - col_offset) % block
                 tab_s = run_s + padding
-                replaceable = run_e - tab_s - trail
+                replaceable = cut - tab_s
                 k = replaceable // block if replaceable > 0 else 0
                 if k == 0:
                     result.append(message[run_s:run_e])
                 else:
-                    result.append(message[run_s:tab_s])
+                    gap = replaceable - block * k
+                    # leader: common chars before the first tab stop are
+                    # never printed; short ones become a bare tab jump,
+                    # longer ones earn their own marker
+                    if padding >= self._LEADER_MARKER_MIN:
+                        result.append(
+                            self._formatter.palette.color_grey(
+                                self._COMPRESSION_MARKER
+                            )
+                        )
+                    elif padding > 0:
+                        result.append("\t")
                     result.append(
                         self._formatter.palette.color_grey(
                             self._COMPRESSION_MARKER * k
                         )
                     )
-                    result.append(message[tab_s + block * k : run_e])
+                    # partial block: marker + spaces padding to the cut
+                    if gap >= self._MARKER_WIDTH:
+                        result.append(
+                            self._formatter.palette.color_grey(
+                                self._MARKER_CHAR
+                            )
+                        )
+                        result.append(" " * (gap - self._MARKER_WIDTH))
+                    else:
+                        result.append(" " * gap)
+                    result.append(message[cut:run_e])
         return "".join(result)
 
     def process(self, record):
@@ -615,14 +680,14 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
     :param formatter: forwarded to ``_DiffOnlyEngine`` for prefix-width
             measurement; pass ``None`` to disable prefix alignment
     :type formatter: _LogFormatter or None
-    :param window: forwarded to ``_DiffOnlyEngine`` as the history
-            window size
-    :type window: int
+    :param threshold: forwarded to ``_DiffOnlyEngine`` as the history
+            depth before compression activates
+    :type threshold: int
     """
 
-    def __init__(self, formatter, window=3):
+    def __init__(self, formatter, threshold=3):
         super().__init__()
-        self._engine = _DiffOnlyEngine(formatter, window)
+        self._engine = _DiffOnlyEngine(formatter, threshold)
 
     def filter(self, record):
         """
@@ -643,16 +708,18 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
 
 
 # pylint: disable-next=invalid-name
-def getLogger(name=None, *, datefmt=None, relative_to=None):
+def getLogger(name=None, *, datefmt=DATEFMT_TIME, relative_to=None):
     """
     return a configured :class:`KamiLogger` for ``name``, creating it if needed.
 
 
     :param name: logger name
     :type name: str, optional
-    :param datefmt: strftime format for timestamps; ignored when ``relative_to`` is set;
-            defaults to ``None`` (no timestamp)
-    :type datefmt: str, optional
+    :param datefmt: strftime format for timestamps;
+            default=``DATEFMT_TIME`` (``HH:MM:SS``);
+            pass ``None`` to disable timestamps
+            ignored when ``relative_to`` is set;
+    :type datefmt: str or None, optional
     :param relative_to: Unix timestamp to use as epoch for relative time display;
             mutually exclusive with ``datefmt``
     :type relative_to: float, optional
@@ -718,16 +785,25 @@ def _calc_logging_level_from_verbosity(verbosity):
         return logging.CRITICAL
 
 
-def _calc_logging_level_from_verbosity_namespace(namespace):
+def _calc_logging_level_from_verbosity_namespace(namespace, verbosity=0):
     """
-    extract verbosity from namespace and return the logging level
+    apply namespace's verbose/quiet counts as an offset to ``verbosity``,
+    then return the logging level
     """
-    verbosity = 0
     if hasattr(namespace, "verbose"):
         verbosity += namespace.verbose
     if hasattr(namespace, "quiet"):
         verbosity -= namespace.quiet
     return _calc_logging_level_from_verbosity(verbosity)
+
+
+def _set_logger_level(level, *, logger=None, logger_name=None):
+    """
+    set ``level`` on ``logger``, falling back to ``logger_name``
+    """
+    if logger is None:
+        logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
 
 
 # Verbosity Public API  ========================================================
@@ -757,22 +833,51 @@ def add_verbose_arguments(parser):
     )
 
 
-def set_logging_level_by_verbosity(namespace, *, logger=None, logger_name=None):
+def set_logging_level_by_namespace(
+    namespace, *, verbosity=0, logger=None, logger_name=None
+):
     """
     set the logging level of a logger based on verbosity flags.
 
 
     :param namespace: parsed namespace containing ``--verbose`` and/or ``--quiet`` counts
     :type namespace: argparse.Namespace
-    :param logger: logger instance to configure; takes priority over ``logger_name``
+    :param verbosity: base verbosity that namespace's ``--verbose``/``--quiet``
+            counts are added to/subtracted from
+    :type verbosity: int
+    :param logger: logger instance to configure
     :type logger: logging.Logger, optional
-    :param logger_name: name of logger to configure; ``None`` targets the root logger;
+    :param logger_name: name of logger to configure;
+            ``None`` targets the root logger;
             ignored when ``logger`` is provided
     :type logger_name: str, optional
     """
-    if logger is None:
-        logger = logging.getLogger(logger_name)
-    logger.setLevel(_calc_logging_level_from_verbosity_namespace(namespace))
+    _set_logger_level(
+        _calc_logging_level_from_verbosity_namespace(namespace, verbosity),
+        logger=logger,
+        logger_name=logger_name,
+    )
+
+
+def set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None):
+    """
+    set the logging level of a logger based on a verbosity integer.
+
+
+    :param verbosity:
+    :type verbosity: int
+    :param logger: logger instance to configure
+    :type logger: logging.Logger, optional
+    :param logger_name: name of logger to configure;
+            ``None`` targets the root logger;
+            ignored when ``logger`` is provided
+    :type logger_name: str, optional
+    """
+    _set_logger_level(
+        _calc_logging_level_from_verbosity(verbosity),
+        logger=logger,
+        logger_name=logger_name,
+    )
 
 
 # Comment Banner  #############################################################
