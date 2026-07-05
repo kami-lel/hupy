@@ -5,7 +5,7 @@ tests for `_copy_hooks_scripts`: fresh copy, existing-dir abort
 without --force, and override with --force
 """
 
-# Fixme `_copy_hooks_scripts` targets the superseded scripts/hupy-hooks/
+# FIXME `_copy_hooks_scripts` targets the superseded scripts/hupy-hooks/
 # design; rework these tests around writing .hupy.config.json + .git/hooks/
 # stubs, per CONTEXT.md's Hook Integration Model
 

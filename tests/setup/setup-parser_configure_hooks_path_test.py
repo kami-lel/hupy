@@ -5,7 +5,7 @@ tests for `_configure_repo_hooks_path`: successful config write, and
 the failure path when the git config cannot be written
 """
 
-# Fixme `_configure_repo_hooks_path`/core.hooksPath is superseded — the
+# FIXME `_configure_repo_hooks_path`/core.hooksPath is superseded — the
 # new design never sets core.hooksPath; this test file should be
 # removed or replaced once `init` moves to .git/hooks/ stubs, per
 # CONTEXT.md's Hook Integration Model

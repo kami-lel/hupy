@@ -73,7 +73,7 @@ python -m hupy init
 - copies the default hook scripts into `scripts/hupy-hooks/`
 - points git's `core.hooksPath` at that folder
 
-<!-- Fixme this whole section describes the superseded scripts/hupy-hooks/
+<!-- FIXME this whole section describes the superseded scripts/hupy-hooks/
 + core.hooksPath design; update to the .hupy.config.json + .git/hooks/
 stub design once `init` is reimplemented, per CONTEXT.md's Hook
 Integration Model -->
@@ -87,7 +87,7 @@ Inspect the copied scripts and comment out any step not needed:
 - `scripts/hupy-hooks/pre-commit`
 - `scripts/hupy-hooks/prepare-commit-msg`
 
-<!-- Fixme superseded — customization moves to editing the tracked
+<!-- FIXME superseded — customization moves to editing the tracked
 .hupy.config.json instead of commenting out lines in copied scripts -->
 
 
