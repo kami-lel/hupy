@@ -13,7 +13,7 @@ the failure path when the git config cannot be written
 import git
 import pytest
 
-from hupy.setup.parser import _configure_repo_hooks_path
+from hupy.setup.cli_init import _configure_repo_hooks_path
 
 # tests  ########################################################################
 

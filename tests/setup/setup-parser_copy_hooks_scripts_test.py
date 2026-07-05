@@ -13,7 +13,7 @@ import os
 
 import pytest
 
-from hupy.setup.parser import _HOOKS_TEMPLATES_DIR, _copy_hooks_scripts
+from hupy.setup.cli_init import _HOOKS_TEMPLATES_DIR, _copy_hooks_scripts
 
 _TEMPLATE_NAMES = sorted(p.name for p in _HOOKS_TEMPLATES_DIR.iterdir())
 

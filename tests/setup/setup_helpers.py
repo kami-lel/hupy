@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 
 import git
 
-from hupy.setup.parser import register_cli_init_parser
+from hupy.setup.cli_init import register_cli_init_parser
 
 # Public API  ##################################################################
 
