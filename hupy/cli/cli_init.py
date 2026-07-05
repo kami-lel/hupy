@@ -4,6 +4,7 @@ import argparse
 import os
 import pathlib
 import shutil
+import sys
 
 import git
 
@@ -41,6 +42,11 @@ performs:
 """
 
 _HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
+
+# placeholder in the stub templates, replaced with the absolute
+# interpreter path at install time so the hooks run under the same
+# Python that ``hupy`` is installed in, regardless of PATH/venv state
+_PYTHON_PLACEHOLDER = "{{PYTHON}}"
 
 # helpers  #####################################################################
 
@@ -80,8 +86,12 @@ def _copy_hook_stubs(hooks_dir, force):
 
             logger.warning("overwrite existing hook: {}".format(target_path))
 
-        logger.debug("hook stub copied: {}".format(target_path))
-        shutil.copy2(stub_file, target_path)
+        content = stub_file.read_text(encoding="utf-8")
+        content = content.replace(_PYTHON_PLACEHOLDER, sys.executable)
+        target_path.write_text(content, encoding="utf-8")
+        shutil.copymode(stub_file, target_path)
+
+        logger.debug("hook stub installed: {}".format(target_path))
 
 
 def _init_main(args):
