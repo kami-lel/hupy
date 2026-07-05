@@ -89,7 +89,7 @@ See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **cust
 
 ## 🚀 Usage
 
-<!-- Todo explain hooks how it works -->
+<!-- TODO explain hooks how it works -->
 
 See the per-feature docs for detailed usage:
 
