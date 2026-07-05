@@ -17,5 +17,5 @@ class HupyConfig(BaseModel):
     schema for the HUPy config file (``.hupy.config.json``)
     """
 
-    default_logger_verbosity: int = 1
     hupy_version: str = Field(default_factory=lambda: version("HUPy"))
+    default_logger_verbosity: int = 1

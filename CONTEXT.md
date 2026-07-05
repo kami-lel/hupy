@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-06 — implemented the reversed Hook Integration Model in code: `hupy/setup/parser.py` was renamed to `hupy/setup/cli_init.py` and rewritten to write a default `.hupy.config.json` (copied from the packaged `hupy/config/.hupy.config.json` template) at the repo root, and to copy the two packaged `hupy/hook-stubs/{pre-commit,prepare-commit-msg}` stub scripts into the repo's actual hooks directory — resolved via a new `_resolve_hooks_dir()` helper that reads `core.hooksPath` via GitPython and falls back to `.git/hooks/`, no longer setting `core.hooksPath` itself; `-f`/`--force` now gates per-file hook-stub conflicts and the config file independently. The old `hupy/default-hupy-hooks/` template directory and `scripts/hupy-hooks/`/`core.hooksPath`-writing code are gone. `tests/setup/` was rewritten to match (hook-stub copy, config write, hooks-dir resolution, and end-to-end CLI suites — 25 tests); updated the status line, module table, Hook Integration Model, `setup` Module Details, Package Layout, and Testing Infrastructure accordingly (previous round: documented this design change ahead of implementation; before that, `setup`/`init` implemented the prior `scripts/hupy-hooks/`/`core.hooksPath` design; before that, re-audited source tree against docs and restructured `cli`'s subcommand tree to mirror git hook stages)*
+*Last updated: 2026-07-06 — introduced a `config` package (`HupyConfig` pydantic model, `load_config`, `write_default_config`) so `.hupy.config.json` is generated from model defaults instead of a static template, and wired its `default_logger_verbosity` field into `cli.py`'s `pre-commit`/`prepare-commit-msg` dispatch via a new `kamilog.set_logging_level_by_namespace(namespace, *, verbosity=0, ...)` (namespace `-v`/`-q` offsets atop a base verbosity), while `set_logging_level_by_verbosity` was narrowed to take a plain int; also disabled logger propagation (`propagate = False`) on `commit_type`, `pch.prepend_commit_header`, `setup.cli_init`, and `ttg.tt_gating` to stop double-printed log lines, and flattened the CLI subcommand tree (dropped nested `start`/`<tool>`/`end` hook-stage subcommands). Updated the module table, Hook Integration Model, `cli`/`kamilog`/`setup` Module Details, added a `config` Module Details section, Package Layout, and Testing Infrastructure accordingly (previous round: implemented the reversed Hook Integration Model in code — `setup/parser.py` renamed to `setup/cli_init.py`, hook stubs and config copied into the repo from packaged templates, `tests/setup/` rewritten to match, 25 tests; before that, documented this design change ahead of implementation; before that, `setup`/`init` implemented the prior `scripts/hupy-hooks/`/`core.hooksPath` design; before that, re-audited source tree against docs and restructured `cli`'s subcommand tree to mirror git hook stages)*
 
 ## Project Overview
 
@@ -8,7 +8,7 @@
 
 Status: **prototype** — `commit_type`, `kamilog`, `cli`, `pch` (Prepend Commit Header), `setup` (`init` subcommand), and the `ttg` package (Triage Tag Gating) are implemented; `branch_protection` and `ensure_file_edited` are not yet started.
 
-Package: `HUPy` (import name `hupy`) · build: `setuptools` · install: `pip install -e ".[dev]"` · dependency: `gitpython>=3.1`
+Package: `HUPy` (import name `hupy`) · build: `setuptools` · install: `pip install -e ".[dev]"` · dependencies: `gitpython>=3.1`, `pydantic>=2`
 
 ## Architecture
 
@@ -18,12 +18,12 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 |---|---|---|
 | `cli` | **implemented** | argument parsing, subcommand dispatch, CLI entrypoint |
 | `commit_type` | **implemented** | classify an in-progress commit as a `CommitType` enum member |
+| `config` | **implemented** | `HupyConfig` pydantic schema for `.hupy.config.json`, plus loading and default-writing helpers |
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
 | `pch` | **implemented** | prepend header lines to in-progress commit messages for Feature Finish and Version Release merges |
 | `setup` | **implemented** | `init` subcommand: copies default hook stub scripts into the repo's actual hooks directory and writes a default `.hupy.config.json` at the repo root |
 | `ttg.tt_detect` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
 | `ttg.tt_gating` | **implemented** | gate commits by triage tag presence on protected branches |
-| `branch_protection` | not yet implemented | detect and block annotation markers by severity tier on protected branches; README also flags a related scenario, blocking *direct* (non-merge) commits to `main` |
 | `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit; a bash-era utility being ported, per the `# Todo reimplement ensure file modified` marker in `hupy/__init__.py` |
 
 ### Design Principles
@@ -36,15 +36,15 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 
 **Decision**: `hupy init` sets a repo up with two artifacts:
 
-1. A tracked, dot-prefixed config file at the repo root, **`.hupy.config.json`** (JSON) — the config surface: which features (`ttg`, `pch`, and future ones) are enabled, and in what order they run per hook stage. Being tracked/committed, it's reviewable and shared across clones the same way any other project file is. Default content is copied from the packaged `hupy/config/.hupy.config.json` template.
-2. Two thin stub scripts copied into the repo's actual hooks directory: `pre-commit` and `prepare-commit-msg`, sourced from the packaged `hupy/hook-stubs/`. Each stub does nothing but invoke the corresponding CLI stage group — `python -m hupy pre-commit "$@"` / `python -m hupy prepare-commit-msg "$@"` — which then reads `.hupy.config.json` to decide what to run and in what order (config-reading side not yet implemented — see `setup` in Module Details).
+1. A tracked, dot-prefixed config file at the repo root, **`.hupy.config.json`** (JSON) — the config surface: which features (`ttg`, `pch`, and future ones) are enabled, and in what order they run per hook stage. Being tracked/committed, it's reviewable and shared across clones the same way any other project file is. Default content is generated from `HupyConfig` defaults (see `config` in Module Details), not copied from a static template.
+2. Two thin stub scripts copied into the repo's actual hooks directory: `pre-commit` and `prepare-commit-msg`, sourced from the packaged `hupy/hook-stubs/`. Each stub does nothing but invoke the corresponding CLI stage group — `python -m hupy pre-commit "$@"` / `python -m hupy prepare-commit-msg "$@"` — which then reads `.hupy.config.json` via `load_config()`; today only `default_logger_verbosity` is consumed (feature enable/order fields aren't in `HupyConfig` yet — see `cli` and `config` in Module Details).
 
 - **Config surface = `.hupy.config.json`, not the hook script.** This reverses an earlier "config surface = the script itself" decision (see *Prior rejections* below). The hook stub is a fixed, content-free trampoline; enabling/disabling a feature and controlling its order both become a JSON edit, not a bash edit.
 - **Dot-prefixed naming (`.hupy.config.json`, not `hupy.config.json`)**: chosen by analogy to the Python ecosystem's single-purpose tool-config dotfiles (`.flake8`, `.pylintrc`, `.coveragerc`, `.isort.cfg`), and specifically to `.pre-commit-config.yaml` — the closest sibling in the ecosystem (same domain: tracked, root-level git-hook-orchestration config) and the exact framework rejected below as a dependency. Visible top-level docs in this repo (`AGENTS.md`, `CHANGELOG.md`, `CONTEXT.md`) were considered as a naming precedent and rejected — those are human-authored prose meant to be read, not tool-consumed config.
 - **Hooks directory is resolved, not fixed to `.git/hooks/`.** `hupy.setup.cli_init._resolve_hooks_dir(repo)` reads `core.hooksPath` via GitPython's `config_reader()` and joins it onto `repo.working_tree_dir` if set (resolving relative to the repo root; an absolute configured path is used as-is since `pathlib` path-joining drops the left side when the right side is absolute), otherwise falls back to `pathlib.Path(repo.git_dir) / "hooks"`. `--hooks-dir` overrides this resolution entirely. `init` itself never writes `core.hooksPath` — an earlier design's redirection-at-a-tracked-directory approach (see *Prior rejections*) is unnecessary now that the hook scripts carry no meaningful content of their own; the reviewable content lives in `.hupy.config.json` instead.
 - **Per-file conflict checks, not directory-level.** `_copy_hook_stubs` only checks whether each individual target filename (`pre-commit`, `prepare-commit-msg`) already exists — not whether the hooks directory itself exists. `.git/hooks/` always exists after `git init` (populated with git's own `*.sample` files), so a directory-existence check would force `-f` on every default-path run; per-file checks let a fresh repo's first `init` succeed without `-f` while still protecting a real pre-existing hook.
 - **Calls the CLI, not internal functions.** The stub invokes `python -m hupy <subcommand>` rather than importing `hupy.ttg`/`hupy.pch` Python functions directly, because the CLI subcommands are `hupy`'s stable, documented public interface.
-- **`-f`/`--force` gates the hook stubs and the config file independently** — `_copy_hook_stubs` and `_write_default_config` each perform their own existence/`force` check, so (e.g.) a pre-existing config with fresh hooks still aborts on the config step even though the hooks were already written; `init` is not atomic across the two artifacts (mirrors the non-atomicity of the prior design between copying scripts and configuring `core.hooksPath`).
+- **`-f`/`--force` gates the hook stubs and the config file independently** — `_copy_hook_stubs` and `write_default_config` each perform their own existence/`force` check, so (e.g.) a pre-existing config with fresh hooks still aborts on the config step even though the hooks were already written; `init` is not atomic across the two artifacts (mirrors the non-atomicity of the prior design between copying scripts and configuring `core.hooksPath`).
 - **Enforcement caveat**: none of the above is enforceable, only convenient. Git hooks are client-side and opt-in (`git commit --no-verify` bypasses them entirely, and a developer can simply never run `hupy init`). Guaranteed enforcement, if ever needed, requires a server-side mechanism (CI required-checks, branch protection, or a self-hosted server's `pre-receive` hook), independent of this model.
 
 #### Prior rejections
@@ -115,15 +115,26 @@ Implements the `init` CLI subcommand (`hupy/setup/cli_init.py`, renamed from `pa
 2. resolve `repo_root = pathlib.Path(repo.working_tree_dir)` — deliberately *not* the raw `root_path` argument, so that running `hupy init` from any subdirectory still anchors `hooks_dir`/`repo_root` at the true repository root
 3. resolve `hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)` — see Hook Integration Model for `_resolve_hooks_dir`'s `core.hooksPath`/`.git/hooks` fallback logic
 4. `_copy_hook_stubs(hooks_dir, force)` — `hooks_dir.mkdir(parents=True, exist_ok=True)` (no error if it already exists — see Hook Integration Model on why this is per-file, not directory-level), then for each file in `hupy/hook-stubs/`: if the target already exists, without `force` → `logger.error(...)` + `raise SystemExit(1)` (leaving that and any later files untouched); with `force`, `logger.warning(...)` then overwrites; otherwise `shutil.copy2` (preserves the executable bit)
-5. `_write_default_config(repo_root, force)` — same existence/`force` pattern as step 4, but for a single file: `repo_root / ".hupy.config.json"`, copied from the packaged `hupy/config/.hupy.config.json` template via `shutil.copy2`
+5. `write_default_config(repo_root, force)` (`hupy/config/write_config.py`) — same existence/`force` pattern as step 4, but for a single file: `repo_root / CONFIG_FILENAME`, generated from `HupyConfig().model_dump_json(indent=2)` rather than copied from a static template
 
 **CLI arguments**: `REPO_ROOT` (positional, optional, `type=pathlib.Path`, default=`pathlib.Path(os.getcwd())`) · `--hooks-dir HOOKS_DIR` (`type=pathlib.Path`, default `None` → resolved in step 3 above) · `-f`/`--force` (`store_true`, gates both step 4 and step 5) · `-v`/`-q` verbosity
 
 Known gap: `REPO_ROOT`'s default is `pathlib.Path(os.getcwd())` evaluated once, when `register_cli_init_parser` runs at module-import time — not per invocation. In a long-lived process (or across a test session that imports `hupy.cli`/`hupy.setup.cli_init` once) this default is frozen to whatever the cwd was at first import, not the cwd at call time, despite the help text's "default=current working directory" implying otherwise. `tests/setup/` works around this by always passing `REPO_ROOT` explicitly rather than relying on the default.
 
-Packaged templates: `hupy/hook-stubs/{pre-commit,prepare-commit-msg}` (thin `python -m hupy <stage> "$@"` wrappers, no `.bash` extension since git requires the exact hook name in the hooks directory) and `hupy/config/.hupy.config.json` (default config content), bundled via `[tool.setuptools.package-data]` in `pyproject.toml` (`hupy = ["hook-stubs/*", "config/.hupy.config.json"]`).
+Packaged templates: `hupy/hook-stubs/{pre-commit,prepare-commit-msg}` (thin `python -m hupy <stage> "$@"` wrappers, no `.bash` extension since git requires the exact hook name in the hooks directory), bundled via `[tool.setuptools.package-data]` in `pyproject.toml` (`hupy = ["hook-stubs/*"]`); `.hupy.config.json` is no longer a packaged file, since `write_default_config` generates its content from `HupyConfig` defaults instead of copying a template.
 
-Not yet implemented: the CLI side that *reads* `.hupy.config.json` when `hupy pre-commit`/`hupy prepare-commit-msg` run — the stubs call through to those stage groups already, but nothing yet parses the config to decide which of `ttg`/`pch` to invoke or in what order; today that's still whatever's wired directly in `cli.py`. The packaged default template is currently just `{}` — its intended shape (a JSON array per stage, e.g. `{"pre-commit": ["triage-tag-gating"], ...}`, in the order features should run) is not yet encoded, since nothing consumes it yet.
+Not yet implemented: the CLI side that uses `.hupy.config.json` to decide *which* of `ttg`/`pch` to invoke or in what order per stage — `cli.py`'s `pre-commit`/`prepare-commit-msg` dispatch already reads the config via `load_config()` (see `config` in Module Details) and applies `default_logger_verbosity`, but the enabled-features/ordering fields aren't in `HupyConfig` yet, so which tool runs per stage is still hardcoded in `cli.py`.
+
+### `config`
+
+Config schema, loading, and default-writing for `.hupy.config.json`.
+
+**Public API**: `CONFIG_FILENAME` (`hupy/config/__init__.py`, `= ".hupy.config.json"`) · `HupyConfig` (`model.py`) · `load_config(repo_root)` (`load_config.py`) · `write_default_config(repo_root, force)` (`write_config.py`)
+
+- **`HupyConfig(BaseModel)`** — `hupy_version: str` (defaulted via `importlib.metadata.version("HUPy")`) and `default_logger_verbosity: int = 1` (base verbosity `cli.py` passes into `set_logging_level_by_namespace` before `-v`/`-q` offsets apply)
+- **`load_config(repo_root)`** — reads and `HupyConfig.model_validate_json()`-validates `repo_root / CONFIG_FILENAME`; on `FileNotFoundError` or `pydantic.ValidationError`, logs and `raise SystemExit(1) from e` rather than propagating the exception
+- **`write_default_config(repo_root, force)`** — same existence/`force` conflict pattern as `_copy_hook_stubs` (see `setup` above), writing `HupyConfig().model_dump_json(indent=2) + "\n"`; used by `hupy init`, not by `load_config`
+- no dedicated test suite yet (`# todo unit test for configs` in `hupy/config/__init__.py`); `write_default_config` is currently only exercised indirectly through `tests/setup/setup-cli_init_init_cli_test.py`
 
 ### `ttg.tt_detect`
 
@@ -170,16 +181,16 @@ hupy prepare-commit-msg
 
 - **main parser** — prog name and description sourced from `__package__` and module docstring
 - **`init`** — registered by the `setup` package's `setup/cli_init.py` (`register_cli_init_parser`); see `setup` in Module Details for its implementation
-- **`pre-commit`** — directly calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity; logs entry/exit via the logger (no nested subcommands)
-- **`prepare-commit-msg`** — directly calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity; logs entry/exit via the logger (no nested subcommands)
+- **`pre-commit`** — loads `.hupy.config.json` via `load_config(os.getcwd())`, applies `-v`/`-q` verbosity on top of `config.default_logger_verbosity`, then calls `perform_triage_tags_gating(os.getcwd())`; logs entry/exit via the logger (no nested subcommands)
+- **`prepare-commit-msg`** — same config-load-then-verbosity pattern, then calls `prepend_commit_header(os.getcwd())`; logs entry/exit via the logger (no nested subcommands)
 - **dispatch functions are module-level** in `cli.py` (`_pre_commit_main`, `_prepare_commit_msg_main`) — they call the public functions from `ttg.tt_gating` and `pch.prepend_commit_header` directly, not via a CLI re-entry
-- **verbosity** — `-v`/`-q` flags apply to the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.commit_type"`) inherit this level since they set none of their own
+- **verbosity** — both stage dispatch functions call `kamilog.set_logging_level_by_namespace(args, verbosity=config.default_logger_verbosity)`, so `.hupy.config.json`'s `default_logger_verbosity` sets the baseline and each `-v`/`-q` shifts it by one step; this targets the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger, and child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.commit_type"`) inherit the resulting level since they set none of their own. `setup/cli_init.py`'s `init` calls the same function but without a config (`set_logging_level_by_namespace(args, logger=logger)`, base `verbosity=0`), since `init` runs before any `.hupy.config.json` exists.
 
-Dispatch follows a simple pattern: subcommand dispatch functions receive the parsed `argparse.Namespace`, handle verbosity, and call the corresponding public utility function.
+Dispatch follows a simple pattern: subcommand dispatch functions receive the parsed `argparse.Namespace`, load config where one exists, handle verbosity, and call the corresponding public utility function.
 
 ### `kamilog`
 
-Customized logging module vendored from [github.com/kami-lel/kamilog](https://github.com/kami-lel/kamilog) (v2.1.0).
+Customized logging module vendored from [github.com/kami-lel/kamilog](https://github.com/kami-lel/kamilog) (v2.3.1).
 
 Key entities:
 
@@ -187,8 +198,11 @@ Key entities:
 - **`AnsiColor` / `AnsiRenderer`** — TTY-aware 16-color ANSI support; coloring is a no-op when the stream is not a TTY
 - **`_LogFormatEngine` / `_LogFormatter`** — builds `LEVEL source: message` lines with optional absolute or relative timestamps
 - **`_DiffOnlyEngine`** — sliding-window diff compression; replaces repeated character runs with `〃\t` markers aligned to 8-column tab stops
-- **`getLogger(name, *, datefmt, relative_to)`** — public factory; returns a `KamiLogger` with stdout handler (< WARNING) and stderr handler (≥ WARNING) pre-attached
-- **`add_verbose_arguments(parser)` / `set_logging_level_by_verbosity(namespace)`** — argparse `-v`/`-q` verbosity helpers
+- **`getLogger(name, *, datefmt=DATEFMT_TIME, relative_to=None)`** — public factory; returns a `KamiLogger` with stdout handler (< WARNING) and stderr handler (≥ WARNING) pre-attached; timestamps on by default (`DATEFMT_TIME`, `HH:MM:SS`)
+- **`add_verbose_arguments(parser)`** — adds `-v`/`-q` (`action="count"`) to an argparse parser
+- **`set_logging_level_by_namespace(namespace, *, verbosity=0, logger=None, logger_name=None)`** — adds `namespace.verbose`/`namespace.quiet` counts as an offset atop a base `verbosity`, then sets the resulting level; this is what `cli.py` and `setup/cli_init.py` call
+- **`set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None)`** — sets a logger's level directly from a plain verbosity int, no namespace involved
+- loggers created via `getLogger()` in `commit_type`, `pch.prepend_commit_header`, `setup.cli_init`, and `ttg.tt_gating` each set `logger.propagate = False` — every logger already carries its own stdout/stderr handlers from `getLogger()`, so leaving propagation on would double-print every record through the root logger's handlers too
 - **comment banners (CB0~CB5)** — `gen_comment_banner_centered/left_just/right_just(content, padding, *, line_width=80)` pad a single line to `line_width` with a fill character (or int `1`~`5` preset: `#`/`=`/`*`/`+`/`-`); `gen_comment_banner_zero(lines, *, line_width=80)` boxes multiple lines with top/bottom `#` rulers
 - **CLI** (`python -m hupy.kamilog ...`) — `comment_banner`/`cb <mode c|l|r> <padding>` reads one line from stdin and prints a padded banner; `comment_banner_zero`/`cb0` reads all lines from stdin and prints a boxed banner; both accept `-w/--line-width` and `-e/--stderr`
   - known gap: the CLI's `padding` argument is read as a raw string, so the documented int `1`~`5` preset shorthand (e.g. `cb c 1`) does not resolve to a fill character — pass the literal character (e.g. `cb c "#"`) instead
@@ -222,12 +236,15 @@ hupy/                             # installable package
   __main__.py                     # `python -m hupy` entry point
   cli.py                          # argument parsing & dispatch
   commit_type.py                  # classify in-progress commits
-  config/                         # default HUPy config template (packaged data)
-    .hupy.config.json              # default content, currently `{}`
+  config/                         # HUPy config schema, load, and write helpers
+    __init__.py                   # CONFIG_FILENAME = ".hupy.config.json"
+    model.py                      # HupyConfig pydantic model (schema + defaults)
+    load_config.py                # load_config(repo_root): read + validate
+    write_config.py               # write_default_config(repo_root, force)
   hook-stubs/                     # default hook stub scripts (packaged data)
     pre-commit                    # thin wrapper: `python -m hupy pre-commit "$@"`
     prepare-commit-msg            # thin wrapper: `python -m hupy prepare-commit-msg "$@"`
-  kamilog.py                      # vendored logging module (v2.1.0)
+  kamilog.py                      # vendored logging module (v2.3.1)
   pch/                            # Prepend Commit Header package
     __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"
     prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG
@@ -259,7 +276,6 @@ tests/
     setup_helpers.py               # `run_init_cli`, `get_configured_hooks_path`,
                                     # `set_configured_hooks_path` helpers
     setup-cli_init_copy_hook_stubs_test.py
-    setup-cli_init_write_default_config_test.py
     setup-cli_init_resolve_hooks_dir_test.py
     setup-cli_init_init_cli_test.py
   ttg/                            # TTG-specific tests
@@ -283,4 +299,4 @@ pyproject.toml
 - **git bundle fixture** (`tests/testee/default_repo.bundle`) — minimal single-file repo fixture; `prep_repo.py` clones it and dynamically constructs scenarios (branches, commits, MERGE_HEAD state, staged files from `tests/testee/ttg/*.py`)
 - **`tests/ttg/prep_repo.py`** — shared between tests and `examples/ttg/*.bash` demos; also runnable standalone via `--scenario <name>`, printing the prepared repo path so demos can `cd` into it
 - **test file naming** — nested-package modules follow `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py` (e.g. `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group)
-- **`tests/setup/`** — unit tests for `_copy_hook_stubs`, `_write_default_config`, and `_resolve_hooks_dir` each get their own file (`setup-cli_init_copy_hook_stubs_test.py`, `setup-cli_init_write_default_config_test.py`, `setup-cli_init_resolve_hooks_dir_test.py`), calling the `hupy.setup.cli_init` functions directly; `setup-cli_init_init_cli_test.py` covers the CLI wiring end-to-end, since that's the other meaningful public surface (unlike `ttg`/`pch`, which test their public function directly without a separate CLI-wiring suite) — `setup_helpers.run_init_cli(args_list)` builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_ROOT` explicitly rather than relying on its default, since that default is frozen at module-import time (see `setup` in Module Details). 25 tests total.
+- **`tests/setup/`** — unit tests for `_copy_hook_stubs` and `_resolve_hooks_dir` each get their own file (`setup-cli_init_copy_hook_stubs_test.py`, `setup-cli_init_resolve_hooks_dir_test.py`), calling the `hupy.setup.cli_init` functions directly; `write_default_config` (now in `hupy/config/write_config.py`) has no dedicated test file of its own (see `config` in Module Details) and is instead exercised via `setup-cli_init_init_cli_test.py`, which asserts the written file matches `HupyConfig().model_dump_json(indent=2) + "\n"`. `setup-cli_init_init_cli_test.py` covers the CLI wiring end-to-end, since that's the other meaningful public surface (unlike `ttg`/`pch`, which test their public function directly without a separate CLI-wiring suite) — `setup_helpers.run_init_cli(args_list)` builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_ROOT` explicitly rather than relying on its default, since that default is frozen at module-import time (see `setup` in Module Details). 22 tests total.
