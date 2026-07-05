@@ -4,6 +4,7 @@ import os
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.config.load_config import load_config
 from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.setup.cli_init import register_cli_init_parser
 from hupy.ttg.tt_gating import perform_triage_tags_gating
@@ -38,7 +39,8 @@ def _pre_commit_main(args):
     """
     dispatch for the ``pre-commit`` subcommand: execute triage tag gating.
     """
-    kamilog.set_logging_level_by_verbosity(args, logger_name=PROJ_LOGGER_NAME)
+    config = load_config(os.getcwd())
+    kamilog.set_logging_level_by_verbosity(config.logger_verbosity)
 
     logger.info("Perform HUPy hooks")
     logger.enter("Start of pre-commit stage")
@@ -69,7 +71,8 @@ def _prepare_commit_msg_main(args):
     dispatch for the ``prepare-commit-msg`` subcommand: execute prepend
     commit header.
     """
-    kamilog.set_logging_level_by_verbosity(args, logger_name=PROJ_LOGGER_NAME)
+    config = load_config(os.getcwd())
+    kamilog.set_logging_level_by_verbosity(config.logger_verbosity)
 
     logger.enter("Start of prepare-commit-msg stage")
 
