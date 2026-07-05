@@ -27,6 +27,8 @@ cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
 cli_subparser = cli_parser.add_subparsers(title="subcommands")
 
 
+# TODO move these parsers out
+
 # pre-commit subparser  ########################################################
 
 
@@ -59,7 +61,6 @@ def _pre_commit_start_main(_):
     """
     dispatch for the ``pre-commit start`` subcommand.
     """
-    # Todo verbosity
     logger.info("Perform HUPy hooks")
     logger.enter("Start of pre-commit stage")
 
