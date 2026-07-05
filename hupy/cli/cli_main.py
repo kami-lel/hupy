@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.config.load_config import load_hupy_config
 from hupy.pch.prepend_commit_header import prepend_commit_header
-from hupy.setup.cli_init import register_cli_init_parser
+from hupy.cli.cli_init import register_cli_init_parser
 from hupy.ttg.tt_gating import perform_triage_tags_gating
 
 __all__ = ("cli_parser", "cli_subparser")
@@ -22,7 +22,7 @@ logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
 
 cli_parser = ArgumentParser(
-    prog=__package__,
+    prog="hupy",
     description=__doc__,
 )
 cli_parser.set_defaults(func=lambda _: cli_parser.print_help())

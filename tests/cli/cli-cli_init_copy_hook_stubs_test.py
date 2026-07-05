@@ -1,5 +1,5 @@
 """
-setup-cli_init_copy_hook_stubs_test.py
+cli-cli_init_copy_hook_stubs_test.py
 
 tests for `_copy_hook_stubs`: fresh dir, pre-existing (but unrelated)
 dir contents, per-file conflict abort without --force, and override
@@ -10,7 +10,7 @@ import os
 
 import pytest
 
-from hupy.setup.cli_init import _HOOK_STUBS_DIR, _copy_hook_stubs
+from hupy.cli.cli_init import _HOOK_STUBS_DIR, _copy_hook_stubs
 
 _STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
 

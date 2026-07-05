@@ -1,5 +1,5 @@
 """
-setup_helpers.py
+cli_helpers.py
 
 helpers for invoking the `init` CLI subcommand in isolation, and for
 inspecting/seeding the resulting git config
@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 
 import git
 
-from hupy.setup.cli_init import register_cli_init_parser
+from hupy.cli.cli_init import register_cli_init_parser
 
 # Public API  ##################################################################
 

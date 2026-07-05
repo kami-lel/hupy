@@ -1,5 +1,5 @@
 """
-setup-cli_init_init_cli_test.py
+cli-cli_init_init_cli_test.py
 
 end-to-end tests for the `init` CLI subcommand: default (.git/hooks)
 target, honoring a pre-configured `core.hooksPath`, `--hooks-dir`
@@ -11,8 +11,8 @@ import pytest
 
 from hupy.config import CONFIG_FILENAME
 from hupy.config.model import HupyConfig
-from hupy.setup.cli_init import _HOOK_STUBS_DIR
-from setup_helpers import (
+from hupy.cli.cli_init import _HOOK_STUBS_DIR
+from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,
     set_configured_hooks_path,

@@ -1,7 +1,7 @@
 """
 conftest.py
 
-shared pytest fixtures for `setup` (hupy init) tests
+shared pytest fixtures for `cli` (hupy init) tests
 """
 
 import git

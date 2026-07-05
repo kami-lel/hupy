@@ -1,5 +1,5 @@
 """
-setup-cli_init_resolve_hooks_dir_test.py
+cli-cli_init_resolve_hooks_dir_test.py
 
 tests for `_resolve_hooks_dir`: defaults to .git/hooks when
 core.hooksPath is unset, and honors core.hooksPath (relative and
@@ -10,7 +10,7 @@ import pathlib
 
 import git
 
-from hupy.setup.cli_init import _resolve_hooks_dir
+from hupy.cli.cli_init import _resolve_hooks_dir
 
 
 # tests  ########################################################################
