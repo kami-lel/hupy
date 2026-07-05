@@ -7,6 +7,7 @@ import shutil
 
 import git
 
+from hupy.config.write_config import write_default_config
 from hupy.setup import SETUP_LOGGER_NAME
 
 
@@ -35,12 +36,6 @@ performs:
 """
 
 _HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
-
-_CONFIG_FILENAME = ".hupy.config.json"
-
-_DEFAULT_CONFIG_TEMPLATE = (
-    pathlib.Path(__file__).resolve().parent.parent / "config" / _CONFIG_FILENAME
-)
 
 # helpers  #####################################################################
 
@@ -84,30 +79,6 @@ def _copy_hook_stubs(hooks_dir, force):
         shutil.copy2(stub_file, target_path)
 
 
-def _write_default_config(repo_root, force):
-    """
-    write the default HUPy config file (``.hupy.config.json``) at
-    ``repo_root``
-    """
-    logger.enter("write HUPy config file")
-    config_path = repo_root / _CONFIG_FILENAME
-
-    if config_path.exists():
-        if not force:
-            logger.error(
-                "HUPy config file already exists (use --force to override): "
-                "{}".format(config_path)
-            )
-            raise SystemExit(1)
-
-        logger.warning(
-            "override existing HUPy config file: {}".format(config_path)
-        )
-
-    logger.debug("HUPy config file copied: {}".format(config_path))
-    shutil.copy2(_DEFAULT_CONFIG_TEMPLATE, config_path)
-
-
 def _init_main(args):
     """
     dispatch for the ``init`` subcommand.
@@ -134,7 +105,7 @@ def _init_main(args):
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     _copy_hook_stubs(hooks_dir, force)
-    _write_default_config(repo_root, force)
+    write_default_config(repo_root, force)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
 

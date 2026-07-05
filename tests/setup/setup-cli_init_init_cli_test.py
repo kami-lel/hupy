@@ -9,11 +9,9 @@ writing, and error paths for non-git or nonexistent targets
 
 import pytest
 
-from hupy.setup.cli_init import (
-    _CONFIG_FILENAME,
-    _DEFAULT_CONFIG_TEMPLATE,
-    _HOOK_STUBS_DIR,
-)
+from hupy.config import CONFIG_FILENAME
+from hupy.config.model import HupyConfig
+from hupy.setup.cli_init import _HOOK_STUBS_DIR
 from setup_helpers import (
     get_configured_hooks_path,
     run_init_cli,
@@ -21,6 +19,7 @@ from setup_helpers import (
 )
 
 _STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
+_DEFAULT_CONFIG_CONTENT = HupyConfig().model_dump_json(indent=2) + "\n"
 
 
 # helpers  ######################################################################
@@ -97,11 +96,11 @@ class TestInitCustomHooksDirFlag:
 
 
 class TestInitWritesConfigFile:
-    def test_writes_config_matching_template(self, git_repo_dir):
+    def test_writes_config_matching_model_defaults(self, git_repo_dir):
         run_init_cli([str(git_repo_dir)])
 
-        config_path = git_repo_dir / _CONFIG_FILENAME
-        assert config_path.read_bytes() == _DEFAULT_CONFIG_TEMPLATE.read_bytes()
+        config_path = git_repo_dir / CONFIG_FILENAME
+        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
 
 class TestInitForceReRun:
@@ -119,18 +118,18 @@ class TestInitForceReRun:
         run_init_cli([str(git_repo_dir)])
         hooks_dir = _default_hooks_dir(git_repo_dir)
         (hooks_dir / _STUB_NAMES[0]).write_text("stale content")
-        config_path = git_repo_dir / _CONFIG_FILENAME
+        config_path = git_repo_dir / CONFIG_FILENAME
         config_path.write_text("stale content")
 
         run_init_cli([str(git_repo_dir), "-f"])
 
         assert (hooks_dir / _STUB_NAMES[0]).read_text() != "stale content"
-        assert config_path.read_bytes() == _DEFAULT_CONFIG_TEMPLATE.read_bytes()
+        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
     def test_config_conflict_alone_still_raises_after_hooks_succeed(
         self, git_repo_dir
     ):
-        (git_repo_dir / _CONFIG_FILENAME).write_text("stale content")
+        (git_repo_dir / CONFIG_FILENAME).write_text("stale content")
 
         with pytest.raises(SystemExit) as exc_info:
             run_init_cli([str(git_repo_dir)])
@@ -139,7 +138,7 @@ class TestInitForceReRun:
         hooks_dir = _default_hooks_dir(git_repo_dir)
         for name in _STUB_NAMES:
             assert (hooks_dir / name).exists()
-        assert (git_repo_dir / _CONFIG_FILENAME).read_text() == "stale content"
+        assert (git_repo_dir / CONFIG_FILENAME).read_text() == "stale content"
 
 
 class TestInitErrors:
@@ -151,7 +150,7 @@ class TestInitErrors:
             run_init_cli([str(not_a_repo)])
 
         assert exc_info.value.code == 1
-        assert not (not_a_repo / _CONFIG_FILENAME).exists()
+        assert not (not_a_repo / CONFIG_FILENAME).exists()
 
     def test_nonexistent_path_raises_system_exit(self, tmp_path):
         missing = tmp_path / "does-not-exist"
