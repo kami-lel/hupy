@@ -4,7 +4,7 @@ import os
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.config.load_config import load_config
+from hupy.config.load_config import load_hupy_config
 from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.setup.cli_init import register_cli_init_parser
 from hupy.ttg.tt_gating import perform_triage_tags_gating
@@ -39,7 +39,7 @@ def _pre_commit_main(args):
     """
     dispatch for the ``pre-commit`` subcommand: execute triage tag gating.
     """
-    config = load_config(os.getcwd())
+    config = load_hupy_config(os.getcwd())
     kamilog.set_logging_level_by_namespace(
         args, verbosity=config.default_logger_verbosity
     )
@@ -72,7 +72,7 @@ def _prepare_commit_msg_main(args):
     dispatch for the ``prepare-commit-msg`` subcommand: execute prepend
     commit header.
     """
-    config = load_config(os.getcwd())
+    config = load_hupy_config(os.getcwd())
     kamilog.set_logging_level_by_namespace(
         args, verbosity=config.default_logger_verbosity
     )
@@ -100,8 +100,6 @@ register_cli_init_parser(cli_subparser)
 _register_pre_commit_parser(cli_subparser)
 _register_prepare_commit_msg_parser(cli_subparser)
 
-
-# TODO find version feature
 
 # todo add configs and/or dry run feature
 # todo use OpenAI to prepare commit message

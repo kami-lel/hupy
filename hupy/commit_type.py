@@ -81,7 +81,7 @@ def _is_pull_merge(repo, sha, target_branch):
     return False
 
 
-# Public API ###################################################################
+# Public API  ##################################################################
 
 # todo save values to cached, which is reset per commit
 

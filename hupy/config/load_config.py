@@ -14,12 +14,23 @@ from hupy.config import CONFIG_FILENAME
 from hupy.config.model import HupyConfig
 from hupy.kamilog import getLogger
 
-__all__ = ("load_config",)
+__all__ = ("load_hupy_config",)
+
+
+# logger  ######################################################################
+
 
 logger = getLogger(PROJ_LOGGER_NAME)
 
 
-def load_config(repo_root):
+# Public API  ##################################################################
+
+
+# TODO TODO make singleton/static
+# TODO TODO hupy takes a repo?
+
+
+def load_hupy_config(repo_root):
     """
     load and validate the HUPy config file (``.hupy.config.json``) at
     ``repo_root``; exits the process if the file is missing or
