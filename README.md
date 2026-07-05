@@ -73,7 +73,7 @@ python -m hupy init
 - copies the default hook stub scripts into the repo's hooks directory
 - writes a default `.hupy.config.json` at the repository root
 
-See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
+See [HUPy File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
 
 
 
