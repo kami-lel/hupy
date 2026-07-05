@@ -40,7 +40,9 @@ def _pre_commit_main(args):
     dispatch for the ``pre-commit`` subcommand: execute triage tag gating.
     """
     config = load_config(os.getcwd())
-    kamilog.set_logging_level_by_verbosity(config.logger_verbosity)
+    kamilog.set_logging_level_by_namespace(
+        args, verbosity=config.default_logger_verbosity
+    )
 
     logger.info("Perform HUPy hooks")
     logger.enter("Start of pre-commit stage")
@@ -72,7 +74,9 @@ def _prepare_commit_msg_main(args):
     commit header.
     """
     config = load_config(os.getcwd())
-    kamilog.set_logging_level_by_verbosity(config.logger_verbosity)
+    kamilog.set_logging_level_by_namespace(
+        args, verbosity=config.default_logger_verbosity
+    )
 
     logger.enter("Start of prepare-commit-msg stage")
 

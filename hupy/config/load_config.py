@@ -30,11 +30,7 @@ def load_config(repo_root):
     try:
         return HupyConfig.model_validate_json(config_path.read_text())
     except FileNotFoundError as e:
-        logger.error(
-            "HUPy config file not found (run `hupy init` first): {}".format(
-                config_path
-            )
-        )
+        logger.error("HUPy config file not found: {}".format(config_path))
         raise SystemExit(1) from e
     except ValidationError as e:
         logger.error(

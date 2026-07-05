@@ -52,7 +52,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 __author__ = "kamiLeL"
 
 
@@ -785,11 +785,11 @@ def _calc_logging_level_from_verbosity(verbosity):
         return logging.CRITICAL
 
 
-def _calc_logging_level_from_verbosity_namespace(namespace):
+def _calc_logging_level_from_verbosity_namespace(namespace, verbosity=0):
     """
-    extract verbosity from namespace and return the logging level
+    apply namespace's verbose/quiet counts as an offset to ``verbosity``,
+    then return the logging level
     """
-    verbosity = 0
     if hasattr(namespace, "verbose"):
         verbosity += namespace.verbose
     if hasattr(namespace, "quiet"):
@@ -833,13 +833,18 @@ def add_verbose_arguments(parser):
     )
 
 
-def set_logging_level_by_namespace(namespace, *, logger=None, logger_name=None):
+def set_logging_level_by_namespace(
+    namespace, *, verbosity=0, logger=None, logger_name=None
+):
     """
     set the logging level of a logger based on verbosity flags.
 
 
     :param namespace: parsed namespace containing ``--verbose`` and/or ``--quiet`` counts
     :type namespace: argparse.Namespace
+    :param verbosity: base verbosity that namespace's ``--verbose``/``--quiet``
+            counts are added to/subtracted from
+    :type verbosity: int
     :param logger: logger instance to configure
     :type logger: logging.Logger, optional
     :param logger_name: name of logger to configure;
@@ -848,7 +853,7 @@ def set_logging_level_by_namespace(namespace, *, logger=None, logger_name=None):
     :type logger_name: str, optional
     """
     _set_logger_level(
-        _calc_logging_level_from_verbosity_namespace(namespace),
+        _calc_logging_level_from_verbosity_namespace(namespace, verbosity),
         logger=logger,
         logger_name=logger_name,
     )
