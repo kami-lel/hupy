@@ -23,69 +23,89 @@ logger = getLogger(SETUP_LOGGER_NAME)
 
 # constants  ###################################################################
 
-# FIXME update description
-
 _DESCRIPTION = __doc__ + """
 
 performs:
 
-- copies the default HUPy hooks scripts into REPO_ROOT/scripts/hupy-hooks/,
-  (or into --hooks-dir)
-- configures git to run hooks from above path,
-  instead of default untracked .git/hooks/
+- copy default HUPy hook stub scripts into the repo's hooks directory
+  (core.hooksPath if configured, otherwise .git/hooks/;
+  override with --hooks-dir)
+- writes a default HUPy config file (.hupy.config.json) at the
+  repository root
 """
 
-_HOOKS_TEMPLATES_DIR = (
-    pathlib.Path(__file__).resolve().parent.parent / "default-hupy-hooks"
+_HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
+
+_CONFIG_FILENAME = ".hupy.config.json"
+
+_DEFAULT_CONFIG_TEMPLATE = (
+    pathlib.Path(__file__).resolve().parent.parent / "config" / _CONFIG_FILENAME
 )
 
 # helpers  #####################################################################
 
 
-def _copy_hooks_scripts(hooks_dir, force):
-    # FIXME superseded — replace with writing a default .hupy.config.json
-    # plus copying thin stubs straight into .git/hooks/, no hooks_dir
+def _resolve_hooks_dir(repo):
     """
-    copy the default HUPy hooks scripts into ``hooks_dir``
+    resolve ``repo``'s actual git hooks directory, honoring
+    ``core.hooksPath`` if configured.
     """
-    logger.enter("copy hooks scripts")
-    if hooks_dir.exists():
+    with repo.config_reader() as reader:
+        configured = reader.get_value("core", "hooksPath", default="")
+
+    if configured:
+        return pathlib.Path(repo.working_tree_dir) / configured
+
+    return pathlib.Path(repo.git_dir) / "hooks"
+
+
+def _copy_hook_stubs(hooks_dir, force):
+    """
+    copy the default HUPy hook stub scripts into ``hooks_dir``
+    """
+    logger.enter("copy hook stubs")
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    for stub_file in _HOOK_STUBS_DIR.iterdir():
+        target_path = hooks_dir / stub_file.name
+
+        if target_path.exists():
+            if not force:
+                logger.error(
+                    "hook already exists (use --force to override): {}".format(
+                        target_path
+                    )
+                )
+                raise SystemExit(1)
+
+            logger.warning("override existing hook: {}".format(target_path))
+
+        logger.debug("hook stub copied: {}".format(target_path))
+        shutil.copy2(stub_file, target_path)
+
+
+def _write_default_config(repo_root, force):
+    """
+    write the default HUPy config file (``.hupy.config.json``) at
+    ``repo_root``
+    """
+    logger.enter("write HUPy config file")
+    config_path = repo_root / _CONFIG_FILENAME
+
+    if config_path.exists():
         if not force:
             logger.error(
-                "hooks dir already exists (use --force to override): {}".format(
-                    hooks_dir
-                )
+                "HUPy config file already exists (use --force to override): "
+                "{}".format(config_path)
             )
             raise SystemExit(1)
 
         logger.warning(
-            "override existing hooks scripts in: {}".format(hooks_dir)
+            "override existing HUPy config file: {}".format(config_path)
         )
-    else:
-        hooks_dir.mkdir(parents=True)
 
-    for template_file in _HOOKS_TEMPLATES_DIR.iterdir():
-        target_path = hooks_dir / template_file.name
-        logger.debug("hook script copied: {}".format(target_path))
-        shutil.copy2(template_file, target_path)
-
-
-def _configure_repo_hooks_path(repo, hooks_dir):
-    # FIXME superseded — core.hooksPath is no longer set under the new
-    # design; hooks go directly into the default .git/hooks/ location
-    """
-    configure git's ``core.hooksPath`` for ``repo``
-    """
-    logger.enter("configure git hooks path")
-
-    try:
-        with repo.config_writer() as writer:
-            writer.set_value("core", "hooksPath", str(hooks_dir))
-    except Exception as e:
-        logger.exception(
-            "failed to set core.hooksPath to: {}".format(hooks_dir)
-        )
-        raise SystemExit(1) from e
+    logger.debug("HUPy config file copied: {}".format(config_path))
+    shutil.copy2(_DEFAULT_CONFIG_TEMPLATE, config_path)
 
 
 def _init_main(args):
@@ -108,15 +128,13 @@ def _init_main(args):
         raise SystemExit(1) from e
 
     repo_root = pathlib.Path(repo.working_tree_dir)
-    # FIXME hooks_dir/scripts-hupy-hooks resolution is superseded; new
-    # design writes .git/hooks/ stubs directly, no hooks_dir needed
-    hooks_dir = args.hooks_dir or (repo_root / "scripts" / "hupy-hooks")
+    hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
 
     logger.enter("HUPy Initialization for: {}".format(repo_root))
-    logger.debug("hook scripts dir: {}".format(hooks_dir))
+    logger.debug("hooks dir: {}".format(hooks_dir))
 
-    _copy_hooks_scripts(hooks_dir, force)
-    _configure_repo_hooks_path(repo, hooks_dir)
+    _copy_hook_stubs(hooks_dir, force)
+    _write_default_config(repo_root, force)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
 
@@ -145,15 +163,13 @@ def register_cli_init_parser(cli_subparser):
         ),
     )
 
-    # FIXME --hooks-dir is superseded — no longer applicable once hooks
-    # move to the fixed .git/hooks/ location
     init_parser.add_argument(
         "--hooks-dir",
         dest="hooks_dir",
         metavar="HOOKS_DIR",
         type=pathlib.Path,
         default=None,
-        help="specify alternative folder to place all HUPy hooks scripts",
+        help="override the folder the hook stub scripts are copied into",
     )
 
     init_parser.add_argument(
@@ -161,7 +177,7 @@ def register_cli_init_parser(cli_subparser):
         "--force",
         action="store_true",
         default=False,
-        help="override existing hooks scripts",
+        help="override an existing hook stub and/or HUPy config file",
     )
 
     add_verbose_arguments(init_parser)
