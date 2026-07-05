@@ -160,26 +160,22 @@ Argument parser and entrypoint for the `hupy` command-line tool.
 
 **Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action)
 
-The subcommand tree mirrors git hook stage names, so the CLI shape matches the `.git/hooks/<hook-name>` stub scripts described in the Hook Integration Model — each stage group is the CLI grouping that a corresponding hook stub calls into:
+The CLI has three top-level subcommands, mirroring the hook stages and setup:
 
 ```
 hupy init
-hupy pre-commit [start | triage-tag-gating | end]
-hupy prepare-commit-msg [start | prepend-commit-header | end]
+hupy pre-commit
+hupy prepare-commit-msg
 ```
 
 - **main parser** — prog name and description sourced from `__package__` and module docstring
-- **`init`** — registered by the `setup` package's `setup/cli_init.py` (`register_cli_init_parser`), mirroring the `ttg`/`pch` pattern of each subcommand area owning its own parser module; see `setup` below for its implementation
-- **`pre-commit` / `prepare-commit-msg`** — each is a stage *group*, registered directly in `cli.py` (not delegated to a subpackage, since neither stage is itself a single tool): it creates the group parser (with its own `start`/`end` stub subcommands, also `pass  # TODO`) and its own nested subparsers action, then delegates registration of the one real tool per stage to that tool's own module:
-  - `pre-commit triage-tag-gating` — registered by `ttg/cli_ttg.py`'s `register_cli_ttg_parser(subparser)`, called with the `pre-commit` group's subparsers action (not the top-level one); calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity
-  - `prepare-commit-msg prepend-commit-header` — registered by `pch/cli_pch.py`'s `register_cli_pch_parser(subparser)`, called with the `prepare-commit-msg` group's subparsers action; calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity
-  - invoking a stage group with no further subcommand (e.g. bare `hupy pre-commit`) prints that group's own help, mirroring how the root parser handles no subcommand at all
-- **dispatch functions are always module-level**, never nested inside their `register_cli_*_parser` function — including the `pre-commit`/`prepare-commit-msg` group's own "no subcommand given" handler, which needs its parser instance to call `.print_help()`. Since that instance only exists once `add_parser()` runs inside the register function, it's threaded through via `parser.set_defaults(func=_pre_commit_main, parser=pre_commit_parser)` and read back as `args.parser` inside the module-level `_pre_commit_main(args)` — avoiding a closure defined inside the register function.
-- **`start`/`end` stubs** exist per stage as placeholders for future cross-cutting setup/teardown (e.g. banner logging around the whole stage); no behavior yet
-- **no aliases** — the previous flat top-level `ttg`/`pch` short aliases were dropped in this restructure; the full hyphenated names are the only way to invoke each tool now
+- **`init`** — registered by the `setup` package's `setup/cli_init.py` (`register_cli_init_parser`); see `setup` in Module Details for its implementation
+- **`pre-commit`** — directly calls `perform_triage_tags_gating(os.getcwd())` after applying `-v`/`-q` verbosity; logs entry/exit via the logger (no nested subcommands)
+- **`prepare-commit-msg`** — directly calls `prepend_commit_header(os.getcwd())` after applying `-v`/`-q` verbosity; logs entry/exit via the logger (no nested subcommands)
+- **dispatch functions are module-level** in `cli.py` (`_pre_commit_main`, `_prepare_commit_msg_main`) — they call the public functions from `ttg.tt_gating` and `pch.prepend_commit_header` directly, not via a CLI re-entry
 - **verbosity** — `-v`/`-q` flags apply to the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.commit_type"`) inherit this level since they set none of their own
 
-Dispatch follows a standard pattern: subcommand dispatch functions receive the parsed `argparse.Namespace` and call the corresponding utility function.
+Dispatch follows a simple pattern: subcommand dispatch functions receive the parsed `argparse.Namespace`, handle verbosity, and call the corresponding public utility function.
 
 ### `kamilog`
 
@@ -234,14 +230,12 @@ hupy/                             # installable package
   kamilog.py                      # vendored logging module (v2.1.0)
   pch/                            # Prepend Commit Header package
     __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"
-    cli_pch.py                    # CLI parser for pch subcommand
     prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG
   setup/                          # init subcommand package
     __init__.py                   # SETUP_LOGGER_NAME = "HU.init"
     cli_init.py                   # CLI parser + implementation for init subcommand
   ttg/                            # Triage Tag Gating package
     __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
-    cli_ttg.py                    # CLI parser for ttg subcommand
     tt_detect.py                  # scan staged diffs for TT markers
     tt_gating.py                  # gate commits by TT tier
 docs/
