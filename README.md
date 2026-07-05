@@ -3,7 +3,7 @@
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
 <!--
-Bug missing feature such that direct bash command can be used
+bug missing feature such that direct bash command can be used
 todo add PCH more scenario eg keep up feature branch with dev
 todo ban direct commit to main
 -->
@@ -73,7 +73,7 @@ python -m hupy init
 - copies the default hook stub scripts into the repo's hooks directory
 - writes a default `.hupy.config.json` at the repository root
 
-See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
+See [HUPy File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
 
 
 
@@ -89,7 +89,26 @@ See [`.hupy.config.json` File Documentation](docs/hupy_config_doc.md) for **cust
 
 ## 🚀 Usage
 
-<!-- Todo explain hooks how it works -->
+Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature:
+
+```mermaid
+flowchart TD
+    commit([git commit])
+
+    %% pre-commit stage
+    subgraph precommit [pre-commit stage]
+        pre[/pre-commit hook/] --> ttg[[Triage Tag Gating]]
+    end
+
+    %% prepare-commit-msg stage
+    subgraph preparemsg [prepare-commit-msg stage]
+        prep[/prepare-commit-msg hook/] --> pch[[Prepend Commit Header]]
+    end
+
+    commit --> pre
+    ttg --> prep
+    pch --> done([commit created])
+```
 
 See the per-feature docs for detailed usage:
 
