@@ -40,6 +40,7 @@ def grep_repo_version():
     pattern = config.ver_grep.version_line_pattern
     logger.debug("version_line_pattern:\t{}".format(pattern))
 
+    # FIXME move this warn to model validation
     if str(version_file) in ("", ".") or not pattern.strip():
         logger.warning(
             "ver_grep is not configured:\n"

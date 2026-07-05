@@ -5,7 +5,6 @@
 <!--
 todo add PCH more scenario eg keep up feature branch with dev
 todo ban direct commit to main
-TODO set up self for HUPy
 -->
 
 > [!NOTE]
