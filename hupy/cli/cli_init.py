@@ -78,7 +78,7 @@ def _copy_hook_stubs(hooks_dir, force):
                 )
                 raise SystemExit(1)
 
-            logger.warning("override existing hook: {}".format(target_path))
+            logger.warning("overwrite existing hook: {}".format(target_path))
 
         logger.debug("hook stub copied: {}".format(target_path))
         shutil.copy2(stub_file, target_path)

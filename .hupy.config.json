@@ -1,0 +1,8 @@
+{
+  "hupy_version": "0.1.0",
+  "default_logger_verbosity": 1,
+  "ver_grep": {
+    "version_file": ".",
+    "version_line_pattern": ""
+  }
+}
