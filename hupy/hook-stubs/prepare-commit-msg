@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 -m hupy prepare-commit-msg "$@"
+"{{PYTHON}}" -m hupy prepare-commit-msg
