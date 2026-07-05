@@ -37,7 +37,7 @@ def _gen_version_release_header_content():
     """
     generate header content for Version Release commit type.
     """
-    return "Version Release"  # Fixme get version
+    return "Version Release"  # FIXME get version
 
 
 def _prepend_commit_header_by_type(is_feature_finish, repo_root):

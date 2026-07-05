@@ -101,7 +101,7 @@ _register_pre_commit_parser(cli_subparser)
 _register_prepare_commit_msg_parser(cli_subparser)
 
 
-# Todo find version feature
+# TODO find version feature
 
 # todo add configs and/or dry run feature
 # todo use OpenAI to prepare commit message
