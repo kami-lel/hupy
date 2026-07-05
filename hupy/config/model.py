@@ -8,20 +8,9 @@ model, providing default values used when writing a fresh config file
 import pathlib
 from importlib.metadata import version
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
-from hupy import PROJ_LOGGER_NAME
-from hupy.kamilog import getLogger
-
-__all__ = ("HupyConfig", "VER_GREP_LOGGER_NAME")
-
-
-# logger  ######################################################################
-
-
-VER_GREP_LOGGER_NAME = PROJ_LOGGER_NAME + ".VerGrep"
-
-ver_grep_logger = getLogger(VER_GREP_LOGGER_NAME)
+__all__ = ("HupyConfig",)
 
 
 # data structure  ##############################################################
@@ -36,15 +25,6 @@ class _VerGrep(BaseModel):
 
     version_file: pathlib.Path = pathlib.Path("")
     version_line_pattern: str = ""
-
-    @field_validator("version_file", "version_line_pattern")
-    @classmethod
-    def validate_configured(cls, v):
-        if not str(v).strip():
-            ver_grep_logger.exception(
-                "version_file and version_line_pattern must be configured"
-            )
-        return v
 
 
 class HupyConfig(BaseModel):
