@@ -41,7 +41,9 @@ def load_hupy_config(repo_path):
 
     :param repo_path: path to the repo root, or to any path inside it
     :type repo_path: str
-    :raises SystemExit: config file not found or is malformed
+    :raises SystemExit: config file not found or is malformed,
+            including a ``ver_grep`` section left at its empty
+            defaults
     :return: the loaded and validated configuration
     :rtype: HupyConfig
     """

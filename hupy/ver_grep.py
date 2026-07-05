@@ -1,12 +1,13 @@
 import os
 import re
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.config.load_config import load_hupy_config
+from hupy.config.model import VER_GREP_LOGGER_NAME
 from hupy.kamilog import getLogger
 
 # logger  ######################################################################
-logger = getLogger(PROJ_LOGGER_NAME + ".VerGrep")
+
+logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
 
@@ -22,19 +23,19 @@ def grep_repo_version():
     group whose content is returned.
 
 
-    :raises SystemExit: version file not found or pattern does not
-            match any line
+    :raises SystemExit: ver_grep is not configured (empty), version
+            file not found, or pattern does not match any line
     :return: the captured group from the first matching line
     :rtype: str
     """
     config = load_hupy_config(os.getcwd())
     version_file = config.ver_grep.version_file
+    pattern = config.ver_grep.version_line_pattern
 
     if not version_file.exists():
         logger.error("version file not found: {}".format(version_file))
         raise SystemExit(1)
 
-    pattern = config.ver_grep.version_line_pattern
     content = version_file.read_text()
 
     for line in content.splitlines():
