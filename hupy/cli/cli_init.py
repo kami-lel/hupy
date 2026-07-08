@@ -30,7 +30,7 @@ root_logger.propagate = False
 
 # constants  ###################################################################
 
-# Fixme split into two steps
+# FIXME split into two steps
 
 
 _DESCRIPTION = __doc__ + """
