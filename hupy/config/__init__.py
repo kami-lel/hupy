@@ -10,4 +10,4 @@ CONFIG_FILENAME = ".hupy.config.json"
 CONFIG_LOGGER_NAME = PROJ_LOGGER_NAME + ".config-json"
 
 # Todo unit test for configs
-# Fixme update kamilog version
+# FIXME update kamilog version
