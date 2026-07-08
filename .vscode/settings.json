@@ -1,0 +1,16 @@
+{
+  "cSpell.words": [
+    "editmsg",
+    "FIXMES",
+    "hexsha",
+    "hupy",
+    "LOUDS",
+    "STEADYS"
+  ],
+  "better-todo-tree.filtering.excludeGlobs": [
+    "**/hooks_utility/*/**",
+    "**/node_modules/*/**",
+    "tests/testee/**",
+    "examples/ttg/**",
+  ],
+}

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "HUPy"
+version = "0.2.0"
+description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
+readme = "README.md"
+dependencies = ["GitPython>=3.1", "pydantic>=2"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hupy*"]
+
+[tool.setuptools.package-data]
+hupy = ["hook-stubs/*"]
