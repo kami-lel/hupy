@@ -8,6 +8,8 @@
 # expected result: fail (Feature Finish gates the Loud tier; both
 # a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
 
+# BUG fix bad demos
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

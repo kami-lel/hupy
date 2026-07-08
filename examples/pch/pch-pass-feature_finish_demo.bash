@@ -7,6 +7,9 @@
 # what git itself does before invoking the commit-msg hook)
 # expected result: header prepended to COMMIT_EDITMSG
 
+
+# BUG fix bad demos
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
