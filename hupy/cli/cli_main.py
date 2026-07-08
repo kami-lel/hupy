@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.cli_icc import register_cli_icc_parser
+from hupy.cli.cli_ich import register_cli_ich_parser
 from hupy.cli.cli_init import register_cli_init_parser
 from hupy.cli.cli_pre_commit import register_cli_pre_commit_parser
 from hupy.cli.cli_prepare_commit_msg import (
@@ -32,6 +34,8 @@ cli_subparser = cli_parser.add_subparsers(title="subcommands")
 register_cli_init_parser(cli_subparser)
 register_cli_pre_commit_parser(cli_subparser)
 register_cli_prepare_commit_msg_parser(cli_subparser)
+register_cli_icc_parser(cli_subparser)
+register_cli_ich_parser(cli_subparser)
 
 
 # Todo add configs and/or dry run feature

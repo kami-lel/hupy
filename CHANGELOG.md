@@ -6,7 +6,13 @@
 
 ### Added
 
+- **`init-create-config`** — new `hupy` subcommand that writes only the default `.hupy.config.json`, without touching hook stubs
+- **`init-copy-hooks`** — new `hupy` subcommand that copies only the hook stub scripts into the repo's hooks directory, without writing a config file
+
 ### Changed
+
+- `hupy init` now composes the two steps above; behavior is unchanged, but each step can be run standalone
+- `init`'s positional repo argument renamed from `REPO_ROOT` to `REPO_PATH` (help text and `--help` output only; behavior unchanged)
 
 ### Deprecated
 
@@ -32,7 +38,7 @@
 
 ## [0.2.0] - 2026-07-08
 
-First release. **HUPy** is a ground-up Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility), repackaging its git-hook commit-quality checks as an installable `hupy` command-line tool.
+First version. **HUPy** is a ground-up Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility), repackaging its git-hook commit-quality checks as an installable `hupy` command-line tool.
 
 ### Added
 
