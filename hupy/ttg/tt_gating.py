@@ -61,7 +61,8 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         for file_path, results in filtered_results.items():
             msg_lines.append(gen_comment_banner_centered(file_path, "-"))
             for _, line in results:
-                # todo print gated TT in colored highlighting
+                # Todo print gated TT in colored highlighting
+                # Todo print gated TT w/ line number
                 msg_lines.append(line.strip())
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)

@@ -9,4 +9,5 @@ from hupy import PROJ_LOGGER_NAME
 CONFIG_FILENAME = ".hupy.config.json"
 CONFIG_LOGGER_NAME = PROJ_LOGGER_NAME + ".config-json"
 
-# todo unit test for configs
+# Todo unit test for configs
+# Fixme update kamilog version

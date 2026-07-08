@@ -34,6 +34,6 @@ register_cli_pre_commit_parser(cli_subparser)
 register_cli_prepare_commit_msg_parser(cli_subparser)
 
 
-# todo add configs and/or dry run feature
+# Todo add configs and/or dry run feature
 # todo use OpenAI to prepare commit message
-# todo allow tmp skip some feature for next round
+# Todo allow tmp skip some feature for next round

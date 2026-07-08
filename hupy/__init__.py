@@ -6,4 +6,4 @@ define the ``hupy`` package entry point
 
 PROJ_LOGGER_NAME = "HU"
 
-# todo reimplement ensure file modified
+# Todo reimplement ensure file modified

@@ -31,7 +31,7 @@ class _VerGrep(BaseModel):
     configuration for version grep hook
     """
 
-    # todo validate ver grep file existed etc.
+    # Todo validate ver grep file existed etc.
 
     version_file: pathlib.Path = pathlib.Path("")
     version_line_pattern: str = ""

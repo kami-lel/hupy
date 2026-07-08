@@ -4,9 +4,9 @@
 
 <!--
 bug missing feature such that direct bash command can be used
-todo add PCH more scenario eg keep up feature branch with dev
-todo ban direct commit to main
-todo toggle direct commit to dev
+Todo add PCH more scenario eg keep up feature branch with dev
+Todo ban direct commit to main
+Todo toggle direct commit to dev
 -->
 
 > [!NOTE]
