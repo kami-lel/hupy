@@ -1,4 +1,4 @@
-"""create a default HUPy config file"""
+"""create default config file"""
 
 import argparse
 import os

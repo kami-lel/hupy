@@ -3,8 +3,6 @@
 import argparse
 import os
 import pathlib
-import shutil
-import sys
 
 import git
 
@@ -30,13 +28,10 @@ root_logger = getLogger(PROJ_LOGGER_NAME)
 root_logger.propagate = False
 
 
-# FIXME split into two steps
-
-
 # constants  ###################################################################
 
 REPO_PATH_HELP = (
-    "path to the git repository (or any of its subdirectories;) "
+    "git repository path (or any of its subdirectories;) "
     "default=current working directory"
 )
 
@@ -51,58 +46,8 @@ performs:
 - create a default HUPy config file (.hupy.config.json) at repository root
 """
 
-_HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
-
-# placeholder in the stub templates, replaced with the absolute
-# interpreter path at install time so the hooks run under the same
-# Python that ``hupy`` is installed in, regardless of PATH/venv state
-_PYTHON_PLACEHOLDER = "{{PYTHON}}"
-
 
 # helpers  #####################################################################
-
-
-def _resolve_hooks_dir(repo):
-    """
-    resolve ``repo``'s actual git hooks directory, honoring
-    ``core.hooksPath`` if configured.
-    """
-    with repo.config_reader() as reader:
-        configured = reader.get_value("core", "hooksPath", default="")
-
-    if configured:
-        return pathlib.Path(repo.working_tree_dir) / configured
-
-    return pathlib.Path(repo.git_dir) / "hooks"
-
-
-def _copy_hook_stubs(hooks_dir, force):
-    """
-    copy the default HUPy hook stub scripts into ``hooks_dir``
-    """
-    logger.enter("copy hook stubs")
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-
-    for stub_file in _HOOK_STUBS_DIR.iterdir():
-        target_path = hooks_dir / stub_file.name
-
-        if target_path.exists():
-            if not force:
-                logger.error(
-                    "hook already exists (use --force to override): {}".format(
-                        target_path
-                    )
-                )
-                raise SystemExit(1)
-
-            logger.warning("overwrite existing hook: {}".format(target_path))
-
-        content = stub_file.read_text(encoding="utf-8")
-        content = content.replace(_PYTHON_PLACEHOLDER, sys.executable)
-        target_path.write_text(content, encoding="utf-8")
-        shutil.copymode(stub_file, target_path)
-
-        logger.debug("hook stub installed: {}".format(target_path))
 
 
 def _init_main(args):
@@ -113,6 +58,10 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
+    # deferred import: cli_ich imports from this module at load time,
+    # so importing it back at module level here would create a cycle
+    from hupy.cli.cli_ich import _copy_hook_stubs, _resolve_hooks_dir
+
     set_logging_level_by_namespace(args, logger=logger)
 
     repo_path = args.repo_path
