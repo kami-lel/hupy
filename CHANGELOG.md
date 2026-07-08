@@ -16,7 +16,7 @@
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v1.0.0...dev
+[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...dev
 
 
 
@@ -30,7 +30,7 @@
 
 
 
-## [1.0.0] - 2026-07-06
+## [0.2.0] - 2026-07-08
 
 First release. **HUPy** is a ground-up Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility), repackaging its git-hook commit-quality checks as an installable `hupy` command-line tool.
 
@@ -44,7 +44,7 @@ First release. **HUPy** is a ground-up Python reimplementation of the original b
 - **Configurable behavior** — a tracked `.hupy.config.json` controls log verbosity and the version lookup, so every clone of a repository behaves the same
 - **Documentation and examples** — a README quick-start, per-feature guides under `docs/`, and runnable demo scripts under `examples/`
 
-[1.0.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v1.0.0
+[0.2.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v1.0.0
 
 
 
