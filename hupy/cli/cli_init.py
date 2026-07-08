@@ -20,17 +20,25 @@ from hupy.kamilog import (
 
 # logger  ######################################################################
 
+INIT_LOGGER_NAME = PROJ_LOGGER_NAME + ".init"
 
-logger = getLogger(PROJ_LOGGER_NAME + ".init")
+logger = getLogger(INIT_LOGGER_NAME)
 logger.propagate = False
+
 
 root_logger = getLogger(PROJ_LOGGER_NAME)
 root_logger.propagate = False
 
 
+# FIXME split into two steps
+
+
 # constants  ###################################################################
 
-# FIXME split into two steps
+REPO_PATH_HELP = (
+    "path to the git repository (or any of its subdirectories;) "
+    "default=current working directory"
+)
 
 
 _DESCRIPTION = __doc__ + """
@@ -40,8 +48,7 @@ performs:
 - copy default HUPy hook stub scripts into the repo's hooks directory
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
-- writes a default HUPy config file (.hupy.config.json) at the
-  repository root
+- create a default HUPy config file (.hupy.config.json) at repository root
 """
 
 _HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
@@ -50,6 +57,7 @@ _HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
 # interpreter path at install time so the hooks run under the same
 # Python that ``hupy`` is installed in, regardless of PATH/venv state
 _PYTHON_PLACEHOLDER = "{{PYTHON}}"
+
 
 # helpers  #####################################################################
 
@@ -107,7 +115,7 @@ def _init_main(args):
     """
     set_logging_level_by_namespace(args, logger=logger)
 
-    repo_path = args.repo_root
+    repo_path = args.repo_path
     force = args.force
 
     repo = load_git_repo(repo_path)
@@ -158,15 +166,12 @@ def register_cli_init_parser(cli_subparser):
     )
 
     init_parser.add_argument(
-        "repo_root",
-        metavar="REPO_ROOT",
+        "repo_path",
+        metavar="REPO_PATH",
         nargs="?",
         type=pathlib.Path,
         default=pathlib.Path(os.getcwd()),
-        help=(
-            "path to the git repository (or any of its subdirectories;) "
-            "default=current working directory"
-        ),
+        help=REPO_PATH_HELP,
     )
 
     init_parser.add_argument(
