@@ -68,10 +68,10 @@ class _Cbm(BaseModel):
     configuration for the CBM module (commit, branch, and merge types)
     """
 
-    main_branch_name: str = "main"
-    dev_branch_name: str = "dev"
-    hotfix_branch_prefix: str = "hotfix"
-    release_branch_prefix: str = "release"
+    main_branch_name: str = Field(default="main", min_length=1)
+    dev_branch_name: str = Field(default="dev", min_length=1)
+    hotfix_branch_prefix: str = Field(default="hotfix", min_length=1)
+    release_branch_prefix: str = Field(default="release", min_length=1)
 
 
 class HupyConfigFile(BaseModel):
