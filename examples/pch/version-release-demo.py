@@ -8,43 +8,23 @@ what git itself does before invoking the commit-msg hook)
 expected result: header prepended to COMMIT_EDITMSG
 """
 
-import os
 import pathlib
 import shutil
-import sys
-import tempfile
 
-_SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
-_REPO_ROOT = _SCRIPT_DIR.parent.parent
-_SCENARIO = "version_release_pass"
-
-sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
-
-from hupy.kamilog import (  # noqa: E402
+from hupy.kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
-    set_logging_level_by_verbosity,
 )
-from hupy.pch import prepend_commit_header  # noqa: E402
-from prep_repo import prepare_repo  # noqa: E402
+from __init__ import prepare_demo_repo_by_scenario, run_pch
+
+_SCENARIO = "version_release_pass"
 
 
 # helpers  #####################################################################
 
 
 def _prepare_demo_repo():
-    dest_dir = tempfile.mkdtemp(prefix="pch_demo_")
-    return prepare_repo(dest_dir, _SCENARIO)
-
-
-def _run_pch(repo_dir, verbosity=1):
-    set_logging_level_by_verbosity(verbosity)
-    cwd = os.getcwd()
-    os.chdir(repo_dir)
-    try:
-        prepend_commit_header(repo_dir)
-    finally:
-        os.chdir(cwd)
+    return prepare_demo_repo_by_scenario(_SCENARIO)
 
 
 # demo  ########################################################################
@@ -70,11 +50,11 @@ def main():
     shutil.copy(editmsg_2, before_file_2)
 
     print(gen_comment_banner_centered("PCH", "="))
-    _run_pch(demo_repo_1)
+    run_pch(demo_repo_1)
     print()
 
     print(gen_comment_banner_centered("PCH w/ -vvv", "="))
-    _run_pch(demo_repo_2, verbosity=3)
+    run_pch(demo_repo_2, verbosity=3)
     print()
 
     print(gen_comment_banner_centered("COMMIT_EDITMSG content", "#"))

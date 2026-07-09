@@ -39,6 +39,8 @@ python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/de
 
 `--scenario` covers TTG/PCH scenarios that unit tests also exercise; `--demo-bucket` covers CBM merge types PCH doesn't handle yet, used only by the `examples/pch/*-demo.py` skip demos. Bash demos in `examples/hooks/` (e.g. `pre-commit-demo.sh`, `prepare-commit-msg-demo.sh`) shell out to this same CLI rather than re-implementing repo setup in bash.
 
+`examples/pch/__init__.py` and `examples/ttg/__init__.py` hold the aux helpers shared across their sibling `*-demo.py` scripts (repo prep + running the library call), imported back with `from __init__ import ...` — each demo script's own directory lands on `sys.path` automatically since it's run standalone (`python3 examples/pch/<name>-demo.py`), so this resolves without extra `sys.path` wiring.
+
 ## PR & Commit Instructions
 
 - follow the **Git Command Safety Policy** in `CLAUDE.md` — never run reset, push, rebase, etc.
