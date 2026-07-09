@@ -64,10 +64,13 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
         msg_lines = [""]
         for file_path, results in filtered_results.items():
             msg_lines.append(gen_comment_banner_centered(file_path, "-"))
+            line_no_width = max(len(str(line_no)) for _, _, line_no in results)
             for _, line, line_no in results:
                 # TODO print gated TT in colored highlighting
-                line_no_str = renderer.color_grey(str(line_no))
-                msg_lines.append(line_no_str + "  " + line.strip())
+                line_no_str = renderer.color_grey(
+                    str(line_no).rjust(line_no_width)
+                )
+                msg_lines.append(line_no_str + " " + line.strip())
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)
 
