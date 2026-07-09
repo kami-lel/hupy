@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-feature-finish-demo.py
+feature-landing-demo.py
 
-demo: Feature Finish merge (add-user-authentication into develop) with the
+demo: Feature Landing merge (add-user-authentication into develop) with the
 in-progress merge message copied into COMMIT_EDITMSG (mirroring
 what git itself does before invoking the commit-msg hook)
 expected result: header prepended to COMMIT_EDITMSG
@@ -17,7 +17,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo_by_scenario, run_pch
 
-_SCENARIO = "feature_finish_pass"
+_SCENARIO = "feature_landing_pass"
 
 
 # helpers  #####################################################################
@@ -33,7 +33,7 @@ def _prepare_demo_repo():
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
     print(
-        "scenario:\tFeature Finish merge (add-user-authentication into develop)"
+        "scenario:\tFeature Landing merge (add-user-authentication into develop)"
     )
     print("expected:\tPASS, header prepended to COMMIT_EDITMSG")
     print()

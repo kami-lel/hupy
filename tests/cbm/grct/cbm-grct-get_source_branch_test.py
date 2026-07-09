@@ -19,7 +19,7 @@ from hupy.cbm.get_current_commit_type import get_source_branch
 
 class TestGetSourceBranchBranchTip:
     def test_resolves_to_branch_at_tip(self, repo):
-        # `repo` fixture: Feature Finish merge, add-user-authentication -> dev
+        # `repo` fixture: Feature Landing merge, add-user-authentication -> dev
         assert get_source_branch(repo) == "add-user-authentication"
 
     def test_resolves_to_whichever_branch_shares_the_tip(self, repo):
@@ -62,7 +62,7 @@ class TestGetSourceBranchCaching:
         assert second == first == "add-user-authentication"
 
     def test_separate_repos_cache_independently(self, tmp_path):
-        repo_a = prepare_merge_repo(tmp_path / "repo_a", "feature_finish")
+        repo_a = prepare_merge_repo(tmp_path / "repo_a", "feature_landing")
         repo_b = prepare_merge_repo(tmp_path / "repo_b", "regular_merge")
 
         assert get_source_branch(repo_a) == "add-user-authentication"

@@ -22,9 +22,9 @@ from prep_repo import prepare_repo_with_files
 # helpers  ######################################################################
 
 
-def _prepare_feature_finish(repo_dir):
+def _prepare_feature_landing(repo_dir):
     prepare_repo_with_files(
-        repo_dir, "feature_finish", {"feature.py": "tt_none.py"}
+        repo_dir, "feature_landing", {"feature.py": "tt_none.py"}
     )
 
 
@@ -37,14 +37,14 @@ class TestPrependCommitHeaderErrors:
             prepend_commit_header(str(tmp_path / "does_not_exist"))
 
     def test_missing_commit_editmsg_raises_file_not_found(self, repo_dir):
-        _prepare_feature_finish(repo_dir)
+        _prepare_feature_landing(repo_dir)
         # COMMIT_EDITMSG intentionally left unseeded
 
         with pytest.raises(FileNotFoundError):
             prepend_commit_header(str(repo_dir))
 
     def test_atomic_write_failure_leaves_original_untouched(self, repo_dir):
-        _prepare_feature_finish(repo_dir)
+        _prepare_feature_landing(repo_dir)
         seed_commit_editmsg_from_merge_msg(repo_dir)
         original = read_commit_editmsg(repo_dir)
 

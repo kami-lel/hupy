@@ -3,7 +3,7 @@
 # all-hooks-demo.sh
 #
 # run every demo in examples/hooks/ in sequence, on the same repo:
-# Feature Finish merge (add-user-authentication into develop) through
+# Feature Landing merge (add-user-authentication into develop) through
 # `hupy pre-commit`, then through `hupy prepare-commit-msg` (mirroring
 # git's own hook order), at default and `-vvv` verbosity
 # expected result: both PASS
@@ -21,7 +21,7 @@ _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 _prepare_demo_repo() {
     local dest
     dest="$(mktemp -d -t hooks_demo_XXXXXX)"
-    python3 "$_PREP_REPO_PY" --scenario feature_finish_pass --dest "$dest" \
+    python3 "$_PREP_REPO_PY" --scenario feature_landing_pass --dest "$dest" \
         > /dev/null
     cp "$dest/.git/MERGE_MSG" "$dest/.git/COMMIT_EDITMSG"
     echo "$dest"
@@ -44,7 +44,7 @@ _run_prepare_commit_msg() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tFeature Finish merge (add-user-authentication into develop)\n"
+printf "scenario:\tFeature Landing merge (add-user-authentication into develop)\n"
 printf "expected:\tPASS\n"
 echo
 

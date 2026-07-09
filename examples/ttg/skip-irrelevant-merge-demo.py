@@ -5,7 +5,7 @@ skip-irrelevant-merge-demo.py
 demo: merging two unrelated, non-protected branches (hotfix into
 release); the hotfix side stages two files — a.py with a LOUD
 "# TODO loud marker" comment and b.py with no tags at all
-expected result: skip (merge type is not Feature Finish or Version Release)
+expected result: skip (merge type is not Feature Landing or Version Release)
 """
 
 import pathlib

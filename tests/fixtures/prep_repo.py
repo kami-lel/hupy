@@ -24,15 +24,15 @@ _FIXTURES_ROOT = _FIXTURES_DIR.parent / "ttg" / "fixtures"
 COMMIT_BUCKETS = (
     "non_merge_commit",
     "regular_merge",
-    "feature_finish",
+    "feature_landing",
     "version_release",
 )
 
 SCENARIOS = (
     "non_merge_commit",
     "irrelevant_merge",
-    "feature_finish_fail",
-    "feature_finish_pass",
+    "feature_landing_fail",
+    "feature_landing_pass",
     "version_release_fail",
     "version_release_pass",
 )
@@ -89,10 +89,10 @@ def _setup_regular_merge(repo_dir, files):
     repo.git.merge("--no-commit", "--no-ff", "hotfix")
 
 
-def _setup_feature_finish(repo_dir, files):
+def _setup_feature_landing(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
-    _commit_fixture(repo_dir, "develop.py", "feature_finish_develop.py")
+    _commit_fixture(repo_dir, "develop.py", "feature_landing_develop.py")
     repo.git.checkout("-q", "-b", "add-user-authentication")
     for filename, fixture_name in files.items():
         _commit_fixture(repo_dir, filename, fixture_name)
@@ -175,7 +175,7 @@ def _setup_release_backport(repo_dir):
 _BUCKET_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
     "regular_merge": _setup_regular_merge,
-    "feature_finish": _setup_feature_finish,
+    "feature_landing": _setup_feature_landing,
     "version_release": _setup_version_release,
 }
 
@@ -201,16 +201,16 @@ _LEGACY_SCENARIO_PRESETS = {
         "regular_merge",
         {"a.py": "tt_loud_only.py", "b.py": "tt_none.py"},
     ),
-    "feature_finish_fail": (
-        "feature_finish",
+    "feature_landing_fail": (
+        "feature_landing",
         {
             "a.py": "tt_loud_only.py",
             "b.py": "tt_2loud.py",
             "c.py": "tt_quiet_only.py",
         },
     ),
-    "feature_finish_pass": (
-        "feature_finish",
+    "feature_landing_pass": (
+        "feature_landing",
         {"a.py": "tt_steady_only.py", "b.py": "tt_quiet_only.py"},
     ),
     "version_release_fail": (

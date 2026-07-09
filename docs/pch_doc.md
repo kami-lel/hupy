@@ -8,14 +8,14 @@ It recognizes two merge types and leaves every other commit untouched.
 
 | Merge | Header added |
 |---|---|
-| **Feature Finish** — a feature branch merged into `dev` | `Feature Finish: <branch-name>` |
+| **Feature Landing** — a feature branch merged into `dev` | `Feature Landing: <branch-name>` |
 | **Version Release** — `dev` merged into `main` | `Version Release: <version>` |
 | anything else (regular commit, unrelated merge) | *nothing — message untouched* |
 
 The header goes on the first line, followed by a blank line and then git's original message:
 
 ```
-Feature Finish: add-user-auth
+Feature Landing: add-user-auth
 
 Merge branch 'add-user-auth' into dev
 ```

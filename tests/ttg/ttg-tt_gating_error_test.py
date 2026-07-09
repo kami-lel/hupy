@@ -32,10 +32,10 @@ class TestPerformTriageTagsGatingErrors:
         """
         test that subprocess.CalledProcessError when running
         `git diff --cached --name-only` causes SystemExit(1).
-        uses a feature_finish merge scenario so TTG actually runs.
+        uses a feature_landing merge scenario so TTG actually runs.
         """
         prepare_repo_with_files(
-            repo_dir, "feature_finish", {"test.py": "tt_none.py"}
+            repo_dir, "feature_landing", {"test.py": "tt_none.py"}
         )
         with mock.patch(
             "hupy.ttg.tt_gating.subprocess.check_output",
@@ -68,10 +68,10 @@ class TestPerformTriageTagsGatingErrors:
     def test_git_diff_cached_name_only_generic_error(self, repo_dir):
         """
         test that generic git error during name-only diff raises SystemExit(1).
-        uses a feature_finish merge scenario so TTG actually runs.
+        uses a feature_landing merge scenario so TTG actually runs.
         """
         prepare_repo_with_files(
-            repo_dir, "feature_finish", {"test.py": "tt_none.py"}
+            repo_dir, "feature_landing", {"test.py": "tt_none.py"}
         )
         with mock.patch(
             "hupy.ttg.tt_gating.subprocess.check_output",

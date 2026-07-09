@@ -14,14 +14,14 @@ from . import prepare_merge_repo
 
 @pytest.fixture
 def repo_dir(tmp_path):
-    """path for a repo prepared with an in-progress Feature Finish merge."""
+    """path for a repo prepared with an in-progress Feature Landing merge."""
     return tmp_path / "repo"
 
 
 @pytest.fixture
 def repo(repo_dir):
     """
-    git.Repo for repo_dir, mid an in-progress Feature Finish merge
+    git.Repo for repo_dir, mid an in-progress Feature Landing merge
     (source branch ``add-user-authentication`` into target ``dev``).
     """
-    return prepare_merge_repo(repo_dir, "feature_finish")
+    return prepare_merge_repo(repo_dir, "feature_landing")

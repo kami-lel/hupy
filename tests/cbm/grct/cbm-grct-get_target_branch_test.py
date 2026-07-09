@@ -13,7 +13,7 @@ from hupy.cbm.get_current_commit_type import get_target_branch
 
 class TestGetTargetBranchOnBranch:
     def test_returns_active_branch_name(self, repo):
-        # `repo` fixture: Feature Finish merge, add-user-authentication -> dev
+        # `repo` fixture: Feature Landing merge, add-user-authentication -> dev
         assert get_target_branch(repo) == "dev"
 
 
@@ -39,7 +39,7 @@ class TestGetTargetBranchCaching:
         assert second == first == "dev"
 
     def test_separate_repos_cache_independently(self, tmp_path):
-        repo_a = prepare_merge_repo(tmp_path / "repo_a", "feature_finish")
+        repo_a = prepare_merge_repo(tmp_path / "repo_a", "feature_landing")
         repo_b = prepare_merge_repo(tmp_path / "repo_b", "regular_merge")
 
         assert get_target_branch(repo_a) == "dev"

@@ -1,7 +1,7 @@
 """
-pch-prepend_commit_header_feature_finish_test.py
+pch-prepend_commit_header_feature_landing_test.py
 
-tests for `prepend_commit_header` on Feature Finish merges, covering
+tests for `prepend_commit_header` on Feature Landing merges, covering
 the header content and the COMMIT_EDITMSG rewrite behavior in detail
 """
 
@@ -14,8 +14,8 @@ from pch_helpers import (
 )
 from prep_repo import prepare_repo_with_files
 
-_BUCKET = "feature_finish"
-_HEADER = "Feature Finish: add-user-authentication"
+_BUCKET = "feature_landing"
+_HEADER = "Feature Landing: add-user-authentication"
 
 
 # helpers  ######################################################################

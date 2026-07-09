@@ -62,8 +62,8 @@ class TestGetCurrentCommitTypePullMerge:
 
 
 class TestGetCurrentCommitTypeKnownMerges:
-    def test_feature_finish_is_feature_landing(self, repo_dir):
-        prepare_merge_repo(repo_dir, "feature_finish")
+    def test_feature_landing_is_feature_landing(self, repo_dir):
+        prepare_merge_repo(repo_dir, "feature_landing")
         assert (
             get_current_commit_type(str(repo_dir))
             == CommitType.FEATURE_LANDING
@@ -101,7 +101,7 @@ class TestGetCurrentCommitTypeErrors:
 
 class TestGetCurrentCommitTypeCaching:
     def test_result_is_cached_across_calls(self, repo_dir):
-        prepare_merge_repo(repo_dir, "feature_finish")
+        prepare_merge_repo(repo_dir, "feature_landing")
         first = get_current_commit_type(str(repo_dir))
         assert first == CommitType.FEATURE_LANDING
 
@@ -115,7 +115,7 @@ class TestGetCurrentCommitTypeCaching:
     def test_separate_repo_paths_cache_independently(self, tmp_path):
         dir_a = tmp_path / "repo_a"
         dir_b = tmp_path / "repo_b"
-        prepare_merge_repo(dir_a, "feature_finish")
+        prepare_merge_repo(dir_a, "feature_landing")
         prepare_merge_repo(dir_b, "version_release")
 
         assert (

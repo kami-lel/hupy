@@ -1,7 +1,7 @@
 """
-ttg-tt_gating_feature_finish_test.py
+ttg-tt_gating_feature_landing_test.py
 
-tests for `perform_triage_tags_gating` on Feature Finish merges
+tests for `perform_triage_tags_gating` on Feature Landing merges
 (gates on LOUD triage tags only)
 """
 
@@ -10,7 +10,7 @@ import pytest
 from hupy.ttg.tt_gating import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
 
-_BUCKET = "feature_finish"
+_BUCKET = "feature_landing"
 
 
 # helpers  ######################################################################

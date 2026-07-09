@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-fail-feature-finish-demo.py
+pass-feature-landing-demo.py
 
-demo: Feature Finish merge (add-user-authentication into develop) staging three
-files — a.py with 1 LOUD tag, b.py with 2 LOUD tags (multiple TT
-in a single file), and c.py with a QUIET tag
-expected result: fail (Feature Finish gates the Loud tier; both
-a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
+demo: Feature Landing merge (add-user-authentication into develop) staging two
+files — a.py with a STEADY "# Todo steady marker" comment and
+b.py with a QUIET "# todo quiet marker" comment (no Loud tags
+anywhere)
+expected result: pass
 """
-
-# Todo add a pre-commit-demo
 
 import pathlib
 
@@ -19,12 +17,8 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo, run_ttg
 
-_BUCKET = "feature_finish"
-_FILES = {
-    "a.py": "tt_loud_only.py",
-    "b.py": "tt_2loud.py",
-    "c.py": "tt_quiet_only.py",
-}
+_BUCKET = "feature_landing"
+_FILES = {"a.py": "tt_steady_only.py", "b.py": "tt_quiet_only.py"}
 
 
 # helpers  #####################################################################
@@ -39,11 +33,8 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tFeature Finish, multiple files with multiple Loud TT")
-    print("expected:\tFAIL")
-    print(
-        "reason:\tLoud tags in both a.py and b.py (multiple files, multiple TT)"
-    )
+    print("scenario:\tFeature Landing, multiple files (steady + quiet, no loud)")
+    print("expected:\tPASS")
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

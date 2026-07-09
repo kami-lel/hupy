@@ -18,7 +18,14 @@ from ..cbm import (
     get_source_branch,
 )
 
-# FIXME update more content
+# TODO catch up
+# TODO release backport
+
+# FIXME version release w/ x.y.z
+# TODO sync backport w/ x.y.z
+# TODO hotfix release w/ x.y.z
+# TODO hotfix backport w/ x.y.z
+# TODO release cut w/ x.y.z
 
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
@@ -28,12 +35,12 @@ logger.propagate = False
 # helpers  #####################################################################
 
 
-def _gen_feature_finish_header_content(repo):
+def _gen_feature_landing_header_content(repo):
     """
-    generate header content for Feature Finish commit type.
+    generate header content for Feature Landing commit type.
     """
     branch_name = get_source_branch(repo)
-    return "Feature Finish: {}".format(branch_name)
+    return "Feature Landing: {}".format(branch_name)
 
 
 def _gen_version_release_header_content():
@@ -46,7 +53,7 @@ def _gen_version_release_header_content():
     return "Version Release"
 
 
-def _prepend_commit_header_by_type(is_feature_finish, repo_root):
+def _prepend_commit_header_by_type(is_feature_landing, repo_root):
     """
     prepend a header line and a blank line to the commit message file.
     """
@@ -66,8 +73,8 @@ def _prepend_commit_header_by_type(is_feature_finish, repo_root):
             )
             target.append(line)
 
-    if is_feature_finish:
-        header = _gen_feature_finish_header_content(repo)
+    if is_feature_landing:
+        header = _gen_feature_landing_header_content(repo)
     else:
         header = _gen_version_release_header_content()
 

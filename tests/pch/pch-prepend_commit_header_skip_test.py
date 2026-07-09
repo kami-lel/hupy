@@ -2,7 +2,7 @@
 pch-prepend_commit_header_skip_test.py
 
 tests for `prepend_commit_header` on commit types it must skip:
-regular non-merge commits and merges unrelated to Feature Finish or
+regular non-merge commits and merges unrelated to Feature Landing or
 Version Release
 """
 

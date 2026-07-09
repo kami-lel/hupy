@@ -2,7 +2,7 @@
 #
 # pre-commit-demo.sh
 #
-# demo: Feature Finish merge (add-user-authentication into develop)
+# demo: Feature Landing merge (add-user-authentication into develop)
 # staging two files with no Loud triage tags — a.py (Steady) and
 # b.py (Quiet) — driven through the actual `hupy pre-commit` CLI
 # expected result: PASS, triage tag gating does not block the commit
@@ -20,7 +20,7 @@ _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 _prepare_demo_repo() {
     local dest
     dest="$(mktemp -d -t ttg_demo_XXXXXX)"
-    python3 "$_PREP_REPO_PY" --scenario feature_finish_pass --dest "$dest" \
+    python3 "$_PREP_REPO_PY" --scenario feature_landing_pass --dest "$dest" \
         > /dev/null
     echo "$dest"
 }
@@ -36,7 +36,7 @@ _run_ttg() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tFeature Finish, multiple files (steady + quiet, no loud)\n"
+printf "scenario:\tFeature Landing, multiple files (steady + quiet, no loud)\n"
 printf "expected:\tPASS\n"
 echo
 
