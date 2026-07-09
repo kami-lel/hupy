@@ -25,3 +25,6 @@ Merge branch 'add-user-auth' into dev
 On a **Version Release**, the header includes your project's version — e.g. `Version Release: 1.0.0`. That number is read from a file you point *HUPy* at via the `ver_grep` setting; if it isn't configured, the header is just `Version Release` with no number.
 
 See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
+
+
+<!-- FIXME merge into cbm -->
