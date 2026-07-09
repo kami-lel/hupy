@@ -4,9 +4,10 @@
 
 Identify in-progress git commits and merges by branch patterns.
 
-## MergeType
+## CommitType
 
-Categorizes merges by source and target branches in the development workflow.
+Categorizes in-progress commits by merge strategy and commit type. A
+merge is further categorized by its source and target branches.
 
 ### Feature Landing
 `feature -> dev`
@@ -48,18 +49,8 @@ A release-candidate branch, after final testing/bugfixes, merges into main. Mark
 
 Any last-minute fixes made on the release branch get synced back to dev. Prevents divergence between release fixes and ongoing development.
 
-## CommitType
-
-Categorizes in-progress commits by merge strategy and commit type.
-
-### FEATURE_FINISH
-A merge of type `feature -> dev`. Represents the completion of a feature implementation.
-
-### VERSION_RELEASE
-A merge of type `dev -> main`. Represents a versioned release to production.
-
-### OTHER_COMMIT
+### Other Commit
 A regular, non-merge commit. Represents standard development work.
 
-### OTHER_MERGE
+### Other Merge
 Any merge that doesn't fit the recognized patterns (e.g., pull merges, octopus merges, etc.).

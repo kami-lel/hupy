@@ -106,8 +106,8 @@ def perform_triage_tags_gating(repo_root):
 
     commit_type = get_current_commit_type(repo_root)
 
-    if CommitType.FEATURE_FINISH in commit_type:
-        logger.debug("TTG on Feature Finish merge")
+    if CommitType.FEATURE_LANDING in commit_type:
+        logger.debug("TTG on Feature Landing merge")
         _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:

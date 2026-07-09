@@ -123,8 +123,8 @@ def get_current_commit_type(repo_path):
     source = get_source_branch(repo)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
-        logger.debug("detect Feature Finish merge")
-        return CommitType.FEATURE_FINISH
+        logger.debug("detect Feature Landing merge")
+        return CommitType.FEATURE_LANDING
     if source == DEV_BRANCH and target == MAIN_BRANCH:
         logger.debug("detect Version Release merge")
         return CommitType.VERSION_RELEASE

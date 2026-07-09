@@ -7,12 +7,10 @@ from hupy.cbm.get_current_commit_type import (
 	get_current_commit_type,
 	get_source_branch,
 )
-from hupy.cbm.merge_type import MergeType
 
 __all__ = (
 	"CommitType",
 	"get_current_commit_type",
 	"get_source_branch",
-	"MergeType",
 	"CBM_LOGGER_NAME",
 )

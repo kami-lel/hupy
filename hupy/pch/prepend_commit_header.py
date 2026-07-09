@@ -103,8 +103,8 @@ def prepend_commit_header(repo_root):
 
     commit_type = get_current_commit_type(repo_root)
 
-    if CommitType.FEATURE_FINISH in commit_type:
-        logger.debug("prepending header on Feature Finish merge")
+    if CommitType.FEATURE_LANDING in commit_type:
+        logger.debug("prepending header on Feature Landing merge")
         _prepend_commit_header_by_type(True, repo_root)
 
     elif CommitType.VERSION_RELEASE in commit_type:

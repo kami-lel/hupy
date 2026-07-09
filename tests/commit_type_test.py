@@ -86,7 +86,7 @@ class TestGetCurrentCommitType:
         _write_merge_head(repo_dir, sha_dev)
         assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
 
-    def test_feature_finish_merge(self, repo, repo_dir):
+    def test_feature_landing_merge(self, repo, repo_dir):
         repo.git.checkout("-q", "-b", "dev")
         _commit(repo_dir, "dev")
         repo.git.checkout("-q", "-b", "add-user-authentication")
@@ -95,7 +95,7 @@ class TestGetCurrentCommitType:
         repo.git.checkout("-q", "dev")
         _write_merge_head(repo_dir, sha_feature)
         assert (
-            get_current_commit_type(str(repo_dir)) == CommitType.FEATURE_FINISH
+            get_current_commit_type(str(repo_dir)) == CommitType.FEATURE_LANDING
         )
 
     def test_version_release_merge(self, repo, repo_dir):
