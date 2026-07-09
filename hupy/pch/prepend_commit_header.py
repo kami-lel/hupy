@@ -18,14 +18,10 @@ from ..cbm import (
     get_source_branch,
 )
 
-# TODO catch up
-# TODO release backport
-
 # FIXME version release w/ x.y.z
-# TODO sync backport w/ x.y.z
-# TODO hotfix release w/ x.y.z
-# TODO hotfix backport w/ x.y.z
 # TODO release cut w/ x.y.z
+# TODO hotfix release w/ x.y.z
+# BUG release/sync/hotfix backports wrong version
 
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
@@ -36,24 +32,57 @@ logger.propagate = False
 
 
 def _gen_feature_landing_header_content(repo):
-    """
-    generate header content for Feature Landing commit type.
-    """
     branch_name = get_source_branch(repo)
     return "Feature Landing: {}".format(branch_name)
 
 
-def _gen_version_release_header_content():
-    """
-    generate header content for Version Release commit type.
-    """
+def _gen_version_release_header_content(_):
     version = grep_repo_version()
     if version:
         return "Version Release: {}".format(version)
-    return "Version Release"
+    else:
+        return "Version Release"
 
 
-def _prepend_commit_header_by_type(is_feature_landing, repo_root):
+def _gen_catch_up_header(_):
+    return "Catch Up"  # FIXME more wording
+
+
+def _gen_release_backport_header(_):
+    version = grep_repo_version()
+    if version:
+        return "Release Backport from: {}".format(version)
+    else:
+        return "Release Backport"
+
+
+def _gen_sync_backport_header(_):
+    version = grep_repo_version()
+    if version:
+        return "Sync Backport from: {}".format(version)
+    else:
+        return "Sync Backport"
+
+
+def _gen_hotfix_backport_header(_):
+    version = grep_repo_version()
+    if version:
+        return "Hotfix Backport from: {}".format(version)
+    else:
+        return "Hotfix Backport"
+
+
+_HEADER_GENERATORS = {
+    CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
+    CommitType.VERSION_RELEASE: _gen_version_release_header_content,
+    CommitType.CATCH_UP: _gen_catch_up_header,
+    CommitType.RELEASE_BACKPORT: _gen_release_backport_header,
+    CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
+    CommitType.HOTFIX_BACKPORT: _gen_hotfix_backport_header,
+}
+
+
+def _prepend_commit_header_by_type(commit_type, repo_root):
     """
     prepend a header line and a blank line to the commit message file.
     """
@@ -73,10 +102,7 @@ def _prepend_commit_header_by_type(is_feature_landing, repo_root):
             )
             target.append(line)
 
-    if is_feature_landing:
-        header = _gen_feature_landing_header_content(repo)
-    else:
-        header = _gen_version_release_header_content()
+    header = _HEADER_GENERATORS[commit_type](repo)
 
     logger.debug("generated header:\n" + header)
 
@@ -112,13 +138,9 @@ def prepend_commit_header(repo_root):
 
     commit_type = get_current_commit_type(repo_root)
 
-    if CommitType.FEATURE_LANDING in commit_type:
-        logger.debug("prepending header on Feature Landing merge")
-        _prepend_commit_header_by_type(True, repo_root)
-
-    elif CommitType.VERSION_RELEASE in commit_type:
-        logger.debug("prepending header on Version Release merge")
-        _prepend_commit_header_by_type(False, repo_root)
+    if commit_type in _HEADER_GENERATORS:
+        logger.debug("prepending header on {} merge".format(commit_type.name))
+        _prepend_commit_header_by_type(commit_type, repo_root)
 
     else:
         logger.skip("regular commit/merge")
