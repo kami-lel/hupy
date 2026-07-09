@@ -14,7 +14,7 @@ from hupy.kamilog import getLogger
 from hupy.cbm.branch_type import BranchType
 from hupy.cbm.commit_type import CommitType, CBM_LOGGER_NAME
 
-__all__ = ("get_current_commit_type", "get_source_branch")
+__all__ = ("get_current_commit_type", "get_source_branch", "get_target_branch")
 
 # logger  ######################################################################
 
@@ -36,13 +36,6 @@ def _read_merge_head(git_dir):
         return [ln.strip() for ln in f if ln.strip()]
 
 
-def _get_target_branch(repo):
-    try:
-        return repo.active_branch.name
-    except TypeError:
-        return None  # detached HEAD
-
-
 def _is_pull_merge(repo, sha, target_branch):
     if target_branch is None:
         return False
@@ -56,12 +49,15 @@ def _is_pull_merge(repo, sha, target_branch):
     return False
 
 
-# Public API  ##################################################################
-
 # pylint: disable-next=invalid-name
 _source_branch_cache = {}
 # pylint: disable-next=invalid-name
+_target_branch_cache = {}
+# pylint: disable-next=invalid-name
 _commit_type_cache = {}
+
+
+# Public API  ##################################################################
 
 
 def get_source_branch(repo):
@@ -86,6 +82,27 @@ def get_source_branch(repo):
             return _source_branch_cache[repo.git_dir]
     _source_branch_cache[repo.git_dir] = repo.git.name_rev("--name-only", sha)
     return _source_branch_cache[repo.git_dir]
+
+
+def get_target_branch(repo):
+    """
+    get the target branch name of the current merge, (result is cached)
+
+
+    :param repo: git repository object
+    :type repo: git.Repo
+    :return: name of the target branch being merged into, or ``None``
+                    on a detached HEAD
+    :rtype: str or None
+    """
+    if repo.git_dir in _target_branch_cache:
+        return _target_branch_cache[repo.git_dir]
+
+    try:
+        _target_branch_cache[repo.git_dir] = repo.active_branch.name
+    except TypeError:
+        _target_branch_cache[repo.git_dir] = None  # detached HEAD
+    return _target_branch_cache[repo.git_dir]
 
 
 def get_current_commit_type(repo_path):
@@ -123,7 +140,7 @@ def get_current_commit_type(repo_path):
         return _commit_type_cache[repo_path]
 
     sha = lines[0]
-    target = _get_target_branch(repo)
+    target = get_target_branch(repo)
 
     if _is_pull_merge(repo, sha, target):
         logger.debug("detect pull merge")
