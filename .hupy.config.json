@@ -4,5 +4,11 @@
   "ver_grep": {
     "version_file": "pyproject.toml",
     "version_line_pattern": "^version = \"(.*)\""
+  },
+  "cbm": {
+    "main_branch_name": "main",
+    "dev_branch_name": "dev",
+    "hotfix_branch_prefix": "hotfix",
+    "release_branch_prefix": "release"
   }
 }

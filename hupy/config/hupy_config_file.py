@@ -63,6 +63,17 @@ class _VerGrep(BaseModel):
         return self
 
 
+class _Cbm(BaseModel):
+    """
+    configuration for the CBM module (commit, branch, and merge types)
+    """
+
+    main_branch_name: str = "main"
+    dev_branch_name: str = "dev"
+    hotfix_branch_prefix: str = "hotfix"
+    release_branch_prefix: str = "release"
+
+
 class HupyConfigFile(BaseModel):
     """
     schema for the HUPy config file (``.hupy.config.json``)
@@ -71,3 +82,4 @@ class HupyConfigFile(BaseModel):
     hupy_version: str = Field(default_factory=lambda: version("HUPy"))
     default_logger_verbosity: int = 1
     ver_grep: _VerGrep = Field(default_factory=_VerGrep)
+    cbm: _Cbm = Field(default_factory=_Cbm)
