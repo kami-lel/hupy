@@ -7,6 +7,7 @@ buckets, for reuse by unit tests and by the ``examples/ttg`` and
 ``tests/``
 """
 
+import os
 import shutil
 import tempfile
 from argparse import ArgumentParser
@@ -107,6 +108,14 @@ def _setup_version_release(repo_dir, files):
         _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
+
+
+def _chdir_into_repo(repo_dir):
+    # HUPy resolves ``ver_grep.version_file`` against the process cwd,
+    # so tests must chdir into the prepared repo for the bundled
+    # ``setup.cfg`` to be found; not restored after the test, since
+    # each test starts a fresh scenario repo anyway
+    os.chdir(str(repo_dir))
 
 
 def _write_and_commit(repo_dir, filename, content):
@@ -254,6 +263,7 @@ def prepare_repo_with_files(dest_dir, commit_bucket, files):
         raise ValueError("unknown commit bucket: {}".format(commit_bucket))
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
+    _chdir_into_repo(dest_dir)
     _BUCKET_SETUP_FUNCS[commit_bucket](dest_dir, files)
     return str(dest_dir)
 
@@ -299,6 +309,7 @@ def prepare_demo_repo(dest_dir, demo_bucket):
         raise ValueError("unknown demo bucket: {}".format(demo_bucket))
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
+    _chdir_into_repo(dest_dir)
     _DEMO_BUCKET_SETUP_FUNCS[demo_bucket](dest_dir)
     return str(dest_dir)
 
