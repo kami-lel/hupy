@@ -13,7 +13,7 @@ from pathlib import Path
 
 import git
 
-from hupy.commit_type import DEV_BRANCH, MAIN_BRANCH
+from hupy.ctd.commit_type import DEV_BRANCH, MAIN_BRANCH
 
 _TESTEE_ROOT = Path(__file__).parent.parent / "testee"
 _BUNDLE_PATH = _TESTEE_ROOT / "default_repo.bundle"

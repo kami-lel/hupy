@@ -12,7 +12,7 @@ import git
 from hupy.kamilog import getLogger
 from hupy.ver_grep import grep_repo_version
 from . import PCH_LOGGER_NAME
-from ..commit_type import (
+from ..ctd import (
     CommitType,
     get_current_commit_type,
     get_source_branch,
