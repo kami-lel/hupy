@@ -50,6 +50,7 @@ def decide_version_update_type(coming_version, current_version):
             update over ``current_version``
     :rtype: str
     """
+    # BUG BUG distinguish b/t current,source,target branches
     coming_core = _parse_version_core(coming_version)
     current_core = _parse_version_core(current_version)
     if coming_core is None or current_core is None:

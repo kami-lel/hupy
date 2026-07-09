@@ -36,6 +36,9 @@ def _read_version_file_at_ref(repo, ref, version_file):
         raise SystemExit(1) from e
 
 
+# BUG BUG this may not be necessary
+
+
 # Public API  ##################################################################
 def grep_source_branch_version():
     """
