@@ -9,6 +9,9 @@ expected result: fail (Feature Finish gates the Loud tier; both
 a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
 """
 
+# Fixme rewrite ttg demo to do only fx
+# Todo add a pre-commit-demo
+
 import pathlib
 import subprocess
 import sys
@@ -26,7 +29,6 @@ from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_zero,
 )
 from prep_repo import prepare_repo  # noqa: E402
-
 
 # helpers  #####################################################################
 
@@ -53,8 +55,7 @@ def main():
     print("scenario:\tFeature Finish, multiple files with multiple Loud TT")
     print("expected:\tFAIL")
     print(
-        "reason:\tLoud tags in both a.py and b.py "
-        "(multiple files, multiple TT)"
+        "reason:\tLoud tags in both a.py and b.py (multiple files, multiple TT)"
     )
     print()
 
