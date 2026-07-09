@@ -3,7 +3,6 @@
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
 <!--
-bug missing feature such that direct bash command can be used
 Todo add PCH more scenario eg keep up feature branch with dev
 Todo ban direct commit to main
 Todo toggle direct commit to dev
