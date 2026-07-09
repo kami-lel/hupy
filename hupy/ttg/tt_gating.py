@@ -11,7 +11,7 @@ import sys
 
 from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
-from ..ctd import CommitType, get_current_commit_type
+from ..cbm import CommitType, get_current_commit_type
 from .tt_detect import (
     _TT_PATTERN,
     TriageTagType,

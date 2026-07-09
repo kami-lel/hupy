@@ -9,9 +9,12 @@ from pathlib import Path
 import git
 import pytest
 
-from hupy.ctd import CommitType, get_current_commit_type
+from hupy.cbm import CommitType, get_current_commit_type
 
 _TESTEE_ROOT = Path(__file__).parent / "testee"
+
+
+# FIXME rewrite ut
 
 
 # fixtures  #####################################################################

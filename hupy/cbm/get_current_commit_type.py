@@ -11,13 +11,18 @@ import os
 import git
 
 from hupy.kamilog import getLogger
-from hupy.ctd.commit_type import CommitType, MAIN_BRANCH, DEV_BRANCH
+from hupy.cbm.commit_type import (
+	CommitType,
+	MAIN_BRANCH,
+	DEV_BRANCH,
+	CBM_LOGGER_NAME,
+)
 
 __all__ = ("get_current_commit_type", "get_source_branch")
 
 # logger  ######################################################################
 
-logger = getLogger("hupy.CTD")
+logger = getLogger(CBM_LOGGER_NAME)
 logger.propagate = False
 
 
