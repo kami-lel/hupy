@@ -51,19 +51,17 @@ def main():
     print("expected:\tSKIP")
     print()
 
-    print(gen_comment_banner_centered("PCH", "#"))
+    print(gen_comment_banner_centered("setup", "#"))
     demo_repo_1 = _prepare_demo_repo()
+    demo_repo_2 = _prepare_demo_repo()
+    print()
+
+    print(gen_comment_banner_centered("PCH", "#"))
     _run_pch(demo_repo_1)
     print()
 
-    print(gen_comment_banner_centered("PCH w/ -v", "#"))
-    demo_repo_2 = _prepare_demo_repo()
-    _run_pch(demo_repo_2, "-v")
-    print()
-
     print(gen_comment_banner_centered("PCH w/ -vvv", "#"))
-    demo_repo_3 = _prepare_demo_repo()
-    _run_pch(demo_repo_3, "-vvv")
+    _run_pch(demo_repo_2, "-vvv")
 
 
 if __name__ == "__main__":

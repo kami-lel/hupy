@@ -60,42 +60,37 @@ def main():
     print(gen_comment_banner_centered("print out", "#"))
     print()
 
-    print(gen_comment_banner_centered("PCH", "="))
+    print(gen_comment_banner_centered("setup", "="))
     demo_repo_1 = _prepare_demo_repo()
     editmsg_1 = pathlib.Path(demo_repo_1, ".git", "COMMIT_EDITMSG")
     before_file_1 = pathlib.Path(demo_repo_1, ".git", "COMMIT_EDITMSG.before")
     shutil.copy(pathlib.Path(demo_repo_1, ".git", "MERGE_MSG"), editmsg_1)
     shutil.copy(editmsg_1, before_file_1)
+
+    demo_repo_2 = _prepare_demo_repo()
+    editmsg_2 = pathlib.Path(demo_repo_2, ".git", "COMMIT_EDITMSG")
+    before_file_2 = pathlib.Path(demo_repo_2, ".git", "COMMIT_EDITMSG.before")
+    shutil.copy(pathlib.Path(demo_repo_2, ".git", "MERGE_MSG"), editmsg_2)
+    shutil.copy(editmsg_2, before_file_2)
+    print()
+
+    print(gen_comment_banner_centered("PCH", "="))
     _run_pch(demo_repo_1)
     print()
 
-    print(gen_comment_banner_centered("PCH w/ -v", "="))
-    demo_repo_2 = _prepare_demo_repo()
-    shutil.copy(
-        pathlib.Path(demo_repo_2, ".git", "MERGE_MSG"),
-        pathlib.Path(demo_repo_2, ".git", "COMMIT_EDITMSG"),
-    )
-    _run_pch(demo_repo_2, "-v")
-    print()
-
     print(gen_comment_banner_centered("PCH w/ -vvv", "="))
-    demo_repo_3 = _prepare_demo_repo()
-    editmsg_3 = pathlib.Path(demo_repo_3, ".git", "COMMIT_EDITMSG")
-    before_file_3 = pathlib.Path(demo_repo_3, ".git", "COMMIT_EDITMSG.before")
-    shutil.copy(pathlib.Path(demo_repo_3, ".git", "MERGE_MSG"), editmsg_3)
-    shutil.copy(editmsg_3, before_file_3)
-    _run_pch(demo_repo_3, "-vvv")
+    _run_pch(demo_repo_2, "-vvv")
     print()
 
     print(gen_comment_banner_centered("COMMIT_EDITMSG content", "#"))
     print()
 
     print(gen_comment_banner_centered("before PCH", "="))
-    print(before_file_3.read_text(), end="")
+    print(before_file_2.read_text(), end="")
     print()
 
     print(gen_comment_banner_centered("after PCH", "="))
-    print(editmsg_3.read_text(), end="")
+    print(editmsg_2.read_text(), end="")
 
 
 if __name__ == "__main__":
