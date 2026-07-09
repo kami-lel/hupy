@@ -55,11 +55,11 @@ def grep_source_branch_version():
         return ""
     version_file, pattern = settings
 
-    # TODO TODO logger
-
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
     source_branch = get_source_branch(repo)
 
     content = _read_version_file_at_ref(repo, source_branch, version_file)
 
-    return _grep_version_from_content(content, version_file, pattern)
+    return _grep_version_from_content(
+        content, version_file, pattern, branch_label="source branch"
+    )

@@ -36,21 +36,34 @@ def _load_ver_grep_settings():
     return version_file, pattern
 
 
-def _grep_version_from_content(content, version_file, pattern):
+def _grep_version_from_content(
+    content, version_file, pattern, branch_label="current branch"
+):
     """
     regex-match ``pattern`` line by line against ``content``, returning
     the first capturing group of the first matching line
+
+    :param branch_label: human-readable source of ``content``, used to
+            disambiguate log output, eg ``"current branch"`` or
+            ``"source branch"``
+    :type branch_label: str
     """
     for line in content.splitlines():
         match = re.search(pattern, line)
         if match:
-            logger.debug("matched line:\n{}".format(line))
+            logger.debug(
+                "matched line on {}:\n{}".format(branch_label, line)
+            )
             version = match.group(1)
-            logger.debug("version grepped:\t{}".format(version))
+            logger.debug(
+                "version grepped on {}:\t{}".format(branch_label, version)
+            )
             return version
 
     logger.error(
-        "no line matches pattern in {}: {}".format(version_file, pattern)
+        "no line matches pattern in {} on {}: {}".format(
+            version_file, branch_label, pattern
+        )
     )
     raise SystemExit(1)
 
@@ -74,7 +87,6 @@ def grep_current_version():
         return ""
     version_file, pattern = settings
 
-    # TODO TODO logger & update behavior
     if not version_file.exists():
         logger.error("version file not found: {}".format(version_file))
         raise SystemExit(1)
