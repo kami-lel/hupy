@@ -28,7 +28,6 @@ from hupy.kamilog import (  # noqa: E402
 from hupy.pch import prepend_commit_header  # noqa: E402
 from prep_repo import prepare_repo  # noqa: E402
 
-
 # helpers  #####################################################################
 
 
