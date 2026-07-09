@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-from hupy.cli.cli_init import (
+from hupy.cli.cli_ich import (
     _HOOK_STUBS_DIR,
     _PYTHON_PLACEHOLDER,
     _copy_hook_stubs,
