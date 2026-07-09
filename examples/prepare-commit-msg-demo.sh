@@ -17,23 +17,6 @@ _BUNDLE="$_REPO_ROOT/tests/testee/default_repo.bundle"
 
 # helpers  #####################################################################
 
-# HACK use kamilog banner
-
-_banner() {
-    python3 -c "
-import sys
-from hupy.kamilog import gen_comment_banner_centered
-print(gen_comment_banner_centered(sys.argv[1], sys.argv[2]))
-" "$1" "$2"
-}
-
-_title() {
-    python3 -c "
-import sys
-from hupy.kamilog import gen_comment_banner_zero
-print(gen_comment_banner_zero([sys.argv[1]]))
-" "$1"
-}
 
 _prepare_demo_repo() {
     local dest
@@ -64,44 +47,38 @@ _run_pch() {
 # demo  ########################################################################
 
 
-main() {
-    _title "$(basename "$0")"
-    printf "scenario:\tVersion Release merge (develop into main)\n"
-    printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
-    echo
+printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf "scenario:\tVersion Release merge (develop into main)\n"
+printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
+echo
 
-    _banner "print out" "#"
-    local demo_repo_1 editmsg_1 before_file_1
-    demo_repo_1="$(_prepare_demo_repo)"
-    editmsg_1="$demo_repo_1/.git/COMMIT_EDITMSG"
-    before_file_1="$demo_repo_1/.git/COMMIT_EDITMSG.before"
-    cp "$demo_repo_1/.git/MERGE_MSG" "$editmsg_1"
-    cp "$editmsg_1" "$before_file_1"
+printf '%s\n' "print out" | python3 -m hupy.kamilog cb center "#"
+demo_repo_1="$(_prepare_demo_repo)"
+editmsg_1="$demo_repo_1/.git/COMMIT_EDITMSG"
+before_file_1="$demo_repo_1/.git/COMMIT_EDITMSG.before"
+cp "$demo_repo_1/.git/MERGE_MSG" "$editmsg_1"
+cp "$editmsg_1" "$before_file_1"
 
-    local demo_repo_2 editmsg_2 before_file_2
-    demo_repo_2="$(_prepare_demo_repo)"
-    editmsg_2="$demo_repo_2/.git/COMMIT_EDITMSG"
-    before_file_2="$demo_repo_2/.git/COMMIT_EDITMSG.before"
-    cp "$demo_repo_2/.git/MERGE_MSG" "$editmsg_2"
-    cp "$editmsg_2" "$before_file_2"
+demo_repo_2="$(_prepare_demo_repo)"
+editmsg_2="$demo_repo_2/.git/COMMIT_EDITMSG"
+before_file_2="$demo_repo_2/.git/COMMIT_EDITMSG.before"
+cp "$demo_repo_2/.git/MERGE_MSG" "$editmsg_2"
+cp "$editmsg_2" "$before_file_2"
 
-    _banner "PCH" "="
-    _run_pch "$demo_repo_1"
-    echo
+printf '%s\n' "PCH" | python3 -m hupy.kamilog cb center "="
+_run_pch "$demo_repo_1"
+echo
 
-    _banner "PCH w/ -vvv" "="
-    _run_pch "$demo_repo_2" -vvv
-    echo
+printf '%s\n' "PCH w/ -vvv" | python3 -m hupy.kamilog cb center "="
+_run_pch "$demo_repo_2" -vvv
+echo
 
-    _banner "COMMIT_EDITMSG content" "#"
-    echo
+printf '%s\n' "COMMIT_EDITMSG content" | python3 -m hupy.kamilog cb center "#"
+echo
 
-    _banner "before PCH" "="
-    cat "$before_file_2"
-    echo
+printf '%s\n' "before PCH" | python3 -m hupy.kamilog cb center "="
+cat "$before_file_2"
+echo
 
-    _banner "after PCH" "="
-    cat "$editmsg_2"
-}
-
-main "$@"
+printf '%s\n' "after PCH" | python3 -m hupy.kamilog cb center "="
+cat "$editmsg_2"
