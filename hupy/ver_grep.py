@@ -19,6 +19,8 @@ VER_GREP_LOGGER_NAME = PROJ_LOGGER_NAME + ".VerGrep"
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
+# TODO decide major/minor/patch version release
+
 
 # Public API  ##################################################################
 def grep_repo_version():
