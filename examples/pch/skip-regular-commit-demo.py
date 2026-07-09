@@ -22,7 +22,6 @@ from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )
-from hupy.config.write_config import write_default_config  # noqa: E402
 from prep_repo import prepare_repo  # noqa: E402
 
 # helpers  #####################################################################
@@ -30,9 +29,7 @@ from prep_repo import prepare_repo  # noqa: E402
 
 def _prepare_demo_repo():
     dest_dir = tempfile.mkdtemp(prefix="pch_demo_")
-    repo_dir = prepare_repo(dest_dir, _SCENARIO)
-    write_default_config(pathlib.Path(repo_dir), force=True)
-    return repo_dir
+    return prepare_repo(dest_dir, _SCENARIO)
 
 
 def _run_pch(repo_dir, *extra_args):
@@ -51,7 +48,6 @@ def main():
     print("expected:\tSKIP")
     print()
 
-    print(gen_comment_banner_centered("setup", "#"))
     demo_repo_1 = _prepare_demo_repo()
     demo_repo_2 = _prepare_demo_repo()
     print()

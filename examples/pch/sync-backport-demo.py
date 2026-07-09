@@ -26,8 +26,6 @@ from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )
-from hupy.config.write_config import write_default_config  # noqa: E402
-
 
 # helpers  #####################################################################
 
@@ -49,7 +47,6 @@ def _prepare_demo_repo():
     repo.git.checkout("-q", "dev")
     repo.git.merge("--no-commit", "--no-ff", "main")
 
-    write_default_config(pathlib.Path(dest_dir), force=True)
     return dest_dir
 
 
@@ -70,9 +67,6 @@ def main():
     print()
 
     print(gen_comment_banner_centered("print out", "#"))
-    print()
-
-    print(gen_comment_banner_centered("setup", "="))
     demo_repo_1 = _prepare_demo_repo()
     editmsg_1 = pathlib.Path(demo_repo_1, ".git", "COMMIT_EDITMSG")
     before_file_1 = pathlib.Path(demo_repo_1, ".git", "COMMIT_EDITMSG.before")
@@ -84,7 +78,6 @@ def main():
     before_file_2 = pathlib.Path(demo_repo_2, ".git", "COMMIT_EDITMSG.before")
     shutil.copy(pathlib.Path(demo_repo_2, ".git", "MERGE_MSG"), editmsg_2)
     shutil.copy(editmsg_2, before_file_2)
-    print()
 
     print(gen_comment_banner_centered("PCH", "="))
     _run_pch(demo_repo_1)
