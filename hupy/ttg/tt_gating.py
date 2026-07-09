@@ -5,13 +5,18 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
+import re
 import subprocess
 import sys
 
 from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
 from ..commit_type import CommitType, get_current_commit_type
-from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
+from .tt_detect import (
+    _TT_PATTERN,
+    TriageTagType,
+    detect_triage_tags_in_staged_file,
+)
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)
@@ -66,11 +71,21 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             msg_lines.append(gen_comment_banner_centered(file_path, "-"))
             line_no_width = max(len(str(line_no)) for _, _, line_no in results)
             for _, line, line_no in results:
-                # TODO print gated TT in colored highlighting
                 line_no_str = renderer.color_grey(
                     str(line_no).rjust(line_no_width)
                 )
-                msg_lines.append(line_no_str + " " + line.strip())
+                stripped_line = line.strip()
+                match = re.search(_TT_PATTERN, stripped_line)
+                if match:
+                    colored_tag = renderer.color_triage_tag(
+                        match.group(1)
+                    )
+                    stripped_line = (
+                        stripped_line[: match.start()]
+                        + colored_tag
+                        + stripped_line[match.end() :]
+                    )
+                msg_lines.append(line_no_str + " " + stripped_line)
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)
 
