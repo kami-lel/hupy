@@ -59,8 +59,8 @@ def load_hupy_config(repo_path):
         _config_cache = HupyConfigFile.model_validate_json(
             config_path.read_text()
         )
-
         return _config_cache
+
     except FileNotFoundError as e:
         logger.error("HUPy config file not found: {}".format(config_path))
         raise SystemExit(1) from e

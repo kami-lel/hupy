@@ -46,28 +46,35 @@ class _VerGrep(BaseModel):
         )
 
     @model_validator(mode="after")
-    def _warn_if_unconfigured(self):
+    def _validate_version_grep_hook(self):
         """
-        warn once, at creation, when the version grep hook is unset.
+        warn once, at creation, when the version grep hook is unset;
+        otherwise error if ``version_file`` does not point to a real
+        file.
         """
-        renderer = AnsiRenderer(sys.stdout)
         if self.is_unconfigured():
+            renderer = AnsiRenderer(sys.stdout)
             logger.warning(
                 "VerGrep not configured:\nmust set {}, {} to enable".format(
                     renderer.color("version_file", AnsiStyle.BOLD),
                     renderer.color("version_line_pattern", AnsiStyle.BOLD),
                 )
             )
+            return self
 
-        # HACK include version filevlidation
-        # version_file = _config_cache.ver_grep.version_file
-        # logger.debug("version_file:\t{}".format(version_file))
-        # pattern = _config_cache.ver_grep.version_line_pattern
-        # logger.debug("version_line_pattern:\t{}".format(pattern))
+        logger.debug("version_file:\t{}".format(self.version_file))
+        logger.debug(
+            "version_line_pattern:\t{}".format(self.version_line_pattern)
+        )
 
-        # if not version_file.exists():
-        #     logger.error("version file not found: {}".format(version_file))
-        #     raise SystemExit(1)
+        if not self.version_file.exists():
+            try:
+                raise FileNotFoundError(
+                    "version file not found: {}".format(self.version_file)
+                )
+            except FileNotFoundError as e:
+                logger.exception("version file not found")
+                raise SystemExit(1) from e
 
         return self
 
