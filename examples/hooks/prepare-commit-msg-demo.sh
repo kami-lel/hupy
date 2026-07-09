@@ -11,7 +11,7 @@
 set -euo pipefail
 
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_REPO_ROOT="$(dirname "$_SCRIPT_DIR")"
+_REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 
 
@@ -54,11 +54,11 @@ before_file_2="$demo_repo_2/.git/COMMIT_EDITMSG.before"
 cp "$demo_repo_2/.git/MERGE_MSG" "$editmsg_2"
 cp "$editmsg_2" "$before_file_2"
 
-printf '%s\n' "PCH" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "="
 _run_pch "$demo_repo_1"
 echo
 
-printf '%s\n' "PCH w/ -vvv" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "prepare-commit-msg w/ -vvv" | python3 -m hupy.kamilog cb center "="
 _run_pch "$demo_repo_2" -vvv
 echo
 

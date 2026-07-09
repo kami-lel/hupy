@@ -37,7 +37,7 @@ python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/
 python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/demo_repo
 ```
 
-`--scenario` covers TTG/PCH scenarios that unit tests also exercise; `--demo-bucket` covers CBM merge types PCH doesn't handle yet, used only by the `examples/pch/*-demo.py` skip demos. Bash demos (e.g. `examples/prepare-commit-msg-demo.sh`) shell out to this same CLI rather than re-implementing repo setup in bash.
+`--scenario` covers TTG/PCH scenarios that unit tests also exercise; `--demo-bucket` covers CBM merge types PCH doesn't handle yet, used only by the `examples/pch/*-demo.py` skip demos. Bash demos in `examples/hooks/` (e.g. `pre-commit-demo.sh`, `prepare-commit-msg-demo.sh`) shell out to this same CLI rather than re-implementing repo setup in bash.
 
 ## PR & Commit Instructions
 
