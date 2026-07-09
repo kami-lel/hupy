@@ -1,7 +1,7 @@
 """
 ver_grep_test.py
 
-tests for `grep_current_version` in `ver_grep.py`
+tests for `grep_current_version` in `gcv.py`
 """
 
 from unittest import mock
@@ -28,7 +28,7 @@ def _grep(version_file, pattern):
         }
     )
     with mock.patch(
-        "hupy.ver_grep.ver_grep.load_hupy_config", return_value=config
+        "hupy.ver_grep.gcv.load_hupy_config", return_value=config
     ):
         return grep_current_version()
 
