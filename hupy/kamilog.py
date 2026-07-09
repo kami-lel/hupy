@@ -13,7 +13,7 @@ import logging
 import sys
 import time
 from collections import deque
-from enum import Enum, IntEnum
+from enum import Flag, IntEnum, auto
 from logging import Formatter, StreamHandler
 
 __all__ = (
@@ -22,8 +22,8 @@ __all__ = (
     "add_verbose_arguments",
     "set_logging_level_by_namespace",
     "set_logging_level_by_verbosity",
-    # ANSI color
-    "AnsiColor",
+    # ANSI style
+    "AnsiStyle",
     "AnsiRenderer",
     # log levels
     "NOTSET",
@@ -52,7 +52,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.3.1"
+__version__ = "2.5.0"
 __author__ = "kamiLeL"
 
 
@@ -90,26 +90,57 @@ for _lvl in _CustomLogLevel:
 # ANSI Color   #################################################################
 
 
-class AnsiColor(Enum):  # =====================================================
+class AnsiStyle(Flag):  # =====================================================
     """
-    ANSI escape code values keyed by color name.
+    style/foreground/background flags, combinable via ``|``;
+    values carry no ANSI meaning, q.v. ``AnsiRenderer._ANSI_STYLE2CODE``
+    for the code lookup
     """
 
-    GREY = "\033[90m"
-    CYAN = "\033[36m"
-    BRIGHT_CYAN = "\033[96m"
-    BLUE = "\033[34m"
-    GREEN = "\033[32m"
-    BRIGHT_BLUE = "\033[94m"
-    BRIGHT_GREEN = "\033[92m"
-    BRIGHT_YELLOW = "\033[93m"
-    YELLOW = "\033[33m"
-    RED = "\033[31m"
-    BRIGHT_RED = "\033[91m"
-    BRIGHT_MAGENTA = "\033[95m"
+    # foreground color  --------------------------------------------------------
 
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
+    RED = auto()
+    BRIGHT_RED = auto()
+    YELLOW = auto()
+    BRIGHT_YELLOW = auto()
+    GREEN = auto()
+    BRIGHT_GREEN = auto()
+    CYAN = auto()
+    BRIGHT_CYAN = auto()
+    BLUE = auto()
+    BRIGHT_BLUE = auto()
+    MAGENTA = auto()
+    BRIGHT_MAGENTA = auto()
+
+    BLACK = auto()
+    GREY = auto()
+    WHITE = auto()
+    BRIGHT_WHITE = auto()
+
+    # background color  --------------------------------------------------------
+
+    BG_RED = auto()
+    BG_BRIGHT_RED = auto()
+    BG_YELLOW = auto()
+    BG_BRIGHT_YELLOW = auto()
+    BG_GREEN = auto()
+    BG_BRIGHT_GREEN = auto()
+    BG_CYAN = auto()
+    BG_BRIGHT_CYAN = auto()
+    BG_BLUE = auto()
+    BG_BRIGHT_BLUE = auto()
+    BG_MAGENTA = auto()
+    BG_BRIGHT_MAGENTA = auto()
+
+    BG_BLACK = auto()
+    BG_GREY = auto()
+    BG_WHITE = auto()
+    BG_BRIGHT_WHITE = auto()
+
+    # style  -------------------------------------------------------------------
+
+    BOLD = auto()
+    UNDERLINE = auto()
 
 
 class AnsiRenderer:  # =========================================================
@@ -120,55 +151,118 @@ class AnsiRenderer:  # =========================================================
     :param stream: output stream used for TTY detection;
             ``None`` disables color unconditionally
     :type stream: IO or None
+    :param is_disabled: when ``True``, disable color unconditionally,
+            regardless of ``stream``; defaults to ``False``
+    :type is_disabled: bool
     """
 
-    _LEVEL_COLORS = {
-        logging.DEBUG: AnsiColor.CYAN,
-        _CustomLogLevel.ENTER: AnsiColor.BRIGHT_CYAN,
-        _CustomLogLevel.SKIP: AnsiColor.BLUE,
-        _CustomLogLevel.SUCC: AnsiColor.GREEN,
-        logging.INFO: AnsiColor.BRIGHT_BLUE,
-        _CustomLogLevel.PASS: AnsiColor.BRIGHT_GREEN,
-        _CustomLogLevel.DONE: AnsiColor.BRIGHT_YELLOW,
-        logging.WARNING: AnsiColor.YELLOW,
-        logging.ERROR: AnsiColor.RED,
-        _CustomLogLevel.FAIL: AnsiColor.BRIGHT_RED,
-        logging.CRITICAL: AnsiColor.BRIGHT_MAGENTA,
+    _RESET = "\033[0m"
+
+    _ANSI_STYLE2CODE = {
+        AnsiStyle.RED: "31",
+        AnsiStyle.BRIGHT_RED: "91",
+        AnsiStyle.YELLOW: "33",
+        AnsiStyle.BRIGHT_YELLOW: "93",
+        AnsiStyle.GREEN: "32",
+        AnsiStyle.BRIGHT_GREEN: "92",
+        AnsiStyle.CYAN: "36",
+        AnsiStyle.BRIGHT_CYAN: "96",
+        AnsiStyle.BLUE: "34",
+        AnsiStyle.BRIGHT_BLUE: "94",
+        AnsiStyle.MAGENTA: "35",
+        AnsiStyle.BRIGHT_MAGENTA: "95",
+        AnsiStyle.BLACK: "30",
+        AnsiStyle.GREY: "90",
+        AnsiStyle.WHITE: "37",
+        AnsiStyle.BRIGHT_WHITE: "97",
+        AnsiStyle.BG_RED: "41",
+        AnsiStyle.BG_BRIGHT_RED: "101",
+        AnsiStyle.BG_YELLOW: "43",
+        AnsiStyle.BG_BRIGHT_YELLOW: "103",
+        AnsiStyle.BG_GREEN: "42",
+        AnsiStyle.BG_BRIGHT_GREEN: "102",
+        AnsiStyle.BG_CYAN: "46",
+        AnsiStyle.BG_BRIGHT_CYAN: "106",
+        AnsiStyle.BG_BLUE: "44",
+        AnsiStyle.BG_BRIGHT_BLUE: "104",
+        AnsiStyle.BG_MAGENTA: "45",
+        AnsiStyle.BG_BRIGHT_MAGENTA: "105",
+        AnsiStyle.BG_BLACK: "40",
+        AnsiStyle.BG_GREY: "100",
+        AnsiStyle.BG_WHITE: "47",
+        AnsiStyle.BG_BRIGHT_WHITE: "107",
+        AnsiStyle.BOLD: "1",
+        AnsiStyle.UNDERLINE: "4",
     }
 
-    def __init__(self, stream=None):
+    _LEVEL2ANSI_COLOR = {
+        logging.DEBUG: AnsiStyle.CYAN,
+        _CustomLogLevel.ENTER: AnsiStyle.BRIGHT_CYAN,
+        _CustomLogLevel.SKIP: AnsiStyle.BLUE,
+        _CustomLogLevel.SUCC: AnsiStyle.GREEN,
+        logging.INFO: AnsiStyle.BRIGHT_BLUE,
+        _CustomLogLevel.PASS: AnsiStyle.BRIGHT_GREEN,
+        _CustomLogLevel.DONE: AnsiStyle.BRIGHT_YELLOW,
+        logging.WARNING: AnsiStyle.YELLOW,
+        logging.ERROR: AnsiStyle.RED,
+        _CustomLogLevel.FAIL: AnsiStyle.BRIGHT_RED,
+        logging.CRITICAL: AnsiStyle.BRIGHT_MAGENTA,
+    }
+
+    _TRIAGE_TAG2ANSI_STYLE = {
+        "BUG": AnsiStyle.BRIGHT_WHITE | AnsiStyle.BG_MAGENTA | AnsiStyle.BOLD,
+        "Bug": AnsiStyle.BLACK | AnsiStyle.BG_BRIGHT_MAGENTA,
+        "bug": AnsiStyle.MAGENTA,
+        "FIXME": AnsiStyle.BRIGHT_WHITE | AnsiStyle.BG_BLUE | AnsiStyle.BOLD,
+        "Fixme": AnsiStyle.BLACK | AnsiStyle.BG_BRIGHT_BLUE,
+        "fixme": AnsiStyle.BLUE,
+        "HACK": AnsiStyle.BLACK | AnsiStyle.BG_CYAN | AnsiStyle.BOLD,
+        "Hack": AnsiStyle.BLACK | AnsiStyle.BG_BRIGHT_CYAN,
+        "hack": AnsiStyle.CYAN,
+        "TODO": AnsiStyle.BLACK | AnsiStyle.BG_YELLOW | AnsiStyle.BOLD,
+        "Todo": AnsiStyle.BLACK | AnsiStyle.BG_BRIGHT_YELLOW,
+        "todo": AnsiStyle.YELLOW,
+    }
+
+    def __init__(self, stream=None, *, is_disabled=False):
         self._enabled = (
-            stream is not None and hasattr(stream, "isatty") and stream.isatty()
+            not is_disabled
+            and stream is not None
+            and hasattr(stream, "isatty")
+            and stream.isatty()
         )
 
     # Public API  **************************************************************
 
-    def color(self, text, color, *, use_bold=False):
+    def color(self, text, style):
         """
-        apply ANSI color code to text, optionally with bold.
+        apply ANSI style codes to text.
 
 
         :param text: text to colorize
         :type text: str
-        :param color: ANSI color to apply
-        :type color: AnsiColor
-        :param use_bold: whether to apply bold formatting;
-                defaults to ``False``
-        :type use_bold: bool
-        :return: ``text`` with color applied if color is enabled;
+        :param style: ANSI style to apply, combine flags with ``|``,
+                eg ``AnsiStyle.BOLD | AnsiStyle.RED | AnsiStyle.BG_YELLOW``
+        :type style: AnsiStyle
+        :return: ``text`` with style applied if color is enabled;
                 otherwise ``text`` unchanged
         :rtype: str
         """
         if not self._enabled:
             return text
 
-        parts = []
-        if use_bold:
-            parts.append(AnsiColor.BOLD.value)
-        parts.append(color.value)
-        parts.append(text)
-        parts.append(AnsiColor.RESET.value)
-        return "".join(parts)
+        codes = [
+            code
+            for flag, code in self._ANSI_STYLE2CODE.items()
+            if flag in style
+        ]
+        return "\033[{}m{}{}".format(";".join(codes), text, self._RESET)
+
+    def color_grey(self, text):
+        """
+        apply bright-black (grey) ANSI color to ``text``
+        """
+        return self.color(text, AnsiStyle.GREY)
 
     def color_level(self, text, levelno):
         """
@@ -178,16 +272,30 @@ class AnsiRenderer:  # =========================================================
         :param levelno: numeric log level used to select the color
         :type levelno: int
         """
-        color = self._LEVEL_COLORS.get(levelno)
+        color = self._LEVEL2ANSI_COLOR.get(levelno)
         if color is None:
             return text
-        return self.color(text, color, use_bold=True)
+        return self.color(text, color | AnsiStyle.BOLD)
 
-    def color_grey(self, text):
+    def color_triage_tag(self, triage_tag):
         """
-        apply bright-black (grey) ANSI color to ``text``
+        apply tag-specific ANSI color to ``triage_tag``
+
+
+        :param triage_tag: triage tag text, eg ``"BUG"``, ``"Fixme"``, ``"todo"``
+        :type triage_tag: str
+        :return: ``triage_tag`` with style applied
+        :rtype: str
+        :raises ValueError: if ``triage_tag`` is not a recognized triage tag
         """
-        return self.color(text, AnsiColor.GREY)
+        style = self._TRIAGE_TAG2ANSI_STYLE.get(triage_tag)
+        if style is None:
+            raise ValueError(
+                "param triage_tag {!r} is not a recognized triage tag".format(
+                    triage_tag
+                )
+            )
+        return self.color(triage_tag, style)
 
 
 # Custom Logging  ##############################################################
@@ -449,11 +557,20 @@ class _LogFormatter(Formatter):  # *********************************************
     :type datefmt: str or None
     :param relative_to: forwarded to ``_LogFormatEngine``
     :type relative_to: float or None
+    :param disable_color: disable color regardless of ``stream``
+    :type disable_color: bool
     """
 
-    def __init__(self, stream=None, *, datefmt=None, relative_to=None):
+    def __init__(
+        self,
+        stream=None,
+        *,
+        datefmt=None,
+        relative_to=None,
+        disable_color=False,
+    ):
         super().__init__(datefmt=datefmt)
-        self.palette = AnsiRenderer(stream)
+        self.palette = AnsiRenderer(stream, is_disabled=disable_color)
         self.engine = _LogFormatEngine(
             self.palette, datefmt=datefmt, relative_to=relative_to
         )
@@ -499,6 +616,89 @@ class _LogFormatter(Formatter):  # *********************************************
 # diff only message   ==========================================================
 
 
+class _TabAlignedLine(list):  # ************************************************
+    """
+    a line of text split into tab-stop-aligned string blocks.
+    """
+
+    @classmethod
+    def parse(cls, line, *, start_offset=0):  # ++++++++++++++++++++++++++++++++
+        """
+        split a regular text line into ``TAB_SIZE``-wide blocks.
+
+        the first block is shortened by ``start_offset`` so later blocks
+        still land on ``TAB_SIZE`` column boundaries; the last block
+        holds whatever remains and may be shorter than ``TAB_SIZE``;
+        any literal ``\\t`` chars already in ``line`` are expanded to
+        spaces first, so alignment stays correct
+
+
+        :param line: source line to split
+        :type line: str
+        :param start_offset: column the line begins at; default=0
+        :type start_offset: int, optional
+        :return: new instance holding the split blocks
+        :rtype: TabAlignedLine
+        """
+        # expand tabs  ---------------------------------------------------------
+        expanded = []
+        col = start_offset
+        for ch in line:
+            if ch == "\t":
+                n_spaces = cls.TAB_SIZE - (col % cls.TAB_SIZE)
+                expanded.append(" " * n_spaces)
+                col += n_spaces
+            else:
+                expanded.append(ch)
+                col += 1
+        line = "".join(expanded)
+
+        # split blocks  --------------------------------------------------------
+        n = len(line)
+        blocks = []
+
+        first_len = cls.TAB_SIZE - (start_offset % cls.TAB_SIZE)
+        first_len = min(first_len, n)
+        pos = first_len
+        blocks.append(line[:pos])
+
+        while pos < n:
+            end = min(pos + cls.TAB_SIZE, n)
+            blocks.append(line[pos:end])
+            pos = end
+
+        return cls(blocks, start_offset=start_offset)
+
+    TAB_SIZE = 8
+
+    def __init__(self, blocks, *, start_offset=0):
+        super().__init__(blocks)
+        self.start_offset = start_offset
+
+    def render(self, *, insert_prefix=False, prefix_symbol=" "):
+        """
+        join the blocks back into a single normal string.
+
+
+        :param insert_prefix: whether to prepend ``start_offset`` copies
+                of ``prefix_symbol`` before the joined blocks;
+                default=False
+        :type insert_prefix: bool, optional
+        :param prefix_symbol: character repeated to build the prefix;
+                default=" "
+        :type prefix_symbol: str, optional
+        :return: the reassembled line
+        :rtype: str
+        """
+        line = "".join(self)
+        if insert_prefix:
+            return prefix_symbol * self.start_offset + line
+        return line
+
+    def __str__(self):
+        return self.render()
+
+
 class _DiffOnlyEngine:  # ******************************************************
     """
     engine for diff-only compression of log message text.
@@ -511,9 +711,8 @@ class _DiffOnlyEngine:  # ******************************************************
     :type threshold: int
     """
 
-    _COMPRESSION_BLOCK_SIZE = 8
     _FALLBACK_TAB_SPAN = 2
-    _COMPRESSION_MARKER = "〃\t"
+    _COMPRESSION_MARKER = "〃\t"  # visual width matches one TAB_SIZE block
     _MARKER_CHAR = "〃"
     _MARKER_WIDTH = 2  # rendered columns of _MARKER_CHAR
     _LEADER_MARKER_MIN = 4  # leader shorter than this becomes bare "\t"
@@ -577,7 +776,7 @@ class _DiffOnlyEngine:  # ******************************************************
                 replaceable, text from it stays printed
         :rtype: int
         """
-        block = self._COMPRESSION_BLOCK_SIZE
+        block = _TabAlignedLine.TAB_SIZE
         col_e = prefix_len + run_e
         floor_col = (col_e // block - self._FALLBACK_TAB_SPAN) * block
         cut_min = max(run_s, floor_col - prefix_len)
@@ -589,8 +788,14 @@ class _DiffOnlyEngine:  # ******************************************************
     def _compress(self, record, message):
         """
         compress positions matching ``_common`` into ``〃\\t`` markers.
+
+        the replaceable span (``run_s`` to ``cut``) is split into
+        ``_TabAlignedLine`` blocks anchored at its absolute column, so
+        a short leading block (if any) is the leader, a short trailing
+        block (if any) is the gap, and everything between is a whole
+        replaceable tab stop.
         """
-        block = self._COMPRESSION_BLOCK_SIZE
+        block = _TabAlignedLine.TAB_SIZE
         prefix_len = self._formatter.engine.count_prefix_chars(record)
         n_common = len(self._common)
         is_common = [
@@ -612,25 +817,35 @@ class _DiffOnlyEngine:  # ******************************************************
                     i += 1
                 run_e = i
                 cut = self._find_cut(message, run_s, run_e, prefix_len)
-                col_offset = (prefix_len + run_s) % block
-                padding = (block - col_offset) % block
-                tab_s = run_s + padding
-                replaceable = cut - tab_s
-                k = replaceable // block if replaceable > 0 else 0
+
+                tal_blocks = list(
+                    _TabAlignedLine.parse(
+                        message[run_s:cut], start_offset=prefix_len + run_s
+                    )
+                )
+                leader = ""
+                if tal_blocks and len(tal_blocks[0]) < block:
+                    leader = tal_blocks.pop(0)
+                if tal_blocks and len(tal_blocks[-1]) < block:
+                    gap_block = tal_blocks.pop()
+                else:
+                    gap_block = ""
+                k = len(tal_blocks)  # remaining blocks are all full-width
+
                 if k == 0:
                     result.append(message[run_s:run_e])
                 else:
-                    gap = replaceable - block * k
+                    gap = len(gap_block)
                     # leader: common chars before the first tab stop are
                     # never printed; short ones become a bare tab jump,
                     # longer ones earn their own marker
-                    if padding >= self._LEADER_MARKER_MIN:
+                    if len(leader) >= self._LEADER_MARKER_MIN:
                         result.append(
                             self._formatter.palette.color_grey(
                                 self._COMPRESSION_MARKER
                             )
                         )
-                    elif padding > 0:
+                    elif leader:
                         result.append("\t")
                     result.append(
                         self._formatter.palette.color_grey(
@@ -683,11 +898,20 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
     :param threshold: forwarded to ``_DiffOnlyEngine`` as the history
             depth before compression activates
     :type threshold: int
+    :param disable_diff_only_compression: whether turn off diff-ony compression
+            and pass records through untouched
+    :type disable_diff_only_compression: bool
     """
 
-    def __init__(self, formatter, threshold=3):
+    def __init__(
+        self, formatter, threshold=3, *, disable_diff_only_compression=False
+    ):
         super().__init__()
-        self._engine = _DiffOnlyEngine(formatter, threshold)
+        self._engine = (
+            None
+            if disable_diff_only_compression
+            else _DiffOnlyEngine(formatter, threshold)
+        )
 
     def filter(self, record):
         """
@@ -699,6 +923,8 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
         :return: always ``True``; this filter never drops records
         :rtype: bool
         """
+        if self._engine is None:  # compression disabled, pass through
+            return True
         record.msg = self._engine.process(record)
         record.args = ()
         return True
@@ -708,7 +934,14 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
 
 
 # pylint: disable-next=invalid-name
-def getLogger(name=None, *, datefmt=DATEFMT_TIME, relative_to=None):
+def getLogger(
+    name=None,
+    *,
+    datefmt=DATEFMT_TIME,
+    relative_to=None,
+    disable_color=False,
+    disable_diff_only_compression=False,
+):
     """
     return a configured :class:`KamiLogger` for ``name``, creating it if needed.
 
@@ -723,6 +956,12 @@ def getLogger(name=None, *, datefmt=DATEFMT_TIME, relative_to=None):
     :param relative_to: Unix timestamp to use as epoch for relative time display;
             mutually exclusive with ``datefmt``
     :type relative_to: float, optional
+    :param disable_color: disable ANSI color on all handlers
+            and the diff-only filter
+    :type disable_color: bool, optional
+    :param disable_diff_only_compression: whether turn off diff-ony compression
+            and pass records through untouched
+    :type disable_diff_only_compression: bool, optional
     :return: a logger with the `name`, create if non-existence;
             root logger if `name` is `None`
     :rtype: KamiLogger
@@ -736,21 +975,35 @@ def getLogger(name=None, *, datefmt=DATEFMT_TIME, relative_to=None):
         logger.addFilter(
             _DiffOnlyMsgFilter(
                 _LogFormatter(
-                    sys.stdout, datefmt=datefmt, relative_to=relative_to
-                )
+                    sys.stdout,
+                    datefmt=datefmt,
+                    relative_to=relative_to,
+                    disable_color=disable_color,
+                ),
+                disable_diff_only_compression=disable_diff_only_compression,
             )
         )
 
     if not logger.handlers:
         stdout_handler = StreamHandler(sys.stdout)
         stdout_handler.setFormatter(
-            _LogFormatter(sys.stdout, datefmt=datefmt, relative_to=relative_to)
+            _LogFormatter(
+                sys.stdout,
+                datefmt=datefmt,
+                relative_to=relative_to,
+                disable_color=disable_color,
+            )
         )
         stdout_handler.addFilter(lambda r: r.levelno < logging.WARNING)
 
         stderr_handler = StreamHandler(sys.stderr)
         stderr_handler.setFormatter(
-            _LogFormatter(sys.stderr, datefmt=datefmt, relative_to=relative_to)
+            _LogFormatter(
+                sys.stderr,
+                datefmt=datefmt,
+                relative_to=relative_to,
+                disable_color=disable_color,
+            )
         )
         stderr_handler.addFilter(lambda r: r.levelno >= logging.WARNING)
 
@@ -880,7 +1133,114 @@ def set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None):
     )
 
 
-# Comment Banner  #############################################################
+# logger CLI  ==================================================================
+
+
+_LOGGER_HELP = "log stdin lines at LEVEL, honoring verbosity threshold"
+
+
+_LOGGER_DESCRIPTION = _LOGGER_HELP + """
+
+lines are read from stdin, one log record per stdin line;
+verbosity threshold decides which records actually print
+
+
+example:
+  echo 'disk full' | python kamilog.py logger error"""
+
+# level Name to numeric level, keyed lowercase
+_LOGGER_LEVEL_MAP = {
+    "notset": NOTSET,
+    "debug": DEBUG,
+    "enter": ENTER,
+    "skip": SKIP,
+    "succ": SUCC,
+    "info": INFO,
+    "pass": PASS,
+    "done": DONE,
+    "warning": WARNING,
+    "error": ERROR,
+    "fail": FAIL,
+    "critical": CRITICAL,
+}
+
+
+# time format Name to strftime string, None disables timestamps
+_LOGGER_TIME_FORMAT_MAP = {
+    "time": DATEFMT_TIME,
+    "time-ms": DATEFMT_TIME_MS,
+    "datetime": DATEFMT_DATETIME,
+    "datetime-ms": DATEFMT_DATETIME_MS,
+    "no-time": None,
+}
+
+
+def _logger_parser_main(args):
+    level = _LOGGER_LEVEL_MAP[args.level.lower()]  # resolve Level name
+    datefmt = _LOGGER_TIME_FORMAT_MAP[args.time_format]  # resolve Time fmt
+    logger = getLogger(
+        datefmt=datefmt,
+        disable_color=args.no_color,
+        disable_diff_only_compression=args.no_diff_only,
+    )
+    set_logging_level_by_namespace(
+        args, verbosity=args.verbosity, logger=logger
+    )
+    for line in sys.stdin.read().splitlines():  # log each stdin Line
+        logger.log(level, line)
+
+
+def _register_logger_parser(cli_subparser):
+    """
+    register the ``logger`` subcommand on ``cli_subparser``
+    """
+    logger_parser = cli_subparser.add_parser(
+        "logger",
+        help=_LOGGER_HELP,
+        description=_LOGGER_DESCRIPTION,
+        formatter_class=RawDescriptionHelpFormatter,
+        aliases=["l"],
+    )
+
+    logger_parser.add_argument(
+        "level",
+        choices=list(_LOGGER_LEVEL_MAP),
+        help="log level name",
+    )
+    logger_parser.add_argument(
+        "-t",
+        "--time-format",
+        choices=list(_LOGGER_TIME_FORMAT_MAP),
+        default="time",
+        help="timestamp format; default=time",
+    )
+
+    logger_parser.add_argument(
+        "--verbosity",
+        type=int,
+        default=3,
+        metavar="VERBOSITY",
+        help="base verbosity offset for level threshold; default=3",
+    )
+    add_verbose_arguments(logger_parser)
+
+    logger_parser.add_argument(
+        "-C",
+        "--no-color",
+        action="store_true",
+        help="disable ANSI color output",
+    )
+    logger_parser.add_argument(
+        "-D",
+        "--no-diff-only",
+        action="store_true",
+        help="disable diff-only message compression",
+    )
+
+    logger_parser.set_defaults(func=_logger_parser_main)
+
+
+# Comment Banner  ##############################################################
 
 
 _CONTENT_SPACING = "  "
@@ -954,7 +1314,7 @@ def _gen_comment_banner_generic(
     return padded_content
 
 
-# Comment Banner Public API  ==================================================
+# Comment Banner Public API  ===================================================
 
 
 def gen_comment_banner_centered(*args, **kwargs):
@@ -1080,17 +1440,6 @@ def gen_comment_banner_zero(
     return "\n".join(formatted_lines)
 
 
-# CLI  #########################################################################
-
-# main parser  =================================================================
-
-cli_parser = ArgumentParser(
-    prog=__name__,
-    description="kamilog CLI: utilities for formatted output and logging",
-)
-cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
-cli_subparser = cli_parser.add_subparsers(title="subcommands")
-
 # comment banner parser  =======================================================
 
 _COMMENT_BANNER_HELP = "print stdin content padded to line width"
@@ -1112,46 +1461,51 @@ def _comment_banner_parser_main(args):
     print(line, file=file)
 
 
-comment_banner_parser = cli_subparser.add_parser(
-    "comment_banner",
-    help=_COMMENT_BANNER_HELP,
-    description=(
-        _COMMENT_BANNER_HELP
-        + "\n\ncontent is read from stdin, as a single line\n\n"
-        "example:\n"
-        "  echo 'hello world' | python kamilog.py cb c '=' -w 20"
-    ),
-    formatter_class=RawDescriptionHelpFormatter,
-    aliases=["cb"],
-)
+def _register_comment_banner_parser(cli_subparser):
+    """
+    register the ``comment_banner`` subcommand on ``cli_subparser``
+    """
+    comment_banner_parser = cli_subparser.add_parser(
+        "comment_banner",
+        help=_COMMENT_BANNER_HELP,
+        description=(
+            _COMMENT_BANNER_HELP
+            + "\n\ncontent is read from stdin, as a single line\n\n"
+            "example:\n"
+            "  echo 'hello world' | python kamilog.py cb c '=' -w 20"
+        ),
+        formatter_class=RawDescriptionHelpFormatter,
+        aliases=["cb"],
+    )
 
-comment_banner_parser.add_argument(
-    "mode",
-    choices=["c", "l", "r", "center", "left", "right"],
-    help="text alignment: c/center, l/left(-justified), r/right(-justified)",
-)
+    comment_banner_parser.add_argument(
+        "mode",
+        choices=["c", "l", "r", "center", "left", "right"],
+        help=(
+            "text alignment: c/center, l/left(-justified), r/right(-justified)"
+        ),
+    )
+    comment_banner_parser.add_argument(
+        "padding",
+        metavar="PADDING",
+        help="fill char, or int 1~5 for CB1~CB5 preset (1:#/2:=/3:*/4:+/5:-)",
+    )
+    comment_banner_parser.add_argument(
+        "-w",
+        "--line-width",
+        type=int,
+        default=80,
+        metavar="LINE_WIDTH",
+        help="total character width of output line; default 80",
+    )
+    comment_banner_parser.add_argument(
+        "-e",
+        "--stderr",
+        action="store_true",
+        help="print to stderr (instead of stdout)",
+    )
 
-comment_banner_parser.add_argument(
-    "padding",
-    metavar="PADDING",
-    help="fill char, or int 1~5 for CB1~CB5 preset (1:#/2:=/3:*/4:+/5:-)",
-)
-comment_banner_parser.add_argument(
-    "-w",
-    "--line-width",
-    type=int,
-    default=80,
-    metavar="LINE_WIDTH",
-    help="total character width of output line; default 80",
-)
-comment_banner_parser.add_argument(
-    "-e",
-    "--stderr",
-    action="store_true",
-    help="print to stderr (instead of stdout)",
-)
-
-comment_banner_parser.set_defaults(func=_comment_banner_parser_main)
+    comment_banner_parser.set_defaults(func=_comment_banner_parser_main)
 
 
 # cb0 parser  ==================================================================
@@ -1170,38 +1524,62 @@ def _comment_banner_zero_parser_main(args):
     print(banner, file=file)
 
 
-comment_banner_zero_parser = cli_subparser.add_parser(
-    "comment_banner_zero",
-    help=_CB0_HELP,
-    description=(
-        _CB0_HELP
-        + "\n\nlines are read from stdin, one banner line per stdin line\n\n"
-        "example:\n"
-        "  printf 'line 1\\nline 2\\n' | python kamilog.py cb0 -w 20"
-    ),
-    formatter_class=RawDescriptionHelpFormatter,
-    aliases=["cb0"],
+def _register_comment_banner_zero_parser(cli_subparser):
+    """
+    register the ``comment_banner_zero`` subcommand on ``cli_subparser``
+    """
+    comment_banner_zero_parser = cli_subparser.add_parser(
+        "comment_banner_zero",
+        help=_CB0_HELP,
+        description=(
+            _CB0_HELP
+            + "\n\nlines are read from stdin, one banner line per stdin line"
+            "\n\nexample:\n"
+            "  printf 'line 1\\nline 2\\n' | python kamilog.py cb0 -w 20"
+        ),
+        formatter_class=RawDescriptionHelpFormatter,
+        aliases=["cb0"],
+    )
+
+    comment_banner_zero_parser.add_argument(
+        "-w",
+        "--line-width",
+        type=int,
+        default=80,
+        metavar="LINE_WIDTH",
+        help="total character width of output line; default 80",
+    )
+    comment_banner_zero_parser.add_argument(
+        "-e",
+        "--stderr",
+        action="store_true",
+        help="print to stderr (instead of stdout)",
+    )
+
+    comment_banner_zero_parser.set_defaults(
+        func=_comment_banner_zero_parser_main
+    )
+
+
+# CLI main parser  #############################################################
+
+_cli_parser = ArgumentParser(
+    prog="kamilog",
+    description="kamilog CLI: utilities for formatted output and logging",
 )
-
-comment_banner_zero_parser.add_argument(
-    "-w",
-    "--line-width",
-    type=int,
-    default=80,
-    metavar="LINE_WIDTH",
-    help="total character width of output line; default 80",
-)
-comment_banner_zero_parser.add_argument(
-    "-e",
-    "--stderr",
-    action="store_true",
-    help="print to stderr (instead of stdout)",
-)
-
-comment_banner_zero_parser.set_defaults(func=_comment_banner_zero_parser_main)
+_cli_parser.set_defaults(func=lambda _: _cli_parser.print_help())
+_cli_subparser = _cli_parser.add_subparsers(title="subcommands")
 
 
-# Entry Point  =================================================================
+# register subcommands
+
+_register_comment_banner_parser(_cli_subparser)
+_register_comment_banner_zero_parser(_cli_subparser)
+_register_logger_parser(_cli_subparser)
+
+
+# Entry Point  #################################################################
+
 if __name__ == "__main__":
-    parsed_args = cli_parser.parse_args()
+    parsed_args = _cli_parser.parse_args()
     parsed_args.func(parsed_args)

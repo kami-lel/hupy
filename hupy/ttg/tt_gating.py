@@ -5,12 +5,18 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
+import re
 import subprocess
+import sys
 
-from hupy.kamilog import getLogger, gen_comment_banner_centered
+from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
 from ..commit_type import CommitType, get_current_commit_type
-from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
+from .tt_detect import (
+    _TT_PATTERN,
+    TriageTagType,
+    detect_triage_tags_in_staged_file,
+)
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)
@@ -46,24 +52,40 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             file_path, repo_root=repo_root
         )
         filtered = TriageTagType.filter_by_group(
-            [tag for tag, _ in tags_in_file],
+            [tag for tag, _, _ in tags_in_file],
             filtering_tt_group,
         )
 
         if filtered:
             filtered_results[file_path] = [
-                (tag, line) for tag, line in tags_in_file if tag in filtered
+                (tag, line, line_no)
+                for tag, line, line_no in tags_in_file
+                if tag in filtered
             ]
 
     if filtered_results:
         logger.fail("gated Triage Tags found")
+        renderer = AnsiRenderer(sys.stdout)
         msg_lines = [""]
         for file_path, results in filtered_results.items():
             msg_lines.append(gen_comment_banner_centered(file_path, "-"))
-            for _, line in results:
-                # Todo print gated TT in colored highlighting
-                # Todo print gated TT w/ line number
-                msg_lines.append(line.strip())
+            line_no_width = max(len(str(line_no)) for _, _, line_no in results)
+            for _, line, line_no in results:
+                line_no_str = renderer.color_grey(
+                    str(line_no).rjust(line_no_width)
+                )
+                stripped_line = line.strip()
+                match = re.search(_TT_PATTERN, stripped_line)
+                if match:
+                    colored_tag = renderer.color_triage_tag(
+                        match.group(1)
+                    )
+                    stripped_line = (
+                        stripped_line[: match.start()]
+                        + colored_tag
+                        + stripped_line[match.end() :]
+                    )
+                msg_lines.append(line_no_str + " " + stripped_line)
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)
 
