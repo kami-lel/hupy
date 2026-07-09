@@ -7,11 +7,12 @@ model, providing default values used when writing a fresh config file
 
 import pathlib
 from importlib.metadata import version
+import sys
 
 from pydantic import BaseModel, Field, model_validator
 
 from hupy.config import CONFIG_LOGGER_NAME
-from hupy.kamilog import getLogger
+from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 
 __all__ = ("HupyConfig",)
 
@@ -51,10 +52,13 @@ class _VerGrep(BaseModel):
         """
         warn once, at creation, when the version grep hook is unset.
         """
+        renderer = AnsiRenderer(sys.stdout)
         if self.is_unconfigured():
             logger.warning(
-                "VerGrep not configured:\n"
-                "must set version_file, version_line_pattern to enable"
+                "VerGrep not configured:\nmust set {}, {} to enable".format(
+                    renderer.color("version_file", AnsiStyle.BOLD),
+                    renderer.color("version_line_pattern", AnsiStyle.BOLD),
+                )
             )
         return self
 
