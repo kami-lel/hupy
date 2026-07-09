@@ -3,7 +3,7 @@ prep_repo.py
 
 prepare temporary git repositories that reproduce the TTG (triage
 tag gating) commit-type buckets, for reuse by unit tests and by the
-``examples/ttg`` demo scripts
+``examples/ttg`` and ``examples/pch`` demo scripts
 """
 
 import shutil
