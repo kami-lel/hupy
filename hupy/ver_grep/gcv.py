@@ -17,9 +17,6 @@ from . import VER_GREP_LOGGER_NAME
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
-# TODO TODO decide major/minor/patch version release
-# TODO TODO expose source & target version
-
 
 # helpers  #####################################################################
 def _load_ver_grep_settings():
