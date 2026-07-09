@@ -9,9 +9,8 @@ import pathlib
 
 from pydantic import ValidationError
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import load_git_repo
-from hupy.config import CONFIG_FILENAME
+from hupy.config import CONFIG_FILENAME, CONFIG_LOGGER_NAME
 from hupy.config.hupy_config_file import HupyConfigFile
 from hupy.kamilog import getLogger
 
@@ -21,7 +20,7 @@ __all__ = ("load_hupy_config",)
 # logger  ######################################################################
 
 
-logger = getLogger(PROJ_LOGGER_NAME)
+logger = getLogger(CONFIG_LOGGER_NAME)
 
 
 # cache  #######################################################################
@@ -57,7 +56,10 @@ def load_hupy_config(repo_path):
     config_path = pathlib.Path(repo.working_tree_dir) / CONFIG_FILENAME
 
     try:
-        _config_cache = HupyConfigFile.model_validate_json(config_path.read_text())
+        _config_cache = HupyConfigFile.model_validate_json(
+            config_path.read_text()
+        )
+
         return _config_cache
     except FileNotFoundError as e:
         logger.error("HUPy config file not found: {}".format(config_path))

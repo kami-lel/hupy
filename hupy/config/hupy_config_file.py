@@ -32,8 +32,6 @@ class _VerGrep(BaseModel):
     configuration for version grep hook
     """
 
-    # Todo validate ver grep file existed etc.
-
     version_file: pathlib.Path = pathlib.Path("")
     version_line_pattern: str = ""
 
@@ -60,6 +58,17 @@ class _VerGrep(BaseModel):
                     renderer.color("version_line_pattern", AnsiStyle.BOLD),
                 )
             )
+
+        # HACK include version filevlidation
+        # version_file = _config_cache.ver_grep.version_file
+        # logger.debug("version_file:\t{}".format(version_file))
+        # pattern = _config_cache.ver_grep.version_line_pattern
+        # logger.debug("version_line_pattern:\t{}".format(pattern))
+
+        # if not version_file.exists():
+        #     logger.error("version file not found: {}".format(version_file))
+        #     raise SystemExit(1)
+
         return self
 
 
