@@ -126,9 +126,25 @@ def _write_and_commit(repo_dir, filename, content):
     repo.index.commit("add {}".format(filename))
 
 
+def _bump_dev_own_version(repo_dir):
+    # simulate dev's own in-progress next-cycle version, distinct from
+    # whatever the backport source branch carries; demo buckets that
+    # exercise `grep_source_branch_version` call this on DEV_BRANCH
+    # right after branching it, before the source branch is built, so
+    # a demo that wrongly reads DEV's (target's) version instead of
+    # the source branch's is visibly wrong rather than coincidentally
+    # right
+    _write_and_commit(
+        repo_dir,
+        "setup.cfg",
+        "[metadata]\nname = default_repo\nversion = 1.3.0-dev\n",
+    )
+
+
 def _setup_sync_backport(repo_dir):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
+    _bump_dev_own_version(repo_dir)
     repo.git.checkout("-q", MAIN_BRANCH)
     _write_and_commit(repo_dir, "hotdoc.py", "# patched directly on main\n")
     repo.git.checkout("-q", DEV_BRANCH)
@@ -156,6 +172,7 @@ def _setup_hotfix_release(repo_dir):
 def _setup_hotfix_backport(repo_dir):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
+    _bump_dev_own_version(repo_dir)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
     _write_and_commit(repo_dir, "login.py", "# patch login crash\n")
@@ -172,11 +189,21 @@ def _setup_release_cut(repo_dir):
 
 
 def _setup_release_backport(repo_dir):
+    # unlike sync/hotfix backport, the source branch's name embeds its
+    # own version (release/2.4.0); DEV must not also bump the version
+    # line here, or two divergent edits to the same line would leave
+    # a real, unresolvable merge conflict rather than an in-progress
+    # merge to demo
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.checkout("-q", "-b", "release/2.4.0")
     _write_and_commit(repo_dir, "changelog.py", "# freeze for 2.4.0\n")
+    _write_and_commit(
+        repo_dir,
+        "setup.cfg",
+        "[metadata]\nname = default_repo\nversion = 2.4.0\n",
+    )
     repo.git.checkout("-q", DEV_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", "release/2.4.0")
 

@@ -28,9 +28,7 @@ def _read_version_file_at_ref(repo, ref, version_file):
     read version_file's content as it exists at ref
     """
     try:
-        return repo.git.show(
-            "{}:{}".format(ref, version_file.as_posix())
-        )
+        return repo.git.show("{}:{}".format(ref, version_file.as_posix()))
     except git.GitCommandError as e:
         logger.error(
             "version file not found on {}: {}".format(ref, version_file)
@@ -56,6 +54,8 @@ def grep_source_branch_version():
     if settings is None:
         return ""
     version_file, pattern = settings
+
+    # TODO TODO logger
 
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
     source_branch = get_source_branch(repo)

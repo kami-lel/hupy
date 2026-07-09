@@ -15,10 +15,13 @@ from . import VER_GREP_LOGGER_NAME
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
+
+# constants  ###################################################################
+
 VERSION_CORE_PATTERN = r"^(\d+)\.(\d+)\.(\d+)"
 
 
-# helpers  #####################################################################
+# auxiliary   ###################################################################
 def _parse_version_core(version):
     """
     parse a version string's ``major.minor.patch`` core into ints,

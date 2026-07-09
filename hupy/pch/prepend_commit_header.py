@@ -10,7 +10,7 @@ import tempfile
 import git
 
 from hupy.kamilog import getLogger
-from hupy.ver_grep import grep_current_version
+from hupy.ver_grep import grep_current_version, grep_source_branch_version
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
@@ -21,7 +21,6 @@ from ..cbm import (
 # FIXME version release w/ x.y.z
 # TODO release cut w/ x.y.z
 # TODO hotfix release w/ x.y.z
-# BUG release/sync/hotfix backports wrong version
 
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
@@ -49,7 +48,7 @@ def _gen_catch_up_header(_):
 
 
 def _gen_release_backport_header(_):
-    version = grep_current_version()
+    version = grep_source_branch_version()
     if version:
         return "Release Backport from: {}".format(version)
     else:
@@ -57,7 +56,7 @@ def _gen_release_backport_header(_):
 
 
 def _gen_sync_backport_header(_):
-    version = grep_current_version()
+    version = grep_source_branch_version()
     if version:
         return "Sync Backport from: {}".format(version)
     else:
@@ -65,7 +64,7 @@ def _gen_sync_backport_header(_):
 
 
 def _gen_hotfix_backport_header(_):
-    version = grep_current_version()
+    version = grep_source_branch_version()
     if version:
         return "Hotfix Backport from: {}".format(version)
     else:

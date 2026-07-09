@@ -74,6 +74,7 @@ def grep_current_version():
         return ""
     version_file, pattern = settings
 
+    # TODO TODO logger & update behavior
     if not version_file.exists():
         logger.error("version file not found: {}".format(version_file))
         raise SystemExit(1)
