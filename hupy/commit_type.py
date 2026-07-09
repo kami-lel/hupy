@@ -21,7 +21,9 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-# Todo make branch names configurable
+# TODO make branch names configurable
+# TODO support hotfix/release branches
+
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
 
