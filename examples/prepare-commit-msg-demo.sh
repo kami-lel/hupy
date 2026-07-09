@@ -12,31 +12,17 @@ set -euo pipefail
 
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _REPO_ROOT="$(dirname "$_SCRIPT_DIR")"
-_BUNDLE="$_REPO_ROOT/tests/testee/default_repo.bundle"
+_PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 
 
 # helpers  #####################################################################
 
 
-# FIXME prepare demo to py side
-
-
 _prepare_demo_repo() {
     local dest
     dest="$(mktemp -d -t pch_demo_XXXXXX)"
-    git clone -q --branch main "$_BUNDLE" "$dest" > /dev/null 2>&1
-    (
-        cd "$dest"
-        git checkout -q -b dev
-        echo "# todo quiet marker" > a.py
-        git add a.py
-        git commit -q -m "add a.py" > /dev/null
-        echo "# todo quiet marker" > b.py
-        git add b.py
-        git commit -q -m "add b.py" > /dev/null
-        git checkout -q main
-        git merge -q --no-commit --no-ff dev > /dev/null 2>&1
-    )
+    python3 "$_PREP_REPO_PY" --scenario version_release_pass --dest "$dest" \
+        > /dev/null
     echo "$dest"
 }
 

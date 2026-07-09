@@ -4,12 +4,8 @@ conftest.py
 shared pytest fixtures for TTG (triage tag gating) tests
 """
 
-import pytest
+import sys
+from pathlib import Path
 
-# fixtures  #####################################################################
-
-
-@pytest.fixture
-def repo_dir(tmp_path):
-    """path for the scenario repo; created by ``prepare_repo_with_files``."""
-    return tmp_path / "repo"
+# make the shared repo-prep fixture builder importable from here
+sys.path.insert(0, str(Path(__file__).parent.parent / "fixtures"))

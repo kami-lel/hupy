@@ -13,7 +13,7 @@ from hupy.cbm import CommitType, get_current_commit_type
 from hupy.config import CONFIG_FILENAME
 from hupy.config.hupy_config_file import HupyConfigFile
 
-_TESTEE_ROOT = Path(__file__).parent / "testee"
+_FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 # FIXME rewrite ut
@@ -27,7 +27,7 @@ def repo_dir(tmp_path):
     """clone the default_repo bundle to tmp_path."""
     dest = tmp_path / "repo"
     git.Repo.clone_from(
-        str(_TESTEE_ROOT / "default_repo.bundle"),
+        str(_FIXTURES_DIR / "default_repo.bundle"),
         str(dest),
         branch="main",
     )

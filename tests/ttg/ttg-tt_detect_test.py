@@ -17,8 +17,8 @@ from hupy.ttg.tt_detect import (
     detect_triage_tags_in_staged_file,
 )
 
-_TESTEE_ROOT = Path(__file__).parent.parent / "testee"
-_FIXTURES_ROOT = _TESTEE_ROOT / "ttg"
+_FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
+_FIXTURES_ROOT = Path(__file__).parent / "fixtures"
 
 
 # fixtures  #####################################################################
@@ -29,7 +29,7 @@ def repo_dir(tmp_path):
     """clone the default_repo bundle to tmp_path."""
     dest = tmp_path / "repo"
     git.Repo.clone_from(
-        str(_TESTEE_ROOT / "default_repo.bundle"),
+        str(_FIXTURES_DIR / "default_repo.bundle"),
         str(dest),
         branch="main",
     )

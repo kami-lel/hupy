@@ -28,9 +28,16 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test file naming: test layout mirrors source layout — top-level modules map directly (`hupy/commit_type.py` → `tests/commit_type_test.py`); packages nest (`hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group); when a package's tests need fixtures from another test directory (e.g., `tests/pch/` needs `tests/ttg/prep_repo.py`), import cross-directory rather than colocating test files by fixture convenience.
+Test file naming: test layout mirrors source layout — top-level modules map directly (`hupy/commit_type.py` → `tests/commit_type_test.py`); packages nest (`hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group). Fixtures shared by every suite (the git bundle, the repo-scenario builder) live in `tests/fixtures/`, not colocated with any one package's tests; `tests/pch/` and `tests/ttg/` each `sys.path.insert` that directory in their `conftest.py` to import `prep_repo`.
 
-Tests use a `repo_dir` pytest fixture (`tests/conftest.py` or `tests/<pkg>/conftest.py`) plus a shared git bundle fixture (`tests/testee/default_repo.bundle`) that is cloned and dynamically modified per test for minimal storage and fast setup.
+The shared `repo_dir` pytest fixture (`tmp_path / "repo"`) lives in the root `tests/conftest.py` and applies to every suite. Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the shared git bundle (`tests/fixtures/default_repo.bundle`) and dynamically constructs branches/commits/merge state — reused across unit tests and the `examples/pch/` and `examples/ttg/` demo scripts, and runnable standalone as a CLI:
+
+```bash
+python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/demo_repo
+python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/demo_repo
+```
+
+`--scenario` covers TTG/PCH scenarios that unit tests also exercise; `--demo-bucket` covers CBM merge types PCH doesn't handle yet, used only by the `examples/pch/*-demo.py` skip demos. Bash demos (e.g. `examples/prepare-commit-msg-demo.sh`) shell out to this same CLI rather than re-implementing repo setup in bash.
 
 ## PR & Commit Instructions
 

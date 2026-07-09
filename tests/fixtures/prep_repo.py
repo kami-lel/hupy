@@ -1,9 +1,10 @@
 """
 prep_repo.py
 
-prepare temporary git repositories that reproduce the TTG (triage
-tag gating) commit-type buckets, for reuse by unit tests and by the
-``examples/ttg`` and ``examples/pch`` demo scripts
+prepare temporary git repositories that reproduce CBM commit-type
+buckets, for reuse by unit tests and by the ``examples/ttg`` and
+``examples/pch`` demo scripts; shared fixture-building CLI for all of
+``tests/``
 """
 
 import shutil
@@ -16,9 +17,9 @@ import git
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
 
-_TESTEE_ROOT = Path(__file__).parent.parent / "testee"
-_BUNDLE_PATH = _TESTEE_ROOT / "default_repo.bundle"
-_FIXTURES_ROOT = _TESTEE_ROOT / "ttg"
+_FIXTURES_DIR = Path(__file__).parent
+_BUNDLE_PATH = _FIXTURES_DIR / "default_repo.bundle"
+_FIXTURES_ROOT = _FIXTURES_DIR.parent / "ttg" / "fixtures"
 
 COMMIT_BUCKETS = (
     "non_merge_commit",
@@ -34,6 +35,17 @@ SCENARIOS = (
     "feature_finish_pass",
     "version_release_fail",
     "version_release_pass",
+)
+
+# CBM merge types PCH does not yet handle; only used by the
+# ``examples/pch`` skip-demo scripts, not by unit tests
+DEMO_BUCKETS = (
+    "sync_backport",
+    "catch_up",
+    "hotfix_release",
+    "hotfix_backport",
+    "release_cut",
+    "release_backport",
 )
 
 
@@ -97,11 +109,83 @@ def _setup_version_release(repo_dir, files):
     repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
 
 
+def _write_and_commit(repo_dir, filename, content):
+    path = Path(repo_dir) / filename
+    path.write_text(content)
+    repo = git.Repo(str(repo_dir))
+    repo.index.add([filename])
+    repo.index.commit("add {}".format(filename))
+
+
+def _setup_sync_backport(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", DEV_BRANCH)
+    repo.git.checkout("-q", MAIN_BRANCH)
+    _write_and_commit(repo_dir, "hotdoc.py", "# patched directly on main\n")
+    repo.git.checkout("-q", DEV_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", MAIN_BRANCH)
+
+
+def _setup_catch_up(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", DEV_BRANCH)
+    repo.git.checkout("-q", "-b", "add-payment-gateway")
+    repo.git.checkout("-q", DEV_BRANCH)
+    _write_and_commit(repo_dir, "notify.py", "# new work landed on dev\n")
+    repo.git.checkout("-q", "add-payment-gateway")
+    repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
+
+
+def _setup_hotfix_release(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
+    _write_and_commit(repo_dir, "login.py", "# patch login crash\n")
+    repo.git.checkout("-q", MAIN_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", "hotfix/fix-login-crash")
+
+
+def _setup_hotfix_backport(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", DEV_BRANCH)
+    repo.git.checkout("-q", MAIN_BRANCH)
+    repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
+    _write_and_commit(repo_dir, "login.py", "# patch login crash\n")
+    repo.git.checkout("-q", DEV_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", "hotfix/fix-login-crash")
+
+
+def _setup_release_cut(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", "release/2.4.0")
+    _write_and_commit(repo_dir, "changelog.py", "# freeze for 2.4.0\n")
+    repo.git.checkout("-q", MAIN_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", "release/2.4.0")
+
+
+def _setup_release_backport(repo_dir):
+    repo = git.Repo(str(repo_dir))
+    repo.git.checkout("-q", "-b", DEV_BRANCH)
+    repo.git.checkout("-q", MAIN_BRANCH)
+    repo.git.checkout("-q", "-b", "release/2.4.0")
+    _write_and_commit(repo_dir, "changelog.py", "# freeze for 2.4.0\n")
+    repo.git.checkout("-q", DEV_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", "release/2.4.0")
+
+
 _BUCKET_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
     "regular_merge": _setup_regular_merge,
     "feature_finish": _setup_feature_finish,
     "version_release": _setup_version_release,
+}
+
+_DEMO_BUCKET_SETUP_FUNCS = {
+    "sync_backport": _setup_sync_backport,
+    "catch_up": _setup_catch_up,
+    "hotfix_release": _setup_hotfix_release,
+    "hotfix_backport": _setup_hotfix_backport,
+    "release_cut": _setup_release_cut,
+    "release_backport": _setup_release_backport,
 }
 
 # legacy scenario -> (bucket, default files) presets, kept so the
@@ -159,7 +243,7 @@ def prepare_repo_with_files(dest_dir, commit_bucket, files):
     :param commit_bucket: commit-type bucket, one of ``COMMIT_BUCKETS``
     :type commit_bucket: str
     :param files: mapping of filename to fixture file name (resolved
-            under ``tests/testee/ttg``); each entry is staged or
+            under ``tests/ttg/fixtures``); each entry is staged or
             committed according to ``commit_bucket``'s scaffold
     :type files: dict
     :raises ValueError: if ``commit_bucket`` is not a known bucket
@@ -196,13 +280,41 @@ def prepare_repo(dest_dir, scenario):
     return prepare_repo_with_files(dest_dir, commit_bucket, files)
 
 
+def prepare_demo_repo(dest_dir, demo_bucket):
+    """
+    prepare a temporary repository for one of the ``examples/pch``
+    skip-demo scenarios (CBM merge types PCH does not yet handle).
+
+
+    :param dest_dir: destination directory for the cloned repo;
+            must not already exist, or be empty if it does
+    :type dest_dir: str
+    :param demo_bucket: demo bucket, one of ``DEMO_BUCKETS``
+    :type demo_bucket: str
+    :raises ValueError: if ``demo_bucket`` is not a known bucket
+    :return: path to the prepared repository
+    :rtype: str
+    """
+    if demo_bucket not in _DEMO_BUCKET_SETUP_FUNCS:
+        raise ValueError("unknown demo bucket: {}".format(demo_bucket))
+
+    git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
+    _DEMO_BUCKET_SETUP_FUNCS[demo_bucket](dest_dir)
+    return str(dest_dir)
+
+
 def _main():
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--scenario",
-        required=True,
         choices=SCENARIOS,
-        help="TTG scenario to prepare",
+        help="TTG/PCH scenario to prepare",
+    )
+    group.add_argument(
+        "--demo-bucket",
+        choices=DEMO_BUCKETS,
+        help="PCH skip-demo bucket to prepare",
     )
     parser.add_argument(
         "--dest",
@@ -211,8 +323,11 @@ def _main():
     )
     args = parser.parse_args()
 
-    dest_dir = args.dest or tempfile.mkdtemp(prefix="ttg_demo_")
-    prepare_repo(dest_dir, args.scenario)
+    dest_dir = args.dest or tempfile.mkdtemp(prefix="repo_prep_")
+    if args.scenario:
+        prepare_repo(dest_dir, args.scenario)
+    else:
+        prepare_demo_repo(dest_dir, args.demo_bucket)
     print(dest_dir)
 
 

@@ -14,13 +14,11 @@ import shutil
 import sys
 import tempfile
 
-import git
-
 _SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parent.parent
-_BUNDLE_PATH = _REPO_ROOT / "tests" / "testee" / "default_repo.bundle"
+_DEMO_BUCKET = "hotfix_backport"
 
-sys.path.insert(0, str(_REPO_ROOT / "tests" / "ttg"))
+sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_centered,
@@ -28,30 +26,15 @@ from hupy.kamilog import (  # noqa: E402
     set_logging_level_by_verbosity,
 )
 from hupy.pch import prepend_commit_header  # noqa: E402
+from prep_repo import prepare_demo_repo  # noqa: E402
 
 
 # helpers  #####################################################################
 
 
-def _commit_file(repo, repo_dir, filename, content):
-    path = pathlib.Path(repo_dir) / filename
-    path.write_text(content)
-    repo.index.add([filename])
-    repo.index.commit("add {}".format(filename))
-
-
 def _prepare_demo_repo():
     dest_dir = tempfile.mkdtemp(prefix="pch_demo_")
-    repo = git.Repo.clone_from(str(_BUNDLE_PATH), dest_dir, branch="main")
-
-    repo.git.checkout("-q", "-b", "dev")
-    repo.git.checkout("-q", "main")
-    repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
-    _commit_file(repo, dest_dir, "login.py", "# patch login crash\n")
-    repo.git.checkout("-q", "dev")
-    repo.git.merge("--no-commit", "--no-ff", "hotfix/fix-login-crash")
-
-    return dest_dir
+    return prepare_demo_repo(dest_dir, _DEMO_BUCKET)
 
 
 def _run_pch(repo_dir, verbosity=1):

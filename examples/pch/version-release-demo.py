@@ -18,7 +18,7 @@ _SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parent.parent
 _SCENARIO = "version_release_pass"
 
-sys.path.insert(0, str(_REPO_ROOT / "tests" / "ttg"))
+sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_centered,
