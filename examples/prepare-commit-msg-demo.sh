@@ -18,6 +18,9 @@ _BUNDLE="$_REPO_ROOT/tests/testee/default_repo.bundle"
 # helpers  #####################################################################
 
 
+# FIXME prepare demo to py side
+
+
 _prepare_demo_repo() {
     local dest
     dest="$(mktemp -d -t pch_demo_XXXXXX)"
