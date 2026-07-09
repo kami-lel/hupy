@@ -10,7 +10,7 @@ writing, and error paths for non-git or nonexistent targets
 import pytest
 
 from hupy.config import CONFIG_FILENAME
-from hupy.config.model import HupyConfig
+from hupy.config.hupy_config_file import HupyConfigFile
 from hupy.cli.cli_init import _HOOK_STUBS_DIR
 from cli_helpers import (
     get_configured_hooks_path,
@@ -19,7 +19,7 @@ from cli_helpers import (
 )
 
 _STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
-_DEFAULT_CONFIG_CONTENT = HupyConfig().model_dump_json(indent=2) + "\n"
+_DEFAULT_CONFIG_CONTENT = HupyConfigFile().model_dump_json(indent=2) + "\n"
 
 
 # helpers  ######################################################################

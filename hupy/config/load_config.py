@@ -2,7 +2,7 @@
 load_config.py
 
 load the HUPy config file (``.hupy.config.json``) from a repo root,
-validating it against :class:`HupyConfig`
+validating it against :class:`HupyConfigFile`
 """
 
 import pathlib
@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import load_git_repo
 from hupy.config import CONFIG_FILENAME
-from hupy.config.model import HupyConfig
+from hupy.config.hupy_config_file import HupyConfigFile
 from hupy.kamilog import getLogger
 
 __all__ = ("load_hupy_config",)
@@ -45,7 +45,7 @@ def load_hupy_config(repo_path):
             including a ``ver_grep`` section left at its empty
             defaults
     :return: the loaded and validated configuration
-    :rtype: HupyConfig
+    :rtype: HupyConfigFile
     """
     # pylint: disable-next=global-statement
     global _config_cache
@@ -57,7 +57,7 @@ def load_hupy_config(repo_path):
     config_path = pathlib.Path(repo.working_tree_dir) / CONFIG_FILENAME
 
     try:
-        _config_cache = HupyConfig.model_validate_json(config_path.read_text())
+        _config_cache = HupyConfigFile.model_validate_json(config_path.read_text())
         return _config_cache
     except FileNotFoundError as e:
         logger.error("HUPy config file not found: {}".format(config_path))

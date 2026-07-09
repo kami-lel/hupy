@@ -2,12 +2,12 @@
 write_config.py
 
 write the HUPy config file (``.hupy.config.json``) at a repo root,
-generated from :class:`HupyConfig` defaults
+generated from :class:`HupyConfigFile` defaults
 """
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config import CONFIG_FILENAME
-from hupy.config.model import HupyConfig
+from hupy.config.hupy_config_file import HupyConfigFile
 from hupy.kamilog import getLogger
 
 __all__ = ("write_default_config",)
@@ -18,7 +18,7 @@ logger = getLogger(PROJ_LOGGER_NAME)
 def write_default_config(repo_root, force):
     """
     write the default HUPy config file (``.hupy.config.json``) at
-    ``repo_root``, generated from :class:`HupyConfig` defaults
+    ``repo_root``, generated from :class:`HupyConfigFile` defaults
     """
     logger.enter("write HUPy config file")
     config_path = repo_root / CONFIG_FILENAME
@@ -36,4 +36,4 @@ def write_default_config(repo_root, force):
         )
 
     logger.debug("HUPy config file written: {}".format(config_path))
-    config_path.write_text(HupyConfig().model_dump_json(indent=2) + "\n")
+    config_path.write_text(HupyConfigFile().model_dump_json(indent=2) + "\n")

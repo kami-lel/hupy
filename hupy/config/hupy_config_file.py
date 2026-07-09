@@ -1,5 +1,5 @@
 """
-model.py
+hupy_config_file.py
 
 define the HUPy config schema (``.hupy.config.json``) as a pydantic
 model, providing default values used when writing a fresh config file
@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from hupy.config import CONFIG_LOGGER_NAME
 from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 
-__all__ = ("HupyConfig",)
+__all__ = ("HupyConfigFile",)
 
 
 # logger  ######################################################################
@@ -63,7 +63,7 @@ class _VerGrep(BaseModel):
         return self
 
 
-class HupyConfig(BaseModel):
+class HupyConfigFile(BaseModel):
     """
     schema for the HUPy config file (``.hupy.config.json``)
     """

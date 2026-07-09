@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from hupy.config.model import HupyConfig
+from hupy.config.hupy_config_file import HupyConfigFile
 from hupy.ver_grep import grep_repo_version
 
 
@@ -21,7 +21,7 @@ def _grep(version_file, pattern):
     given ``version_file`` and ``pattern``, bypassing disk/git config
     loading.
     """
-    config = HupyConfig(
+    config = HupyConfigFile(
         ver_grep={
             "version_file": str(version_file),
             "version_line_pattern": pattern,
