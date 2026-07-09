@@ -1,5 +1,7 @@
 # Commit, Branch & Merge Documentation
 
+<!-- FIXME manually rewrite -->
+
 The **CBM** module (`hupy.cbm`) inspects a git repository's live state to
 classify the *in-progress* commit — telling a plain commit from a merge,
 and each merge from the branch pair it joins.
@@ -17,10 +19,7 @@ Everything below is re-exported from `hupy.cbm`.
 | `get_source_branch` | function | resolve the branch being merged from |
 | `get_target_branch` | function | resolve the branch being merged into |
 | `CommitType` | `Flag` enum | the commit / merge taxonomy |
-| `CBM_LOGGER_NAME` | str | logger name, `"<proj>.CBM"` |
-
-`BranchType` lives in `hupy.cbm.branch_type` and backs the taxonomy, but
-is not part of the top-level export.
+| `BranchType` | `Enum` | single-branch classifier backing the taxonomy |
 
 ## BranchType
 
