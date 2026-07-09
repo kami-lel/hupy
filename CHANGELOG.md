@@ -20,6 +20,8 @@
 
 ### Fixed
 
+- `examples/pch/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running the PCH hook (previously errored on a stray `prepend-commit-header` CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
+
 ### Security
 
 [unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...dev
