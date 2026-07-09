@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-version-release-demo.py
+hotfix-backport-demo.py
 
-demo: Version Release merge (develop into main) with the
-in-progress merge message copied into COMMIT_EDITMSG (mirroring
-what git itself does before invoking the commit-msg hook)
-expected result: header prepended to COMMIT_EDITMSG
+demo: Hotfix Backport merge (hotfix/fix-login-crash into dev), a CBM
+merge type that CBM already classifies (see hupy/cbm/commit_type.py)
+but that PCH does not yet prepend a header for
+expected result: skip (merge type not yet handled by PCH)
 """
 
 import pathlib
@@ -14,9 +14,11 @@ import subprocess
 import sys
 import tempfile
 
+import git
+
 _SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parent.parent
-_SCENARIO = "version_release_pass"
+_BUNDLE_PATH = _REPO_ROOT / "tests" / "testee" / "default_repo.bundle"
 
 sys.path.insert(0, str(_REPO_ROOT / "tests" / "ttg"))
 
@@ -25,16 +27,31 @@ from hupy.kamilog import (  # noqa: E402
     gen_comment_banner_zero,
 )
 from hupy.config.write_config import write_default_config  # noqa: E402
-from prep_repo import prepare_repo  # noqa: E402
+
 
 # helpers  #####################################################################
 
 
+def _commit_file(repo, repo_dir, filename, content):
+    path = pathlib.Path(repo_dir) / filename
+    path.write_text(content)
+    repo.index.add([filename])
+    repo.index.commit("add {}".format(filename))
+
+
 def _prepare_demo_repo():
     dest_dir = tempfile.mkdtemp(prefix="pch_demo_")
-    repo_dir = prepare_repo(dest_dir, _SCENARIO)
-    write_default_config(pathlib.Path(repo_dir), force=True)
-    return repo_dir
+    repo = git.Repo.clone_from(str(_BUNDLE_PATH), dest_dir, branch="main")
+
+    repo.git.checkout("-q", "-b", "dev")
+    repo.git.checkout("-q", "main")
+    repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
+    _commit_file(repo, dest_dir, "login.py", "# patch login crash\n")
+    repo.git.checkout("-q", "dev")
+    repo.git.merge("--no-commit", "--no-ff", "hotfix/fix-login-crash")
+
+    write_default_config(pathlib.Path(dest_dir), force=True)
+    return dest_dir
 
 
 def _run_pch(repo_dir, *extra_args):
@@ -49,8 +66,11 @@ def _run_pch(repo_dir, *extra_args):
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tVersion Release merge (develop into main)")
-    print("expected:\tPASS, header prepended to COMMIT_EDITMSG")
+    print(
+        "scenario:\tHotfix Backport merge "
+        "(hotfix/fix-login-crash into dev)"
+    )
+    print("expected:\tSKIP (merge type not yet handled by PCH)")
     print()
 
     print(gen_comment_banner_centered("print out", "#"))
