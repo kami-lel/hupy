@@ -13,7 +13,6 @@ __all__ = ("CommitType", "CBM_LOGGER_NAME")
 CBM_LOGGER_NAME = PROJ_LOGGER_NAME + ".CBM"
 
 
-# TODO make branch names configurable
 # TODO support hotfix/release branches
 
 MAIN_BRANCH = "main"

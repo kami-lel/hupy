@@ -12,10 +12,10 @@ import git
 
 from hupy.kamilog import getLogger
 from hupy.cbm.commit_type import (
-	CommitType,
-	MAIN_BRANCH,
-	DEV_BRANCH,
-	CBM_LOGGER_NAME,
+    CommitType,
+    MAIN_BRANCH,
+    DEV_BRANCH,
+    CBM_LOGGER_NAME,
 )
 
 __all__ = ("get_current_commit_type", "get_source_branch")

@@ -58,7 +58,7 @@ class TestDetectTriageTagsInStagedFile:
         results = detect_triage_tags_in_staged_file("test.py", repo_dir)
 
         assert len(results) == 1
-        tag, line = results[0]
+        tag, line, line_no = results[0]
         assert tag == TriageTagType.LOUD_TODO
         assert "TODO" in line
 
@@ -68,7 +68,7 @@ class TestDetectTriageTagsInStagedFile:
         results = detect_triage_tags_in_staged_file("test.py", repo_dir)
 
         assert len(results) == 2
-        tags = [tag for tag, _ in results]
+        tags = [tag for tag, _, _ in results]
         assert all(tag in TriageTagType.LOUDS for tag in tags)
         assert TriageTagType.LOUD_TODO in tags
         assert TriageTagType.LOUD_BUG in tags
