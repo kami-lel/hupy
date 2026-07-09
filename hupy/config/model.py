@@ -53,8 +53,8 @@ class _VerGrep(BaseModel):
         """
         if self.is_unconfigured():
             logger.warning(
-                "ver_grep is not configured: "
-                "set version_file and version_line_pattern"
+                "VerGrep not configured:\n"
+                "must set version_file, version_line_pattern to enable"
             )
         return self
 
