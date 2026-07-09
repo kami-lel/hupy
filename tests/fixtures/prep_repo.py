@@ -90,11 +90,24 @@ def _setup_regular_merge(repo_dir, files):
     repo.git.merge("--no-commit", "--no-ff", "hotfix")
 
 
+def _bump_source_branch_version(repo_dir, version):
+    # give the branch about to be merged in a version distinct from
+    # main's 1.2.3, so demos exercise a real version diff between the
+    # current and coming branch instead of both sides reading
+    # identically
+    _write_and_commit(
+        repo_dir,
+        "setup.cfg",
+        "[metadata]\nname = default_repo\nversion = {}\n".format(version),
+    )
+
+
 def _setup_feature_landing(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     _commit_fixture(repo_dir, "develop.py", "feature_landing_develop.py")
     repo.git.checkout("-q", "-b", "add-user-authentication")
+    _bump_source_branch_version(repo_dir, "1.3.0")
     for filename, fixture_name in files.items():
         _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", DEV_BRANCH)
@@ -104,6 +117,7 @@ def _setup_feature_landing(repo_dir, files):
 def _setup_version_release(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
+    _bump_source_branch_version(repo_dir, "1.3.0")
     for filename, fixture_name in files.items():
         _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
