@@ -20,7 +20,7 @@
 
 ### Fixed
 
-- `examples/pch/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running the PCH hook (previously errored on a stray `prepend-commit-header` CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
+- `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray `prepend-commit-header`/`triage-tag-gating` CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
 
 ### Security
 
