@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pch-skip-irrelevant_merge_demo.py
+skip-unrelated-merge-demo.py
 
 demo: merging two unrelated, non-protected branches (hotfix into
 release); the hotfix side stages two files — a.py with a LOUD

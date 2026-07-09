@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pch-pass-version_release_demo.py
+version-release-demo.py
 
 demo: Version Release merge (develop into main) with the
 in-progress merge message copied into COMMIT_EDITMSG (mirroring

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pch-pass-feature_finish_demo.py
+feature-finish-demo.py
 
 demo: Feature Finish merge (add-user-authentication into develop) with the
 in-progress merge message copied into COMMIT_EDITMSG (mirroring

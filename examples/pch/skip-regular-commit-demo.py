@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pch-skip-non_merge_commit_demo.py
+skip-regular-commit-demo.py
 
 demo: a regular (non-merge) commit stages two files — a.py with a
 LOUD "# TODO loud marker" comment and b.py with no tags at all
