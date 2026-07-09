@@ -26,8 +26,7 @@ def _pre_commit_main(args):  ###################################################
 
     perform_triage_tags_gating(os.getcwd())
 
-    # FIXME make done only occurs once
-    logger.done("pre-commit HUPy hooks")
+    logger.succ("pre-commit HUPy hooks")
 
 
 # Public API  ##################################################################

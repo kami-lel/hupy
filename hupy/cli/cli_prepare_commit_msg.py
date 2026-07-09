@@ -28,7 +28,8 @@ def _prepare_commit_msg_main(args):  ###########################################
 
     prepend_commit_header(os.getcwd())
 
-    logger.done("prepare-commit-msg HUPy hooks")
+    logger.succ("prepare-commit-msg HUPy hooks")
+    logger.done("all HUPy hooks finished")
 
 
 # Public API  ##################################################################
