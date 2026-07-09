@@ -1,7 +1,7 @@
 """
 ver_grep_test.py
 
-tests for `grep_repo_version` in `ver_grep.py`
+tests for `grep_current_version` in `ver_grep.py`
 """
 
 from unittest import mock
@@ -9,7 +9,7 @@ from unittest import mock
 import pytest
 
 from hupy.config.hupy_config_file import HupyConfigFile
-from hupy.ver_grep import grep_repo_version
+from hupy.ver_grep import grep_current_version
 
 
 # helpers  ######################################################################
@@ -17,7 +17,7 @@ from hupy.ver_grep import grep_repo_version
 
 def _grep(version_file, pattern):
     """
-    run ``grep_repo_version`` against a stubbed config carrying the
+    run ``grep_current_version`` against a stubbed config carrying the
     given ``version_file`` and ``pattern``, bypassing disk/git config
     loading.
     """
@@ -28,9 +28,9 @@ def _grep(version_file, pattern):
         }
     )
     with mock.patch(
-        "hupy.ver_grep.load_hupy_config", return_value=config
+        "hupy.ver_grep.ver_grep.load_hupy_config", return_value=config
     ):
-        return grep_repo_version()
+        return grep_current_version()
 
 
 def _write(tmp_path, name, text):

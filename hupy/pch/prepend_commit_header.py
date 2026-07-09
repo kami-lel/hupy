@@ -10,7 +10,7 @@ import tempfile
 import git
 
 from hupy.kamilog import getLogger
-from hupy.ver_grep import grep_repo_version
+from hupy.ver_grep import grep_current_version
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
@@ -37,7 +37,7 @@ def _gen_feature_landing_header_content(repo):
 
 
 def _gen_version_release_header_content(_):
-    version = grep_repo_version()
+    version = grep_current_version()
     if version:
         return "Version Release: {}".format(version)
     else:
@@ -49,7 +49,7 @@ def _gen_catch_up_header(_):
 
 
 def _gen_release_backport_header(_):
-    version = grep_repo_version()
+    version = grep_current_version()
     if version:
         return "Release Backport from: {}".format(version)
     else:
@@ -57,7 +57,7 @@ def _gen_release_backport_header(_):
 
 
 def _gen_sync_backport_header(_):
-    version = grep_repo_version()
+    version = grep_current_version()
     if version:
         return "Sync Backport from: {}".format(version)
     else:
@@ -65,7 +65,7 @@ def _gen_sync_backport_header(_):
 
 
 def _gen_hotfix_backport_header(_):
-    version = grep_repo_version()
+    version = grep_current_version()
     if version:
         return "Hotfix Backport from: {}".format(version)
     else:

@@ -8,13 +8,11 @@ configured version file
 import os
 import re
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
+from . import VER_GREP_LOGGER_NAME
 
 # logger  ######################################################################
-
-VER_GREP_LOGGER_NAME = PROJ_LOGGER_NAME + ".VerGrep"
 
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
@@ -24,7 +22,7 @@ logger.propagate = False
 
 
 # Public API  ##################################################################
-def grep_repo_version():
+def grep_current_version():
     """
     extract version string from the repository's version file using
     the configured regex pattern; the pattern must contain a capturing
