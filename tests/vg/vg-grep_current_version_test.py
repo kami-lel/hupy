@@ -1,5 +1,5 @@
 """
-ver_grep_test.py
+vg-grep_current_version_test.py
 
 tests for `grep_current_version` in `gcv.py`
 """
@@ -43,7 +43,7 @@ def _write(tmp_path, name, text):
 # tests  ########################################################################
 
 
-class TestGrepRepoVersionMatch:
+class TestGrepCurrentVersionMatch:
     def test_returns_captured_group(self, tmp_path):
         path = _write(tmp_path, "pyproject.toml", 'version = "1.2.3"\n')
         assert _grep(path, r'version = "(.*)"') == "1.2.3"
@@ -69,7 +69,7 @@ class TestGrepRepoVersionMatch:
         assert _grep(path, r"__version__ = '(.*?)'") == "0.4.1"
 
 
-class TestGrepRepoVersionNotConfigured:
+class TestGrepCurrentVersionNotConfigured:
     def test_empty_version_file_returns_empty(self):
         assert _grep("", r'version = "(.*)"') == ""
 
@@ -85,7 +85,7 @@ class TestGrepRepoVersionNotConfigured:
         assert _grep(path, "   ") == ""
 
 
-class TestGrepRepoVersionErrors:
+class TestGrepCurrentVersionErrors:
     def test_missing_version_file_raises_system_exit(self, tmp_path):
         missing = tmp_path / "does_not_exist.toml"
         with pytest.raises(SystemExit) as ei:
