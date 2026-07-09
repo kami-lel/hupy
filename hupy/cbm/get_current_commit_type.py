@@ -11,12 +11,8 @@ import os
 import git
 
 from hupy.kamilog import getLogger
-from hupy.cbm.commit_type import (
-    CommitType,
-    MAIN_BRANCH,
-    DEV_BRANCH,
-    CBM_LOGGER_NAME,
-)
+from hupy.cbm.branch_type import BranchType
+from hupy.cbm.commit_type import CommitType, CBM_LOGGER_NAME
 
 __all__ = ("get_current_commit_type", "get_source_branch")
 
@@ -135,16 +131,12 @@ def get_current_commit_type(repo_path):
         return _commit_type_cache[repo_path]
 
     source = get_source_branch(repo)
+    source_type = BranchType.from_name(source, repo_path)
+    target_type = (
+        None if target is None else BranchType.from_name(target, repo_path)
+    )
 
-    if source != MAIN_BRANCH and target == DEV_BRANCH:
-        logger.debug("detect Feature Landing merge")
-        _commit_type_cache[repo_path] = CommitType.FEATURE_LANDING
-        return _commit_type_cache[repo_path]
-    if source == DEV_BRANCH and target == MAIN_BRANCH:
-        logger.debug("detect Version Release merge")
-        _commit_type_cache[repo_path] = CommitType.VERSION_RELEASE
-        return _commit_type_cache[repo_path]
-
-    logger.debug("detect regular merge")
-    _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
+    commit_type = CommitType.decide_commit_type(source_type, target_type)
+    logger.debug("detect {} merge".format(commit_type.name))
+    _commit_type_cache[repo_path] = commit_type
     return _commit_type_cache[repo_path]

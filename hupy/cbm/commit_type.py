@@ -7,14 +7,11 @@ commit type flag: categorize git commits by merge strategy
 from enum import Flag, auto
 
 from hupy import PROJ_LOGGER_NAME
+from hupy.cbm.branch_type import BranchType
 
 __all__ = ("CommitType", "CBM_LOGGER_NAME")
 
 CBM_LOGGER_NAME = PROJ_LOGGER_NAME + ".CBM"
-
-
-MAIN_BRANCH = "main"
-DEV_BRANCH = "dev"
 
 
 class CommitType(Flag):
@@ -50,3 +47,28 @@ class CommitType(Flag):
     RELEASE_CUT = MERGE | _RELEASE_CUT
     RELEASE_BACKPORT = MERGE | _RELEASE_BACKPORT
     OTHER_MERGE = MERGE | _OTHER_MERGE
+
+    @classmethod
+    def decide_commit_type(cls, source, target):
+        """
+        :param source: type of the merge's source branch
+        :type source: BranchType, optional
+        :param target: type of the merge's target branch
+        :type target: BranchType, optional
+        :return: the merge type matching ``source`` and ``target``,
+                or ``OTHER_MERGE`` if the pair matches no known pattern
+        :rtype: CommitType
+        """
+        return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
+
+
+_MERGE_TYPE_BY_BRANCH_PAIR = {
+    (BranchType.FEATURE, BranchType.DEV): CommitType.FEATURE_LANDING,
+    (BranchType.DEV, BranchType.MAIN): CommitType.VERSION_RELEASE,
+    (BranchType.MAIN, BranchType.DEV): CommitType.SYNC_BACKPORT,
+    (BranchType.DEV, BranchType.FEATURE): CommitType.CATCH_UP,
+    (BranchType.HOTFIX, BranchType.MAIN): CommitType.HOTFIX_RELEASE,
+    (BranchType.HOTFIX, BranchType.DEV): CommitType.HOTFIX_BACKPORT,
+    (BranchType.RELEASE, BranchType.MAIN): CommitType.RELEASE_CUT,
+    (BranchType.RELEASE, BranchType.DEV): CommitType.RELEASE_BACKPORT,
+}

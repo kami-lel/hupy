@@ -13,7 +13,11 @@ from pathlib import Path
 
 import git
 
-from hupy.cbm.commit_type import DEV_BRANCH, MAIN_BRANCH
+from hupy.config import CONFIG_FILENAME
+from hupy.config.hupy_config_file import HupyConfigFile
+
+MAIN_BRANCH = "main"
+DEV_BRANCH = "dev"
 
 _TESTEE_ROOT = Path(__file__).parent.parent / "testee"
 _BUNDLE_PATH = _TESTEE_ROOT / "default_repo.bundle"
@@ -169,6 +173,8 @@ def prepare_repo_with_files(dest_dir, commit_bucket, files):
         raise ValueError("unknown commit bucket: {}".format(commit_bucket))
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
+    config_path = Path(dest_dir) / CONFIG_FILENAME
+    config_path.write_text(HupyConfigFile().model_dump_json())
     _BUCKET_SETUP_FUNCS[commit_bucket](dest_dir, files)
     return str(dest_dir)
 
