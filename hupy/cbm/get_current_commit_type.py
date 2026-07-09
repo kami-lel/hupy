@@ -62,12 +62,15 @@ def _is_pull_merge(repo, sha, target_branch):
 
 # Public API  ##################################################################
 
-# TODO save values to cached, which is reset per commit
+# pylint: disable-next=invalid-name
+_source_branch_cache = {}
+# pylint: disable-next=invalid-name
+_commit_type_cache = {}
 
 
 def get_source_branch(repo):
     """
-    get the source branch name of the current merge
+    get the source branch name of the current merge, (result is cached)
 
 
     :param repo: git repository object
@@ -75,18 +78,23 @@ def get_source_branch(repo):
     :return: name of the source branch being merged
     :rtype: str
     """
+    if repo.git_dir in _source_branch_cache:
+        return _source_branch_cache[repo.git_dir]
+
     merge_head_path = os.path.join(repo.git_dir, "MERGE_HEAD")
     with open(merge_head_path, encoding="utf-8") as f:
         sha = f.read().strip()
     for branch in repo.branches:
         if branch.commit.hexsha == sha:
-            return branch.name
-    return repo.git.name_rev("--name-only", sha)
+            _source_branch_cache[repo.git_dir] = branch.name
+            return _source_branch_cache[repo.git_dir]
+    _source_branch_cache[repo.git_dir] = repo.git.name_rev("--name-only", sha)
+    return _source_branch_cache[repo.git_dir]
 
 
 def get_current_commit_type(repo_path):
     """
-    return the type of the current in-progress commit
+    return the type of the current in-progress commit, (result is cached)
 
 
     :param repo_path: path to the git repository or any of its
@@ -101,33 +109,42 @@ def get_current_commit_type(repo_path):
     >>> get_current_commit_type(repo_path)
     <CommitType.OTHER_COMMIT: ...>
     """
+    if repo_path in _commit_type_cache:
+        return _commit_type_cache[repo_path]
+
     repo = git.Repo(repo_path, search_parent_directories=True)
     gd = repo.git_dir
 
     if not _has_state(gd, "MERGE_HEAD"):
         logger.debug("detect regular commit")
-        return CommitType.OTHER_COMMIT
+        _commit_type_cache[repo_path] = CommitType.OTHER_COMMIT
+        return _commit_type_cache[repo_path]
 
     lines = _read_merge_head(gd)
     if len(lines) != 1:  # octopus merge
         logger.debug("detect octopus merge")
-        return CommitType.OTHER_MERGE
+        _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
+        return _commit_type_cache[repo_path]
 
     sha = lines[0]
     target = _get_target_branch(repo)
 
     if _is_pull_merge(repo, sha, target):
         logger.debug("detect pull merge")
-        return CommitType.OTHER_MERGE
+        _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
+        return _commit_type_cache[repo_path]
 
     source = get_source_branch(repo)
 
     if source != MAIN_BRANCH and target == DEV_BRANCH:
         logger.debug("detect Feature Landing merge")
-        return CommitType.FEATURE_LANDING
+        _commit_type_cache[repo_path] = CommitType.FEATURE_LANDING
+        return _commit_type_cache[repo_path]
     if source == DEV_BRANCH and target == MAIN_BRANCH:
         logger.debug("detect Version Release merge")
-        return CommitType.VERSION_RELEASE
+        _commit_type_cache[repo_path] = CommitType.VERSION_RELEASE
+        return _commit_type_cache[repo_path]
 
     logger.debug("detect regular merge")
-    return CommitType.OTHER_MERGE
+    _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
+    return _commit_type_cache[repo_path]
