@@ -1,6 +1,5 @@
 {
   "hupy_version": "0.3.0",
-  "default_logger_verbosity": 1,
   "ver_grep": {
     "is_disabled": false,
     "version_file": "pyproject.toml",

@@ -9,10 +9,6 @@
   // hupy_version  -------------------------------------------------------------
   // *HUPy* version that wrote the file; informational, no need to edit
   "hupy_version": "0.3.0",
-  // default_logger_verbosity  -------------------------------------------------
-  // hook log verbosity: `3`+ DEBUG, `2` ENTER, `1` INFO (default), `0` DONE,
-  // `-1` WARNING, `-2` ERROR, `-3` CRITICAL
-  "default_logger_verbosity": 1,
   "ver_grep": { // #############################################################
     // reads the repo's version string for *Prepend Commit Header*; empty
     // fields disable it, so the header falls back to plain `Version Release`
