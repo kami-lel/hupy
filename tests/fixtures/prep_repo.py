@@ -55,6 +55,7 @@ DEMO_BUCKETS = (
     "release_minor_prototype",
     "release_alpha",
     "release_beta",
+    "release_rc",
     "release_major_stable",
     "release_minor_pre_alpha",
 )
@@ -274,6 +275,10 @@ def _setup_release_beta(repo_dir):
     _setup_version_release_with_versions(repo_dir, "1.3.0-beta.1")
 
 
+def _setup_release_rc(repo_dir):
+    _setup_version_release_with_versions(repo_dir, "1.3.0-rc.1")
+
+
 def _setup_release_major_stable(repo_dir):
     _setup_version_release_with_versions(
         repo_dir, "2.0.0", target_version="1.2.3"
@@ -304,6 +309,7 @@ _DEMO_BUCKET_SETUP_FUNCS = {
     "release_minor_prototype": _setup_release_minor_prototype,
     "release_alpha": _setup_release_alpha,
     "release_beta": _setup_release_beta,
+    "release_rc": _setup_release_rc,
     "release_major_stable": _setup_release_major_stable,
     "release_minor_pre_alpha": _setup_release_minor_pre_alpha,
 }

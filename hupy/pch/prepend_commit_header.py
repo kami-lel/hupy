@@ -51,8 +51,8 @@ def _get_release_type_word(version, pch_config):
     map a version string to its release-type word
     """
     tagged_words = (
-        (pch_config.alpha_tag, "Alpha "),
-        (pch_config.beta_tag, "Beta "),
+        (pch_config.alpha_tag, "Alpha Release "),
+        (pch_config.beta_tag, "Beta Release "),
         (pch_config.release_candidate_tag, "Release Candidate "),
     )
     for tag, word in tagged_words:
@@ -60,15 +60,15 @@ def _get_release_type_word(version, pch_config):
             return word
 
     if pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
-        return "Pre-Alpha "
+        return "Pre-Alpha Release "
     if pch_config.enable_vertical_slice and re.match(
         r"^0\.[5-9]\.\d+", version
     ):
-        return "Vertical Slice "
+        return "Vertical Slice Release "
     if re.match(r"^0\.\d+\.\d+", version):
-        return "Prototype "
+        return "Prototype Release "
     if re.match(r"^\d+\.\d+\.\d+", version):
-        return "Stable "
+        return "Stable Release "
     return ""
 
 
@@ -111,14 +111,14 @@ def _gen_version_release_header(repo):
     if not release_type:
         return "Version Release: {}".format(version)
 
-    if release_type in ("Alpha ", "Beta ", "Release Candidate "):
+    if release_type in ("Alpha Release ", "Beta Release ", "Release Candidate "):
         bump_prefix = ""
     else:
         bump_prefix = _get_version_bump_prefix(
             version, grep_target_branch_version()
         )
 
-    return "{}{}Release: {}".format(bump_prefix, release_type, version)
+    return "{}: {}".format((bump_prefix + release_type).rstrip(), version)
 
 
 def _gen_feature_landing_header(repo):

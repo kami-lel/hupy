@@ -119,8 +119,8 @@ class TestVersionReleaseHeaderWithVersion:
 
 
 class TestVersionReleaseHeaderScenarios:
-    """the six release-type/bump-prefix combinations pch's
-    ``examples/pch/release-*-demo.py`` scripts also demonstrate
+    """the seven release-type/bump-prefix combinations pch's
+    ``examples/pch/vr-*-demo.py`` scripts also demonstrate
     end-to-end against a real repo"""
 
     def test_fail_parse_version_falls_back_to_plain_prefix(self, repo_dir):
@@ -169,6 +169,19 @@ class TestVersionReleaseHeaderScenarios:
 
         assert read_commit_editmsg(repo_dir) == (
             "Beta Release: 1.3.0-beta.1\n\nsubject only\n"
+        )
+
+    def test_release_candidate_has_no_bump_prefix(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        # target set to a version that would otherwise trigger a
+        # major bump, proving RC releases skip the bump prefix
+        with _patch_version("1.3.0-rc.1"), _patch_target_version("0.9.0"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Release Candidate: 1.3.0-rc.1\n\nsubject only\n"
         )
 
     def test_major_stable_release(self, repo_dir):
