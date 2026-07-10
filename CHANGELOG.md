@@ -6,28 +6,40 @@
 
 ### Added
 
-- **`init-create-config`** — new `hupy` subcommand that writes only the default `.hupy.config.json`, without touching hook stubs
-- **`init-copy-hooks`** — new `hupy` subcommand that copies only the hook stub scripts into the repo's hooks directory, without writing a config file
-- **six new merge types recognized** — `hupy.pch` now prepends commit headers for Sync Backport (`main`→`dev`), Catch Up (`dev`→feature), Hotfix Release (`hotfix/*`→`main`), Hotfix Backport (`hotfix/*`→`dev`), Release Cut (`release/*`→`main`), and Release Backport (`release/*`→`dev`), on top of the existing Feature Landing and Version Release headers — 8 merge types total, each with its own header format and, where applicable, a version number
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+
+## [0.3.0] - 2026-07-10
+
+### Added
+
+- **`init-create-config`** and **`init-copy-hooks`** — new `hupy` subcommands that split `init` into standalone steps: writing the default `.hupy.config.json` alone, or copying the hook stub scripts alone
+- **six new merge types recognized** — `hupy.pch` now prepends commit headers for Sync Backport, Catch Up, Hotfix Release, Hotfix Backport, Release Cut, and Release Backport, alongside the existing Feature Landing and Version Release headers — 8 merge types total, each with its own header format and, where applicable, a version number
 - **configurable branch names** — new `cbm` section in `.hupy.config.json` (`main_branch_name`, `dev_branch_name`, `hotfix_branch_prefix`, `release_branch_prefix`) replaces hardcoded `"main"`/`"dev"` branch matching
-- **`hupy.ver_grep.grep_target_branch_version()`** and **`hupy.ver_grep.decide_version_update_type()`** — read a merge's target-branch version and classify a major/minor/patch version bump between source and target branches, now wired into the Version Release, Hotfix Release, and Release Cut headers as a `Major `/`Minor `/`Patch ` prefix
-- **release-type detection in the Version Release header** — `hupy.pch` classifies the source version as Alpha, Beta, Release Candidate, Pre-Alpha, Vertical Slice, Prototype, or Stable and labels the header accordingly, eg `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`, `Release Candidate: 1.3.0-rc.1`; a version that doesn't parse as a `major.minor.patch` core still falls back to plain `Version Release: <version>`
-- **`pch` config section** — new section in `.hupy.config.json` (`enable_vertical_slice`, `enable_pre_alpha`, `alpha_tag`, `beta_tag`, `release_candidate_tag`) configures which release types `hupy.pch` recognizes and how; an empty tag disables recognition of that release type
-- **Ban Direct Commit** — a `pre-commit` check, wired ahead of Triage Tag Gating, that blocks a commit made directly on a protected branch (`dev`/`main` by default) while still allowing that branch to receive commits through a merge, eg. `feature → dev`; a new `bdc` section in `.hupy.config.json` (`ban_commit_to_dev`, `ban_commit_to_main`, `ban_commit_to_branches`) configures which branches are protected
+- **version-bump detection** — `pch` classifies a merge's major/minor/patch version bump and prefixes it onto the Version Release, Hotfix Release, and Release Cut headers
+- **release-type detection in the Version Release header** — classifies the source version as Alpha, Beta, Release Candidate, Pre-Alpha, Vertical Slice, Prototype, or Stable and labels the header accordingly, eg `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`
+- **`pch` config section** — new section in `.hupy.config.json` (`enable_vertical_slice`, `enable_pre_alpha`, `alpha_tag`, `beta_tag`, `release_candidate_tag`) configures which release types `pch` recognizes
+- **Ban Direct Commit** — a `pre-commit` check, wired ahead of Triage Tag Gating, that blocks a commit made directly on a protected branch (`main` by default) while still allowing that branch to receive commits through a merge; a new `bdc` section in `.hupy.config.json` (`ban_commit_to_dev`, `ban_commit_to_main`, `ban_commit_to_branches`) configures which branches are protected
 
 ### Changed
 
-- `hupy init` now composes the two steps above; behavior is unchanged, but each step can be run standalone
-- `init`'s positional repo argument renamed from `REPO_ROOT` to `REPO_PATH` (help text and `--help` output only; behavior unchanged)
-- renamed generated commit-header terminology: **Feature Finish** → **Feature Landing**, **Version Release** → **Stable Release**, across code, docs, and generated commit headers
-- renamed generated commit-header terminology back: **Stable Release** → **Version Release**, across code, docs, and generated commit headers
-- restructured `hupy.commit_type` (flat module) into the `hupy.cbm` package (Commit/Branch/Merge), exposing `BranchType`, `CommitType`, `get_current_commit_type`, `get_source_branch`, `get_target_branch`
-- restructured `hupy.ver_grep` (flat module, single `grep_repo_version()`) into a package split into `grep_source_branch_version()`/`grep_target_branch_version()`, each reading the branch tip via `git show` rather than the working tree
+- `hupy init` now composes `init-create-config` and `init-copy-hooks`; behavior is unchanged, but each step can also be run standalone
+- `init`'s positional repo argument renamed from `REPO_ROOT` to `REPO_PATH` (help text only; behavior unchanged)
+- renamed generated commit-header terminology: **Feature Finish** → **Feature Landing**, **Version Release** → **Stable Release**, then reverted **Stable Release** back to **Version Release**
+- restructured `hupy.commit_type` (flat module) into the `hupy.cbm` package (Commit/Branch/Merge)
+- restructured `hupy.ver_grep` (flat module) into a package that reads each branch's tip via `git show` rather than the working tree
 - consolidated `docs/pch_doc.md` into a new `docs/cbm_doc.md` guide covering Branch/Merge concepts, PCH headers, and `ver_grep`
 - Catch Up header now includes the target branch name, previously plain `"Catch Up"`
-- `hupy pre-commit`'s and `hupy prepare-commit-msg`'s entry/success log lines lowercased and reworded for consistency (eg. `"Start pre-commit stage"` → `"start pre-commit stage"`, `"pre-commit HUPy hooks"` → `"pre-commit stage finished"`)
-
-### Deprecated
+- `hupy pre-commit`'s and `hupy prepare-commit-msg`'s log lines reworded for consistency
 
 ### Removed
 
@@ -35,11 +47,10 @@
 
 ### Fixed
 
-- `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray `prepend-commit-header`/`triage-tag-gating` CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
+- `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
 
-### Security
-
-[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...dev
+[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.3.0...dev
+[0.3.0]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...v0.3.0
 
 
 
@@ -67,7 +78,7 @@ First version. **HUPy** is a ground-up Python reimplementation of the original b
 - **Configurable behavior** — a tracked `.hupy.config.json` controls log verbosity and the version lookup, so every clone of a repository behaves the same
 - **Documentation and examples** — a README quick-start, per-feature guides under `docs/`, and runnable demo scripts under `examples/`
 
-[0.2.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v1.0.0
+[0.2.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v0.2.0
 
 
 

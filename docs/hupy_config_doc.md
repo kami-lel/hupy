@@ -1,5 +1,7 @@
 # HUPy File `.hupy.config.json` Documentation
 
+<!-- todo consider using jsonc -->
+
 `.hupy.config.json` is *HUPy*'s per-repository config. `python -m hupy init` writes it to the repository root; commit it so every clone shares the same behavior.
 
 ```json
@@ -229,7 +231,7 @@ blocked; merging is unaffected.
 
 | Sub-field | Default |
 |---|---|
-| `ban_commit_to_dev` | `true` |
+| `ban_commit_to_dev` | `false` |
 | `ban_commit_to_main` | `true` |
 | `ban_commit_to_branches` | `[]` |
 

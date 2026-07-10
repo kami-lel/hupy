@@ -125,14 +125,16 @@ gitGraph
 
 ## `hupy.cbm` Module
 
-### `get_current_commit_type(repo_path)`
+### `get_current_commit_type(repo)`
 
 The main entry point of the module. Call it during an in-progress commit (e.g. from a `commit-msg` or `prepare-commit-msg` hook) to find out whether the commit is a plain commit or a merge, and if it's a merge, which of the recognized types it belongs to.
 
 ```python
+import git
 from hupy.cbm import get_current_commit_type, CommitType
 
-commit_type = get_current_commit_type(".")
+repo = git.Repo(".", search_parent_directories=True)
+commit_type = get_current_commit_type(repo)
 
 if commit_type is CommitType.FEATURE_LANDING:
     ...
@@ -142,10 +144,10 @@ Here the first branch runs when a feature is landing on `dev`, the
 second runs for any other kind of merge, and the final `else` runs for
 a plain, non-merge commit.
 
-`repo_path` may be the repo root or any path inside it — the repo is
-located by walking up from there. Raises
-`git.InvalidGitRepositoryError` / `git.NoSuchPathError` if no repo is
-found.
+`get_current_commit_type` expects an already-open `git.Repo`; building
+that `git.Repo` (and handling `git.InvalidGitRepositoryError` /
+`git.NoSuchPathError` if no repo is found) is the caller's
+responsibility.
 
 
 
@@ -225,6 +227,34 @@ Feature Landing: add-user-auth
 
 Merge branch 'add-user-auth' into dev
 ```
+
+### Header Format
+
+| Merge Type | Header |
+|---|---|
+| Feature Landing | `Feature Landing: <source-branch-name>` |
+| Version Release | `<bump><release-type>: <version>`, eg `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`, `Release Candidate: 1.3.0-rc.1` — see [Version Release Header](#version-release-header) below; falls back to `Version Release: <version>` when the version doesn't parse, or plain `Version Release` with no version at all |
+| Sync Backport | `Sync Backport from: <version>` or plain `Sync Backport` |
+| Catch Up | `Catch Up: <target-branch-name>` |
+| Hotfix Release | `<bump>Hotfix Release: <version>` or plain `Hotfix Release` |
+| Hotfix Backport | `Hotfix Backport from: <version>` or plain `Hotfix Backport` |
+| Release Cut | `<bump>Release Cut: <version>` or plain `Release Cut` |
+| Release Backport | `Release Backport from: <version>` or plain `Release Backport` |
+
+`<bump>` is `Major `/`Minor `/`Patch `/*(none)*`, comparing the source and target branch versions via `ver_grep`; empty when no bump is detected or a version doesn't resolve.
+
+#### Version Release Header
+
+`<release-type>` is chosen by checking the resolved version against the `pch` config (see [`.hupy.config.json` Documentation](hupy_config_doc.md#pch)), in this order:
+
+1. `alpha_tag`/`beta_tag`/`release_candidate_tag` found as a substring of the version → `Alpha Release`/`Beta Release`/`Release Candidate` (each check skipped if its tag is left empty)
+2. `enable_pre_alpha` and a `0.9.z` core → `Pre-Alpha Release`
+3. `enable_vertical_slice` and a `0.5.z`–`0.9.z` core → `Vertical Slice Release`
+4. any other `0.x.z` core → `Prototype Release`
+5. `>=1.0.0` core → `Stable Release`
+6. otherwise → unparsable, falls back to the plain header above
+
+`<bump>` is always empty for Alpha, Beta, and Release Candidate releases, even when a bump would otherwise be detected.
 
 
 
