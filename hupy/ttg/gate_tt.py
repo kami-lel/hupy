@@ -69,17 +69,14 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
             repo_root=repo.working_dir,
             disable_tt_detect_by_type=disable_tt_detect_by_type,
         )
-        filtered = TriageTagType.filter_by_group(
-            [tag for tag, _, _ in tags_in_file],
-            filtering_tt_group,
-        )
+        gated_tags = [
+            (tag, line, line_no)
+            for tag, line, line_no in tags_in_file
+            if tag in filtering_tt_group
+        ]
 
-        if filtered:
-            filtered_results[file_path] = [
-                (tag, line, line_no)
-                for tag, line, line_no in tags_in_file
-                if tag in filtered
-            ]
+        if gated_tags:
+            filtered_results[file_path] = gated_tags
 
     if filtered_results:
         logger.fail("gated Triage Tags found")

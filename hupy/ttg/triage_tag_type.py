@@ -71,28 +71,6 @@ class TriageTagType(Flag):  # ==================================================
 
     # Public Methods  **********************************************************
 
-    # HACK mv this away
-
-    @classmethod
-    def filter_by_group(cls, tags, group):
-        """
-        filter tags by group membership.
-
-        return only tags that belong to the specified group
-        (e.g. ``LOUDS``, ``FIXMES``, ``TODOS | STEADYS``).
-
-
-        :param tags: ``TriageTagType`` members to filter
-        :type tags: iterable
-        :param group: ``TriageTagType`` group to filter by
-        :type group: TriageTagType
-        :return: tags that belong to the group
-        :rtype: list
-        """
-        return [tag for tag in tags if tag in group]
-
-    # HACK rf this to be its own
-
     @classmethod
     def find_first_in_line(cls, line, comment_prefix=None):
         """
