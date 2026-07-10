@@ -16,10 +16,6 @@ from ..cbm import (
     get_source_branch,
 )
 
-# FIXME stable release w/ x.y.z
-# TODO release cut w/ x.y.z
-# TODO hotfix release w/ x.y.z
-
 # logger  ######################################################################
 logger = getLogger(PCH_LOGGER_NAME)
 logger.propagate = False
@@ -27,10 +23,7 @@ logger.propagate = False
 
 # auxiliary  ###################################################################
 
-
-def _gen_feature_landing_header_content(repo):
-    branch_name = get_source_branch(repo)
-    return "Feature Landing: {}".format(branch_name)
+# FIXME rewrite & check all wording
 
 
 def _gen_stable_release_header_content(_):
@@ -41,16 +34,9 @@ def _gen_stable_release_header_content(_):
         return "Stable Release"
 
 
-def _gen_catch_up_header(_):
-    return "Catch Up"  # FIXME more wording
-
-
-def _gen_release_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Release Backport from: {}".format(version)
-    else:
-        return "Release Backport"
+def _gen_feature_landing_header_content(repo):
+    branch_name = get_source_branch(repo)
+    return "Feature Landing: {}".format(branch_name)
 
 
 def _gen_sync_backport_header(_):
@@ -61,6 +47,18 @@ def _gen_sync_backport_header(_):
         return "Sync Backport"
 
 
+def _gen_catch_up_header(_):
+    return "Catch Up"
+
+
+def _gen_hotfix_release_header(_):
+    version = grep_source_branch_version()
+    if version:
+        return "Hotfix Release: {}".format(version)
+    else:
+        return "Hotfix Release"
+
+
 def _gen_hotfix_backport_header(_):
     version = grep_source_branch_version()
     if version:
@@ -69,13 +67,31 @@ def _gen_hotfix_backport_header(_):
         return "Hotfix Backport"
 
 
+def _gen_release_cut_header(_):
+    version = grep_source_branch_version()
+    if version:
+        return "Release Cut: {}".format(version)
+    else:
+        return "Release Cut"
+
+
+def _gen_release_backport_header(_):
+    version = grep_source_branch_version()
+    if version:
+        return "Release Backport from: {}".format(version)
+    else:
+        return "Release Backport"
+
+
 _HEADER_GENERATORS = {
-    CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
     CommitType.STABLE_RELEASE: _gen_stable_release_header_content,
-    CommitType.CATCH_UP: _gen_catch_up_header,
-    CommitType.RELEASE_BACKPORT: _gen_release_backport_header,
+    CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
     CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
+    CommitType.CATCH_UP: _gen_catch_up_header,
+    CommitType.HOTFIX_RELEASE: _gen_hotfix_release_header,
     CommitType.HOTFIX_BACKPORT: _gen_hotfix_backport_header,
+    CommitType.RELEASE_CUT: _gen_release_cut_header,
+    CommitType.RELEASE_BACKPORT: _gen_release_backport_header,
 }
 
 

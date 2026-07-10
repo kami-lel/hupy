@@ -29,8 +29,8 @@
 
 | Merge Type | Direction | Remarks |
 | --- | --- | --- |
-| Feature Landing | feature → dev | a finished feature lands on the shared dev line |
 | Stable Release | dev → main | a stable batch ships to production |
+| Feature Landing | feature → dev | a finished feature lands on the shared dev line |
 | Sync Backport | main → dev | pull a main-only change back so dev doesn't drift |
 | Catch Up | dev → feature | bring a feature branch current with dev |
 | Hotfix Release | hotfix → main | an urgent fix ships straight to production |
@@ -39,7 +39,7 @@
 | Release Backport | release → dev | sync last-minute release fixes back to dev |
 | Other Merge | any other pair | recognized as a merge, but no known pattern |
 
-**feature ↔ dev ↔ main** — Feature Landing, Catch Up, Stable Release, Sync Backport
+**feature ↔ dev ↔ main**: Feature Landing, Catch Up, Stable Release, Sync Backport
 
 ```mermaid
 %%{init: { 'gitGraph': {'showCommitLabel': false} } }%%
@@ -66,7 +66,7 @@ gitGraph
   merge main tag: "Sync Backport"
 ```
 
-**hotfix, release → main, dev** — Hotfix Release, Hotfix Backport, Release Cut, Release Backport
+**hotfix, release → main, dev**: Hotfix Release, Hotfix Backport, Release Cut, Release Backport
 
 ```mermaid
 %%{init: { 'gitGraph': {'showCommitLabel': false} } }%%
