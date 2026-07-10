@@ -3,6 +3,8 @@
 import argparse
 import os
 import pathlib
+import shutil
+import sys
 
 import git
 
@@ -35,6 +37,12 @@ REPO_PATH_HELP = (
     "default=current working directory"
 )
 
+_HOOK_STUBS_DIR = (
+    pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
+)
+
+_PYTHON_PLACEHOLDER = "{{PYTHON}}"
+
 
 _DESCRIPTION = __doc__ + """
 
@@ -50,14 +58,53 @@ performs:
 # helpers  #####################################################################
 
 
+def _resolve_hooks_dir(repo):
+    """
+    resolve ``repo``'s actual git hooks directory, honoring
+    ``core.hooksPath`` if configured.
+    """
+    with repo.config_reader() as reader:
+        configured = reader.get_value("core", "hooksPath", default="")
+
+    if configured:
+        return pathlib.Path(repo.working_tree_dir) / configured
+
+    return pathlib.Path(repo.git_dir) / "hooks"
+
+
+def _copy_hook_stubs(hooks_dir, force):
+    """
+    copy the default HUPy hook stub scripts into ``hooks_dir``
+    """
+    logger.enter("copy hook stubs")
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    for stub_file in _HOOK_STUBS_DIR.iterdir():
+        target_path = hooks_dir / stub_file.name
+
+        if target_path.exists():
+            if not force:
+                logger.error(
+                    "hook already exists (use --force to override): {}".format(
+                        target_path
+                    )
+                )
+                raise SystemExit(1)
+
+            logger.warning("overwrite existing hook: {}".format(target_path))
+
+        content = stub_file.read_text(encoding="utf-8")
+        content = content.replace(_PYTHON_PLACEHOLDER, sys.executable)
+        target_path.write_text(content, encoding="utf-8")
+        shutil.copymode(stub_file, target_path)
+
+        logger.debug("hook stub installed: {}".format(target_path))
+
+
 def _run_copy_hooks(args, repo):
     """
     step: copy default HUPy hook stub scripts into the repo's hooks dir.
     """
-    # deferred import: cli_ich imports from this module at load time,
-    # so importing it back at module level here would create a cycle
-    from hupy.cli.cli_ich import _copy_hook_stubs, _resolve_hooks_dir
-
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
     logger.debug("hooks dir: {}".format(hooks_dir))
     _copy_hook_stubs(hooks_dir, args.force)

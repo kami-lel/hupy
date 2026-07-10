@@ -11,7 +11,7 @@ import pytest
 
 from hupy.config.load_config import CONFIG_FILENAME
 from hupy.config.write_config import _DEFAULT_CONFIG_ASSET
-from hupy.cli.cli_ich import _HOOK_STUBS_DIR
+from hupy.cli.cli_init import _HOOK_STUBS_DIR
 from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,

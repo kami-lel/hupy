@@ -10,7 +10,7 @@ import pathlib
 
 import git
 
-from hupy.cli.cli_ich import _resolve_hooks_dir
+from hupy.cli.cli_init import _resolve_hooks_dir
 
 
 # tests  ########################################################################
