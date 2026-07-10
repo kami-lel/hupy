@@ -1,5 +1,5 @@
 """
-ttg-tt_gating_version_release_test.py
+ttg-gate_tt_version_release_test.py
 
 tests for `perform_triage_tags_gating` on Version Release merges
 (gates on LOUD and STEADY triage tags)
@@ -8,7 +8,7 @@ tests for `perform_triage_tags_gating` on Version Release merges
 import git
 import pytest
 
-from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.ttg.gate_tt import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
 
 _BUCKET = "version_release"

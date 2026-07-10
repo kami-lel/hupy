@@ -1,7 +1,7 @@
 """
-ttg-tt_detect_test.py
+ttg-detect_tt_test.py
 
-tests for triage tag detection in `tt_detect.py`
+tests for triage tag detection in `detect_tt.py`
 """
 
 import shutil
@@ -12,10 +12,8 @@ from unittest import mock
 import git
 import pytest
 
-from hupy.ttg.tt_detect import (
-    TriageTagType,
-    detect_triage_tags_in_staged_file,
-)
+from hupy.ttg.detect_tt import detect_triage_tags_in_staged_file
+from hupy.ttg.triage_tag_type import TriageTagType
 
 _FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 _FIXTURES_ROOT = Path(__file__).parent / "fixtures"
@@ -75,7 +73,7 @@ class TestDetectTriageTagsInStagedFile:
 
     def test_subprocess_error_raises_system_exit(self, repo_dir):
         with mock.patch(
-            "hupy.ttg.tt_detect.subprocess.check_output",
+            "hupy.ttg.detect_tt.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(1, "git"),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -85,7 +83,7 @@ class TestDetectTriageTagsInStagedFile:
 
     def test_subprocess_error_on_missing_file(self, repo_dir):
         with mock.patch(
-            "hupy.ttg.tt_detect.subprocess.check_output",
+            "hupy.ttg.detect_tt.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(
                 128, "git", stderr="fatal: not a git repo"
             ),
@@ -114,3 +112,54 @@ class TestDetectTriageTagsInStagedFile:
         results = detect_triage_tags_in_staged_file("test.py", repo_dir)
 
         assert results == []
+
+    def test_detects_tag_after_c_style_comment_leader(self, repo_dir):
+        _stage_fixture(repo_dir, "test.c", "tt_loud_only.c")
+
+        results = detect_triage_tags_in_staged_file("test.c", repo_dir)
+
+        assert len(results) == 1
+        assert results[0][0] == TriageTagType.LOUD_TODO
+
+    def test_detects_tag_after_html_comment_leader(self, repo_dir):
+        _stage_fixture(repo_dir, "test.html", "tt_loud_only.html")
+
+        results = detect_triage_tags_in_staged_file("test.html", repo_dir)
+
+        assert len(results) == 1
+        assert results[0][0] == TriageTagType.LOUD_TODO
+
+    def test_ignores_tag_not_after_expected_comment_leader(self, repo_dir):
+        _stage_fixture(repo_dir, "test.py", "tt_bare_in_string.py")
+
+        results = detect_triage_tags_in_staged_file("test.py", repo_dir)
+
+        assert results == []
+
+    def test_falls_back_to_bare_match_for_unmapped_extension(self, repo_dir):
+        _stage_fixture(repo_dir, "test.md2", "tt_bare_in_string.py")
+
+        results = detect_triage_tags_in_staged_file("test.md2", repo_dir)
+
+        assert len(results) == 1
+        assert results[0][0] == TriageTagType.LOUD_TODO
+
+    def test_falls_back_to_bare_match_for_no_extension(self, repo_dir):
+        _stage_fixture(repo_dir, "ttg_demo_note", "ttg_demo_note")
+
+        results = detect_triage_tags_in_staged_file(
+            "ttg_demo_note", repo_dir
+        )
+
+        assert len(results) == 1
+        assert results[0][0] == TriageTagType.LOUD_FIXME
+
+    def test_disable_tt_detect_by_type_matches_bare_tag(self, repo_dir):
+        _stage_fixture(repo_dir, "test.py", "tt_bare_in_string.py")
+
+        results = detect_triage_tags_in_staged_file(
+            "test.py", repo_dir, disable_tt_detect_by_type=True
+        )
+
+        assert len(results) == 1
+        assert results[0][0] == TriageTagType.LOUD_TODO

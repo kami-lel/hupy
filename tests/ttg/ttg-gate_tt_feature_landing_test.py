@@ -1,5 +1,5 @@
 """
-ttg-tt_gating_feature_landing_test.py
+ttg-gate_tt_feature_landing_test.py
 
 tests for `perform_triage_tags_gating` on Feature Landing merges
 (gates on LOUD triage tags only)
@@ -8,7 +8,7 @@ tests for `perform_triage_tags_gating` on Feature Landing merges
 import git
 import pytest
 
-from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.ttg.gate_tt import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
 
 _BUCKET = "feature_landing"

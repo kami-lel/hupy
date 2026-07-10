@@ -10,13 +10,15 @@
 - **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
 - **`--copy-hooks`/`--create-config-file` flags on `hupy init`** — run either step alone, or both together (same as passing neither); a step registry in `cli_init.py` makes adding further steps/flags a one-line change
 - **per-module `is_disabled` config flag** — `ver_grep`, `ttg`, `pch`, and `bdc` each gain an `is_disabled: bool` field in `.hupy.config.jsonc`; setting it skips that module's check entirely (`ver_grep`'s validator returns early without the unconfigured-warning; `ttg`/`pch`/`bdc` each `logger.skip(...)` and return before doing any work) — `hb` already carried the field from `dev` but has no implementation yet to wire it into
-- **new `ttg` config section** — `is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`; only `is_disabled` is consumed by `tt_gating` so far, the other two fields are schema-only, not yet read by `tt_detect`/`tt_gating`
+- **new `ttg` config section** — `is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`; all three are now consumed by `ttg.gate_tt`/`ttg.detect_tt`: `disable_tt_detect_by_type` (default `false`) requires a TT tag to follow the comment-leader token expected for the file's extension (eg `//`, `#`, `<!--`), via the new `ttg.comment_style.get_comment_prefix_for_file`, rather than matching anywhere in the line; `ignored_path_globs` skips matching staged files from TT scanning entirely
 
 ### Changed
 
 - config file renamed **`.hupy.config.json`** → **`.hupy.config.jsonc`**, now parsed as JSON5 (comments and trailing commas allowed) via the new `json5` dependency
 - `hupy init`/`init-create-config` now write a fresh config by copying a packaged asset (`hupy/assets/.hupy.config.jsonc`) verbatim, rather than generating one from `HupyConfigFile`'s field defaults; `HupyConfigFile`'s fields no longer carry defaults themselves — the shipped asset is now the single source of default values, with its comments documenting each field in place of the old `docs/hupy_config_doc.md`
 - renamed `write_default_config` → `create_default_config_file` (now takes a `git.Repo`, not a bare `repo_root` path); renamed `hupy/config/hupy_config_file.py` → `hupy/config/config_file.py`; `CONFIG_FILENAME` moved from `hupy.config` to `hupy.config.load_config`, alongside a new `get_config_file_path(repo)` helper
+- **`ttg` package restructured** — `ttg.tt_gating` renamed to `ttg.gate_tt`, `ttg.tt_detect` renamed to `ttg.detect_tt`; `ttg.gate_tt` further split into `ttg.staged_files` (staged-file listing and `ignored_path_globs` filtering) and `ttg.report_tt` (rendering/logging gated-tag findings), leaving `gate_tt` holding just the gating decision itself; `triage_tag_type.py` trimmed down to the bare `TriageTagType` flag enum — its line-scanning logic moved into `detect_tt` (its only caller) and the redundant `filter_by_group` classmethod removed in favor of `TriageTagType`'s native `in`-based group membership check
+- `ttg`/`pch` auxiliary functions that need config values now call the cached `load_hupy_config(repo)` directly instead of having the value threaded down through function parameters
 
 ### Deprecated
 

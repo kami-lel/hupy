@@ -1,7 +1,7 @@
 """
-ttg-tt_gating_error_test.py
+ttg-gate_tt_error_test.py
 
-tests for error handling in `perform_triage_tags_gating` in `tt_gating.py`
+tests for error handling in `perform_triage_tags_gating` in `gate_tt.py`
 """
 
 import subprocess
@@ -10,7 +10,7 @@ from unittest import mock
 import git
 import pytest
 
-from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.ttg.gate_tt import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
 
 
@@ -39,7 +39,7 @@ class TestPerformTriageTagsGatingErrors:
             repo_dir, "feature_landing", {"test.py": "tt_none.py"}
         )
         with mock.patch(
-            "hupy.ttg.tt_gating.subprocess.check_output",
+            "hupy.ttg.staged_files.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(1, "git"),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -56,7 +56,7 @@ class TestPerformTriageTagsGatingErrors:
             repo_dir, "version_release", {"test.py": "tt_none.py"}
         )
         with mock.patch(
-            "hupy.ttg.tt_gating.subprocess.check_output",
+            "hupy.ttg.staged_files.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(
                 128, "git", stderr="fatal: Permission denied"
             ),
@@ -75,7 +75,7 @@ class TestPerformTriageTagsGatingErrors:
             repo_dir, "feature_landing", {"test.py": "tt_none.py"}
         )
         with mock.patch(
-            "hupy.ttg.tt_gating.subprocess.check_output",
+            "hupy.ttg.staged_files.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(
                 1, "git", stderr="fatal: unknown error"
             ),
