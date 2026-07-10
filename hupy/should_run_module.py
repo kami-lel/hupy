@@ -17,6 +17,16 @@ __all__ = ("should_run_module",)
 logger = getLogger(PROJ_LOGGER_NAME)
 logger.propagate = False
 
+# constants  ###################################################################
+
+_MODULE_ABBR_TO_NAME = {
+    "vg": "VerGrep",
+    "ttg": "Triage Tag Gating",
+    "pch": "Prepend Commit Header",
+    "bdc": "Ban Direct Commit",
+    "hb": "Hook Bracket",
+}
+
 
 # Public API  ##################################################################
 def should_run_module(repo, state_file, module_abbr):
@@ -36,14 +46,15 @@ def should_run_module(repo, state_file, module_abbr):
     :return: ``True`` if the module should run this invocation
     :rtype: bool
     """
-    # FIXME  print out proper name
+    module_name = _MODULE_ABBR_TO_NAME[module_abbr]
+
     config = load_hupy_config(repo)
     if getattr(config, module_abbr).is_disabled:
-        logger.skip("{} disabled in config file".format(module_abbr))
+        logger.skip("{} disabled in config file".format(module_name))
         return False
 
     if state_file.consume_skip_once(module_abbr):
-        logger.skip("{} skipped once".format(module_abbr))
+        logger.skip("{} skipped once".format(module_name))
         return False
 
     return True
