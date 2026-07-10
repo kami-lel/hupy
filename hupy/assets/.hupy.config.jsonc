@@ -5,48 +5,44 @@
 // # commit it so every clone shares the same behavior
 // #############################################################################
 {
+  // Fixme rework .jsonc comments, along w/ complete doc rewrite
   // hupy_version  -------------------------------------------------------------
   // *HUPy* version that wrote the file; informational, no need to edit
   "hupy_version": "0.3.0",
-
   // default_logger_verbosity  -------------------------------------------------
   // hook log verbosity: `3`+ DEBUG, `2` ENTER, `1` INFO (default), `0` DONE,
   // `-1` WARNING, `-2` ERROR, `-3` CRITICAL
   "default_logger_verbosity": 1,
-
-  // reads the repo's version string for *Prepend Commit Header*; empty
-  // fields disable it, so the header falls back to plain `Version Release`
-  //
-  // eg. pyproject.toml `version = "1.0.0"` -> `"^version = \"(.*)\""`
-  "ver_grep": {  // ############################################################
-    "version_file": "",  // file to read, relative to repo root
-    "version_line_pattern": ""  // regex; first capture group `( )` is version
+  "ver_grep": { // #############################################################
+    // reads the repo's version string for *Prepend Commit Header*; empty
+    // fields disable it, so the header falls back to plain `Version Release`
+    //
+    // eg. pyproject.toml `version = "1.0.0"` -> `"^version = \"(.*)\""`
+    "version_file": "", // file to read, relative to repo root
+    "version_line_pattern": "" // regex; first capture group `( )` is version
   },
-
-  // branch naming *CBM* classifies against to pick a merge type. unmatched
-  // branches with a `/` count as User; anything else as Feature
-  "cbm": {  // #################################################################
-    "main_branch_name": "main",  // exact name of the main branch
-    "dev_branch_name": "dev",  // exact name of the dev branch
-    "hotfix_branch_prefix": "hotfix",  // prefix (before `/`) marking hotfix
-    "release_branch_prefix": "release"  // prefix (before `/`) marking release
+  "cbm": { // ##################################################################
+    // branch naming *CBM* classifies against to pick a merge type. unmatched
+    // branches with a `/` count as User; anything else as Feature
+    "main_branch_name": "main", // exact name of the main branch
+    "dev_branch_name": "dev", // exact name of the dev branch
+    "hotfix_branch_prefix": "hotfix", // prefix (before `/`) marking hotfix
+    "release_branch_prefix": "release" // prefix (before `/`) marking release
   },
-
-  // how *Prepend Commit Header* reads a version and picks a header; leave a
-  // tag empty to disable that release type's header
-  "pch": {  // #################################################################
-    "enable_vertical_slice": false,  // enable the Vertical Slice header
-    "enable_pre_alpha": true,  // enable the Pre-Alpha header
-    "alpha_tag": "-alpha",  // version suffix identifying an alpha release
-    "beta_tag": "-beta",  // version suffix identifying a beta release
-    "release_candidate_tag": "-rc"  // suffix identifying a release candidate
+  "pch": { // ##################################################################
+    // how *Prepend Commit Header* reads a version and picks a header; leave a
+    // tag empty to disable that release type's header
+    "enable_vertical_slice": false, // enable the Vertical Slice header
+    "enable_pre_alpha": true, // enable the Pre-Alpha header
+    "alpha_tag": "-alpha", // version suffix identifying an alpha release
+    "beta_tag": "-beta", // version suffix identifying a beta release
+    "release_candidate_tag": "-rc" // suffix identifying a release candidate
   },
-
-  // *Ban Direct Commit*: blocks direct commits to protected branches; merges
-  // (eg. `feature -> dev`) are unaffected
-  "bdc": {  // #################################################################
+  "bdc": { // ##################################################################
+    // *Ban Direct Commit*: blocks direct commits to protected branches; merges
+    // (eg. `feature -> dev`) are unaffected
     "ban_commit_to_main": true,
     "ban_commit_to_dev": false,
-    "ban_commit_to_branches": []  // exact branch names, on top of the above
+    "ban_commit_to_branches": [] // exact branch names, on top of the above
   }
 }
