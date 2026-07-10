@@ -4,6 +4,8 @@ conftest.py
 pytest fixtures shared across all test suites
 """
 
+# TODO validate the .hupy.config.jsonc
+
 import pytest
 
 # fixtures  #####################################################################

@@ -117,6 +117,8 @@ class HupyConfigFile(BaseModel):
     schema for the HUPy config file (``.hupy.config.json``)
     """
 
+    # TODO validate version mismatch
+
     hupy_version: str = Field(default_factory=lambda: version("HUPy"))
     default_logger_verbosity: int = 1
     ver_grep: _VerGrep = Field(default_factory=_VerGrep)
