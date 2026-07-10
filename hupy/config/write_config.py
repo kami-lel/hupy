@@ -7,18 +7,19 @@ generated from :class:`HupyConfigFile` defaults
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config import CONFIG_FILENAME
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.config.config_file import HupyConfigFile
 from hupy.kamilog import getLogger
 
-__all__ = ("write_default_config",)
+__all__ = ("create_default_config_file",)
 
 logger = getLogger(PROJ_LOGGER_NAME)
 
 
-def write_default_config(repo_root, force):
+def create_default_config_file(repo, repo_root, force):
     """
     write the default HUPy config file (``.hupy.config.json``) at
-    ``repo_root``, generated from :class:`HupyConfigFile` defaults
+    ``repo_root`` of ``repo``, generated from :class:`HupyConfigFile`
+    defaults
     """
     logger.enter("write HUPy config file")
     config_path = repo_root / CONFIG_FILENAME

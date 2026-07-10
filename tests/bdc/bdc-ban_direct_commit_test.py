@@ -10,7 +10,7 @@ import pytest
 
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 from hupy.cbm import CommitType
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.config.config_file import HupyConfigFile
 
 _REPO = object()
 

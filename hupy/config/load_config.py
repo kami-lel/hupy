@@ -10,7 +10,7 @@ import pathlib
 from pydantic import ValidationError
 
 from hupy.config import CONFIG_FILENAME, CONFIG_LOGGER_NAME
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.config.config_file import HupyConfigFile
 from hupy.kamilog import getLogger
 
 __all__ = ("load_hupy_config",)

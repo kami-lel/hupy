@@ -7,7 +7,7 @@ tests for `BranchType.from_name` in `branch_type.py`
 from unittest import mock
 
 from hupy.cbm.branch_type import BranchType
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.config.config_file import HupyConfigFile
 
 # helpers  ######################################################################
 

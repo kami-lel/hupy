@@ -5,7 +5,7 @@ import os
 import pathlib
 
 from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
-from hupy.config.write_config import write_default_config
+from hupy.config.write_config import create_default_config_file
 
 
 from hupy.kamilog import (
@@ -52,7 +52,7 @@ def _icc_main(args):
 
     logger.enter("HUPy config creation for: {}".format(repo_root))
 
-    write_default_config(repo_root, force)
+    create_default_config_file(repo, repo_root, force)
 
     logger.done("HUPy config created for: {}".format(repo_root))
 

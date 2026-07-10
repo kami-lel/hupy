@@ -1,5 +1,5 @@
 """
-hupy_config_file.py
+config_file.py
 
 define the HUPy config schema (``.hupy.config.json``) as a pydantic
 model, providing default values used when writing a fresh config file

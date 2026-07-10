@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.config.config_file import HupyConfigFile
 from hupy.ver_grep import grep_target_branch_version
 from vg_helpers import (
     prepare_merge_repo_with_version,
