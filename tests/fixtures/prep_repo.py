@@ -115,9 +115,12 @@ def _setup_feature_landing(repo_dir, files):
 
 
 def _setup_version_release(repo_dir, files):
+    # bumps a major version (main's 1.2.3 -> 2.0.0) so this scenario
+    # is ready to show a "Major " bump prefix once pch wires
+    # _gen_version_release_header through _gen_bumped_version_header
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
-    _bump_source_branch_version(repo_dir, "1.3.0")
+    _bump_source_branch_version(repo_dir, "2.0.0")
     for filename, fixture_name in files.items():
         _commit_fixture(repo_dir, filename, fixture_name)
     repo.git.checkout("-q", MAIN_BRANCH)
@@ -176,9 +179,12 @@ def _setup_catch_up(repo_dir):
 
 
 def _setup_hotfix_release(repo_dir):
+    # bumps a patch version (main's 1.2.3 -> 1.2.4) so this demo shows
+    # a "Patch " bump prefix
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", "hotfix/fix-login-crash")
     _write_and_commit(repo_dir, "login.py", "# patch login crash\n")
+    _bump_source_branch_version(repo_dir, "1.2.4")
     repo.git.checkout("-q", MAIN_BRANCH)
     repo.git.merge("--no-commit", "--no-ff", "hotfix/fix-login-crash")
 
@@ -195,11 +201,14 @@ def _setup_hotfix_backport(repo_dir):
 
 
 def _setup_release_cut(repo_dir):
+    # bumps a minor version (main's 1.2.3 -> 1.3.0) so this demo shows
+    # a "Minor " bump prefix
     repo = git.Repo(str(repo_dir))
-    repo.git.checkout("-q", "-b", "release/2.4.0")
-    _write_and_commit(repo_dir, "changelog.py", "# freeze for 2.4.0\n")
+    repo.git.checkout("-q", "-b", "release/1.3.0")
+    _write_and_commit(repo_dir, "changelog.py", "# freeze for 1.3.0\n")
+    _bump_source_branch_version(repo_dir, "1.3.0")
     repo.git.checkout("-q", MAIN_BRANCH)
-    repo.git.merge("--no-commit", "--no-ff", "release/2.4.0")
+    repo.git.merge("--no-commit", "--no-ff", "release/1.3.0")
 
 
 def _setup_release_backport(repo_dir):
