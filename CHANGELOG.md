@@ -6,11 +6,20 @@
 
 ### Added
 
+- **`verify-config-file`** — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, reporting success or the validation error
+- **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
+
 ### Changed
+
+- config file renamed **`.hupy.config.json`** → **`.hupy.config.jsonc`**, now parsed as JSON5 (comments and trailing commas allowed) via the new `json5` dependency
+- `hupy init`/`init-create-config` now write a fresh config by copying a packaged asset (`hupy/assets/.hupy.config.jsonc`) verbatim, rather than generating one from `HupyConfigFile`'s field defaults; `HupyConfigFile`'s fields no longer carry defaults themselves — the shipped asset is now the single source of default values, with its comments documenting each field in place of the old `docs/hupy_config_doc.md`
+- renamed `write_default_config` → `create_default_config_file` (now takes a `git.Repo`, not a bare `repo_root` path); renamed `hupy/config/hupy_config_file.py` → `hupy/config/config_file.py`; `CONFIG_FILENAME` moved from `hupy.config` to `hupy.config.load_config`, alongside a new `get_config_file_path(repo)` helper
 
 ### Deprecated
 
 ### Removed
+
+- `docs/hupy_config_doc.md` (folded into `.hupy.config.jsonc`'s own comments)
 
 ### Fixed
 
