@@ -17,3 +17,5 @@ class HupyStateFile(BaseModel):
     """
     schema for the HUPy state file (``hupy-state.json``)
     """
+
+    logger_verbosity: int = 1
