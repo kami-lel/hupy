@@ -7,11 +7,14 @@
 
 
 <!-- Fixme rewrite .hupy.config.jsonc docs
-Fixme rewrite all components docs -->
+Fixme rewrite all components docs
+Fixme rewrite readme
 
-<!--
 Todo hooks bracket: actually implemented
-todo reimplement ensure file modified -->
+Todo pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
+-->
+
+<!-- todo reimplement ensure file modified -->
 
 
 
