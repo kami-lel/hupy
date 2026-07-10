@@ -18,6 +18,7 @@ from ..cbm import (
     CommitType,
     get_current_commit_type,
     get_source_branch,
+    get_target_branch,
 )
 
 # logger  ######################################################################
@@ -90,8 +91,9 @@ def _gen_sync_backport_header(_):
     return _gen_backport_header("Sync Backport")
 
 
-def _gen_catch_up_header(_):
-    return "Catch Up"  # FIXME more word: eg target branch name
+def _gen_catch_up_header(repo):
+    branch_name = get_target_branch(repo)
+    return "Catch Up: {}".format(branch_name)
 
 
 def _gen_hotfix_release_header(_):
