@@ -120,7 +120,7 @@ class HupyConfigFile(BaseModel):
     # TODO validate version mismatch
 
     hupy_version: str = Field(default_factory=lambda: version("HUPy"))
-    default_logger_verbosity: int = 1
+    default_logger_verbosity: int = 1  # FIXME mv to state file
     ver_grep: _VerGrep = Field(default_factory=_VerGrep)
     cbm: _Cbm = Field(default_factory=_Cbm)
     pch: _Pch = Field(default_factory=_Pch)

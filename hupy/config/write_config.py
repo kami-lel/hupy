@@ -1,28 +1,37 @@
 """
 write_config.py
 
-write the HUPy config file (``.hupy.config.json``) at a repo root,
-generated from :class:`HupyConfigFile` defaults
+copy the default HUPy config asset (``.hupy.config.jsonc``) to a
+repo's root as its HUPy config file
 """
 
+import pathlib
+import shutil
+
 from hupy import PROJ_LOGGER_NAME
-from hupy.config import CONFIG_FILENAME
-from hupy.config.config_file import HupyConfigFile
+from hupy.config.load_config import get_config_file_path
 from hupy.kamilog import getLogger
 
 __all__ = ("create_default_config_file",)
 
 logger = getLogger(PROJ_LOGGER_NAME)
 
+# constants  ###################################################################
 
-def create_default_config_file(repo, repo_root, force):
+_DEFAULT_CONFIG_ASSET = (
+    pathlib.Path(__file__).resolve().parent.parent
+    / "assets"
+    / ".hupy.config.jsonc"
+)
+
+
+def create_default_config_file(repo, force):
     """
-    write the default HUPy config file (``.hupy.config.json``) at
-    ``repo_root`` of ``repo``, generated from :class:`HupyConfigFile`
-    defaults
+    copy the default HUPy config asset (``.hupy.config.jsonc``) to
+    ``repo``'s working tree root as its HUPy config file
     """
     logger.enter("write HUPy config file")
-    config_path = repo_root / CONFIG_FILENAME
+    config_path = get_config_file_path(repo)
 
     if config_path.exists():
         if not force:
@@ -37,4 +46,4 @@ def create_default_config_file(repo, repo_root, force):
         )
 
     logger.debug("HUPy config file written: {}".format(config_path))
-    config_path.write_text(HupyConfigFile().model_dump_json(indent=2) + "\n")
+    shutil.copyfile(_DEFAULT_CONFIG_ASSET, config_path)

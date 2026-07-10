@@ -76,7 +76,7 @@ def _init_main(args):
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     _copy_hook_stubs(hooks_dir, force)
-    create_default_config_file(repo, repo_root, force)
+    create_default_config_file(repo, force)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
 
