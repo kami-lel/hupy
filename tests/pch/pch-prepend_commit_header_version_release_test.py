@@ -127,11 +127,11 @@ class TestVersionReleaseHeaderScenarios:
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("v2024.07-rc1"):
+        with _patch_version("v2024.07-nightly"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Version Release: v2024.07-rc1\n\nsubject only\n"
+            "Version Release: v2024.07-nightly\n\nsubject only\n"
         )
 
     def test_minor_prototype_release(self, repo_dir):

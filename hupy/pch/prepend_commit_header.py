@@ -8,6 +8,7 @@ import os
 import re
 import tempfile
 
+from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.ver_grep import (
     decide_version_update_type,
@@ -45,29 +46,31 @@ def _get_version_bump_prefix(source_version, target_version):
         return ""
 
 
-def _get_release_type_word(version):
+def _get_release_type_word(version, pch_config):
     """
-    map a version string to its release-type word: ``Alpha``/``Beta``
-    when a matching pre-release identifier is present, ``Pre-Alpha``
-    for a ``0.9.z`` core, ``Prototype`` for any other ``0.x.z`` core,
-    ``Stable`` for ``1.0.0`` and higher, or ``""`` when the version
-    doesn't parse as a ``major.minor.patch`` core at all
+    map a version string to its release-type word
     """
-    if "-alpha" in version:
+    if pch_config.alpha_tag and pch_config.alpha_tag in version:
         return "Alpha "
-    elif "-beta" in version:
+    elif pch_config.beta_tag and pch_config.beta_tag in version:
         return "Beta "
-    elif re.match(r"^0\.9\.\d+", version):
+    elif (
+        pch_config.release_candidate_tag
+        and pch_config.release_candidate_tag in version
+    ):
+        return "Release Candidate "
+    elif pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
         return "Pre-Alpha "
+    elif pch_config.enable_vertical_slice and re.match(
+        r"^0\.[5-9]\.\d+", version
+    ):
+        return "Vertical Slice "
     elif re.match(r"^0\.\d+\.\d+", version):
         return "Prototype "
     elif re.match(r"^\d+\.\d+\.\d+", version):
         return "Stable "
     else:
         return ""
-
-
-# TODO togglable pre-alpha & vs
 
 
 def _gen_bumped_version_header(header_word):
@@ -99,16 +102,17 @@ def _gen_backport_header(header_word):
 # generate header  =============================================================
 
 
-def _gen_version_release_header(_):
+def _gen_version_release_header(repo):
     version = grep_source_branch_version()
     if not version:
         return "Version Release"
 
-    release_type = _get_release_type_word(version)
+    pch_config = load_hupy_config(repo).pch
+    release_type = _get_release_type_word(version, pch_config)
     if not release_type:
         return "Version Release: {}".format(version)
 
-    if release_type in ("Alpha ", "Beta "):
+    if release_type in ("Alpha ", "Beta ", "Release Candidate "):
         bump_prefix = ""
     else:
         bump_prefix = _get_version_bump_prefix(
