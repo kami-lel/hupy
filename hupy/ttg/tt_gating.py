@@ -5,12 +5,18 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
+import re
 import subprocess
+import sys
 
-from hupy.kamilog import getLogger, gen_comment_banner_centered
+from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
-from ..commit_type import CommitType, get_current_commit_type
-from .tt_detect import TriageTagType, detect_triage_tags_in_staged_file
+from ..cbm import CommitType, get_current_commit_type
+from .tt_detect import (
+    _TT_PATTERN,
+    TriageTagType,
+    detect_triage_tags_in_staged_file,
+)
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)
@@ -20,14 +26,14 @@ logger.propagate = False
 # helpers  #####################################################################
 
 
-def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
+def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
     try:
         cached_files = (
             subprocess.check_output(
                 ("git", "diff", "--cached", "--name-only"),
                 text=True,
                 stderr=subprocess.PIPE,
-                cwd=repo_root,
+                cwd=repo.working_dir,
             )
             .strip()
             .split("\n")
@@ -43,54 +49,66 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             continue
 
         tags_in_file = detect_triage_tags_in_staged_file(
-            file_path, repo_root=repo_root
+            file_path, repo_root=repo.working_dir
         )
         filtered = TriageTagType.filter_by_group(
-            [tag for tag, _ in tags_in_file],
+            [tag for tag, _, _ in tags_in_file],
             filtering_tt_group,
         )
 
         if filtered:
             filtered_results[file_path] = [
-                (tag, line) for tag, line in tags_in_file if tag in filtered
+                (tag, line, line_no)
+                for tag, line, line_no in tags_in_file
+                if tag in filtered
             ]
 
     if filtered_results:
         logger.fail("gated Triage Tags found")
+        renderer = AnsiRenderer(sys.stdout)
         msg_lines = [""]
         for file_path, results in filtered_results.items():
             msg_lines.append(gen_comment_banner_centered(file_path, "-"))
-            for _, line in results:
-                # todo print gated TT in colored highlighting
-                msg_lines.append(line.strip())
+            line_no_width = max(len(str(line_no)) for _, _, line_no in results)
+            for _, line, line_no in results:
+                line_no_str = renderer.color_grey(
+                    str(line_no).rjust(line_no_width)
+                )
+                stripped_line = line.strip()
+                match = re.search(_TT_PATTERN, stripped_line)
+                if match:
+                    colored_tag = renderer.color_triage_tag(match.group(1))
+                    stripped_line = (
+                        stripped_line[: match.start()]
+                        + colored_tag
+                        + stripped_line[match.end() :]
+                    )
+                msg_lines.append(line_no_str + " " + stripped_line)
         logger.info("\n".join(msg_lines))
         raise SystemExit(1)
 
 
 # Public API  ##################################################################
-
-
-def perform_triage_tags_gating(repo_root):
+def perform_triage_tags_gating(repo):
     """
     execute triage tag gating for the current commit.
 
 
-    :param repo_root: path to the git repository or any of its
-            subdirectories
-    :type repo_root: str
+    :param repo: git repository object
+    :type repo: git.Repo
     """
-    logger.enter("performing TTG")
+    logger.enter("perform Triage Tag Gating")
 
-    commit_type = get_current_commit_type(repo_root)
+    commit_type = get_current_commit_type(repo)
 
-    if CommitType.FEATURE_FINISH in commit_type:
-        logger.debug("TTG on Feature Finish merge")
-        _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
+    if CommitType.FEATURE_LANDING in commit_type:
+        logger.debug("TTG on Feature Landing merge")
+        _perform_triage_tags_by_filtering_group(repo, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
         logger.debug("TTG on Version Release merge")
         _perform_triage_tags_by_filtering_group(
-            repo_root, TriageTagType.LOUDS | TriageTagType.STEADYS
+            repo, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
 
     else:
@@ -98,3 +116,6 @@ def perform_triage_tags_gating(repo_root):
         return
 
     logger.pass_("no gated TT found")
+
+
+# todo add config for ignored globs

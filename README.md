@@ -1,13 +1,6 @@
-# Hooks Utility Python `hupy` README
+# `hupy` (Hooks Utility Python) README
 
-> **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
-
-<!--
-bug missing feature such that direct bash command can be used
-todo add PCH more scenario eg keep up feature branch with dev
-todo ban direct commit to main
-todo toggle direct commit to dev
--->
+> a toolkit for enforcing commit quality via git hooks.
 
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
@@ -26,10 +19,10 @@ todo toggle direct commit to dev
 
 ## ✨ Features
 
-- 🛡️ **Branch protection** — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
-- 📋 **Ensure file edited** — require specific files or line ranges to change as part of a commit
-- ✏️ **Improve commit message** — auto-generate better messages for merge commit types
-- 🔍 **Commit type detection** — identify commit type (e.g., binary merge) from within a hook
+- 🚫 **Ban Direct Commit** — block commits made directly on a protected branch (`main` by default), while still allowing that branch to receive commits through a merge
+- 🛡️ **Triage Tag Gating** — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
+- ✏️ **Prepend Commit Header** — auto-generate descriptive headers for merge commit types, stamping the project version on releases
+- 🔍 **Commit/Branch/Merge detection** — classify branch types and in-progress commit types from git state, shared across the hooks above
 
 
 
@@ -98,7 +91,7 @@ flowchart TD
 
     %% pre-commit stage
     subgraph precommit [pre-commit stage]
-        pre[/pre-commit hook/] --> ttg[[Triage Tag Gating]]
+        pre[/pre-commit hook/] --> bdc[[Ban Direct Commit]] --> ttg[[Triage Tag Gating]]
     end
 
     %% prepare-commit-msg stage
@@ -113,5 +106,6 @@ flowchart TD
 
 See the per-feature docs for detailed usage:
 
+- [Ban Direct Commit (BDC)](docs/hupy_config_doc.md#bdc)
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
-- [Prepend Commit Header (PCH)](docs/pch_doc.md)
+- [Commit, Branch & Merge (CBM) and Prepend Commit Header (PCH)](docs/cbm_doc.md)

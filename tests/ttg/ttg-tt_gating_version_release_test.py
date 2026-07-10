@@ -5,6 +5,7 @@ tests for `perform_triage_tags_gating` on Version Release merges
 (gates on LOUD and STEADY triage tags)
 """
 
+import git
 import pytest
 
 from hupy.ttg.tt_gating import perform_triage_tags_gating
@@ -19,13 +20,13 @@ _BUCKET = "version_release"
 def _assert_gated(repo_dir, files):
     prepare_repo_with_files(repo_dir, _BUCKET, files)
     with pytest.raises(SystemExit) as exc_info:
-        perform_triage_tags_gating(str(repo_dir))
+        perform_triage_tags_gating(git.Repo(str(repo_dir)))
     assert exc_info.value.code == 1
 
 
 def _assert_passes(repo_dir, files):
     prepare_repo_with_files(repo_dir, _BUCKET, files)
-    perform_triage_tags_gating(str(repo_dir))
+    perform_triage_tags_gating(git.Repo(str(repo_dir)))
 
 
 # tests  ########################################################################

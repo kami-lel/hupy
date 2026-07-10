@@ -22,6 +22,8 @@ _TT_PATTERN = (
     r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|" r"todo|fixme|hack|bug)\b"
 )
 
+_HUNK_HEADER_PATTERN = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
 _TT_STR_TO_NAME = {
     "TODO": "LOUD_TODO",
     "FIXME": "LOUD_FIXME",
@@ -141,7 +143,8 @@ def detect_triage_tags_in_staged_file(file_path, repo_root=None):
     :param repo_root: path to the git repository or any of its
             subdirectories; defaults to the current directory
     :type repo_root: str or None
-    :return: list of tuples ``(tag_member, line)`` for detected tags
+    :return: list of tuples ``(tag_member, line, line_no)`` for
+            detected tags
     :rtype: list
     """
     logger.debug("search TT in: " + str(file_path))
@@ -158,12 +161,21 @@ def detect_triage_tags_in_staged_file(file_path, repo_root=None):
         raise SystemExit(1) from e
 
     results = []
+    line_no = 0
 
     for line in diff_output.split("\n"):
+        hunk_match = _HUNK_HEADER_PATTERN.match(line)
+        if hunk_match:
+            line_no = int(hunk_match.group(1))
+            continue
+
         if line.startswith("+") and not line.startswith("+++"):
             added_line = line[1:]
             tag_member = TriageTagType.find_first_in_line(added_line)
             if tag_member:
-                results.append((tag_member, added_line))
+                results.append((tag_member, added_line, line_no))
+            line_no += 1
+        elif line.startswith(" "):
+            line_no += 1
 
     return results
