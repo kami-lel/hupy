@@ -9,4 +9,4 @@ from hupy import PROJ_LOGGER_NAME
 CONFIG_FILENAME = ".hupy.config.json"
 CONFIG_LOGGER_NAME = PROJ_LOGGER_NAME + ".config-file"
 
-# todo version integration scripts for config
+# todo script to upd config file per version
