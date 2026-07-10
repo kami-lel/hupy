@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-10 — added an `is_disabled: bool` field to `ver_grep`/`ttg`/`pch`/`bdc`'s config sections; `ver_grep`'s validator, `tt_gating.perform_triage_tags_gating`, and `pch.prepend_commit_header` each check it and skip/return early when set, `bdc.ban_direct_commit` does too (see Known gap below). A new `ttg` config section (`is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`) was added alongside it; only `is_disabled` is wired up so far. See `config`/`ttg.tt_gating`/`pch`/`bdc` in Module Details for the full design, and `CHANGELOG.md` for the complete history of prior rounds — this line now tracks only the most recent change, not a cumulative log.*
+*Last updated: 2026-07-11 — the `ttg` package was restructured: `tt_gating`/`tt_detect` renamed to `gate_tt`/`detect_tt`; `gate_tt` split further into `staged_files` (staged-file listing + `ignored_path_globs` filtering) and `report_tt` (rendering/logging gated findings), leaving `gate_tt` itself as just the gating decision; `triage_tag_type.py` trimmed to the bare `TriageTagType` enum, its line-scanning logic moved into the new `detect_tt._find_first_tag_in_line` (its only caller) alongside a new `comment_style` module that makes `disable_tt_detect_by_type`/type-aware detection actually work — both `ttg` config fields that were previously schema-only are now consumed. `ttg`/`pch` helpers that need config also now call the cached `load_hupy_config(repo)` directly rather than having values threaded down through parameters. See `ttg.*` in Module Details for the full design, and `CHANGELOG.md` for the complete history of prior rounds — this line now tracks only the most recent change, not a cumulative log.*
 
 ## Project Overview
 
@@ -22,8 +22,11 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 | `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
 | `pch` | **implemented** | prepend header lines to in-progress commit messages for all 8 `cbm` merge types; several append a version number via `ver_grep` when configured |
 | `ver_grep` | **implemented** | extract a merge's source/target branch version string by regex-matching a line in a configured version file, read at that branch's git tip; also classifies major/minor/patch version bumps |
-| `ttg.triage_tag_type` | **implemented** | `TriageTagType` flag enum (3 tiers × 4 kinds) and its line-scanning classmethods |
+| `ttg.triage_tag_type` | **implemented** | `TriageTagType` flag enum (3 tiers × 4 kinds) |
+| `ttg.comment_style` | **implemented** | map a file extension to its comment-leader token, for type-aware TT matching |
 | `ttg.detect_tt` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
+| `ttg.staged_files` | **implemented** | list staged files in a repo, filtered against `ignored_path_globs` |
+| `ttg.report_tt` | **implemented** | render/log gated triage tag findings and abort the commit |
 | `ttg.gate_tt` | **implemented** | gate commits by triage tag presence on protected branches |
 | `bdc` | **implemented** | Ban Direct Commit — block a commit made directly on a protected branch, while still allowing that branch to receive commits through a merge |
 | `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit; a bash-era utility being ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py` |
@@ -137,7 +140,7 @@ Config schema, loading, and default-copying for `.hupy.config.jsonc`.
 - A `model_validator(mode="after")` on `HupyConfigFile` compares `hupy_version` against `importlib.metadata.version("HUPy")` and `logger.warning(...)`s (via `CONFIG_LOGGER_NAME`) on a mismatch, without raising — catches a config file left over from an older `hupy` install after the package itself is upgraded
 - **per-module `is_disabled: bool`** — `_VerGrep`, `_Ttg`, `_Pch`, and `_Bdc` each carry this field (`_Hb` already had it before this round, unconsumed since `hb` has no implementation yet); each consuming module checks it first and skips its own logic when `True` — see `ver_grep`/`ttg.gate_tt`/`pch`/`bdc` in Module Details for the exact early-return point in each
 - **`_VerGrep(BaseModel)`** — `is_disabled: bool`, `version_file: pathlib.Path`, `version_line_pattern: str` (see `ver_grep` in Module Details for how these are consumed). `is_unconfigured()` returns `True` when `version_file` is empty/`"."` (`pathlib.Path("")` normalizes to `.`) or `version_line_pattern` is blank. A `model_validator(mode="after")` returns immediately when `is_disabled` is `True` (before the unconfigured check, so a disabled `ver_grep` never logs the unconfigured warning either); otherwise calls `is_unconfigured()` and, if `True`, logs a `logger.warning(...)` via `CONFIG_LOGGER_NAME` rather than raising — an unconfigured (but not disabled) `ver_grep` is a valid, non-fatal state (e.g. the shipped default config's empty `version_file`/`version_line_pattern`)
-- **`_Ttg(BaseModel)`** — `is_disabled: bool`, `disable_tt_detect_by_type: bool`, `ignored_path_globs: list[str]`; new this round. Only `is_disabled` is consumed so far, by `ttg.gate_tt.perform_triage_tags_gating` (see `ttg.gate_tt` in Module Details); `disable_tt_detect_by_type` and `ignored_path_globs` are schema-only, not yet read by `detect_tt`/`gate_tt`
+- **`_Ttg(BaseModel)`** — `is_disabled: bool`, `disable_tt_detect_by_type: bool`, `ignored_path_globs: list[str]`; all three now consumed by `ttg.gate_tt`: `is_disabled` by `perform_triage_tags_gating`, `disable_tt_detect_by_type`/`ignored_path_globs` by `_perform_triage_tags_by_filtering_group` (see `ttg.gate_tt`/`ttg.detect_tt`/`ttg.staged_files` in Module Details)
 - **`_Cbm(BaseModel)`** — `main_branch_name: str`, `dev_branch_name: str`, `hotfix_branch_prefix: str`, `release_branch_prefix: str` (all `Field(min_length=1)`); consumed by `cbm.branch_type.BranchType.from_name` (see `cbm` in Module Details)
 - **`_Pch(BaseModel)`** — `is_disabled: bool`, `enable_vertical_slice: bool`, `enable_pre_alpha: bool`, `alpha_tag: str`, `beta_tag: str`, `release_candidate_tag: str` (the tag fields are plain strs, no `min_length` — empty disables that tag's recognition); consumed by `pch.prepend_commit_header` (`is_disabled` at the top of `prepend_commit_header`, the rest by `_get_release_type_word` — see `pch` in Module Details)
 - **`_Bdc(BaseModel)`** — `is_disabled: bool`, `ban_commit_to_main: bool`, `ban_commit_to_dev: bool`, `ban_commit_to_branches: list[str]`; consumed by `bdc.ban_direct_commit` (see `bdc` in Module Details, including a **known gap** where the disabled check reads the wrong config field)
@@ -161,18 +164,33 @@ Reads a merge's source/target branch version string by regex-matching a line in 
 
 ### `ttg.triage_tag_type`
 
-**`TriageTagType(Flag)`** — 12 members across 3 tiers × 4 kinds (`TODO`/`FIXME`/`HACK`/`BUG`), each matched case-sensitively (`TODO` loud, `Todo` steady, `todo` quiet); composite groups `LOUDS`/`STEADYS`/`QUIETS` (by tier) and `TODOS`/`FIXMES`/`HACKS`/`BUGS` (by kind) are pre-defined flag combinations
+**`TriageTagType(Flag)`** — 12 members across 3 tiers × 4 kinds (`TODO`/`FIXME`/`HACK`/`BUG`), each matched case-sensitively (`TODO` loud, `Todo` steady, `todo` quiet); composite groups `LOUDS`/`STEADYS`/`QUIETS` (by tier) and `TODOS`/`FIXMES`/`HACKS`/`BUGS` (by kind) are pre-defined flag combinations. Purely the enum definition — no line-scanning or filtering methods live here any more; group membership is checked directly via `Flag`'s native `in` operator (eg `tag in TriageTagType.LOUDS`) rather than a dedicated classmethod.
 
-- `TriageTagType.find_first_in_line(line)` — first tag match in a line, or `None`
-- `TriageTagType.filter_by_group(tags, group)` — keep only tags belonging to a group (e.g. `LOUDS`, `TODOS | STEADYS`)
+### `ttg.comment_style`
+
+Maps a file's extension to the comment-leader token expected for that language.
+
+**Public API**: `get_comment_prefix_for_file(file_path)` → `str | None` — looks up `pathlib.Path(file_path).suffix.lower()` against a fixed dict (`//` C-style: `.c`/`.cpp`/`.java`/`.js`/`.ts`/`.go`/`.rs`/…; `#` hash-style: `.py`/`.sh`/`.rb`/`.yaml`/…; `<!--` HTML-style: `.html`/`.xml`/`.md`/…); returns `None` for an unmapped or missing extension, in which case `detect_tt` falls back to matching a TT tag anywhere in the line.
 
 ### `ttg.detect_tt`
 
 Scans staged git diffs for triage tag annotation markers.
 
-**Public API**: `detect_triage_tags_in_staged_file(file_path, repo_root=None)` → `list[(TriageTagType, str)]` — runs `git diff --cached -- file_path`, and for every added (`+`) line, records the first matching tag and the line text, using `triage_tag_type.TriageTagType.find_first_in_line`
+**Public API**: `detect_triage_tags_in_staged_file(file_path, repo_root=None, disable_tt_detect_by_type=False)` → `list[(TriageTagType, str, int)]` — runs `git diff --cached -- file_path`, tracks the current line number from each hunk header, and for every added (`+`) line records the first matching tag, the line text, and its line number via the module-private `_find_first_tag_in_line(line, comment_prefix)`. `comment_prefix` is `None` when `disable_tt_detect_by_type` is `True` (match anywhere in the line); otherwise it's `comment_style.get_comment_prefix_for_file(file_path)`, and when non-`None` only a tag occurring after that comment-leader token counts as a match.
 
-Detection is a plain regex word-boundary match on the whole added line — it does not check whether the match sits inside a comment for the file's language (`# todo detect TT with respect of code comment by file type`), so a tag appearing in a string literal or non-comment context would still register.
+`_TT_PATTERN` (the tag-matching regex) and `_find_first_tag_in_line` live here rather than in `triage_tag_type.py`, since this is their only caller; `ttg.report_tt` imports `_TT_PATTERN` back from here to re-match the tag for highlighting when rendering a gated finding.
+
+### `ttg.staged_files`
+
+Lists a repo's staged files and filters them against configured ignore globs.
+
+**Public API**: `get_staged_file_paths(repo)` — runs `git diff --cached --name-only`, `raise SystemExit(1)` on a `subprocess.CalledProcessError`; `is_path_ignored(file_path, ignored_path_globs)` — `fnmatch.fnmatch`es `file_path` against each glob.
+
+### `ttg.report_tt`
+
+Renders and logs gated triage tag findings, then aborts the commit.
+
+**Public API**: `report_gated_tags(filtered_results)` — takes the `file_path -> [(tag, line, line_no)]` mapping built by `gate_tt`, logs `logger.fail(...)`, renders a per-file comment banner (`kamilog.gen_comment_banner_centered`, `"-"` fill) with each gated line, highlighting the matched tag via `AnsiRenderer.color_triage_tag` (re-matching with `detect_tt._TT_PATTERN`), then `raise SystemExit(1)`.
 
 ### `ttg.gate_tt`
 
@@ -186,9 +204,9 @@ Gating policy by commit type:
 - `VERSION_RELEASE` → gates `LOUDS | STEADYS`
 - anything else → skipped, no gating
 
-On a gated match, `_perform_triage_tags_by_filtering_group` builds a report (file name banners via `kamilog.gen_comment_banner_centered`, `"-"` fill) and raises `SystemExit(1)`. The reported lines are plain text — no highlighting on the matched tag itself yet (`# todo print gated TT in colored highlighting`).
+`_perform_triage_tags_by_filtering_group(repo, filtering_tt_group)` loads `config.ttg` itself, rather than receiving already-loaded values as parameters (`load_hupy_config` is cached, so a second call is cheap), then orchestrates three steps, each its own helper: `staged_files.get_staged_file_paths(repo)` to list staged files; `_collect_gated_tags(...)`, which loops those files, skips ones matching `staged_files.is_path_ignored(...)`, calls `detect_tt.detect_triage_tags_in_staged_file(...)`, and filters the result by `tag in filtering_tt_group`; and, only when gated tags were found, `report_tt.report_gated_tags(filtered_results)`.
 
-`gate_tt` and `detect_tt` share one logger, `TTG_LOGGER_NAME` (`"HU.TTG"`), defined in `hupy/ttg/__init__.py` **before** the `from .gate_tt import ...` line — `gate_tt` imports `TTG_LOGGER_NAME` back from the package `__init__`, so the definition must precede the import or it fails with a circular-import `ImportError`. `cbm` keeps its own separate logger, `CBM_LOGGER_NAME` (`"HU.CBM"`).
+`gate_tt`, `detect_tt`, `staged_files`, and `report_tt` share one logger, `TTG_LOGGER_NAME` (`"HU.TTG"`), defined in `hupy/ttg/__init__.py` **before** the `from .gate_tt import ...` line — each module imports `TTG_LOGGER_NAME` back from the package `__init__`, so the definition must precede the import or it fails with a circular-import `ImportError`. `cbm` keeps its own separate logger, `CBM_LOGGER_NAME` (`"HU.CBM"`).
 
 ### `bdc`
 
@@ -319,8 +337,11 @@ hupy/                             # installable package
     prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG; _HEADER_GENERATORS per merge type
   ttg/                            # Triage Tag Gating package
     __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
-    triage_tag_type.py             # TriageTagType flag enum + line-scan classmethods
-    detect_tt.py                  # scan staged diffs for TT markers
+    triage_tag_type.py             # TriageTagType flag enum
+    comment_style.py               # file extension -> comment-leader token
+    detect_tt.py                  # scan staged diffs for TT markers, type-aware
+    staged_files.py                # list staged files, filter ignored_path_globs
+    report_tt.py                   # render/log gated TT findings
     gate_tt.py                     # gate commits by TT tier
   ver_grep/                       # version-grepping package (formerly flat ver_grep.py)
     __init__.py                   # VER_GREP_LOGGER_NAME = "HU.VerGrep"; re-exports below
@@ -385,12 +406,14 @@ tests/
   ttg/                            # TTG-specific tests
     conftest.py                   # sys.path shim onto tests/fixtures/ for prep_repo import
     fixtures/                     # per-scenario fixture files used by prep_repo.py (tt_*.py, ...)
+    ttg-comment_style_test.py
     ttg-detect_tt_test.py
     ttg-gate_tt_feature_landing_test.py
     ttg-gate_tt_version_release_test.py
     ttg-gate_tt_non_merge_test.py
     ttg-gate_tt_regular_merge_test.py
-    ttg-gate_tt_error_test.py
+    ttg-gate_tt_ignored_globs_test.py
+    ttg-gate_tt_error_test.py     # patches hupy.ttg.staged_files.subprocess.check_output
   bdc/                             # BDC-specific tests
     conftest.py                   # sys.path shim onto tests/fixtures/ for config_fixture import
     bdc-ban_direct_commit_test.py
@@ -410,7 +433,7 @@ pyproject.toml
 - **git bundle fixture** (`tests/fixtures/default_repo.bundle`) — minimal single-file repo fixture; `prep_repo.py` clones it and dynamically constructs scenarios (branches, commits, MERGE_HEAD state, staged files from `tests/ttg/fixtures/*.py`)
 - **`tests/fixtures/prep_repo.py`** — the shared repo-scenario builder, used by `tests/pch/`, `tests/ttg/` unit tests and, indirectly, by the `examples/pch/*-demo.py` and `examples/ttg/*-demo.py` demos. Exposes three builders: `prepare_repo(dest_dir, scenario)` for the legacy TTG/PCH `SCENARIOS` that unit tests also exercise (`non_merge_commit`, `irrelevant_merge`, `feature_landing_{pass,fail}`, `version_release_{pass,fail}`), `prepare_repo_with_files(dest_dir, commit_bucket, files)` for an arbitrary file manifest against one of the `COMMIT_BUCKETS` (used by both unit tests and the `examples/ttg/*-demo.py` scripts), and `prepare_demo_repo(dest_dir, demo_bucket)` for the demo-only `DEMO_BUCKETS` — six merge types (`sync_backport`, `catch_up`, `hotfix_release`, `hotfix_backport`, `release_cut`, `release_backport`) with no dedicated `tests/pch/` assertions yet, only `examples/pch/*-demo.py` scripts, plus seven `release_*` buckets (`release_fail_parse`, `release_minor_prototype`, `release_alpha`, `release_beta`, `release_rc`, `release_major_stable`, `release_minor_pre_alpha`) that back the `vr-*-demo.py` scripts specifically, each pinning a Version Release release-type/bump-prefix combination. Also runnable standalone as a CLI with mutually exclusive `--scenario <name>` / `--demo-bucket <name>` flags plus `--dest`, printing the prepared repo path; `examples/hooks/prepare-commit-msg-demo.sh` shells out to this CLI rather than re-implementing repo setup in bash.
 - **`examples/pch/__init__.py`** / **`examples/ttg/__init__.py`** — aux helpers shared across each directory's `*-demo.py` scripts, deduplicated out of what was previously identical `_prepare_demo_repo`/`_run_*` code copy-pasted into every demo file. Each does the `sys.path.insert` onto `tests/fixtures/` and wraps `prep_repo.py`'s builders (`prepare_demo_repo_by_scenario`/`prepare_demo_repo_by_bucket` + `run_pch` for `pch`; `prepare_demo_repo` + `run_ttg` for `ttg`, the latter calling `perform_triage_tags_gating` directly rather than the full `pre-commit` CLI). Demo scripts pull these in with `from __init__ import ...` — this resolves because Python auto-adds a directly-run script's own directory to `sys.path`, so no additional path wiring is needed in the demo files themselves.
-- **test file naming** — nested-package modules follow `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py` (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate_tt_*_test.py`, `hupy/cbm/branch_type.py` → `tests/cbm/cbm-branch_type_test.py`, `hupy/ver_grep/branch_version.py` → `tests/vg/vg-grep_*_branch_version_test.py`), split further by scenario group; `hupy/cbm/get_current_commit_type.py`'s three public functions each get their own file, nested under `tests/cbm/grct/` (the abbreviation mirrors the module name)
+- **test file naming** — nested-package modules follow `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py` (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate_tt_*_test.py`, `hupy/cbm/branch_type.py` → `tests/cbm/cbm-branch_type_test.py`, `hupy/ver_grep/branch_version.py` → `tests/vg/vg-grep_*_branch_version_test.py`), split further by scenario group; `hupy/cbm/get_current_commit_type.py`'s three public functions each get their own file, nested under `tests/cbm/grct/` (the abbreviation mirrors the module name). `ttg.staged_files` and `ttg.report_tt` have no dedicated test file of their own — both are exercised indirectly through the `ttg-gate_tt_*_test.py` suites (`staged_files.get_staged_file_paths`'s git-error path is covered by `ttg-gate_tt_error_test.py`, which patches `hupy.ttg.staged_files.subprocess.check_output`)
 - **`tests/cli/`** (formerly `tests/setup/`, renamed with the `hupy/setup/` → `hupy/cli/` move) — unit tests for `_copy_hook_stubs` and `_resolve_hooks_dir` each get their own file (`cli-cli_init_copy_hook_stubs_test.py`, `cli-cli_init_resolve_hooks_dir_test.py`); both now import their targets from `cli_init.py` directly, since `cli_icc.py`/`cli_ich.py` were deleted and those helpers moved there. The copy-stubs file also covers the `{{PYTHON}}` → `sys.executable` substitution (placeholder replaced, baked path absolute, packaged templates still carry the placeholder — see `cli` in Module Details). `create_default_config_file` (in `hupy/config/write_config.py`) has no dedicated test file of its own (see `config` in Module Details) and is instead exercised via `cli-cli_init_init_cli_test.py`, which asserts the written file is byte-identical to the packaged asset (`hupy/assets/.hupy.config.jsonc`), rather than matching a serialized `HupyConfigFile()`. `cli-cli_init_init_cli_test.py` covers the CLI wiring end-to-end, since that's the other meaningful public surface (unlike `ttg`/`pch`, which test their public function directly without a separate CLI-wiring suite) — `cli_helpers.run_init_cli(args_list)` (formerly `setup_helpers.py`) builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`--copy-hooks`/`--create-config-file`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; a `TestInitStepFlags` class asserts `--copy-hooks` alone skips the config file, `--create-config-file` alone skips the hooks, both flags together (or neither) produce both; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_PATH` explicitly rather than relying on its default, since that default is frozen at module-import time (see `cli` in Module Details). 29 tests total; no dedicated test file exists yet for `cli_verify.py`'s own subcommand wiring (its behavior is exercised indirectly through `init`'s shared helpers).
 - **`tests/cbm/`** — `cbm-branch_type_test.py` patches `hupy.cbm.branch_type.load_hupy_config` to stub `_Cbm` config, built via `tests/fixtures/config_fixture.py`'s `load_config_fixture(overrides)` rather than constructing `HupyConfigFile` directly (its fields carry no defaults any more — see `config` in Module Details), covering default and overridden branch names/prefixes and precedence between DEV/MAIN/HOTFIX/RELEASE/USER/FEATURE, and confirming `repo` is forwarded through to `load_hupy_config`; `cbm-commit_type_test.py` parametrizes `CommitType.decide_commit_type` over all 8 known `(BranchType, BranchType)` pairs plus a set of unmapped pairs (all → `OTHER_MERGE`); `grct/` covers `get_current_commit_type`/`get_source_branch`/`get_target_branch` against real repo fixtures — regular commits, octopus/pull merges, detached HEAD, and per-repo caching behavior — with `grct/conftest.py` noting that repo construction/error handling is the caller's job, not these functions'.
 - **`tests/vg/`** — `vg-decide_version_update_type_test.py` covers major/minor/patch bump classification, no-update and unparsable cases, and pre-release/build-suffix stripping; `vg-grep_source_branch_version_test.py`/`vg-grep_target_branch_version_test.py` (mirror images of each other) patch `hupy.ver_grep.branch_version.load_hupy_config` and use shared `vg_helpers.py` fixtures (`prepare_merge_repo_with_version`, `prepare_merge_repo_without_version_file`) to assert each function reads its own branch's tip specifically (not the other branch's, not the working tree), first-match-wins, not-configured returning `""`, and `SystemExit` on a missing version file or no matching line.
