@@ -8,7 +8,7 @@ import os
 import tempfile
 
 from hupy.kamilog import getLogger
-from hupy.ver_grep import grep_source_branch_version
+from hupy.ver_grep import decide_version_update_type, grep_source_branch_version
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
@@ -24,7 +24,25 @@ logger.propagate = False
 # auxiliary  ###################################################################
 
 
-def _gen_version_release_header_content(_):
+def _get_version_bump_prefix(source_version, target_version):
+    """
+    map a source/target version comparison to a header word prefix
+    """
+    bump_type = decide_version_update_type(source_version, target_version)
+    if bump_type == "x":
+        return "Major "
+    elif bump_type == "y":
+        return "Minor "
+    elif bump_type == "z":
+        return "Patch "
+    else:
+        return ""
+
+
+# generate header  =============================================================
+
+
+def _gen_version_release_header(_):
     # FIXME stable release & prototype & alpha/beta release w/ major/minor/patch
     version = grep_source_branch_version()
     if version:
@@ -33,7 +51,7 @@ def _gen_version_release_header_content(_):
         return "Version Release"
 
 
-def _gen_feature_landing_header_content(repo):
+def _gen_feature_landing_header(repo):
     branch_name = get_source_branch(repo)
     return "Feature Landing: {}".format(branch_name)
 
@@ -85,8 +103,8 @@ def _gen_release_backport_header(_):
 
 
 _HEADER_GENERATORS = {
-    CommitType.VERSION_RELEASE: _gen_version_release_header_content,
-    CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
+    CommitType.VERSION_RELEASE: _gen_version_release_header,
+    CommitType.FEATURE_LANDING: _gen_feature_landing_header,
     CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
     CommitType.CATCH_UP: _gen_catch_up_header,
     CommitType.HOTFIX_RELEASE: _gen_hotfix_release_header,
