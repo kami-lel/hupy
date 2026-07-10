@@ -17,4 +17,4 @@ where = ["."]
 include = ["hupy*"]
 
 [tool.setuptools.package-data]
-hupy = ["hook-stubs/*"]
+hupy = ["assets/hook-stubs/*"]
