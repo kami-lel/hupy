@@ -3,7 +3,7 @@
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
 <!--
-Todo taggable ban direct commit to main/dev
+Todo togglable ban direct commit to main/dev
 -->
 
 > [!NOTE]
