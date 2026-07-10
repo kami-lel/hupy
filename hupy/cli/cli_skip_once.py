@@ -1,5 +1,3 @@
-"""flag HUPy modules to be skipped once on their next hook run"""
-
 import argparse
 import os
 
@@ -46,15 +44,21 @@ _MODULE_NAME_TO_ABBR = {
 
 # auxiliary  ###################################################################
 def _format_modules():
-    """
-    build an aligned "abbr  full-name" listing of every skippable
-    module, one per line, for the ``skip-once`` parser description
-    """
-    width = max(len(abbr) for abbr in _MODULE_ABBR_TO_NAME)
-    return "\n".join(
-        "  {:<{width}}  {}".format(abbr, name, width=width)
+    return ",\n".join(
+        "  {},\t{}".format(abbr, name)
         for abbr, name in _MODULE_ABBR_TO_NAME.items()
     )
+
+
+_SKIP_ONCE_HELP = "skip module(s) in next hook run"
+
+_SKIP_ONCE_DESCRIPTION = _SKIP_ONCE_HELP + """
+
+MODULEs:
+{}
+
+each given module is skipped exactly once,
+consumed by the next pre-commit/prepare-commit-msg""".format(_format_modules())
 
 
 def _skip_once_main(args):
@@ -87,16 +91,8 @@ def register_cli_skip_once_parser(cli_subparser):
     skip_once_parser = cli_subparser.add_parser(
         "skip-once",
         aliases=["s"],
-        help="skip modules in next hook run",
-        description=__doc__ + """
-
-modules:
-{}
-
-each flagged module is skipped exactly once, consumed by the next
-pre-commit/prepare-commit-msg run that checks it, regardless of its
-is_disabled config setting
-""".format(_format_modules()),
+        help=_SKIP_ONCE_HELP,
+        description=_SKIP_ONCE_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -106,10 +102,7 @@ is_disabled config setting
         nargs="+",
         choices=tuple(_MODULE_ABBR_TO_NAME.keys())
         + tuple(_MODULE_NAME_TO_ABBR.keys()),
-        help=(
-            "module(s) to skip once on their next hook run, by full "
-            "name or abbr"
-        ),
+        help="module(s) to skip, v.s.",
     )
 
     add_verbose_arguments(skip_once_parser)
