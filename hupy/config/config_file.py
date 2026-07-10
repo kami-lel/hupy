@@ -32,8 +32,6 @@ class _VerGrep(BaseModel):
     configuration for version grep hook
     """
 
-    # TODO allow to be turned off
-
     is_disabled: bool
 
     version_file: pathlib.Path
@@ -56,6 +54,9 @@ class _VerGrep(BaseModel):
         otherwise error if ``version_file`` does not point to a real
         file.
         """
+        if self.is_disabled:
+            return self
+
         if self.is_unconfigured():
             renderer = AnsiRenderer(sys.stdout)
             logger.warning(
