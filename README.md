@@ -113,4 +113,4 @@ flowchart TD
 See the per-feature docs for detailed usage:
 
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
-- [Prepend Commit Header (PCH)](docs/pch_doc.md)
+- [Commit, Branch & Merge (CBM) and Prepend Commit Header (PCH)](docs/cbm_doc.md)

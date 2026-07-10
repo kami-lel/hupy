@@ -273,7 +273,7 @@ hupy/                             # installable package
   ver_grep.py                     # grep_repo_version(): regex-extract version from a file
 docs/
   ttg_doc.md                      # user doc: TTG tiers & per-merge gating
-  pch_doc.md                      # user doc: PCH merge-commit headers
+  cbm_doc.md                      # user doc: CBM concepts + PCH merge-commit headers
   hupy_config_doc.md               # user doc: .hupy.config.json fields & ver_grep setup
 examples/
   hooks/                           # bash demos driving the real `hupy <stage>` CLI end-to-end

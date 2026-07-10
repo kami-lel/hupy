@@ -180,3 +180,51 @@ returns something like `"add-login"` and `get_target_branch` returns
 
 `get_target_branch` returns `None` on a detached `HEAD`, since there is
 no named branch to report.
+
+## `hupy.pch` Module
+
+**Prepend Commit Header** is *HUPy*'s `prepare-commit-msg` hook. When you make a **merge commit**, it adds a short header line to the top of the commit message so the history reads clearly at a glance — you don't have to write it yourself.
+
+It recognizes every merge type listed under [Merge Type](#merge-type) above and leaves every other commit (`OTHER_COMMIT`, `OTHER_MERGE`) untouched.
+
+### What It Does
+
+| Merge Type | Header added |
+| --- | --- |
+| Feature Landing | `Feature Landing: <branch-name>` |
+| Stable Release | `Stable Release: <version>` |
+| Sync Backport | `Sync Backport from: <version>` |
+| Catch Up | `Catch Up` |
+| Hotfix Release | `Hotfix Release: <version>` |
+| Hotfix Backport | `Hotfix Backport from: <version>` |
+| Release Cut | `Release Cut: <version>` |
+| Release Backport | `Release Backport from: <version>` |
+| Other Merge / regular commit | *nothing — message untouched* |
+
+The header goes on the first line, followed by a blank line and then git's original message:
+
+```
+Feature Landing: add-user-auth
+
+Merge branch 'add-user-auth' into dev
+```
+
+### Version Number
+
+On any merge type with a `<version>` placeholder above, the header includes a version number — e.g. `Stable Release: 1.0.0`. That number is read from a file you point *HUPy* at via the `ver_grep` setting; if it isn't configured, the header falls back to the plain form with no number, e.g. `Stable Release`.
+
+See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
+
+### `prepend_commit_header(repo)`
+
+The main entry point of the module. Call it during an in-progress commit (e.g. from a `prepare-commit-msg` hook) to prepend the appropriate header to `COMMIT_EDITMSG`, based on the commit type reported by `get_current_commit_type`.
+
+```python
+import git
+from hupy.pch import prepend_commit_header
+
+repo = git.Repo(".", search_parent_directories=True)
+prepend_commit_header(repo)
+```
+
+`repo` must be an already-open `git.Repo`.
