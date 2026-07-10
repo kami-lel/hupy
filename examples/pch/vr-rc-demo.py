@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-stable-release-demo.py
+vr-rc-demo.py
 
-demo: Stable Release merge (develop into main) with the
-in-progress merge message copied into COMMIT_EDITMSG (mirroring
-what git itself does before invoking the commit-msg hook)
-expected result: header prepended to COMMIT_EDITMSG
+demo: Version Release merge (dev into main), source branch version
+"1.3.0-rc.1", to exercise pch's "Release Candidate" wording (no
+bump prefix, no trailing "Release" word, even though the merge
+would otherwise be a major bump)
+expected result: header prepended to COMMIT_EDITMSG,
+"Release Candidate: 1.3.0-rc.1"
 """
 
 import pathlib
@@ -15,16 +17,16 @@ from hupy.kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )
-from __init__ import prepare_demo_repo_by_scenario, run_pch
+from __init__ import prepare_demo_repo_by_bucket, run_pch
 
-_SCENARIO = "stable_release_pass"
+_DEMO_BUCKET = "release_rc"
 
 
 # helpers  #####################################################################
 
 
 def _prepare_demo_repo():
-    return prepare_demo_repo_by_scenario(_SCENARIO)
+    return prepare_demo_repo_by_bucket(_DEMO_BUCKET)
 
 
 # demo  ########################################################################
@@ -32,8 +34,14 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tStable Release merge (develop into main)")
-    print("expected:\tPASS, header prepended to COMMIT_EDITMSG")
+    print(
+        "scenario:\tVersion Release merge (dev into main), "
+        "release candidate source version"
+    )
+    print(
+        'expected:\tPASS, header "Release Candidate: 1.3.0-rc.1" '
+        "prepended"
+    )
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-fail-stable-release-demo.py
+fail-version-release-demo.py
 
-demo: Stable Release merge (develop into main) staging three
+demo: Version Release merge (develop into main) staging three
 files — a.py with 1 LOUD tag, b.py with 1 LOUD and 2 STEADY tags
 (multiple TT in a single file), and c.py with a QUIET tag
-expected result: fail (Stable Release gates Loud and Steady tiers;
+expected result: fail (Version Release gates Loud and Steady tiers;
 both a.py and b.py's gating tags are reported, c.py's Quiet tag is not)
 """
 
@@ -17,7 +17,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo, run_ttg
 
-_BUCKET = "stable_release"
+_BUCKET = "version_release"
 _FILES = {
     "a.py": "tt_loud_only.py",
     "b.py": "tt_1loud_2steady.py",
@@ -37,7 +37,7 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tStable Release, multiple files with multiple gating TT")
+    print("scenario:\tVersion Release, multiple files with multiple gating TT")
     print("expected:\tFAIL")
     print(
         "reason:\tLoud/Steady tags in both a.py and b.py "

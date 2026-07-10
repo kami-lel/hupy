@@ -64,9 +64,9 @@ class TestGetCurrentCommitTypeKnownMerges:
         repo = prepare_merge_repo(repo_dir, "feature_landing")
         assert get_current_commit_type(repo) == CommitType.FEATURE_LANDING
 
-    def test_stable_release_is_stable_release(self, repo_dir):
-        repo = prepare_merge_repo(repo_dir, "stable_release")
-        assert get_current_commit_type(repo) == CommitType.STABLE_RELEASE
+    def test_version_release_is_version_release(self, repo_dir):
+        repo = prepare_merge_repo(repo_dir, "version_release")
+        assert get_current_commit_type(repo) == CommitType.VERSION_RELEASE
 
     def test_unrelated_merge_is_other_merge(self, repo_dir):
         repo = prepare_merge_repo(repo_dir, "regular_merge")
@@ -114,7 +114,7 @@ class TestGetCurrentCommitTypeCaching:
         dir_a = tmp_path / "repo_a"
         dir_b = tmp_path / "repo_b"
         repo_a = prepare_merge_repo(dir_a, "feature_landing")
-        repo_b = prepare_merge_repo(dir_b, "stable_release")
+        repo_b = prepare_merge_repo(dir_b, "version_release")
 
         assert get_current_commit_type(repo_a) == CommitType.FEATURE_LANDING
-        assert get_current_commit_type(repo_b) == CommitType.STABLE_RELEASE
+        assert get_current_commit_type(repo_b) == CommitType.VERSION_RELEASE

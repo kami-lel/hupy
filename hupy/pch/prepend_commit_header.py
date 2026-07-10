@@ -5,15 +5,22 @@ prepend commit type header to commit message
 """
 
 import os
+import re
 import tempfile
 
+from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
-from hupy.ver_grep import grep_source_branch_version
+from hupy.ver_grep import (
+    decide_version_update_type,
+    grep_source_branch_version,
+    grep_target_branch_version,
+)
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
     get_current_commit_type,
     get_source_branch,
+    get_target_branch,
 )
 
 # logger  ######################################################################
@@ -23,70 +30,130 @@ logger.propagate = False
 
 # auxiliary  ###################################################################
 
-# Fixme rewrite & check all wording
-# Fixme stable release & prototype & alpha/beta release
+
+def _get_version_bump_prefix(source_version, target_version):
+    """
+    map a source/target version comparison to a header word prefix
+    """
+    bump_type = decide_version_update_type(source_version, target_version)
+    if bump_type == "x":
+        return "Major "
+    elif bump_type == "y":
+        return "Minor "
+    elif bump_type == "z":
+        return "Patch "
+    else:
+        return ""
 
 
-def _gen_stable_release_header_content(_):
+def _get_release_type_word(version, pch_config):
+    """
+    map a version string to its release-type word
+    """
+    tagged_words = (
+        (pch_config.alpha_tag, "Alpha Release "),
+        (pch_config.beta_tag, "Beta Release "),
+        (pch_config.release_candidate_tag, "Release Candidate "),
+    )
+    for tag, word in tagged_words:
+        if tag and tag in version:
+            return word
+
+    if pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
+        return "Pre-Alpha Release "
+    if pch_config.enable_vertical_slice and re.match(
+        r"^0\.[5-9]\.\d+", version
+    ):
+        return "Vertical Slice Release "
+    if re.match(r"^0\.\d+\.\d+", version):
+        return "Prototype Release "
+    if re.match(r"^\d+\.\d+\.\d+", version):
+        return "Stable Release "
+    return ""
+
+
+def _gen_bumped_version_header(header_word):
+    """
+    build a "<header_word>: <version>" header, prefixed with the
+    version's major/minor/patch bump word when a source version
+    resolves
+    """
     version = grep_source_branch_version()
     if version:
-        return "Stable Release: {}".format(version)
+        prefix = _get_version_bump_prefix(version, grep_target_branch_version())
+        return "{}{}: {}".format(prefix, header_word, version)
     else:
-        return "Stable Release"
+        return header_word
 
 
-def _gen_feature_landing_header_content(repo):
+def _gen_backport_header(header_word):
+    """
+    build a "<header_word> from: <version>" header, or plain
+    ``header_word`` when no source version resolves
+    """
+    version = grep_source_branch_version()
+    if version:
+        return "{} from: {}".format(header_word, version)
+    else:
+        return header_word
+
+
+# generate header  =============================================================
+
+
+def _gen_version_release_header(repo):
+    version = grep_source_branch_version()
+    if not version:
+        return "Version Release"
+
+    pch_config = load_hupy_config(repo).pch
+    release_type = _get_release_type_word(version, pch_config)
+    if not release_type:
+        return "Version Release: {}".format(version)
+
+    if release_type in ("Alpha Release ", "Beta Release ", "Release Candidate "):
+        bump_prefix = ""
+    else:
+        bump_prefix = _get_version_bump_prefix(
+            version, grep_target_branch_version()
+        )
+
+    return "{}: {}".format((bump_prefix + release_type).rstrip(), version)
+
+
+def _gen_feature_landing_header(repo):
     branch_name = get_source_branch(repo)
     return "Feature Landing: {}".format(branch_name)
 
 
 def _gen_sync_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Sync Backport from: {}".format(version)
-    else:
-        return "Sync Backport"
+    return _gen_backport_header("Sync Backport")
 
 
-def _gen_catch_up_header(_):
-    return "Catch Up"
+def _gen_catch_up_header(repo):
+    branch_name = get_target_branch(repo)
+    return "Catch Up: {}".format(branch_name)
 
 
 def _gen_hotfix_release_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Hotfix Release: {}".format(version)
-    else:
-        return "Hotfix Release"
+    return _gen_bumped_version_header("Hotfix Release")
 
 
 def _gen_hotfix_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Hotfix Backport from: {}".format(version)
-    else:
-        return "Hotfix Backport"
+    return _gen_backport_header("Hotfix Backport")
 
 
 def _gen_release_cut_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Release Cut: {}".format(version)
-    else:
-        return "Release Cut"
+    return _gen_bumped_version_header("Release Cut")
 
 
 def _gen_release_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Release Backport from: {}".format(version)
-    else:
-        return "Release Backport"
+    return _gen_backport_header("Release Backport")
 
 
 _HEADER_GENERATORS = {
-    CommitType.STABLE_RELEASE: _gen_stable_release_header_content,
-    CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
+    CommitType.VERSION_RELEASE: _gen_version_release_header,
+    CommitType.FEATURE_LANDING: _gen_feature_landing_header,
     CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
     CommitType.CATCH_UP: _gen_catch_up_header,
     CommitType.HOTFIX_RELEASE: _gen_hotfix_release_header,

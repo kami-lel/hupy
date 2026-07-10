@@ -8,18 +8,22 @@
 
 - **`init-create-config`** — new `hupy` subcommand that writes only the default `.hupy.config.json`, without touching hook stubs
 - **`init-copy-hooks`** — new `hupy` subcommand that copies only the hook stub scripts into the repo's hooks directory, without writing a config file
-- **six new merge types recognized** — `hupy.pch` now prepends commit headers for Sync Backport (`main`→`dev`), Catch Up (`dev`→feature), Hotfix Release (`hotfix/*`→`main`), Hotfix Backport (`hotfix/*`→`dev`), Release Cut (`release/*`→`main`), and Release Backport (`release/*`→`dev`), on top of the existing Feature Landing and Stable Release headers — 8 merge types total, each with its own header format and, where applicable, a version number
+- **six new merge types recognized** — `hupy.pch` now prepends commit headers for Sync Backport (`main`→`dev`), Catch Up (`dev`→feature), Hotfix Release (`hotfix/*`→`main`), Hotfix Backport (`hotfix/*`→`dev`), Release Cut (`release/*`→`main`), and Release Backport (`release/*`→`dev`), on top of the existing Feature Landing and Version Release headers — 8 merge types total, each with its own header format and, where applicable, a version number
 - **configurable branch names** — new `cbm` section in `.hupy.config.json` (`main_branch_name`, `dev_branch_name`, `hotfix_branch_prefix`, `release_branch_prefix`) replaces hardcoded `"main"`/`"dev"` branch matching
-- **`hupy.ver_grep.grep_target_branch_version()`** and **`hupy.ver_grep.decide_version_update_type()`** — read a merge's target-branch version and classify a major/minor/patch version bump between source and target branches
+- **`hupy.ver_grep.grep_target_branch_version()`** and **`hupy.ver_grep.decide_version_update_type()`** — read a merge's target-branch version and classify a major/minor/patch version bump between source and target branches, now wired into the Version Release, Hotfix Release, and Release Cut headers as a `Major `/`Minor `/`Patch ` prefix
+- **release-type detection in the Version Release header** — `hupy.pch` classifies the source version as Alpha, Beta, Release Candidate, Pre-Alpha, Vertical Slice, Prototype, or Stable and labels the header accordingly, eg `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`, `Release Candidate: 1.3.0-rc.1`; a version that doesn't parse as a `major.minor.patch` core still falls back to plain `Version Release: <version>`
+- **`pch` config section** — new section in `.hupy.config.json` (`enable_vertical_slice`, `enable_pre_alpha`, `alpha_tag`, `beta_tag`, `release_candidate_tag`) configures which release types `hupy.pch` recognizes and how; an empty tag disables recognition of that release type
 
 ### Changed
 
 - `hupy init` now composes the two steps above; behavior is unchanged, but each step can be run standalone
 - `init`'s positional repo argument renamed from `REPO_ROOT` to `REPO_PATH` (help text and `--help` output only; behavior unchanged)
 - renamed generated commit-header terminology: **Feature Finish** → **Feature Landing**, **Version Release** → **Stable Release**, across code, docs, and generated commit headers
+- renamed generated commit-header terminology back: **Stable Release** → **Version Release**, across code, docs, and generated commit headers
 - restructured `hupy.commit_type` (flat module) into the `hupy.cbm` package (Commit/Branch/Merge), exposing `BranchType`, `CommitType`, `get_current_commit_type`, `get_source_branch`, `get_target_branch`
 - restructured `hupy.ver_grep` (flat module, single `grep_repo_version()`) into a package split into `grep_source_branch_version()`/`grep_target_branch_version()`, each reading the branch tip via `git show` rather than the working tree
 - consolidated `docs/pch_doc.md` into a new `docs/cbm_doc.md` guide covering Branch/Merge concepts, PCH headers, and `ver_grep`
+- Catch Up header now includes the target branch name, previously plain `"Catch Up"`
 
 ### Deprecated
 
