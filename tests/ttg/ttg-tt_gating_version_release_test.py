@@ -1,7 +1,7 @@
 """
-ttg-tt_gating_stable_release_test.py
+ttg-tt_gating_version_release_test.py
 
-tests for `perform_triage_tags_gating` on Stable Release merges
+tests for `perform_triage_tags_gating` on Version Release merges
 (gates on LOUD and STEADY triage tags)
 """
 
@@ -11,7 +11,7 @@ import pytest
 from hupy.ttg.tt_gating import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
 
-_BUCKET = "stable_release"
+_BUCKET = "version_release"
 
 
 # helpers  ######################################################################
@@ -32,7 +32,7 @@ def _assert_passes(repo_dir, files):
 # tests  ########################################################################
 
 
-class TestStableReleaseSingleFile:
+class TestVersionReleaseSingleFile:
     def test_loud_only_is_gated(self, repo_dir):
         _assert_gated(repo_dir, {"release.py": "tt_loud_only.py"})
 
@@ -67,7 +67,7 @@ class TestStableReleaseSingleFile:
         _assert_gated(repo_dir, {"release.py": "tt_1loud_2steady.py"})
 
 
-class TestStableReleaseMultipleFiles:
+class TestVersionReleaseMultipleFiles:
     def test_none_have_tt_passes(self, repo_dir):
         _assert_passes(
             repo_dir,

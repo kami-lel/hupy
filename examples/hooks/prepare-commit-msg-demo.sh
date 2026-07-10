@@ -2,7 +2,7 @@
 #
 # prepare-commit-msg-demo.sh
 #
-# demo: Stable Release merge (develop into main) with the
+# demo: Version Release merge (develop into main) with the
 # in-progress merge message copied into COMMIT_EDITMSG (mirroring
 # what git itself does before invoking the commit-msg hook), driven
 # through the actual `hupy prepare-commit-msg` CLI
@@ -21,7 +21,7 @@ _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 _prepare_demo_repo() {
     local dest
     dest="$(mktemp -d -t pch_demo_XXXXXX)"
-    python3 "$_PREP_REPO_PY" --scenario stable_release_pass --dest "$dest" \
+    python3 "$_PREP_REPO_PY" --scenario version_release_pass --dest "$dest" \
         > /dev/null
     echo "$dest"
 }
@@ -37,7 +37,7 @@ _run_pch() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tStable Release merge (develop into main)\n"
+printf "scenario:\tVersion Release merge (develop into main)\n"
 printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
 echo
 

@@ -23,16 +23,14 @@ logger.propagate = False
 
 # auxiliary  ###################################################################
 
-# Fixme rewrite & check all wording
-# Fixme stable release & prototype & alpha/beta release
 
-
-def _gen_stable_release_header_content(_):
+def _gen_version_release_header_content(_):
+    # FIXME stable release & prototype & alpha/beta release w/ major/minor/patch
     version = grep_source_branch_version()
     if version:
-        return "Stable Release: {}".format(version)
+        return "Version Release: {}".format(version)
     else:
-        return "Stable Release"
+        return "Version Release"
 
 
 def _gen_feature_landing_header_content(repo):
@@ -49,10 +47,11 @@ def _gen_sync_backport_header(_):
 
 
 def _gen_catch_up_header(_):
-    return "Catch Up"
+    return "Catch Up"  # FIXME more word: eg target branch name
 
 
 def _gen_hotfix_release_header(_):
+    # FIXME w/ major/minor/patch
     version = grep_source_branch_version()
     if version:
         return "Hotfix Release: {}".format(version)
@@ -69,6 +68,7 @@ def _gen_hotfix_backport_header(_):
 
 
 def _gen_release_cut_header(_):
+    # FIXME w/ major/minor/patch
     version = grep_source_branch_version()
     if version:
         return "Release Cut: {}".format(version)
@@ -85,7 +85,7 @@ def _gen_release_backport_header(_):
 
 
 _HEADER_GENERATORS = {
-    CommitType.STABLE_RELEASE: _gen_stable_release_header_content,
+    CommitType.VERSION_RELEASE: _gen_version_release_header_content,
     CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
     CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
     CommitType.CATCH_UP: _gen_catch_up_header,

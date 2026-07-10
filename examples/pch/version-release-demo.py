@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-stable-release-demo.py
+version-release-demo.py
 
-demo: Stable Release merge (develop into main) with the
+demo: Version Release merge (develop into main) with the
 in-progress merge message copied into COMMIT_EDITMSG (mirroring
 what git itself does before invoking the commit-msg hook)
 expected result: header prepended to COMMIT_EDITMSG
@@ -17,7 +17,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo_by_scenario, run_pch
 
-_SCENARIO = "stable_release_pass"
+_SCENARIO = "version_release_pass"
 
 
 # helpers  #####################################################################
@@ -32,7 +32,7 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tStable Release merge (develop into main)")
+    print("scenario:\tVersion Release merge (develop into main)")
     print("expected:\tPASS, header prepended to COMMIT_EDITMSG")
     print()
 

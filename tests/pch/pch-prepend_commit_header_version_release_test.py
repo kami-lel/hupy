@@ -1,7 +1,7 @@
 """
-pch-prepend_commit_header_stable_release_test.py
+pch-prepend_commit_header_version_release_test.py
 
-tests for `prepend_commit_header` on Stable Release merges; message
+tests for `prepend_commit_header` on Version Release merges; message
 formatting internals are already exercised in detail by the Feature
 Finish scenario tests, so this file only confirms header selection,
 the basic rewrite, and the version-number suffix drawn from ver_grep
@@ -20,7 +20,7 @@ from pch_helpers import (
 )
 from prep_repo import prepare_repo_with_files
 
-_BUCKET = "stable_release"
+_BUCKET = "version_release"
 
 
 # helpers  ######################################################################
@@ -42,8 +42,8 @@ def _patch_version(value):
 # tests  ########################################################################
 
 
-class TestStableReleaseHeaderNoVersion:
-    _HEADER = "Stable Release"
+class TestVersionReleaseHeaderNoVersion:
+    _HEADER = "Version Release"
 
     def test_real_merge_message_gets_header_prepended(self, repo_dir):
         repo = _prepare(repo_dir)
@@ -78,9 +78,9 @@ class TestStableReleaseHeaderNoVersion:
         )
 
 
-class TestStableReleaseHeaderWithVersion:
+class TestVersionReleaseHeaderWithVersion:
     _VERSION = "1.2.3"
-    _HEADER = "Stable Release: 1.2.3"
+    _HEADER = "Version Release: 1.2.3"
 
     def test_version_number_is_appended_to_header(self, repo_dir):
         repo = _prepare(repo_dir)
@@ -113,5 +113,5 @@ class TestStableReleaseHeaderWithVersion:
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Stable Release: v2024.07-rc1\n\nsubject only\n"
+            "Version Release: v2024.07-rc1\n\nsubject only\n"
         )
