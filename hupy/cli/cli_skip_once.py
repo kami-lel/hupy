@@ -23,7 +23,21 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-SKIPPABLE_MODULES = ("ver_grep", "ttg", "pch", "bdc", "hb")
+_MODULE_ABBR_TO_NAME = {
+    "ver_grep": "ver-grep",
+    "ttg": "triage-tag-gating",
+    "pch": "prepend-commit-header",
+    "bdc": "ban-direct-commit",
+    "hb": "hook-bracket",
+}
+
+_MODULE_NAME_TO_ABBR = {
+    name: abbr for abbr, name in _MODULE_ABBR_TO_NAME.items()
+}
+
+_SKIPPABLE_MODULE_CHOICES = tuple(_MODULE_ABBR_TO_NAME.keys()) + tuple(
+    _MODULE_NAME_TO_ABBR.keys()
+)
 
 _SKIP_ONCE_DOC = "skip modules in next hook run"
 
@@ -34,7 +48,12 @@ modules: {}
 each flagged module is skipped exactly once, consumed by the next
 pre-commit/prepare-commit-msg run that checks it, regardless of its
 is_disabled config setting
-""".format(", ".join(SKIPPABLE_MODULES))
+""".format(
+    ", ".join(
+        "{} ({})".format(name, abbr)
+        for abbr, name in _MODULE_ABBR_TO_NAME.items()
+    )
+)
 
 
 # helpers  #####################################################################
@@ -52,14 +71,16 @@ def _skip_once_main(args):
 
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
 
-    with open_state_file(repo) as state_file:
-        for module in args.modules:
-            if module not in state_file.skip_once:
-                state_file.skip_once.append(module)
+    abbrs = [
+        _MODULE_NAME_TO_ABBR.get(module, module) for module in args.modules
+    ]
 
-        logger.done(
-            "flagged for one-time skip: {}".format(", ".join(args.modules))
-        )
+    with open_state_file(repo) as state_file:
+        for abbr in abbrs:
+            if abbr not in state_file.skip_once:
+                state_file.skip_once.append(abbr)
+
+        logger.done("flagged for one-time skip: {}".format(", ".join(abbrs)))
 
 
 # Public API  ##################################################################
@@ -79,10 +100,10 @@ def register_cli_skip_once_parser(cli_subparser):
         "modules",
         metavar="MODULE",
         nargs="+",
-        choices=SKIPPABLE_MODULES,
-        help="module(s) to skip once on their next hook run",
+        choices=_SKIPPABLE_MODULE_CHOICES,
+        help="module(s) to skip once on their next hook run, by full "
+        "name or abbr",
     )
-    # TODO add abbr
 
     add_verbose_arguments(skip_once_parser)
 
