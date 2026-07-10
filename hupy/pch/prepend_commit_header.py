@@ -50,27 +50,26 @@ def _get_release_type_word(version, pch_config):
     """
     map a version string to its release-type word
     """
-    if pch_config.alpha_tag and pch_config.alpha_tag in version:
-        return "Alpha "
-    elif pch_config.beta_tag and pch_config.beta_tag in version:
-        return "Beta "
-    elif (
-        pch_config.release_candidate_tag
-        and pch_config.release_candidate_tag in version
-    ):
-        return "Release Candidate "
-    elif pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
+    tagged_words = (
+        (pch_config.alpha_tag, "Alpha "),
+        (pch_config.beta_tag, "Beta "),
+        (pch_config.release_candidate_tag, "Release Candidate "),
+    )
+    for tag, word in tagged_words:
+        if tag and tag in version:
+            return word
+
+    if pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
         return "Pre-Alpha "
-    elif pch_config.enable_vertical_slice and re.match(
+    if pch_config.enable_vertical_slice and re.match(
         r"^0\.[5-9]\.\d+", version
     ):
         return "Vertical Slice "
-    elif re.match(r"^0\.\d+\.\d+", version):
+    if re.match(r"^0\.\d+\.\d+", version):
         return "Prototype "
-    elif re.match(r"^\d+\.\d+\.\d+", version):
+    if re.match(r"^\d+\.\d+\.\d+", version):
         return "Stable "
-    else:
-        return ""
+    return ""
 
 
 def _gen_bumped_version_header(header_word):
