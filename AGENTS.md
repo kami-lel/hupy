@@ -28,7 +28,7 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test file naming: test layout mirrors source layout — top-level modules map directly (`hupy/commit_type.py` → `tests/commit_type_test.py`); packages nest (`hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`, split further by scenario group). Fixtures shared by every suite (the git bundle, the repo-scenario builder) live in `tests/fixtures/`, not colocated with any one package's tests; `tests/pch/` and `tests/ttg/` each `sys.path.insert` that directory in their `conftest.py` to import `prep_repo`.
+Test file naming: test layout mirrors source layout — packages nest (`hupy/cbm/branch_type.py` → `tests/cbm/cbm-branch_type_test.py`, `hupy/cbm/get_current_commit_type.py` → `tests/cbm/grct/cbm-grct-*_test.py`; `hupy/ver_grep/branch_version.py` → `tests/vg/vg-grep_*_branch_version_test.py`; `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`), split further by scenario group. Fixtures shared by every suite (the git bundle, the repo-scenario builder) live in `tests/fixtures/`, not colocated with any one package's tests; `tests/pch/` and `tests/ttg/` each `sys.path.insert` that directory in their `conftest.py` to import `prep_repo`.
 
 The shared `repo_dir` pytest fixture (`tmp_path / "repo"`) lives in the root `tests/conftest.py` and applies to every suite. Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the shared git bundle (`tests/fixtures/default_repo.bundle`) and dynamically constructs branches/commits/merge state — reused across unit tests and the `examples/pch/` and `examples/ttg/` demo scripts, and runnable standalone as a CLI:
 

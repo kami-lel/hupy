@@ -24,6 +24,7 @@ logger.propagate = False
 # auxiliary  ###################################################################
 
 # Fixme rewrite & check all wording
+# Fixme stable release & prototype release
 
 
 def _gen_stable_release_header_content(_):
