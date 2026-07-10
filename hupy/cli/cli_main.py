@@ -40,7 +40,7 @@ register_cli_ich_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
 
 
-# FIXME work w/ both cache & persistent
+# Todo add state file
 # Todo allow tmp skip some feature for next round
 
 # todo dry run feature for hooks CLI
