@@ -1,5 +1,5 @@
 """
-ttg-tt_gating_ignored_globs_test.py
+ttg-gate_tt_ignored_globs_test.py
 
 tests for `perform_triage_tags_gating` respecting the
 `ttg.ignored_path_globs` config: staged files matching a configured
@@ -14,7 +14,7 @@ import pytest
 from config_fixture import load_config_fixture
 from prep_repo import prepare_repo_with_files
 
-from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.ttg.gate_tt import perform_triage_tags_gating
 
 _BUCKET = "feature_landing"
 
@@ -28,7 +28,7 @@ def _run(repo_dir, files, ignored_path_globs):
         overrides={"ttg": {"ignored_path_globs": list(ignored_path_globs)}}
     )
     with mock.patch(
-        "hupy.ttg.tt_gating.load_hupy_config", return_value=config
+        "hupy.ttg.gate_tt.load_hupy_config", return_value=config
     ):
         perform_triage_tags_gating(git.Repo(str(repo_dir)))
 

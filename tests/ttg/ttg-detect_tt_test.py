@@ -1,7 +1,7 @@
 """
-ttg-tt_detect_test.py
+ttg-detect_tt_test.py
 
-tests for triage tag detection in `tt_detect.py`
+tests for triage tag detection in `detect_tt.py`
 """
 
 import shutil
@@ -12,7 +12,7 @@ from unittest import mock
 import git
 import pytest
 
-from hupy.ttg.tt_detect import (
+from hupy.ttg.detect_tt import (
     TriageTagType,
     detect_triage_tags_in_staged_file,
 )
@@ -75,7 +75,7 @@ class TestDetectTriageTagsInStagedFile:
 
     def test_subprocess_error_raises_system_exit(self, repo_dir):
         with mock.patch(
-            "hupy.ttg.tt_detect.subprocess.check_output",
+            "hupy.ttg.detect_tt.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(1, "git"),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -85,7 +85,7 @@ class TestDetectTriageTagsInStagedFile:
 
     def test_subprocess_error_on_missing_file(self, repo_dir):
         with mock.patch(
-            "hupy.ttg.tt_detect.subprocess.check_output",
+            "hupy.ttg.detect_tt.subprocess.check_output",
             side_effect=subprocess.CalledProcessError(
                 128, "git", stderr="fatal: not a git repo"
             ),

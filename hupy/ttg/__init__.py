@@ -8,6 +8,6 @@ from hupy import PROJ_LOGGER_NAME
 
 TTG_LOGGER_NAME = PROJ_LOGGER_NAME + ".TTG"
 
-from .tt_gating import perform_triage_tags_gating
+from .gate_tt import perform_triage_tags_gating
 
 __all__ = ("perform_triage_tags_gating",)

@@ -19,7 +19,7 @@ sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.ttg import TTG_LOGGER_NAME  # noqa: E402
-from hupy.ttg.tt_gating import perform_triage_tags_gating  # noqa: E402
+from hupy.ttg.gate_tt import perform_triage_tags_gating  # noqa: E402
 from prep_repo import prepare_repo_with_files  # noqa: E402
 
 

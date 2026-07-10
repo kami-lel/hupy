@@ -6,7 +6,7 @@ import git
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.config.load_config import load_hupy_config
-from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.ttg.gate_tt import perform_triage_tags_gating
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 
 # logger  ######################################################################
