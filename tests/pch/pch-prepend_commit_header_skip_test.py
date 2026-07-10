@@ -9,8 +9,11 @@ Version Release
 import git
 
 from hupy.pch import prepend_commit_header
+from hupy.state.state_file import HupyStateFile
 from pch_helpers import read_commit_editmsg, write_commit_editmsg
 from prep_repo import prepare_repo_with_files
+
+_STATE_FILE = HupyStateFile()
 
 _SENTINEL = "unrelated commit message\n"
 
@@ -22,7 +25,7 @@ def _assert_skipped(repo_dir, bucket):
     prepare_repo_with_files(repo_dir, bucket, {"feature.py": "tt_none.py"})
     write_commit_editmsg(repo_dir, _SENTINEL)
 
-    prepend_commit_header(git.Repo(str(repo_dir)))
+    prepend_commit_header(git.Repo(str(repo_dir)), _STATE_FILE)
 
     assert read_commit_editmsg(repo_dir) == _SENTINEL
 

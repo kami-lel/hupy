@@ -30,7 +30,7 @@ def _prepare_commit_msg_main(args):  ###########################################
 
         logger.enter("start prepare-commit-msg stage")
 
-        prepend_commit_header(repo)
+        prepend_commit_header(repo, state_file)
 
         logger.succ("prepare-commit-msg stage finished")
         logger.done("all HUPy hooks finished")

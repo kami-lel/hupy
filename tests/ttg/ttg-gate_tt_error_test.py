@@ -10,8 +10,11 @@ from unittest import mock
 import git
 import pytest
 
+from hupy.state.state_file import HupyStateFile
 from hupy.ttg.gate_tt import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
+
+_STATE_FILE = HupyStateFile()
 
 
 # fixtures  #####################################################################
@@ -43,7 +46,7 @@ class TestPerformTriageTagsGatingErrors:
             side_effect=subprocess.CalledProcessError(1, "git"),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(git.Repo(str(repo_dir)))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
 
             assert exc_info.value.code == 1
 
@@ -62,7 +65,7 @@ class TestPerformTriageTagsGatingErrors:
             ),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(git.Repo(str(repo_dir)))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
 
             assert exc_info.value.code == 1
 
@@ -81,6 +84,6 @@ class TestPerformTriageTagsGatingErrors:
             ),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(git.Repo(str(repo_dir)))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
 
             assert exc_info.value.code == 1

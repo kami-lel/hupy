@@ -8,8 +8,11 @@ tests for `perform_triage_tags_gating` on Feature Landing merges
 import git
 import pytest
 
+from hupy.state.state_file import HupyStateFile
 from hupy.ttg.gate_tt import perform_triage_tags_gating
 from prep_repo import prepare_repo_with_files
+
+_STATE_FILE = HupyStateFile()
 
 _BUCKET = "feature_landing"
 
@@ -20,13 +23,13 @@ _BUCKET = "feature_landing"
 def _assert_gated(repo_dir, files):
     prepare_repo_with_files(repo_dir, _BUCKET, files)
     with pytest.raises(SystemExit) as exc_info:
-        perform_triage_tags_gating(git.Repo(str(repo_dir)))
+        perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
     assert exc_info.value.code == 1
 
 
 def _assert_passes(repo_dir, files):
     prepare_repo_with_files(repo_dir, _BUCKET, files)
-    perform_triage_tags_gating(git.Repo(str(repo_dir)))
+    perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
 
 
 # tests  ########################################################################

@@ -6,6 +6,7 @@ block commits made directly on protected branches
 
 from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
+from hupy.should_run_module import should_run_module
 from ..cbm import CommitType, get_current_commit_type, get_target_branch
 from . import BDC_LOGGER_NAME
 
@@ -32,7 +33,7 @@ def _get_protected_branches(repo):
 
 
 # Public API  ##################################################################
-def ban_direct_commit(repo):
+def ban_direct_commit(repo, state_file):
     """
     block the current commit if it directly targets a protected
     branch.
@@ -40,10 +41,11 @@ def ban_direct_commit(repo):
 
     :param repo: git repository object
     :type repo: git.Repo
+    :param state_file: the open HUPy state file, as yielded by
+            ``open_state_file``
+    :type state_file: HupyStateFile
     """
-    config = load_hupy_config(repo)
-    if config.bdc.is_disabled:
-        logger.skip("Ban Direct Commit disabled")
+    if not should_run_module(repo, state_file, "bdc"):
         return
 
     logger.enter("perform Ban Direct Commit")

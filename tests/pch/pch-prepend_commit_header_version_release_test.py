@@ -13,6 +13,7 @@ from unittest import mock
 import git
 
 from hupy.pch import prepend_commit_header
+from hupy.state.state_file import HupyStateFile
 from pch_helpers import (
     read_commit_editmsg,
     seed_commit_editmsg_from_merge_msg,
@@ -20,6 +21,8 @@ from pch_helpers import (
     write_commit_editmsg,
 )
 from prep_repo import prepare_repo_with_files
+
+_STATE_FILE = HupyStateFile()
 
 _BUCKET = "version_release"
 
@@ -60,7 +63,7 @@ class TestVersionReleaseHeaderNoVersion:
         original = read_commit_editmsg(repo_dir)
 
         with _patch_version(""):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         result = read_commit_editmsg(repo_dir)
         assert result.startswith(self._HEADER + "\n\n")
@@ -71,7 +74,7 @@ class TestVersionReleaseHeaderNoVersion:
         seed_commit_editmsg_from_merge_msg(repo_dir)
 
         with _patch_version(""):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert stray_temp_files(repo_dir) == []
 
@@ -80,7 +83,7 @@ class TestVersionReleaseHeaderNoVersion:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version(""):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             self._HEADER + "\n\nsubject only\n"
@@ -100,7 +103,7 @@ class TestVersionReleaseHeaderWithVersion:
         original = read_commit_editmsg(repo_dir)
 
         with _patch_version(self._VERSION):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         result = read_commit_editmsg(repo_dir)
         assert result.startswith(self._HEADER + "\n\n")
@@ -111,7 +114,7 @@ class TestVersionReleaseHeaderWithVersion:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version(self._VERSION):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             self._HEADER + "\n\nsubject only\n"
@@ -128,7 +131,7 @@ class TestVersionReleaseHeaderScenarios:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version("v2024.07-nightly"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Version Release: v2024.07-nightly\n\nsubject only\n"
@@ -139,7 +142,7 @@ class TestVersionReleaseHeaderScenarios:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version("0.4.0"), _patch_target_version("0.3.0"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Minor Prototype Release: 0.4.0\n\nsubject only\n"
@@ -152,7 +155,7 @@ class TestVersionReleaseHeaderScenarios:
         # target set to a version that would otherwise trigger a
         # major bump, proving alpha releases skip the bump prefix
         with _patch_version("1.3.0-alpha.1"), _patch_target_version("0.9.0"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Alpha Release: 1.3.0-alpha.1\n\nsubject only\n"
@@ -165,7 +168,7 @@ class TestVersionReleaseHeaderScenarios:
         # target set to a version that would otherwise trigger a
         # major bump, proving beta releases skip the bump prefix
         with _patch_version("1.3.0-beta.1"), _patch_target_version("0.9.0"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Beta Release: 1.3.0-beta.1\n\nsubject only\n"
@@ -178,7 +181,7 @@ class TestVersionReleaseHeaderScenarios:
         # target set to a version that would otherwise trigger a
         # major bump, proving RC releases skip the bump prefix
         with _patch_version("1.3.0-rc.1"), _patch_target_version("0.9.0"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Release Candidate: 1.3.0-rc.1\n\nsubject only\n"
@@ -189,7 +192,7 @@ class TestVersionReleaseHeaderScenarios:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version("2.0.0"), _patch_target_version("1.2.3"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Major Stable Release: 2.0.0\n\nsubject only\n"
@@ -200,7 +203,7 @@ class TestVersionReleaseHeaderScenarios:
         write_commit_editmsg(repo_dir, "subject only\n")
 
         with _patch_version("0.9.0"), _patch_target_version("0.8.5"):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == (
             "Minor Pre-Alpha Release: 0.9.0\n\nsubject only\n"

@@ -36,6 +36,7 @@ def should_run_module(repo, state_file, module_abbr):
     :return: ``True`` if the module should run this invocation
     :rtype: bool
     """
+    # FIXME  print out proper name
     config = load_hupy_config(repo)
     if getattr(config, module_abbr).is_disabled:
         logger.skip("{} disabled in config file".format(module_abbr))

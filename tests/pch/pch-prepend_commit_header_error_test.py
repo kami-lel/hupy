@@ -11,12 +11,15 @@ import git
 import pytest
 
 from hupy.pch import prepend_commit_header
+from hupy.state.state_file import HupyStateFile
 from pch_helpers import (
     read_commit_editmsg,
     seed_commit_editmsg_from_merge_msg,
     stray_temp_files,
 )
 from prep_repo import prepare_repo_with_files
+
+_STATE_FILE = HupyStateFile()
 
 
 # helpers  ######################################################################
@@ -48,7 +51,7 @@ class TestPrependCommitHeaderErrors:
         # COMMIT_EDITMSG intentionally left unseeded
 
         with pytest.raises(FileNotFoundError):
-            prepend_commit_header(repo)
+            prepend_commit_header(repo, _STATE_FILE)
 
     def test_atomic_write_failure_leaves_original_untouched(self, repo_dir):
         repo = _prepare_feature_landing(repo_dir)
@@ -60,7 +63,7 @@ class TestPrependCommitHeaderErrors:
             side_effect=OSError("disk full"),
         ):
             with pytest.raises(OSError):
-                prepend_commit_header(repo)
+                prepend_commit_header(repo, _STATE_FILE)
 
         assert read_commit_editmsg(repo_dir) == original
         assert stray_temp_files(repo_dir) == []

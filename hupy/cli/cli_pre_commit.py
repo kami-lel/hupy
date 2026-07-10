@@ -30,8 +30,8 @@ def _pre_commit_main(args):  ###################################################
 
         logger.enter("start pre-commit stage")
 
-        ban_direct_commit(repo)
-        perform_triage_tags_gating(repo)
+        ban_direct_commit(repo, state_file)
+        perform_triage_tags_gating(repo, state_file)
 
         logger.succ("pre-commit stage finished")
 
