@@ -1,24 +1,23 @@
 """
 config_fixture.py
 
-shared HupyConfigFile fixture: loads the base config from
-tests/fixtures/config/default_config.jsonc, deep-merges caller-supplied
-overrides into it, and schema-validates the result; replaces
-constructing HupyConfigFile straight from partial kwargs, which relied
-on field defaults the schema doesn't provide
+shared HupyConfigFile fixture: loads the base config from the shipped
+``.hupy.config.jsonc`` asset, deep-merges caller-supplied overrides
+into it, and schema-validates the result; replaces constructing
+HupyConfigFile straight from partial kwargs, which relied on field
+defaults the schema doesn't provide
 """
-
-from pathlib import Path
 
 import json5
 
 from hupy.config.config_file import HupyConfigFile
+from hupy.config.write_config import DEFAULT_CONFIG_ASSET
 
 __all__ = ("CONFIG_FIXTURE_PATH", "load_config_fixture")
 
 # constants  ###################################################################
 
-CONFIG_FIXTURE_PATH = Path(__file__).parent / "config" / "default_config.jsonc"
+CONFIG_FIXTURE_PATH = DEFAULT_CONFIG_ASSET
 
 
 # helpers  ######################################################################

@@ -112,6 +112,15 @@ class _Bdc(BaseModel):
     ban_commit_to_branches: list[str]
 
 
+class _Hb(BaseModel):
+    """
+    configuration for the HB module (hook bracket)
+    """
+
+    pre_commit: list[str]
+    prepare_commit_msg: list[str]
+
+
 class HupyConfigFile(BaseModel):
     """
     schema for the HUPy config file (``.hupy.config.json``)
@@ -123,6 +132,7 @@ class HupyConfigFile(BaseModel):
     cbm: _Cbm
     pch: _Pch
     bdc: _Bdc
+    hb: _Hb
 
     @model_validator(mode="after")
     def _validate_hupy_version(self):
