@@ -107,8 +107,8 @@ class _Bdc(BaseModel):
     configuration for the BDC module (ban direct commit)
     """
 
-    ban_commit_to_dev: bool = True
     ban_commit_to_main: bool = True
+    ban_commit_to_dev: bool = False
     ban_commit_to_branches: list[str] = Field(default_factory=list)
 
 
