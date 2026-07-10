@@ -23,14 +23,14 @@
 
 ## `ver_grep`
 
-Powers the *Prepend Commit Header* hook: a **Version Release** merge gets the header `Version Release: <version>` when a version resolves, else plain `Version Release`.
+Powers the *Prepend Commit Header* hook: a **Stable Release** merge gets the header `Stable Release: <version>` when a version resolves, else plain `Stable Release`.
 
 | Sub-field | Purpose |
 |---|---|
 | `version_file` | file to read, relative to the repo root |
 | `version_line_pattern` | Python regex whose first capturing group `( )` is the version |
 
-The pattern runs per line (`re.search`); the first matching line wins. Escape any double quote in JSON as `\"`. Empty fields disable `ver_grep`, so the header falls back to plain `Version Release`.
+The pattern runs per line (`re.search`); the first matching line wins. Escape any double quote in JSON as `\"`. Empty fields disable `ver_grep`, so the header falls back to plain `Stable Release`.
 
 ### Common Patterns
 

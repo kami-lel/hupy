@@ -22,10 +22,11 @@ from prep_repo import prepare_repo_with_files
 # helpers  ######################################################################
 
 
-def _prepare_feature_finish(repo_dir):
+def _prepare_feature_landing(repo_dir):
     prepare_repo_with_files(
-        repo_dir, "feature_finish", {"feature.py": "tt_none.py"}
+        repo_dir, "feature_landing", {"feature.py": "tt_none.py"}
     )
+    return git.Repo(str(repo_dir))
 
 
 # tests  ########################################################################
@@ -33,18 +34,24 @@ def _prepare_feature_finish(repo_dir):
 
 class TestPrependCommitHeaderErrors:
     def test_nonexistent_repo_path_raises(self, tmp_path):
+        # repo construction is now the caller's responsibility; a bad
+        # path must fail there, before prepend_commit_header is ever
+        # reached
         with pytest.raises(git.NoSuchPathError):
-            prepend_commit_header(str(tmp_path / "does_not_exist"))
+            git.Repo(
+                str(tmp_path / "does_not_exist"),
+                search_parent_directories=True,
+            )
 
     def test_missing_commit_editmsg_raises_file_not_found(self, repo_dir):
-        _prepare_feature_finish(repo_dir)
+        repo = _prepare_feature_landing(repo_dir)
         # COMMIT_EDITMSG intentionally left unseeded
 
         with pytest.raises(FileNotFoundError):
-            prepend_commit_header(str(repo_dir))
+            prepend_commit_header(repo)
 
     def test_atomic_write_failure_leaves_original_untouched(self, repo_dir):
-        _prepare_feature_finish(repo_dir)
+        repo = _prepare_feature_landing(repo_dir)
         seed_commit_editmsg_from_merge_msg(repo_dir)
         original = read_commit_editmsg(repo_dir)
 
@@ -53,7 +60,7 @@ class TestPrependCommitHeaderErrors:
             side_effect=OSError("disk full"),
         ):
             with pytest.raises(OSError):
-                prepend_commit_header(str(repo_dir))
+                prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == original
         assert stray_temp_files(repo_dir) == []

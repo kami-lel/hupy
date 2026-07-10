@@ -8,9 +8,8 @@
     "STEADYS"
   ],
   "better-todo-tree.filtering.excludeGlobs": [
-    "**/hooks_utility/*/**",
-    "**/node_modules/*/**",
-    "tests/testee/**",
+    "tests/fixtures/**",
+    "tests/**/fixtures/**",
     "examples/ttg/**",
   ],
 }

@@ -1,9 +1,10 @@
-# Hooks Utility Python `hupy` README
+
 
 > **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
 
 <!--
 Todo add PCH more scenario eg keep up feature branch with dev
+bug missing feature such that direct bash command can be used
 Todo ban direct commit to main
 Todo toggle direct commit to dev
 -->
@@ -113,4 +114,4 @@ flowchart TD
 See the per-feature docs for detailed usage:
 
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
-- [Prepend Commit Header (PCH)](docs/pch_doc.md)
+- [Commit, Branch & Merge (CBM) and Prepend Commit Header (PCH)](docs/cbm_doc.md)

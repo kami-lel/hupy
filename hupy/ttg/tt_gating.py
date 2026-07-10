@@ -11,7 +11,7 @@ import sys
 
 from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from ..ttg import TTG_LOGGER_NAME
-from ..commit_type import CommitType, get_current_commit_type
+from ..cbm import CommitType, get_current_commit_type
 from .tt_detect import (
     _TT_PATTERN,
     TriageTagType,
@@ -26,14 +26,14 @@ logger.propagate = False
 # helpers  #####################################################################
 
 
-def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
+def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
     try:
         cached_files = (
             subprocess.check_output(
                 ("git", "diff", "--cached", "--name-only"),
                 text=True,
                 stderr=subprocess.PIPE,
-                cwd=repo_root,
+                cwd=repo.working_dir,
             )
             .strip()
             .split("\n")
@@ -49,7 +49,7 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
             continue
 
         tags_in_file = detect_triage_tags_in_staged_file(
-            file_path, repo_root=repo_root
+            file_path, repo_root=repo.working_dir
         )
         filtered = TriageTagType.filter_by_group(
             [tag for tag, _, _ in tags_in_file],
@@ -93,27 +93,26 @@ def _perform_triage_tags_by_filtering_group(repo_root, filtering_tt_group):
 # Public API  ##################################################################
 
 
-def perform_triage_tags_gating(repo_root):
+def perform_triage_tags_gating(repo):
     """
     execute triage tag gating for the current commit.
 
 
-    :param repo_root: path to the git repository or any of its
-            subdirectories
-    :type repo_root: str
+    :param repo: git repository object
+    :type repo: git.Repo
     """
     logger.enter("performing TTG")
 
-    commit_type = get_current_commit_type(repo_root)
+    commit_type = get_current_commit_type(repo)
 
-    if CommitType.FEATURE_FINISH in commit_type:
-        logger.debug("TTG on Feature Finish merge")
-        _perform_triage_tags_by_filtering_group(repo_root, TriageTagType.LOUDS)
+    if CommitType.FEATURE_LANDING in commit_type:
+        logger.debug("TTG on Feature Landing merge")
+        _perform_triage_tags_by_filtering_group(repo, TriageTagType.LOUDS)
 
-    elif CommitType.VERSION_RELEASE in commit_type:
-        logger.debug("TTG on Version Release merge")
+    elif CommitType.STABLE_RELEASE in commit_type:
+        logger.debug("TTG on Stable Release merge")
         _perform_triage_tags_by_filtering_group(
-            repo_root, TriageTagType.LOUDS | TriageTagType.STEADYS
+            repo, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
 
     else:

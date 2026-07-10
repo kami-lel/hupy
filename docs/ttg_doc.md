@@ -20,8 +20,8 @@ TTG only acts on the two protected merges, and the release gate is stricter:
 
 | Merge | Blocks |
 |---|---|
-| **Feature Finish** — a feature branch merged into `dev` | Loud |
-| **Version Release** — `dev` merged into `main` | Loud + Steady |
+| **Feature Landing** — a feature branch merged into `dev` | Loud |
+| **Stable Release** — `dev` merged into `main` | Loud + Steady |
 | anything else (regular commit, unrelated merge) | *nothing* |
 
 Quiet tags are never blocked, so low-priority notes can travel with the code.
