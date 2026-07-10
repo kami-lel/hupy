@@ -33,12 +33,11 @@ def _is_path_ignored(file_path, ignored_path_globs):
     return any(fnmatch.fnmatch(file_path, glob) for glob in ignored_path_globs)
 
 
-def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
-    # TODO break down aux fx
-    config = load_hupy_config(repo)
-    ignored_path_globs = config.ttg.ignored_path_globs
-    disable_tt_detect_by_type = config.ttg.disable_tt_detect_by_type
-
+def _get_staged_file_paths(repo):
+    """
+    :return: paths of files staged in ``repo``
+    :rtype: list
+    """
     try:
         cached_files = (
             subprocess.check_output(
@@ -54,12 +53,23 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
         logger.critical("unable to get git cached files")
         raise SystemExit(1) from e
 
+    return [file_path for file_path in cached_files if file_path]
+
+
+def _collect_gated_tags(
+    repo,
+    cached_files,
+    filtering_tt_group,
+    ignored_path_globs,
+    disable_tt_detect_by_type,
+):
+    """
+    :return: staged file path -> gated ``(tag, line, line_no)`` tuples
+    :rtype: dict
+    """
     filtered_results = {}
 
     for file_path in cached_files:
-        if not file_path:
-            continue
-
         if _is_path_ignored(file_path, ignored_path_globs):
             logger.debug("skip ignored path: " + file_path)
             continue
@@ -78,29 +88,45 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
         if gated_tags:
             filtered_results[file_path] = gated_tags
 
-    if filtered_results:
-        logger.fail("gated Triage Tags found")
-        renderer = AnsiRenderer(sys.stdout)
-        msg_lines = [""]
-        for file_path, results in filtered_results.items():
-            msg_lines.append(gen_comment_banner_centered(file_path, "-"))
-            line_no_width = max(len(str(line_no)) for _, _, line_no in results)
-            for _, line, line_no in results:
-                line_no_str = renderer.color_grey(
-                    str(line_no).rjust(line_no_width)
+    return filtered_results
+
+
+def _report_gated_tags(filtered_results):
+    logger.fail("gated Triage Tags found")
+    renderer = AnsiRenderer(sys.stdout)
+    msg_lines = [""]
+    for file_path, results in filtered_results.items():
+        msg_lines.append(gen_comment_banner_centered(file_path, "-"))
+        line_no_width = max(len(str(line_no)) for _, _, line_no in results)
+        for _, line, line_no in results:
+            line_no_str = renderer.color_grey(str(line_no).rjust(line_no_width))
+            stripped_line = line.strip()
+            match = re.search(_TT_PATTERN, stripped_line)
+            if match:
+                colored_tag = renderer.color_triage_tag(match.group(1))
+                stripped_line = (
+                    stripped_line[: match.start()]
+                    + colored_tag
+                    + stripped_line[match.end() :]
                 )
-                stripped_line = line.strip()
-                match = re.search(_TT_PATTERN, stripped_line)
-                if match:
-                    colored_tag = renderer.color_triage_tag(match.group(1))
-                    stripped_line = (
-                        stripped_line[: match.start()]
-                        + colored_tag
-                        + stripped_line[match.end() :]
-                    )
-                msg_lines.append(line_no_str + " " + stripped_line)
-        logger.info("\n".join(msg_lines))
-        raise SystemExit(1)
+            msg_lines.append(line_no_str + " " + stripped_line)
+    logger.info("\n".join(msg_lines))
+    raise SystemExit(1)
+
+
+def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
+    config = load_hupy_config(repo)
+    cached_files = _get_staged_file_paths(repo)
+    filtered_results = _collect_gated_tags(
+        repo,
+        cached_files,
+        filtering_tt_group,
+        config.ttg.ignored_path_globs,
+        config.ttg.disable_tt_detect_by_type,
+    )
+
+    if filtered_results:
+        _report_gated_tags(filtered_results)
 
 
 # Public API  ##################################################################
