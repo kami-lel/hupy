@@ -23,11 +23,9 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-# config sections carrying an ``is_disabled`` flag, also the keys
-# usable with ``skip-once``
 SKIPPABLE_MODULES = ("ver_grep", "ttg", "pch", "bdc", "hb")
 
-_SKIP_ONCE_DOC = "flag modules to be skipped once on their next hook run"
+_SKIP_ONCE_DOC = "skip modules in next hook run"
 
 _DESCRIPTION = __doc__ + """
 
@@ -71,6 +69,7 @@ def register_cli_skip_once_parser(cli_subparser):
     """
     skip_once_parser = cli_subparser.add_parser(
         "skip-once",
+        aliases=["s"],
         help=_SKIP_ONCE_DOC,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
