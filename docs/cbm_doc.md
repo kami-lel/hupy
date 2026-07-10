@@ -181,27 +181,44 @@ returns something like `"add-login"` and `get_target_branch` returns
 `get_target_branch` returns `None` on a detached `HEAD`, since there is
 no named branch to report.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## `hupy.pch` Module
 
 **Prepend Commit Header** is *HUPy*'s `prepare-commit-msg` hook. When you make a **merge commit**, it adds a short header line to the top of the commit message so the history reads clearly at a glance — you don't have to write it yourself.
 
-It recognizes every merge type listed under [Merge Type](#merge-type) above and leaves every other commit (`OTHER_COMMIT`, `OTHER_MERGE`) untouched.
-
-### What It Does
-
-| Merge Type | Header added |
-| --- | --- |
-| Feature Landing | `Feature Landing: <branch-name>` |
-| Stable Release | `Stable Release: <version>` |
-| Sync Backport | `Sync Backport from: <version>` |
-| Catch Up | `Catch Up` |
-| Hotfix Release | `Hotfix Release: <version>` |
-| Hotfix Backport | `Hotfix Backport from: <version>` |
-| Release Cut | `Release Cut: <version>` |
-| Release Backport | `Release Backport from: <version>` |
-| Other Merge / regular commit | *nothing — message untouched* |
-
-The header goes on the first line, followed by a blank line and then git's original message:
+It recognizes every merge type listed under [Merge Type](#merge-type) above and leaves every other commit (`OTHER_COMMIT`, `OTHER_MERGE`) untouched. The header goes on the first line, followed by a blank line and then git's original message:
 
 ```
 Feature Landing: add-user-auth
@@ -209,11 +226,17 @@ Feature Landing: add-user-auth
 Merge branch 'add-user-auth' into dev
 ```
 
-### Version Number
 
-On any merge type with a `<version>` placeholder above, the header includes a version number — e.g. `Stable Release: 1.0.0`. That number is read from a file you point *HUPy* at via the `ver_grep` setting; if it isn't configured, the header falls back to the plain form with no number, e.g. `Stable Release`.
 
-See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
+
+
+
+
+
+
+
+
+
 
 ### `prepend_commit_header(repo)`
 
@@ -228,3 +251,67 @@ prepend_commit_header(repo)
 ```
 
 `repo` must be an already-open `git.Repo`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## `hupy.ver_grep` Module
+
+Extracts a repo's version string by regex-matching a line in a configured version file. *PCH* uses it to fill in the `<version>` placeholder on the merge types below; if `ver_grep` isn't configured, the header falls back to the plain form with no number.
+
+See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
+
+
+
+
+
+
+
+
+
+
+
+
+
+### `grep_source_branch_version()` / `grep_target_branch_version()`
+
+Read straight from each branch's own tip via git — the working tree mid-merge holds the (possibly conflicted) target branch content, not either branch cleanly. `grep_source_branch_version` reads the merge's incoming branch, `grep_target_branch_version` reads the currently checked-out branch.
+
+```python
+from hupy.ver_grep import grep_source_branch_version, grep_target_branch_version
+
+grep_source_branch_version()
+grep_target_branch_version()
+```
+
+Both take no arguments — they resolve the repo from the current working directory and read `get_source_branch` / `get_target_branch` internally. Both return `""` if `ver_grep` isn't configured, and raise `SystemExit` if the version file isn't found on that branch or the pattern matches no line.
