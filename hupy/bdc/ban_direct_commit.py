@@ -52,7 +52,7 @@ def ban_direct_commit(repo):
     commit_type = get_current_commit_type(repo)
 
     if CommitType.MERGE in commit_type:
-        logger.succ("merge into protected branch")
+        logger.pass_("merging into protected branch")
         return
 
     logger.fail("attempt direct commit to protected branch")
