@@ -12,10 +12,8 @@ from unittest import mock
 import git
 import pytest
 
-from hupy.ttg.detect_tt import (
-    TriageTagType,
-    detect_triage_tags_in_staged_file,
-)
+from hupy.ttg.detect_tt import detect_triage_tags_in_staged_file
+from hupy.ttg.triage_tag_type import TriageTagType
 
 _FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 _FIXTURES_ROOT = Path(__file__).parent / "fixtures"

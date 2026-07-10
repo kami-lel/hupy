@@ -14,8 +14,8 @@ from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from hupy.config.load_config import load_hupy_config
 from ..ttg import TTG_LOGGER_NAME
 from ..cbm import CommitType, get_current_commit_type
-from .triage_tag_type import _TT_PATTERN, TriageTagType
-from .detect_tt import detect_triage_tags_in_staged_file
+from .triage_tag_type import TriageTagType
+from .detect_tt import _TT_PATTERN, detect_triage_tags_in_staged_file
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)

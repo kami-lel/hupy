@@ -20,6 +20,62 @@ logger = getLogger(TTG_LOGGER_NAME)
 
 _HUNK_HEADER_PATTERN = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
+_TT_PATTERN = (
+    r"\b(TODO|FIXME|HACK|BUG|Todo|Fixme|Hack|Bug|" r"todo|fixme|hack|bug)\b"
+)
+
+_TT_STR_TO_NAME = {
+    "TODO": "LOUD_TODO",
+    "FIXME": "LOUD_FIXME",
+    "HACK": "LOUD_HACK",
+    "BUG": "LOUD_BUG",
+    "Todo": "STEADY_TODO",
+    "Fixme": "STEADY_FIXME",
+    "Hack": "STEADY_HACK",
+    "Bug": "STEADY_BUG",
+    "todo": "QUIET_TODO",
+    "fixme": "QUIET_FIXME",
+    "hack": "QUIET_HACK",
+    "bug": "QUIET_BUG",
+}
+
+
+# auxiliary  ###################################################################
+
+
+def _find_first_tag_in_line(line, comment_prefix=None):
+    """
+    find first triage tag in a line.
+
+    scan a line for the first occurrence of a triage tag and
+    return the corresponding ``TriageTagType`` member. when
+    ``comment_prefix`` is given, only a tag occurring after that
+    comment-leader token on the line counts as a match; otherwise
+    the tag is matched anywhere in the line.
+
+
+    :param line: line of text to scan
+    :type line: str
+    :param comment_prefix: comment-leader token (eg ``"//"``,
+            ``"#"``, ``"<!--"``) the tag must follow, or ``None``
+            to match the tag anywhere in the line
+    :type comment_prefix: str or None
+    :return: the first ``TriageTagType`` member found, or ``None``
+    :rtype: TriageTagType or None
+    """
+    pattern = (
+        _TT_PATTERN
+        if comment_prefix is None
+        else re.escape(comment_prefix) + r".*?" + _TT_PATTERN
+    )
+    match = re.search(pattern, line)
+    if not match:
+        return None
+
+    tag_text = match.group(1)
+    member_name = _TT_STR_TO_NAME[tag_text]
+    return TriageTagType[member_name]
+
 
 # Public API  ##################################################################
 
@@ -82,9 +138,7 @@ def detect_triage_tags_in_staged_file(
 
         if line.startswith("+") and not line.startswith("+++"):
             added_line = line[1:]
-            tag_member = TriageTagType.find_first_in_line(
-                added_line, comment_prefix
-            )
+            tag_member = _find_first_tag_in_line(added_line, comment_prefix)
             if tag_member:
                 results.append((tag_member, added_line, line_no))
             line_no += 1
