@@ -7,7 +7,7 @@ import pathlib
 import git
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.write_config import write_default_config
+from hupy.config.write_config import create_default_config_file
 
 
 from hupy.kamilog import (
@@ -79,7 +79,7 @@ def _init_main(args):
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     _copy_hook_stubs(hooks_dir, force)
-    write_default_config(repo_root, force)
+    create_default_config_file(repo, force)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
 

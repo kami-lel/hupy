@@ -1,11 +1,11 @@
-"""create default config file"""
+"""verify the HUPy config file"""
 
 import argparse
 import os
 import pathlib
 
 from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
-from hupy.config.write_config import create_default_config_file
+from hupy.config.load_config import load_hupy_config
 
 
 from hupy.kamilog import (
@@ -26,16 +26,16 @@ logger.propagate = False
 
 _DESCRIPTION = __doc__ + """
 
-create a default HUPy config file (.hupy.config.json) at repository root
+validate the HUPy config file (.hupy.config.jsonc) at repository root
 """
 
 
 # helpers  #####################################################################
 
 
-def _icc_main(args):
+def _verify_main(args):
     """
-    dispatch for the ``init-create-config`` subcommand.
+    dispatch for the ``verify-config-file`` subcommand.
 
 
     :param args: parsed arguments from argparse
@@ -44,34 +44,33 @@ def _icc_main(args):
     set_logging_level_by_namespace(args, logger=logger)
 
     repo_path = args.repo_path
-    force = args.force
 
     repo = load_git_repo(repo_path)
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    logger.enter("HUPy config creation for: {}".format(repo_root))
+    logger.enter("HUPy config file verification for: {}".format(repo_root))
 
-    create_default_config_file(repo, force)
+    load_hupy_config(repo)
 
-    logger.done("HUPy config created for: {}".format(repo_root))
+    logger.done("HUPy config file valid for: {}".format(repo_root))
 
 
 # Public API  ##################################################################
 
 
-def register_cli_icc_parser(cli_subparser):
+def register_cli_verify_parser(cli_subparser):
     """
-    register the ``init-create-config`` subcommand parser.
+    register the ``verify-config-file`` subcommand parser.
     """
-    icc_parser = cli_subparser.add_parser(
-        "init-create-config",
+    verify_parser = cli_subparser.add_parser(
+        "verify-config-file",
         help=__doc__,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    icc_parser.add_argument(
+    verify_parser.add_argument(
         "repo_path",
         metavar="REPO_PATH",
         nargs="?",
@@ -80,14 +79,6 @@ def register_cli_icc_parser(cli_subparser):
         help=REPO_PATH_HELP,
     )
 
-    icc_parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        default=False,
-        help="override an existing HUPy config file",
-    )
+    add_verbose_arguments(verify_parser)
 
-    add_verbose_arguments(icc_parser)
-
-    icc_parser.set_defaults(func=_icc_main)
+    verify_parser.set_defaults(func=_verify_main)

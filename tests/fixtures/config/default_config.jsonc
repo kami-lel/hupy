@@ -1,0 +1,26 @@
+{
+  "hupy_version": "0.3.0",
+  "default_logger_verbosity": 1,
+  "ver_grep": {
+    "version_file": "",
+    "version_line_pattern": ""
+  },
+  "cbm": {
+    "main_branch_name": "main",
+    "dev_branch_name": "dev",
+    "hotfix_branch_prefix": "hotfix",
+    "release_branch_prefix": "release"
+  },
+  "pch": {
+    "enable_vertical_slice": false,
+    "enable_pre_alpha": true,
+    "alpha_tag": "-alpha",
+    "beta_tag": "-beta",
+    "release_candidate_tag": "-rc"
+  },
+  "bdc": {
+    "ban_commit_to_main": true,
+    "ban_commit_to_dev": false,
+    "ban_commit_to_branches": []
+  }
+}

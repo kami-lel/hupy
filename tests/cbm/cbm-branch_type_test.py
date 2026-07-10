@@ -6,8 +6,9 @@ tests for `BranchType.from_name` in `branch_type.py`
 
 from unittest import mock
 
+from config_fixture import load_config_fixture
+
 from hupy.cbm.branch_type import BranchType
-from hupy.config.hupy_config_file import HupyConfigFile
 
 # helpers  ######################################################################
 
@@ -17,7 +18,7 @@ def _classify(branch_name, **cbm_overrides):
     classify ``branch_name`` against a stubbed config carrying
     ``cbm_overrides``, bypassing disk/git config loading.
     """
-    config = HupyConfigFile(cbm=cbm_overrides)
+    config = load_config_fixture(overrides={"cbm": cbm_overrides})
     with mock.patch(
         "hupy.cbm.branch_type.load_hupy_config", return_value=config
     ):
@@ -141,7 +142,7 @@ class TestFromNamePrecedence:
 
 class TestFromNamePassesRepo:
     def test_repo_forwarded_to_load_hupy_config(self):
-        config = HupyConfigFile()
+        config = load_config_fixture()
         with mock.patch(
             "hupy.cbm.branch_type.load_hupy_config", return_value=config
         ) as mocked:

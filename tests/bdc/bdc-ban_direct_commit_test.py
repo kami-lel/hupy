@@ -8,9 +8,10 @@ from unittest import mock
 
 import pytest
 
+from config_fixture import load_config_fixture
+
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 from hupy.cbm import CommitType
-from hupy.config.hupy_config_file import HupyConfigFile
 
 _REPO = object()
 
@@ -31,16 +32,18 @@ def _run(
     run ``ban_direct_commit`` against a stubbed config and stubbed
     ``cbm`` lookups, bypassing disk/git config loading.
     """
-    config = HupyConfigFile(
-        cbm={
-            "dev_branch_name": dev_branch_name,
-            "main_branch_name": main_branch_name,
-        },
-        bdc={
-            "ban_commit_to_dev": ban_commit_to_dev,
-            "ban_commit_to_main": ban_commit_to_main,
-            "ban_commit_to_branches": list(ban_commit_to_branches),
-        },
+    config = load_config_fixture(
+        overrides={
+            "cbm": {
+                "dev_branch_name": dev_branch_name,
+                "main_branch_name": main_branch_name,
+            },
+            "bdc": {
+                "ban_commit_to_dev": ban_commit_to_dev,
+                "ban_commit_to_main": ban_commit_to_main,
+                "ban_commit_to_branches": list(ban_commit_to_branches),
+            },
+        }
     )
     with mock.patch(
         "hupy.bdc.ban_direct_commit.load_hupy_config", return_value=config
