@@ -24,7 +24,9 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-_HOOK_STUBS_DIR = pathlib.Path(__file__).resolve().parent.parent / "hook-stubs"
+_HOOK_STUBS_DIR = (
+    pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
+)
 
 _PYTHON_PLACEHOLDER = "{{PYTHON}}"
 
