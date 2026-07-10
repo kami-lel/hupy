@@ -14,7 +14,7 @@ from pathlib import Path
 
 import git
 
-from prep_repo import DEV_BRANCH, MAIN_BRANCH
+from prep_repo import DEV_BRANCH, MAIN_BRANCH, _write_config_file
 
 _BUNDLE_PATH = Path(__file__).parent.parent / "fixtures" / "default_repo.bundle"
 
@@ -27,6 +27,7 @@ SOURCE_BRANCH = "add-user-authentication"
 def _clone_and_enter(dest_dir):
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
     os.chdir(str(dest_dir))
+    _write_config_file(dest_dir)
     return git.Repo(str(dest_dir))
 
 

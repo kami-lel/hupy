@@ -21,6 +21,7 @@ DEV_BRANCH = "dev"
 _FIXTURES_DIR = Path(__file__).parent
 _BUNDLE_PATH = _FIXTURES_DIR / "default_repo.bundle"
 _FIXTURES_ROOT = _FIXTURES_DIR.parent / "ttg" / "fixtures"
+_CONFIG_FIXTURE_PATH = _FIXTURES_DIR / "config" / "default_config.jsonc"
 
 COMMIT_BUCKETS = (
     "non_merge_commit",
@@ -144,6 +145,15 @@ def _chdir_into_repo(repo_dir):
     # ``setup.cfg`` to be found; not restored after the test, since
     # each test starts a fresh scenario repo anyway
     os.chdir(str(repo_dir))
+
+
+def _write_config_file(repo_dir):
+    # the bundle no longer carries a committed HUPy config file, so
+    # write the shared fixture straight onto disk, untracked, for
+    # ``load_hupy_config`` to read
+    shutil.copyfile(
+        _CONFIG_FIXTURE_PATH, Path(repo_dir) / ".hupy.config.jsonc"
+    )
 
 
 def _write_and_commit(repo_dir, filename, content):
@@ -381,6 +391,7 @@ def prepare_repo_with_files(dest_dir, commit_bucket, files):
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
     _chdir_into_repo(dest_dir)
+    _write_config_file(dest_dir)
     _BUCKET_SETUP_FUNCS[commit_bucket](dest_dir, files)
     return str(dest_dir)
 
@@ -427,6 +438,7 @@ def prepare_demo_repo(dest_dir, demo_bucket):
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
     _chdir_into_repo(dest_dir)
+    _write_config_file(dest_dir)
     _DEMO_BUCKET_SETUP_FUNCS[demo_bucket](dest_dir)
     return str(dest_dir)
 

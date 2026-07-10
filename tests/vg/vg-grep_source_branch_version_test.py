@@ -8,7 +8,8 @@ from unittest import mock
 
 import pytest
 
-from hupy.config.config_file import HupyConfigFile
+from config_fixture import load_config_fixture
+
 from hupy.ver_grep import grep_source_branch_version
 from vg_helpers import (
     prepare_merge_repo_with_version,
@@ -29,8 +30,13 @@ def _grep(pattern=_PATTERN, version_file=_VERSION_FILE):
     config loading; the current working directory is expected to
     already be inside the prepared merge repo.
     """
-    config = HupyConfigFile(
-        ver_grep={"version_file": version_file, "version_line_pattern": pattern}
+    config = load_config_fixture(
+        overrides={
+            "ver_grep": {
+                "version_file": version_file,
+                "version_line_pattern": pattern,
+            }
+        }
     )
     with mock.patch(
         "hupy.ver_grep.branch_version.load_hupy_config", return_value=config
