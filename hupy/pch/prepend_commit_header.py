@@ -5,6 +5,7 @@ prepend commit type header to commit message
 """
 
 import os
+import re
 import tempfile
 
 from hupy.kamilog import getLogger
@@ -44,6 +45,25 @@ def _get_version_bump_prefix(source_version, target_version):
         return ""
 
 
+def _get_release_type_word(version):
+    """
+    map a version string to its release-type word: ``Alpha``/``Beta``
+    when a matching pre-release identifier is present, ``Pre-Alpha``
+    for a ``0.9.z`` core, ``Prototype`` for any other ``0.x.z`` core,
+    otherwise ``Stable``
+    """
+    if "-alpha" in version:
+        return "Alpha "
+    elif "-beta" in version:
+        return "Beta "
+    elif re.match(r"^0\.9\.\d+", version):
+        return "Pre-Alpha "
+    elif re.match(r"^0\.\d+\.\d+", version):
+        return "Prototype "
+    else:
+        return "Stable "
+
+
 def _gen_bumped_version_header(header_word):
     """
     build a "<header_word>: <version>" header, prefixed with the
@@ -76,10 +96,16 @@ def _gen_backport_header(header_word):
 
 
 def _gen_version_release_header(_):
-    # FIXME stable release & prototype & alpha/beta release w/ major/minor/patch
     version = grep_source_branch_version()
     if version:
-        return "Version Release: {}".format(version)
+        release_type = _get_release_type_word(version)
+        if release_type in ("Alpha ", "Beta "):
+            bump_prefix = ""
+        else:
+            bump_prefix = _get_version_bump_prefix(
+                version, grep_target_branch_version()
+            )
+        return "{}{}Release: {}".format(bump_prefix, release_type, version)
     else:
         return "Version Release"
 

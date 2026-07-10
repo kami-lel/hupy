@@ -79,8 +79,11 @@ class TestVersionReleaseHeaderNoVersion:
 
 
 class TestVersionReleaseHeaderWithVersion:
+    """no bump: mocked source (``1.2.3``) equals the real target
+    branch's ``setup.cfg`` version"""
+
     _VERSION = "1.2.3"
-    _HEADER = "Version Release: 1.2.3"
+    _HEADER = "Stable Release: 1.2.3"
 
     def test_version_number_is_appended_to_header(self, repo_dir):
         repo = _prepare(repo_dir)
@@ -113,5 +116,82 @@ class TestVersionReleaseHeaderWithVersion:
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Version Release: v2024.07-rc1\n\nsubject only\n"
+            "Stable Release: v2024.07-rc1\n\nsubject only\n"
+        )
+
+
+class TestVersionReleaseHeaderReleaseType:
+    """release-type word, driven by the mocked source version alone;
+    the real target branch's ``1.2.3`` never triggers a bump here"""
+
+    def test_alpha_pre_release(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("1.2.3-alpha.1"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Alpha Release: 1.2.3-alpha.1\n\nsubject only\n"
+        )
+
+    def test_beta_pre_release(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("1.2.3-beta.1"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Beta Release: 1.2.3-beta.1\n\nsubject only\n"
+        )
+
+    def test_zero_major_is_prototype(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("0.3.2"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Prototype Release: 0.3.2\n\nsubject only\n"
+        )
+
+
+class TestVersionReleaseHeaderBumpPrefix:
+    """bump prefix, driven by comparing the mocked source version
+    against the real target branch's ``1.2.3`` (see prep_repo.py's
+    version_release bucket)"""
+
+    def test_major_bump(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("2.0.0"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Major Stable Release: 2.0.0\n\nsubject only\n"
+        )
+
+    def test_minor_bump(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("1.3.0"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Minor Stable Release: 1.3.0\n\nsubject only\n"
+        )
+
+    def test_patch_bump(self, repo_dir):
+        repo = _prepare(repo_dir)
+        write_commit_editmsg(repo_dir, "subject only\n")
+
+        with _patch_version("1.2.4"):
+            prepend_commit_header(repo)
+
+        assert read_commit_editmsg(repo_dir) == (
+            "Patch Stable Release: 1.2.4\n\nsubject only\n"
         )
