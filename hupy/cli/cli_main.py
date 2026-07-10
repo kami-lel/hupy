@@ -38,8 +38,8 @@ register_cli_icc_parser(cli_subparser)
 register_cli_ich_parser(cli_subparser)
 
 
-# Todo add cache file
-# Todo add CLI verify config
+# TODO add cache file
+# TODO add CLI verify config
 # Todo allow tmp skip some feature for next round
 
 # todo dry run feature for hooks CLI
