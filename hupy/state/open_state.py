@@ -49,9 +49,16 @@ def open_state_file(repo):
 
         try:
             logger.debug("open HUPy state file: {}".format(state_path))
-            state = HupyStateFile.model_construct(
-                **json.loads(state_path.read_text())
-            )
+            if state_path.exists():
+                state = HupyStateFile.model_construct(
+                    **json.loads(state_path.read_text())
+                )
+            else:
+                logger.info(
+                    "hupy-state.json not found, create from defaults:\t{}"
+                    .format(state_path)
+                )
+                state = HupyStateFile()
 
             yield state
 
