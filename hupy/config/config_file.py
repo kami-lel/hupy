@@ -91,6 +91,7 @@ class _Ttg(BaseModel):
     # TODO allow to be turned off
 
     is_disabled: bool
+    disable_tt_detect_by_type: bool
     ignored_path_globs: list[str]
 
 

@@ -8,6 +8,7 @@
   },
   "ttg": {
     "is_disabled": false,
+    "disable_tt_detect_by_type": false,
     "ignored_path_globs": []
   },
   "cbm": {
