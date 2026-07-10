@@ -5,6 +5,10 @@
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
+
+<!-- Fixme rewrite .hupy.config.jsonc docs
+Fixme rewrite all components docs -->
+
 <!--
 todo hooks bracket: actually implemented
 todo reimplement ensure file modified -->

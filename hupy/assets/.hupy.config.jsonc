@@ -5,7 +5,6 @@
 // # commit it so every clone shares the same behavior
 // #############################################################################
 {
-  // Fixme rework .jsonc comments, along w/ complete doc rewrite
   // hupy_version  -------------------------------------------------------------
   // *HUPy* version that wrote the file; informational, no need to edit
   "hupy_version": "0.3.0",
