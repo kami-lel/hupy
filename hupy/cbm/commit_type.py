@@ -35,6 +35,7 @@ class CommitType(Flag):
 
     # Public Member  -----------------------------------------------------------
 
+    REGULAR_COMMIT = auto()
     MERGE = auto()
     OTHER_COMMIT = auto()
 

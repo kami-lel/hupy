@@ -114,7 +114,7 @@ def get_current_commit_type(repo):
     :rtype: CommitType
     :example:
     >>> get_current_commit_type(repo)
-    <CommitType.OTHER_COMMIT: ...>
+    <CommitType.REGULAR_COMMIT: ...>
     """
     if repo.git_dir in _commit_type_cache:
         return _commit_type_cache[repo.git_dir]
@@ -123,7 +123,7 @@ def get_current_commit_type(repo):
 
     if not _has_state(gd, "MERGE_HEAD"):
         logger.debug("detect regular commit")
-        _commit_type_cache[repo.git_dir] = CommitType.OTHER_COMMIT
+        _commit_type_cache[repo.git_dir] = CommitType.REGULAR_COMMIT
         return _commit_type_cache[repo.git_dir]
 
     lines = _read_merge_head(gd)
