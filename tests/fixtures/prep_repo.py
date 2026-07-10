@@ -26,7 +26,7 @@ COMMIT_BUCKETS = (
     "non_merge_commit",
     "regular_merge",
     "feature_landing",
-    "version_release",
+    "stable_release",
 )
 
 SCENARIOS = (
@@ -34,8 +34,8 @@ SCENARIOS = (
     "irrelevant_merge",
     "feature_landing_fail",
     "feature_landing_pass",
-    "version_release_fail",
-    "version_release_pass",
+    "stable_release_fail",
+    "stable_release_pass",
 )
 
 # CBM merge types PCH does not yet handle; only used by the
@@ -114,7 +114,7 @@ def _setup_feature_landing(repo_dir, files):
     repo.git.merge("--no-commit", "--no-ff", "add-user-authentication")
 
 
-def _setup_version_release(repo_dir, files):
+def _setup_stable_release(repo_dir, files):
     repo = git.Repo(str(repo_dir))
     repo.git.checkout("-q", "-b", DEV_BRANCH)
     _bump_source_branch_version(repo_dir, "1.3.0")
@@ -226,7 +226,7 @@ _BUCKET_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
     "regular_merge": _setup_regular_merge,
     "feature_landing": _setup_feature_landing,
-    "version_release": _setup_version_release,
+    "stable_release": _setup_stable_release,
 }
 
 _DEMO_BUCKET_SETUP_FUNCS = {
@@ -263,16 +263,16 @@ _LEGACY_SCENARIO_PRESETS = {
         "feature_landing",
         {"a.py": "tt_steady_only.py", "b.py": "tt_quiet_only.py"},
     ),
-    "version_release_fail": (
-        "version_release",
+    "stable_release_fail": (
+        "stable_release",
         {
             "a.py": "tt_loud_only.py",
             "b.py": "tt_1loud_2steady.py",
             "c.py": "tt_quiet_only.py",
         },
     ),
-    "version_release_pass": (
-        "version_release",
+    "stable_release_pass": (
+        "stable_release",
         {"a.py": "tt_quiet_only.py", "b.py": "tt_quiet_only.py"},
     ),
 }

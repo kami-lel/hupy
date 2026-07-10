@@ -33,7 +33,7 @@ Test file naming: test layout mirrors source layout — top-level modules map di
 The shared `repo_dir` pytest fixture (`tmp_path / "repo"`) lives in the root `tests/conftest.py` and applies to every suite. Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the shared git bundle (`tests/fixtures/default_repo.bundle`) and dynamically constructs branches/commits/merge state — reused across unit tests and the `examples/pch/` and `examples/ttg/` demo scripts, and runnable standalone as a CLI:
 
 ```bash
-python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/demo_repo
+python3 tests/fixtures/prep_repo.py --scenario stable_release_pass --dest /tmp/demo_repo
 python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/demo_repo
 ```
 

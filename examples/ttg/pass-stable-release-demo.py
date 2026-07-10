@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-pass-version-release-demo.py
+pass-stable-release-demo.py
 
-demo: Version Release merge (develop into main) staging two files
+demo: Stable Release merge (develop into main) staging two files
 — a.py and b.py, each with only a QUIET "# todo quiet marker"
 comment (no Loud or Steady tags anywhere)
 expected result: pass
@@ -16,7 +16,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo, run_ttg
 
-_BUCKET = "version_release"
+_BUCKET = "stable_release"
 _FILES = {"a.py": "tt_quiet_only.py", "b.py": "tt_quiet_only.py"}
 
 
@@ -32,7 +32,7 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tVersion Release, multiple files (quiet only, no loud/steady)")
+    print("scenario:\tStable Release, multiple files (quiet only, no loud/steady)")
     print("expected:\tPASS")
     print()
 

@@ -9,7 +9,7 @@ It recognizes two merge types and leaves every other commit untouched.
 | Merge | Header added |
 |---|---|
 | **Feature Landing** — a feature branch merged into `dev` | `Feature Landing: <branch-name>` |
-| **Version Release** — `dev` merged into `main` | `Version Release: <version>` |
+| **Stable Release** — `dev` merged into `main` | `Stable Release: <version>` |
 | anything else (regular commit, unrelated merge) | *nothing — message untouched* |
 
 The header goes on the first line, followed by a blank line and then git's original message:
@@ -22,7 +22,7 @@ Merge branch 'add-user-auth' into dev
 
 ## Version Number
 
-On a **Version Release**, the header includes your project's version — e.g. `Version Release: 1.0.0`. That number is read from a file you point *HUPy* at via the `ver_grep` setting; if it isn't configured, the header is just `Version Release` with no number.
+On a **Stable Release**, the header includes your project's version — e.g. `Stable Release: 1.0.0`. That number is read from a file you point *HUPy* at via the `ver_grep` setting; if it isn't configured, the header is just `Stable Release` with no number.
 
 See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
 

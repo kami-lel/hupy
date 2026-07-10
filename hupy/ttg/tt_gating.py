@@ -109,8 +109,8 @@ def perform_triage_tags_gating(repo):
         logger.debug("TTG on Feature Landing merge")
         _perform_triage_tags_by_filtering_group(repo, TriageTagType.LOUDS)
 
-    elif CommitType.VERSION_RELEASE in commit_type:
-        logger.debug("TTG on Version Release merge")
+    elif CommitType.STABLE_RELEASE in commit_type:
+        logger.debug("TTG on Stable Release merge")
         _perform_triage_tags_by_filtering_group(
             repo, TriageTagType.LOUDS | TriageTagType.STEADYS
         )

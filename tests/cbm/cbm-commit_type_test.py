@@ -17,7 +17,7 @@ class TestDecideCommitTypeKnownPairs:
         "source, target, expected",
         [
             (BranchType.FEATURE, BranchType.DEV, CommitType.FEATURE_LANDING),
-            (BranchType.DEV, BranchType.MAIN, CommitType.VERSION_RELEASE),
+            (BranchType.DEV, BranchType.MAIN, CommitType.STABLE_RELEASE),
             (BranchType.MAIN, BranchType.DEV, CommitType.SYNC_BACKPORT),
             (BranchType.DEV, BranchType.FEATURE, CommitType.CATCH_UP),
             (BranchType.HOTFIX, BranchType.MAIN, CommitType.HOTFIX_RELEASE),
@@ -33,7 +33,7 @@ class TestDecideCommitTypeKnownPairs:
         "expected",
         [
             CommitType.FEATURE_LANDING,
-            CommitType.VERSION_RELEASE,
+            CommitType.STABLE_RELEASE,
             CommitType.SYNC_BACKPORT,
             CommitType.CATCH_UP,
             CommitType.HOTFIX_RELEASE,

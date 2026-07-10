@@ -24,7 +24,7 @@ class CommitType(Flag):
     """
 
     _FEATURE_LANDING = auto()
-    _VERSION_RELEASE = auto()
+    _STABLE_RELEASE = auto()
     _SYNC_BACKPORT = auto()
     _CATCH_UP = auto()
     _HOTFIX_RELEASE = auto()
@@ -39,7 +39,7 @@ class CommitType(Flag):
     OTHER_COMMIT = auto()
 
     FEATURE_LANDING = MERGE | _FEATURE_LANDING
-    VERSION_RELEASE = MERGE | _VERSION_RELEASE
+    STABLE_RELEASE = MERGE | _STABLE_RELEASE
     SYNC_BACKPORT = MERGE | _SYNC_BACKPORT
     CATCH_UP = MERGE | _CATCH_UP
     HOTFIX_RELEASE = MERGE | _HOTFIX_RELEASE
@@ -64,7 +64,7 @@ class CommitType(Flag):
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
     (BranchType.FEATURE, BranchType.DEV): CommitType.FEATURE_LANDING,
-    (BranchType.DEV, BranchType.MAIN): CommitType.VERSION_RELEASE,
+    (BranchType.DEV, BranchType.MAIN): CommitType.STABLE_RELEASE,
     (BranchType.MAIN, BranchType.DEV): CommitType.SYNC_BACKPORT,
     (BranchType.DEV, BranchType.FEATURE): CommitType.CATCH_UP,
     (BranchType.HOTFIX, BranchType.MAIN): CommitType.HOTFIX_RELEASE,

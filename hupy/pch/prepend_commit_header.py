@@ -16,7 +16,7 @@ from ..cbm import (
     get_source_branch,
 )
 
-# FIXME version release w/ x.y.z
+# FIXME stable release w/ x.y.z
 # TODO release cut w/ x.y.z
 # TODO hotfix release w/ x.y.z
 
@@ -33,12 +33,12 @@ def _gen_feature_landing_header_content(repo):
     return "Feature Landing: {}".format(branch_name)
 
 
-def _gen_version_release_header_content(_):
+def _gen_stable_release_header_content(_):
     version = grep_source_branch_version()
     if version:
-        return "Version Release: {}".format(version)
+        return "Stable Release: {}".format(version)
     else:
-        return "Version Release"
+        return "Stable Release"
 
 
 def _gen_catch_up_header(_):
@@ -71,7 +71,7 @@ def _gen_hotfix_backport_header(_):
 
 _HEADER_GENERATORS = {
     CommitType.FEATURE_LANDING: _gen_feature_landing_header_content,
-    CommitType.VERSION_RELEASE: _gen_version_release_header_content,
+    CommitType.STABLE_RELEASE: _gen_stable_release_header_content,
     CommitType.CATCH_UP: _gen_catch_up_header,
     CommitType.RELEASE_BACKPORT: _gen_release_backport_header,
     CommitType.SYNC_BACKPORT: _gen_sync_backport_header,
