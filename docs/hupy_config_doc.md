@@ -18,6 +18,7 @@
 | `hupy_version` | *HUPy* version that wrote the file; informational, no need to edit |
 | `default_logger_verbosity` | hook log verbosity: `3`+ DEBUG, `2` ENTER, `1` INFO *(default)*, `0` DONE, `-1` WARNING, `-2` ERROR, `-3`- CRITICAL |
 | `ver_grep` | how to read the repo's version string — see below |
+| `cbm` | branch names/prefixes the *CBM* module (commit, branch, and merge types) classifies against — see below |
 | `pch` | how *Prepend Commit Header* understands versions and picks a header — see below |
 
 
@@ -87,7 +88,55 @@ The pattern runs per line (`re.search`); the first matching line wins. Escape an
 
 Anchor with `^` when several `version`-like lines exist.
 
-<!-- Todo add cbm to config file doc -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## `cbm`
+
+Classifies git branches by naming convention, so *CBM* can decide the merge
+type (eg. `feature → dev` is a *Feature Landing*, `hotfix/* → main` is a
+*Hotfix Release*). Every branch not matched by a field below, and holding a
+`/` in its name, counts as a *User* branch; anything else is a *Feature*
+branch.
+
+| Sub-field | Default | Purpose |
+|---|---|---|
+| `main_branch_name` | `main` | exact name of the main branch |
+| `dev_branch_name` | `dev` | exact name of the dev branch |
+| `hotfix_branch_prefix` | `hotfix` | prefix (before `/`) marking a hotfix branch |
+| `release_branch_prefix` | `release` | prefix (before `/`) marking a release branch |
+
+Each field must be non-empty.
+
 
 
 

@@ -10,5 +10,12 @@
     "dev_branch_name": "dev",
     "hotfix_branch_prefix": "hotfix",
     "release_branch_prefix": "release"
+  },
+  "pch": {
+    "enable_vertical_slice": false,
+    "enable_pre_alpha": true,
+    "alpha_tag": "-alpha",
+    "beta_tag": "-beta",
+    "release_candidate_tag": "-rc"
   }
 }
