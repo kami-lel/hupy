@@ -5,22 +5,15 @@ load the HUPy config file (``.hupy.config.jsonc``) from a repo root,
 validating it against :class:`HupyConfigFile`
 """
 
-import pathlib
-
 import json5
 from pydantic import ValidationError
 
 from hupy.config import CONFIG_LOGGER_NAME
 from hupy.config.config_file import HupyConfigFile
+from hupy.config.config_file_path import get_config_file_path
 from hupy.kamilog import getLogger
 
-__all__ = ("CONFIG_FILENAME", "get_config_file_path", "load_hupy_config")
-
-
-# constants  ###################################################################
-
-
-CONFIG_FILENAME = ".hupy.config.jsonc"
+__all__ = ("load_hupy_config",)
 
 
 # logger  ######################################################################
@@ -36,20 +29,6 @@ _config_cache = None
 
 
 # Public API  ##################################################################
-def get_config_file_path(repo):
-    """
-    resolve the path of the HUPy config file (``.hupy.config.jsonc``)
-    at ``repo``'s working tree root
-
-
-    :param repo: git repository object
-    :type repo: git.Repo
-    :return: path to the HUPy config file
-    :rtype: pathlib.Path
-    """
-    return pathlib.Path(repo.working_tree_dir) / CONFIG_FILENAME
-
-
 def load_hupy_config(repo):
     """
     load and validate the HUPy config file (``.hupy.config.jsonc``)
