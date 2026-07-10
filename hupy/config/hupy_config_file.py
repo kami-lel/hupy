@@ -97,6 +97,9 @@ class _Pch(BaseModel):
 
     enable_vertical_slice: bool = False
     enable_pre_alpha: bool = True
+    alpha_tag: str = "-alpha"
+    beta_tag: str = "-beta"
+    release_candidate_tag: str = "-rc"
 
 
 class HupyConfigFile(BaseModel):

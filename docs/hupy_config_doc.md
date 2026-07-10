@@ -2,8 +2,6 @@
 
 `.hupy.config.json` is *HUPy*'s per-repository config. `python -m hupy init` writes it to the repository root; commit it so every clone shares the same behavior.
 
-## Fields
-
 ```json
 {
   "hupy_version": "1.0.0",
@@ -20,6 +18,40 @@
 | `hupy_version` | *HUPy* version that wrote the file; informational, no need to edit |
 | `default_logger_verbosity` | hook log verbosity: `3`+ DEBUG, `2` ENTER, `1` INFO *(default)*, `0` DONE, `-1` WARNING, `-2` ERROR, `-3`- CRITICAL |
 | `ver_grep` | how to read the repo's version string — see below |
+| `pch` | how *Prepend Commit Header* understands versions and picks a header — see below |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## `ver_grep`
 
@@ -32,6 +64,18 @@ Powers the *Prepend Commit Header* hook: a **Version Release** merge gets the he
 
 The pattern runs per line (`re.search`); the first matching line wins. Escape any double quote in JSON as `\"`. Empty fields disable `ver_grep`, so the header falls back to plain `Version Release`.
 
+
+
+
+
+
+
+
+
+
+
+
+
 ### Common Patterns
 
 | Version file | Example line | `version_line_pattern` (JSON) |
@@ -42,3 +86,51 @@ The pattern runs per line (`re.search`); the first matching line wins. Escape an
 | `VERSION` | `1.0.0` | `"(.*)"` |
 
 Anchor with `^` when several `version`-like lines exist.
+
+<!-- Todo add cbm to config file doc -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## `pch`
+
+Configures how *Prepend Commit Header* understands a resolved version and which header it prepends accordingly.
+
+| Sub-field | Default | Purpose |
+|---|---|---|
+| `enable_vertical_slice` | `false` | enable the *Vertical Slice* header |
+| `enable_pre_alpha` | `true` | enable the *Pre-Alpha* header |
+| `alpha_tag` | `-alpha` | version suffix identifying an alpha release |
+| `beta_tag` | `-beta` | version suffix identifying a beta release |
+| `release_candidate_tag` | `-rc` | version suffix identifying a release candidate |
+
+Leave any of `alpha_tag`, `beta_tag`, `release_candidate_tag` empty to disable that tag: *PCH* will no longer recognize that release type and skips its header.
