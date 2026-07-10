@@ -6,12 +6,12 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 
-<!-- Fixme rewrite .hupy.config.jsonc docs
-Fixme rewrite all components docs
-Fixme rewrite readme
+<!-- FIXME rewrite .hupy.config.jsonc docs
+FIXME rewrite all components docs
+FIXME rewrite readme
 
 Todo hooks bracket: actually implemented
-Todo pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
+TODO pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
 -->
 
 <!-- todo reimplement ensure file modified -->
