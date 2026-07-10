@@ -8,6 +8,7 @@
 
 - **`verify-config-file`** — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, reporting success or the validation error
 - **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
+- **`--copy-hooks`/`--create-config-file` flags on `hupy init`** — run either step alone, or both together (same as passing neither); a step registry in `cli_init.py` makes adding further steps/flags a one-line change
 
 ### Changed
 
@@ -20,6 +21,7 @@
 ### Removed
 
 - `docs/hupy_config_doc.md` (folded into `.hupy.config.jsonc`'s own comments)
+- **`init-create-config`/`init-copy-hooks` subcommands** — superseded by `hupy init`'s new `--create-config-file`/`--copy-hooks` flags; `cli_icc.py`/`cli_ich.py` deleted, their `_copy_hook_stubs`/`_resolve_hooks_dir` helpers and supporting constants moved into `cli_init.py`
 
 ### Fixed
 
