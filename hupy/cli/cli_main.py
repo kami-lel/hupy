@@ -38,8 +38,8 @@ register_cli_icc_parser(cli_subparser)
 register_cli_ich_parser(cli_subparser)
 
 
-# todo add cache file
-# todo dry run feature for hooks
-# todo allow tmp skip some feature for next round
+# Todo add cache file
+# Todo dry run feature for hooks
+# Todo allow tmp skip some feature for next round
 
 # todo use OpenAI to prepare commit message

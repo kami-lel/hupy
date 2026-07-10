@@ -118,4 +118,4 @@ def perform_triage_tags_gating(repo):
     logger.pass_("no gated TT found")
 
 
-# todo add config for ignored globs
+# Todo add config for ignored globs
