@@ -5,17 +5,14 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
-import fnmatch
-import re
-import subprocess
-import sys
-
-from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
+from hupy.kamilog import getLogger
 from hupy.config.load_config import load_hupy_config
 from ..ttg import TTG_LOGGER_NAME
 from ..cbm import CommitType, get_current_commit_type
 from .triage_tag_type import TriageTagType
-from .detect_tt import _TT_PATTERN, detect_triage_tags_in_staged_file
+from .detect_tt import detect_triage_tags_in_staged_file
+from .staged_files import get_staged_file_paths, is_path_ignored
+from .report_tt import report_gated_tags
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)
@@ -23,37 +20,6 @@ logger.propagate = False
 
 
 # helpers  #####################################################################
-
-
-def _is_path_ignored(file_path, ignored_path_globs):
-    """
-    :return: if ``file_path`` matches any glob in ``ignored_path_globs``
-    :rtype: bool
-    """
-    return any(fnmatch.fnmatch(file_path, glob) for glob in ignored_path_globs)
-
-
-def _get_staged_file_paths(repo):
-    """
-    :return: paths of files staged in ``repo``
-    :rtype: list
-    """
-    try:
-        cached_files = (
-            subprocess.check_output(
-                ("git", "diff", "--cached", "--name-only"),
-                text=True,
-                stderr=subprocess.PIPE,
-                cwd=repo.working_dir,
-            )
-            .strip()
-            .split("\n")
-        )
-    except subprocess.CalledProcessError as e:
-        logger.critical("unable to get git cached files")
-        raise SystemExit(1) from e
-
-    return [file_path for file_path in cached_files if file_path]
 
 
 def _collect_gated_tags(
@@ -70,7 +36,7 @@ def _collect_gated_tags(
     filtered_results = {}
 
     for file_path in cached_files:
-        if _is_path_ignored(file_path, ignored_path_globs):
+        if is_path_ignored(file_path, ignored_path_globs):
             logger.debug("skip ignored path: " + file_path)
             continue
 
@@ -91,32 +57,9 @@ def _collect_gated_tags(
     return filtered_results
 
 
-def _report_gated_tags(filtered_results):
-    logger.fail("gated Triage Tags found")
-    renderer = AnsiRenderer(sys.stdout)
-    msg_lines = [""]
-    for file_path, results in filtered_results.items():
-        msg_lines.append(gen_comment_banner_centered(file_path, "-"))
-        line_no_width = max(len(str(line_no)) for _, _, line_no in results)
-        for _, line, line_no in results:
-            line_no_str = renderer.color_grey(str(line_no).rjust(line_no_width))
-            stripped_line = line.strip()
-            match = re.search(_TT_PATTERN, stripped_line)
-            if match:
-                colored_tag = renderer.color_triage_tag(match.group(1))
-                stripped_line = (
-                    stripped_line[: match.start()]
-                    + colored_tag
-                    + stripped_line[match.end() :]
-                )
-            msg_lines.append(line_no_str + " " + stripped_line)
-    logger.info("\n".join(msg_lines))
-    raise SystemExit(1)
-
-
 def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
     config = load_hupy_config(repo)
-    cached_files = _get_staged_file_paths(repo)
+    cached_files = get_staged_file_paths(repo)
     filtered_results = _collect_gated_tags(
         repo,
         cached_files,
@@ -126,7 +69,7 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
     )
 
     if filtered_results:
-        _report_gated_tags(filtered_results)
+        report_gated_tags(filtered_results)
 
 
 # Public API  ##################################################################
