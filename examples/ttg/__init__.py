@@ -10,6 +10,8 @@ import pathlib
 import sys
 import tempfile
 
+import git
+
 _PKG_DIR = pathlib.Path(__file__).resolve().parent
 _REPO_ROOT = _PKG_DIR.parent.parent
 
@@ -31,7 +33,8 @@ def prepare_demo_repo(bucket, files):
 
 def run_ttg(repo_dir, verbosity=1):
     set_logging_level_by_verbosity(verbosity, logger_name=TTG_LOGGER_NAME)
+    repo = git.Repo(repo_dir, search_parent_directories=True)
     try:
-        perform_triage_tags_gating(repo_dir)
+        perform_triage_tags_gating(repo)
     except SystemExit:
         pass

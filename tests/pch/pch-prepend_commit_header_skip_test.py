@@ -6,6 +6,8 @@ regular non-merge commits and merges unrelated to Feature Landing or
 Version Release
 """
 
+import git
+
 from hupy.pch import prepend_commit_header
 from pch_helpers import read_commit_editmsg, write_commit_editmsg
 from prep_repo import prepare_repo_with_files
@@ -20,7 +22,7 @@ def _assert_skipped(repo_dir, bucket):
     prepare_repo_with_files(repo_dir, bucket, {"feature.py": "tt_none.py"})
     write_commit_editmsg(repo_dir, _SENTINEL)
 
-    prepend_commit_header(str(repo_dir))
+    prepend_commit_header(git.Repo(str(repo_dir)))
 
     assert read_commit_editmsg(repo_dir) == _SENTINEL
 

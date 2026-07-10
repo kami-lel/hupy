@@ -7,6 +7,7 @@ tests for error handling in `perform_triage_tags_gating` in `tt_gating.py`
 import subprocess
 from unittest import mock
 
+import git
 import pytest
 
 from hupy.ttg.tt_gating import perform_triage_tags_gating
@@ -42,7 +43,7 @@ class TestPerformTriageTagsGatingErrors:
             side_effect=subprocess.CalledProcessError(1, "git"),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(str(repo_dir))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)))
 
             assert exc_info.value.code == 1
 
@@ -61,7 +62,7 @@ class TestPerformTriageTagsGatingErrors:
             ),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(str(repo_dir))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)))
 
             assert exc_info.value.code == 1
 
@@ -80,6 +81,6 @@ class TestPerformTriageTagsGatingErrors:
             ),
         ):
             with pytest.raises(SystemExit) as exc_info:
-                perform_triage_tags_gating(str(repo_dir))
+                perform_triage_tags_gating(git.Repo(str(repo_dir)))
 
             assert exc_info.value.code == 1

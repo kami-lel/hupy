@@ -30,7 +30,7 @@ _config_cache = None
 
 
 # Public API  ##################################################################
-def load_hupy_config(repo_path):
+def load_hupy_config(repo_path):  # FIXME take repo
     """
     load and validate the HUPy config file (``.hupy.config.json``)
     from the Git repository containing ``repo_path``, caching the

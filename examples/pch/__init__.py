@@ -11,6 +11,8 @@ import pathlib
 import sys
 import tempfile
 
+import git
+
 _PKG_DIR = pathlib.Path(__file__).resolve().parent
 _REPO_ROOT = _PKG_DIR.parent.parent
 
@@ -42,6 +44,7 @@ def run_pch(repo_dir, verbosity=1):
     cwd = os.getcwd()
     os.chdir(repo_dir)
     try:
-        prepend_commit_header(repo_dir)
+        repo = git.Repo(repo_dir, search_parent_directories=True)
+        prepend_commit_header(repo)
     finally:
         os.chdir(cwd)

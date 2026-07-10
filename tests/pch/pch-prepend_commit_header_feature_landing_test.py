@@ -5,6 +5,8 @@ tests for `prepend_commit_header` on Feature Landing merges, covering
 the header content and the COMMIT_EDITMSG rewrite behavior in detail
 """
 
+import git
+
 from hupy.pch import prepend_commit_header
 from pch_helpers import (
     read_commit_editmsg,
@@ -23,6 +25,7 @@ _HEADER = "Feature Landing: add-user-authentication"
 
 def _prepare(repo_dir):
     prepare_repo_with_files(repo_dir, _BUCKET, {"feature.py": "tt_none.py"})
+    return git.Repo(str(repo_dir))
 
 
 # tests  ########################################################################
@@ -30,28 +33,28 @@ def _prepare(repo_dir):
 
 class TestFeatureFinishHeaderContent:
     def test_real_merge_message_gets_header_prepended(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         seed_commit_editmsg_from_merge_msg(repo_dir)
         original = read_commit_editmsg(repo_dir)
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         result = read_commit_editmsg(repo_dir)
         assert result.startswith(_HEADER + "\n\n")
         assert original.strip() in result
 
     def test_no_stray_temp_file_left_behind(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         seed_commit_editmsg_from_merge_msg(repo_dir)
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert stray_temp_files(repo_dir) == []
 
 
 class TestFeatureFinishMessageFormatting:
     def test_comment_lines_are_regrouped_after_content(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         write_commit_editmsg(
             repo_dir,
             "subject line\n"
@@ -60,7 +63,7 @@ class TestFeatureFinishMessageFormatting:
             "   # comment 2 with leading whitespace\n",
         )
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
             _HEADER + "\n"
@@ -72,36 +75,36 @@ class TestFeatureFinishMessageFormatting:
         )
 
     def test_all_comment_message_collapses_to_header_only(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "# only a comment\n")
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
             _HEADER + "\n\n# only a comment"
         )
 
     def test_no_comment_message_has_no_comment_block(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == _HEADER + "\n\nsubject only\n"
 
     def test_empty_commit_message_does_not_crash(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "")
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == _HEADER + "\n\n"
 
     def test_non_ascii_content_round_trips(self, repo_dir):
-        _prepare(repo_dir)
+        repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "fix: 修复 bug 🐛\n")
 
-        prepend_commit_header(str(repo_dir))
+        prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
             _HEADER + "\n\nfix: 修复 bug 🐛\n"

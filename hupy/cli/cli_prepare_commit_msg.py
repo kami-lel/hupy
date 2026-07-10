@@ -2,6 +2,8 @@
 
 import os
 
+import git
+
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.config.load_config import load_hupy_config
 from hupy.pch.prepend_commit_header import prepend_commit_header
@@ -19,6 +21,7 @@ def _prepare_commit_msg_main(args):  ###########################################
     dispatch for the ``prepare-commit-msg`` subcommand: execute prepend
     commit header.
     """
+    repo = git.Repo(os.getcwd(), search_parent_directories=True)
     config = load_hupy_config(os.getcwd())
     kamilog.set_logging_level_by_namespace(
         args, verbosity=config.default_logger_verbosity
@@ -26,7 +29,7 @@ def _prepare_commit_msg_main(args):  ###########################################
 
     logger.enter("Start prepare-commit-msg stage")
 
-    prepend_commit_header(os.getcwd())
+    prepend_commit_header(repo)
 
     logger.succ("prepare-commit-msg HUPy hooks")
     logger.done("all HUPy hooks finished")

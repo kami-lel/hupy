@@ -25,10 +25,8 @@ from hupy.cbm.get_current_commit_type import get_current_commit_type
 
 class TestGetCurrentCommitTypeRegularCommit:
     def test_no_merge_head_is_other_commit(self, repo_dir):
-        clone_repo(repo_dir)
-        assert (
-            get_current_commit_type(str(repo_dir)) == CommitType.OTHER_COMMIT
-        )
+        repo = clone_repo(repo_dir)
+        assert get_current_commit_type(repo) == CommitType.OTHER_COMMIT
 
 
 class TestGetCurrentCommitTypeOctopusMerge:
@@ -44,7 +42,7 @@ class TestGetCurrentCommitTypeOctopusMerge:
             "{}\n{}\n".format(sha_hotfix, sha_release)
         )
 
-        assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
+        assert get_current_commit_type(repo) == CommitType.OTHER_MERGE
 
 
 class TestGetCurrentCommitTypePullMerge:
@@ -58,27 +56,21 @@ class TestGetCurrentCommitTypePullMerge:
         repo.git.update_ref("refs/remotes/origin/dev", sha_dev)
         write_merge_head(repo_dir, sha_dev)
 
-        assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
+        assert get_current_commit_type(repo) == CommitType.OTHER_MERGE
 
 
 class TestGetCurrentCommitTypeKnownMerges:
     def test_feature_landing_is_feature_landing(self, repo_dir):
-        prepare_merge_repo(repo_dir, "feature_landing")
-        assert (
-            get_current_commit_type(str(repo_dir))
-            == CommitType.FEATURE_LANDING
-        )
+        repo = prepare_merge_repo(repo_dir, "feature_landing")
+        assert get_current_commit_type(repo) == CommitType.FEATURE_LANDING
 
     def test_version_release_is_version_release(self, repo_dir):
-        prepare_merge_repo(repo_dir, "version_release")
-        assert (
-            get_current_commit_type(str(repo_dir))
-            == CommitType.VERSION_RELEASE
-        )
+        repo = prepare_merge_repo(repo_dir, "version_release")
+        assert get_current_commit_type(repo) == CommitType.VERSION_RELEASE
 
     def test_unrelated_merge_is_other_merge(self, repo_dir):
-        prepare_merge_repo(repo_dir, "regular_merge")
-        assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
+        repo = prepare_merge_repo(repo_dir, "regular_merge")
+        assert get_current_commit_type(repo) == CommitType.OTHER_MERGE
 
 
 class TestGetCurrentCommitTypeDetachedHead:
@@ -90,37 +82,39 @@ class TestGetCurrentCommitTypeDetachedHead:
         repo.git.checkout("-q", sha_feature)
         write_merge_head(repo_dir, sha_feature)
 
-        assert get_current_commit_type(str(repo_dir)) == CommitType.OTHER_MERGE
+        assert get_current_commit_type(repo) == CommitType.OTHER_MERGE
 
 
 class TestGetCurrentCommitTypeErrors:
     def test_missing_repo_path_raises(self, tmp_path):
+        # repo construction is now the caller's responsibility; a bad
+        # path must fail there, before get_current_commit_type is
+        # ever reached
         with pytest.raises(git.NoSuchPathError):
-            get_current_commit_type(str(tmp_path / "does_not_exist"))
+            git.Repo(
+                str(tmp_path / "does_not_exist"),
+                search_parent_directories=True,
+            )
 
 
 class TestGetCurrentCommitTypeCaching:
     def test_result_is_cached_across_calls(self, repo_dir):
-        prepare_merge_repo(repo_dir, "feature_landing")
-        first = get_current_commit_type(str(repo_dir))
+        repo = prepare_merge_repo(repo_dir, "feature_landing")
+        first = get_current_commit_type(repo)
         assert first == CommitType.FEATURE_LANDING
 
         # MERGE_HEAD is gone now, but the cached value must not
-        # change for this repo path
+        # change for this repo
         (Path(repo_dir) / ".git" / "MERGE_HEAD").unlink()
 
-        second = get_current_commit_type(str(repo_dir))
+        second = get_current_commit_type(repo)
         assert second == first == CommitType.FEATURE_LANDING
 
-    def test_separate_repo_paths_cache_independently(self, tmp_path):
+    def test_separate_repos_cache_independently(self, tmp_path):
         dir_a = tmp_path / "repo_a"
         dir_b = tmp_path / "repo_b"
-        prepare_merge_repo(dir_a, "feature_landing")
-        prepare_merge_repo(dir_b, "version_release")
+        repo_a = prepare_merge_repo(dir_a, "feature_landing")
+        repo_b = prepare_merge_repo(dir_b, "version_release")
 
-        assert (
-            get_current_commit_type(str(dir_a)) == CommitType.FEATURE_LANDING
-        )
-        assert (
-            get_current_commit_type(str(dir_b)) == CommitType.VERSION_RELEASE
-        )
+        assert get_current_commit_type(repo_a) == CommitType.FEATURE_LANDING
+        assert get_current_commit_type(repo_b) == CommitType.VERSION_RELEASE

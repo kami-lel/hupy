@@ -7,8 +7,6 @@ prepend commit type header to commit message
 import os
 import tempfile
 
-import git
-
 from hupy.kamilog import getLogger
 from hupy.ver_grep import grep_source_branch_version
 from . import PCH_LOGGER_NAME
@@ -82,20 +80,17 @@ _HEADER_GENERATORS = {
 
 
 # Public API  ##################################################################
-
-
-def prepend_commit_header(repo_root):
+def prepend_commit_header(repo):
     """
     prepend commit type header to the current commit message.
 
 
-    :param repo_root: path to the git repository or any of its
-            subdirectories
-    :type repo_root: str
+    :param repo: git repository object
+    :type repo: git.Repo
     """
     logger.enter("prepending commit header")
 
-    commit_type = get_current_commit_type(repo_root)
+    commit_type = get_current_commit_type(repo)
 
     if commit_type not in _HEADER_GENERATORS:
         logger.skip("regular commit/merge")
@@ -103,7 +98,6 @@ def prepend_commit_header(repo_root):
 
     logger.debug("prepending header on {} merge".format(commit_type.name))
 
-    repo = git.Repo(repo_root, search_parent_directories=True)
     commit_editmsg_path = os.path.join(repo.git_dir, "COMMIT_EDITMSG")
 
     content_lines = []

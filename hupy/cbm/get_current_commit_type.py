@@ -8,8 +8,6 @@ identify the type of an in-progress git commit
 
 import os
 
-import git
-
 from hupy.kamilog import getLogger
 from hupy.cbm.branch_type import BranchType
 from hupy.cbm.commit_type import CommitType, CBM_LOGGER_NAME
@@ -105,55 +103,52 @@ def get_target_branch(repo):
     return _target_branch_cache[repo.git_dir]
 
 
-def get_current_commit_type(repo_path):
+def get_current_commit_type(repo):
     """
     return the type of the current in-progress commit, (result is cached)
 
 
-    :param repo_path: path to the git repository or any of its
-                    subdirectories; defaults to the current directory
-    :type repo_path: str
-    :raises git.InvalidGitRepositoryError: if no git repository is
-                    found at or above ``repo_path``
-    :raises git.NoSuchPathError: if ``repo_path`` does not exist
+    :param repo: git repository object
+    :type repo: git.Repo
     :return: a public member of ``CommitType``
     :rtype: CommitType
     :example:
-    >>> get_current_commit_type(repo_path)
+    >>> get_current_commit_type(repo)
     <CommitType.OTHER_COMMIT: ...>
     """
-    if repo_path in _commit_type_cache:
-        return _commit_type_cache[repo_path]
+    if repo.git_dir in _commit_type_cache:
+        return _commit_type_cache[repo.git_dir]
 
-    repo = git.Repo(repo_path, search_parent_directories=True)
     gd = repo.git_dir
 
     if not _has_state(gd, "MERGE_HEAD"):
         logger.debug("detect regular commit")
-        _commit_type_cache[repo_path] = CommitType.OTHER_COMMIT
-        return _commit_type_cache[repo_path]
+        _commit_type_cache[repo.git_dir] = CommitType.OTHER_COMMIT
+        return _commit_type_cache[repo.git_dir]
 
     lines = _read_merge_head(gd)
     if len(lines) != 1:  # octopus merge
         logger.debug("detect octopus merge")
-        _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
-        return _commit_type_cache[repo_path]
+        _commit_type_cache[repo.git_dir] = CommitType.OTHER_MERGE
+        return _commit_type_cache[repo.git_dir]
 
     sha = lines[0]
     target = get_target_branch(repo)
 
     if _is_pull_merge(repo, sha, target):
         logger.debug("detect pull merge")
-        _commit_type_cache[repo_path] = CommitType.OTHER_MERGE
-        return _commit_type_cache[repo_path]
+        _commit_type_cache[repo.git_dir] = CommitType.OTHER_MERGE
+        return _commit_type_cache[repo.git_dir]
 
     source = get_source_branch(repo)
-    source_type = BranchType.from_name(source, repo_path)
+    source_type = BranchType.from_name(source, repo.working_dir)
     target_type = (
-        None if target is None else BranchType.from_name(target, repo_path)
+        None
+        if target is None
+        else BranchType.from_name(target, repo.working_dir)
     )
 
     commit_type = CommitType.decide_commit_type(source_type, target_type)
     logger.debug("detect {} merge".format(commit_type.name))
-    _commit_type_cache[repo_path] = commit_type
-    return _commit_type_cache[repo_path]
+    _commit_type_cache[repo.git_dir] = commit_type
+    return _commit_type_cache[repo.git_dir]
