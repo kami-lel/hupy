@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-release-minor-prototype-demo.py
+vr-alpha-demo.py
 
-demo: Version Release merge (dev into main), a 0.x.z minor bump
-(main's 0.3.0 -> dev's 0.4.0), to exercise pch's "Minor Prototype
-Release" wording
+demo: Version Release merge (dev into main), source branch version
+"1.3.0-alpha.1", to exercise pch's "Alpha Release" wording (no bump
+prefix, even though the merge would otherwise be a major bump)
 expected result: header prepended to COMMIT_EDITMSG,
-"Minor Prototype Release: 0.4.0"
+"Alpha Release: 1.3.0-alpha.1"
 """
 
 import pathlib
@@ -18,7 +18,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo_by_bucket, run_pch
 
-_DEMO_BUCKET = "release_minor_prototype"
+_DEMO_BUCKET = "release_alpha"
 
 
 # helpers  #####################################################################
@@ -35,10 +35,10 @@ def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
     print(
         "scenario:\tVersion Release merge (dev into main), "
-        "0.x.z minor bump (0.3.0 -> 0.4.0)"
+        "alpha pre-release source version"
     )
     print(
-        'expected:\tPASS, header "Minor Prototype Release: 0.4.0" prepended'
+        'expected:\tPASS, header "Alpha Release: 1.3.0-alpha.1" prepended'
     )
     print()
 

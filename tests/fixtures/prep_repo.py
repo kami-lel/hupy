@@ -43,7 +43,7 @@ SCENARIOS = (
 # CBM merge types PCH's header generators cover but that have no
 # dedicated ``tests/pch/`` file yet; the ``release_*`` ones below
 # exercise the Version Release header's release-type/bump-prefix
-# wording (``examples/pch/release-*-demo.py``)
+# wording (``examples/pch/vr-*-demo.py``)
 DEMO_BUCKETS = (
     "sync_backport",
     "catch_up",

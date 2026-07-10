@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-version-release-demo.py
+vr-fail-parse-demo.py
 
-demo: Version Release merge (develop into main) with the
-in-progress merge message copied into COMMIT_EDITMSG (mirroring
-what git itself does before invoking the commit-msg hook)
-expected result: header prepended to COMMIT_EDITMSG
+demo: Version Release merge (dev into main), source branch version
+"v2024.07-rc1" doesn't parse as a major.minor.patch core, so pch
+falls back to the plain "Version Release" wording
+expected result: header prepended to COMMIT_EDITMSG,
+"Version Release: v2024.07-rc1"
 """
 
 import pathlib
@@ -15,16 +16,16 @@ from hupy.kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )
-from __init__ import prepare_demo_repo_by_scenario, run_pch
+from __init__ import prepare_demo_repo_by_bucket, run_pch
 
-_SCENARIO = "version_release_pass"
+_DEMO_BUCKET = "release_fail_parse"
 
 
 # helpers  #####################################################################
 
 
 def _prepare_demo_repo():
-    return prepare_demo_repo_by_scenario(_SCENARIO)
+    return prepare_demo_repo_by_bucket(_DEMO_BUCKET)
 
 
 # demo  ########################################################################
@@ -32,8 +33,11 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tVersion Release merge (develop into main)")
-    print("expected:\tPASS, header prepended to COMMIT_EDITMSG")
+    print(
+        "scenario:\tVersion Release merge (dev into main), "
+        "unparsable source version"
+    )
+    print('expected:\tPASS, header "Version Release: v2024.07-rc1" prepended')
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

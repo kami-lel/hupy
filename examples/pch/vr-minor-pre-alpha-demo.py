@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-release-minor-pre-alpha-demo.py
+vr-minor-pre-alpha-demo.py
 
 demo: Version Release merge (dev into main), a 0.9.z minor bump
 (main's 0.8.5 -> dev's 0.9.0), to exercise pch's "Minor Pre-Alpha

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-release-beta-demo.py
+vr-major-stable-demo.py
 
-demo: Version Release merge (dev into main), source branch version
-"1.3.0-beta.1", to exercise pch's "Beta Release" wording (no bump
-prefix, even though the merge would otherwise be a major bump)
+demo: Version Release merge (dev into main), a major bump (main's
+1.2.3 -> dev's 2.0.0), to exercise pch's "Major Stable Release"
+wording
 expected result: header prepended to COMMIT_EDITMSG,
-"Beta Release: 1.3.0-beta.1"
+"Major Stable Release: 2.0.0"
 """
 
 import pathlib
@@ -18,7 +18,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo_by_bucket, run_pch
 
-_DEMO_BUCKET = "release_beta"
+_DEMO_BUCKET = "release_major_stable"
 
 
 # helpers  #####################################################################
@@ -35,9 +35,11 @@ def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
     print(
         "scenario:\tVersion Release merge (dev into main), "
-        "beta pre-release source version"
+        "major bump (1.2.3 -> 2.0.0)"
     )
-    print('expected:\tPASS, header "Beta Release: 1.3.0-beta.1" prepended')
+    print(
+        'expected:\tPASS, header "Major Stable Release: 2.0.0" prepended'
+    )
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

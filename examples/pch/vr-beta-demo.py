@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-release-fail-parse-demo.py
+vr-beta-demo.py
 
 demo: Version Release merge (dev into main), source branch version
-"v2024.07-rc1" doesn't parse as a major.minor.patch core, so pch
-falls back to the plain "Version Release" wording
+"1.3.0-beta.1", to exercise pch's "Beta Release" wording (no bump
+prefix, even though the merge would otherwise be a major bump)
 expected result: header prepended to COMMIT_EDITMSG,
-"Version Release: v2024.07-rc1"
+"Beta Release: 1.3.0-beta.1"
 """
 
 import pathlib
@@ -18,7 +18,7 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo_by_bucket, run_pch
 
-_DEMO_BUCKET = "release_fail_parse"
+_DEMO_BUCKET = "release_beta"
 
 
 # helpers  #####################################################################
@@ -35,9 +35,9 @@ def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
     print(
         "scenario:\tVersion Release merge (dev into main), "
-        "unparsable source version"
+        "beta pre-release source version"
     )
-    print('expected:\tPASS, header "Version Release: v2024.07-rc1" prepended')
+    print('expected:\tPASS, header "Beta Release: 1.3.0-beta.1" prepended')
     print()
 
     print(gen_comment_banner_centered("print out", "#"))
