@@ -102,6 +102,16 @@ class _Pch(BaseModel):
     release_candidate_tag: str = "-rc"
 
 
+class _Bdc(BaseModel):
+    """
+    configuration for the BDC module (ban direct commit)
+    """
+
+    ban_commit_to_dev: bool = True
+    ban_commit_to_main: bool = True
+    ban_commit_to_branches: list[str] = Field(default_factory=list)
+
+
 class HupyConfigFile(BaseModel):
     """
     schema for the HUPy config file (``.hupy.config.json``)
@@ -112,3 +122,4 @@ class HupyConfigFile(BaseModel):
     ver_grep: _VerGrep = Field(default_factory=_VerGrep)
     cbm: _Cbm = Field(default_factory=_Cbm)
     pch: _Pch = Field(default_factory=_Pch)
+    bdc: _Bdc = Field(default_factory=_Bdc)
