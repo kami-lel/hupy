@@ -50,7 +50,8 @@ def _get_release_type_word(version):
     map a version string to its release-type word: ``Alpha``/``Beta``
     when a matching pre-release identifier is present, ``Pre-Alpha``
     for a ``0.9.z`` core, ``Prototype`` for any other ``0.x.z`` core,
-    otherwise ``Stable``
+    ``Stable`` for ``1.0.0`` and higher, or ``""`` when the version
+    doesn't parse as a ``major.minor.patch`` core at all
     """
     if "-alpha" in version:
         return "Alpha "
@@ -60,8 +61,13 @@ def _get_release_type_word(version):
         return "Pre-Alpha "
     elif re.match(r"^0\.\d+\.\d+", version):
         return "Prototype "
-    else:
+    elif re.match(r"^\d+\.\d+\.\d+", version):
         return "Stable "
+    else:
+        return ""
+
+
+# TODO togglable pre-alpha & vs
 
 
 def _gen_bumped_version_header(header_word):
@@ -92,22 +98,24 @@ def _gen_backport_header(header_word):
 
 # generate header  =============================================================
 
-# TODO demo & test for all types
-
 
 def _gen_version_release_header(_):
     version = grep_source_branch_version()
-    if version:
-        release_type = _get_release_type_word(version)
-        if release_type in ("Alpha ", "Beta "):
-            bump_prefix = ""
-        else:
-            bump_prefix = _get_version_bump_prefix(
-                version, grep_target_branch_version()
-            )
-        return "{}{}Release: {}".format(bump_prefix, release_type, version)
-    else:
+    if not version:
         return "Version Release"
+
+    release_type = _get_release_type_word(version)
+    if not release_type:
+        return "Version Release: {}".format(version)
+
+    if release_type in ("Alpha ", "Beta "):
+        bump_prefix = ""
+    else:
+        bump_prefix = _get_version_bump_prefix(
+            version, grep_target_branch_version()
+        )
+
+    return "{}{}Release: {}".format(bump_prefix, release_type, version)
 
 
 def _gen_feature_landing_header(repo):
