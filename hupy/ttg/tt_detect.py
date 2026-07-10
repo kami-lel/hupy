@@ -125,7 +125,7 @@ class TriageTagType(Flag):  # ==================================================
 # Public API  ##################################################################
 
 
-# Todo detect TT with respect of code comment by file type
+# TODO detect TT with respect of code comment by file type
 
 
 def detect_triage_tags_in_staged_file(file_path, repo_root=None):
