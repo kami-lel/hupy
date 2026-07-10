@@ -38,7 +38,7 @@ register_cli_icc_parser(cli_subparser)
 register_cli_ich_parser(cli_subparser)
 
 
-# TODO add cache file
+# FIXME work w/ both cache & persistent
 # TODO add CLI verify config
 # Todo allow tmp skip some feature for next round
 
