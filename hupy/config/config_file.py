@@ -124,8 +124,6 @@ class _Bdc(BaseModel):
     configuration for the BDC module (ban direct commit)
     """
 
-    # TODO allow to be turned off
-
     is_disabled: bool
     ban_commit_to_main: bool
     ban_commit_to_dev: bool
@@ -137,7 +135,7 @@ class _Hb(BaseModel):
     configuration for the HB module (hook bracket)
     """
 
-    # TODO allow to be turned off
+    # Todo allow to be turned off
 
     is_disabled: bool
     pre_commit: list[str]
