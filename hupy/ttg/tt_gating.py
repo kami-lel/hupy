@@ -89,8 +89,6 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
 
 
 # Public API  ##################################################################
-
-
 def perform_triage_tags_gating(repo):
     """
     execute triage tag gating for the current commit.
@@ -118,3 +116,6 @@ def perform_triage_tags_gating(repo):
         return
 
     logger.pass_("no gated TT found")
+
+
+# todo add config for ignored globs
