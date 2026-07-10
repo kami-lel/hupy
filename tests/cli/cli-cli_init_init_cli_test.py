@@ -103,6 +103,46 @@ class TestInitWritesConfigFile:
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
 
+class TestInitStepFlags:
+    def test_copy_hooks_flag_skips_config_file(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir), "--copy-hooks"])
+
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        for name in _STUB_NAMES:
+            assert (hooks_dir / name).exists()
+        assert not (git_repo_dir / CONFIG_FILENAME).exists()
+
+    def test_create_config_file_flag_skips_hooks(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir), "--create-config-file"])
+
+        config_path = git_repo_dir / CONFIG_FILENAME
+        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
+
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        for name in _STUB_NAMES:
+            assert not (hooks_dir / name).exists()
+
+    def test_both_flags_together_create_hooks_and_config(self, git_repo_dir):
+        run_init_cli(
+            [str(git_repo_dir), "--copy-hooks", "--create-config-file"]
+        )
+
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        for name in _STUB_NAMES:
+            assert (hooks_dir / name).exists()
+        config_path = git_repo_dir / CONFIG_FILENAME
+        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
+
+    def test_no_flags_create_both_hooks_and_config(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir)])
+
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        for name in _STUB_NAMES:
+            assert (hooks_dir / name).exists()
+        config_path = git_repo_dir / CONFIG_FILENAME
+        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
+
+
 class TestInitForceReRun:
     def test_rerun_without_force_raises_system_exit(self, git_repo_dir):
         run_init_cli([str(git_repo_dir)])
