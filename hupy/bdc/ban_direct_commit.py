@@ -22,5 +22,6 @@ def ban_direct_commit(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
+    logger.enter("perform Ban Direct Commit")
     # TODO implement direct-commit ban
     pass

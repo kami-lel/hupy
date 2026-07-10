@@ -111,7 +111,11 @@ def _gen_version_release_header(repo):
     if not release_type:
         return "Version Release: {}".format(version)
 
-    if release_type in ("Alpha Release ", "Beta Release ", "Release Candidate "):
+    if release_type in (
+        "Alpha Release ",
+        "Beta Release ",
+        "Release Candidate ",
+    ):
         bump_prefix = ""
     else:
         bump_prefix = _get_version_bump_prefix(
@@ -172,7 +176,7 @@ def prepend_commit_header(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
-    logger.enter("prepending commit header")
+    logger.enter("perform Prepend Commit Header")
 
     commit_type = get_current_commit_type(repo)
 
