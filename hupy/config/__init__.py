@@ -10,3 +10,5 @@ CONFIG_FILENAME = ".hupy.config.json"
 CONFIG_LOGGER_NAME = PROJ_LOGGER_NAME + ".config-file"
 
 # todo script to update config file w/ package update
+
+# FIXME consider using context
