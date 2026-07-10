@@ -5,6 +5,7 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
+import fnmatch
 import re
 import subprocess
 import sys
@@ -27,7 +28,19 @@ logger.propagate = False
 # helpers  #####################################################################
 
 
-def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
+def _is_path_ignored(file_path, ignored_path_globs):
+    """
+    :return: if ``file_path`` matches any glob in ``ignored_path_globs``
+    :rtype: bool
+    """
+    return any(
+        fnmatch.fnmatch(file_path, glob) for glob in ignored_path_globs
+    )
+
+
+def _perform_triage_tags_by_filtering_group(
+    repo, filtering_tt_group, ignored_path_globs
+):
     try:
         cached_files = (
             subprocess.check_output(
@@ -47,6 +60,10 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
 
     for file_path in cached_files:
         if not file_path:
+            continue
+
+        if _is_path_ignored(file_path, ignored_path_globs):
+            logger.debug("skip ignored path: " + file_path)
             continue
 
         tags_in_file = detect_triage_tags_in_staged_file(
@@ -109,12 +126,16 @@ def perform_triage_tags_gating(repo):
 
     if CommitType.FEATURE_LANDING in commit_type:
         logger.debug("TTG on Feature Landing merge")
-        _perform_triage_tags_by_filtering_group(repo, TriageTagType.LOUDS)
+        _perform_triage_tags_by_filtering_group(
+            repo, TriageTagType.LOUDS, config.ttg.ignored_path_globs
+        )
 
     elif CommitType.VERSION_RELEASE in commit_type:
         logger.debug("TTG on Version Release merge")
         _perform_triage_tags_by_filtering_group(
-            repo, TriageTagType.LOUDS | TriageTagType.STEADYS
+            repo,
+            TriageTagType.LOUDS | TriageTagType.STEADYS,
+            config.ttg.ignored_path_globs,
         )
 
     else:
@@ -122,6 +143,3 @@ def perform_triage_tags_gating(repo):
         return
 
     logger.pass_("no gated TT found")
-
-
-# TODO add config for ignored globs
