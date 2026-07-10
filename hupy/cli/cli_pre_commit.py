@@ -7,6 +7,7 @@ import git
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.config.load_config import load_hupy_config
 from hupy.ttg.tt_gating import perform_triage_tags_gating
+from hupy.bdc.ban_direct_commit import ban_direct_commit
 
 # logger  ######################################################################
 logger = kamilog.getLogger(PROJ_LOGGER_NAME)
@@ -17,7 +18,8 @@ _PRE_COMMIT_DOC = "run pre-commit stage hooks"
 
 def _pre_commit_main(args):  ###################################################
     """
-    dispatch for the ``pre-commit`` subcommand: execute triage tag gating.
+    dispatch for the ``pre-commit`` subcommand: execute direct-commit
+    ban and triage tag gating.
     """
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
     config = load_hupy_config(repo)
@@ -25,11 +27,12 @@ def _pre_commit_main(args):  ###################################################
         args, verbosity=config.default_logger_verbosity
     )
 
-    logger.enter("Start pre-commit stage")
+    logger.enter("start pre-commit stage")
 
+    ban_direct_commit(repo)
     perform_triage_tags_gating(repo)
 
-    logger.succ("pre-commit HUPy hooks")
+    logger.succ("pre-commit stage finished")
 
 
 # Public API  ##################################################################
