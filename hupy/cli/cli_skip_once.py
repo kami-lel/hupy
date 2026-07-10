@@ -23,37 +23,25 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-_MODULE_ABBR_TO_NAME = {
-    "ver_grep": "ver-grep",
-    "ttg": "triage-tag-gating",
-    "pch": "prepend-commit-header",
-    "bdc": "ban-direct-commit",
-    "hb": "hook-bracket",
-}
+SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")
+
+_MODULE_ABBR_TO_NAME = dict(
+    zip(
+        SKIPPABLE_MODULE,
+        # ordered to line up with SKIPPABLE_MODULE
+        (
+            "ver-grep",
+            "triage-tag-gating",
+            "prepend-commit-header",
+            "ban-direct-commit",
+            "hook-bracket",
+        ),
+    )
+)
 
 _MODULE_NAME_TO_ABBR = {
     name: abbr for abbr, name in _MODULE_ABBR_TO_NAME.items()
 }
-
-_SKIPPABLE_MODULE_CHOICES = tuple(_MODULE_ABBR_TO_NAME.keys()) + tuple(
-    _MODULE_NAME_TO_ABBR.keys()
-)
-
-_SKIP_ONCE_DOC = "skip modules in next hook run"
-
-_DESCRIPTION = __doc__ + """
-
-modules: {}
-
-each flagged module is skipped exactly once, consumed by the next
-pre-commit/prepare-commit-msg run that checks it, regardless of its
-is_disabled config setting
-""".format(
-    ", ".join(
-        "{} ({})".format(name, abbr)
-        for abbr, name in _MODULE_ABBR_TO_NAME.items()
-    )
-)
 
 
 # helpers  #####################################################################
@@ -76,9 +64,7 @@ def _skip_once_main(args):
     ]
 
     with open_state_file(repo) as state_file:
-        for abbr in abbrs:
-            if abbr not in state_file.skip_once:
-                state_file.skip_once.append(abbr)
+        state_file.skip_once.update(abbrs)
 
         logger.done("flagged for one-time skip: {}".format(", ".join(abbrs)))
 
@@ -91,8 +77,21 @@ def register_cli_skip_once_parser(cli_subparser):
     skip_once_parser = cli_subparser.add_parser(
         "skip-once",
         aliases=["s"],
-        help=_SKIP_ONCE_DOC,
-        description=_DESCRIPTION,
+        help="skip modules in next hook run",
+        description=__doc__
+        + """
+
+modules: {}
+
+each flagged module is skipped exactly once, consumed by the next
+pre-commit/prepare-commit-msg run that checks it, regardless of its
+is_disabled config setting
+""".format(
+            ", ".join(
+                "{} ({})".format(name, abbr)
+                for abbr, name in _MODULE_ABBR_TO_NAME.items()
+            )
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -100,7 +99,8 @@ def register_cli_skip_once_parser(cli_subparser):
         "modules",
         metavar="MODULE",
         nargs="+",
-        choices=_SKIPPABLE_MODULE_CHOICES,
+        choices=tuple(_MODULE_ABBR_TO_NAME.keys())
+        + tuple(_MODULE_NAME_TO_ABBR.keys()),
         help="module(s) to skip once on their next hook run, by full "
         "name or abbr",
     )
