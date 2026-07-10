@@ -1,3 +1,10 @@
+"""
+cli_skip_once.py
+
+define the ``skip-once`` CLI subcommand, letting a HUPy module be
+skipped for exactly one upcoming hook run
+"""
+
 import argparse
 import os
 
