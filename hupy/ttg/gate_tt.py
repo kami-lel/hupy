@@ -30,17 +30,15 @@ def _is_path_ignored(file_path, ignored_path_globs):
     :return: if ``file_path`` matches any glob in ``ignored_path_globs``
     :rtype: bool
     """
-    return any(
-        fnmatch.fnmatch(file_path, glob) for glob in ignored_path_globs
-    )
+    return any(fnmatch.fnmatch(file_path, glob) for glob in ignored_path_globs)
 
 
-def _perform_triage_tags_by_filtering_group(
-    repo,
-    filtering_tt_group,
-    ignored_path_globs,
-    disable_tt_detect_by_type=False,
-):
+def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
+    # TODO break down aux fx
+    config = load_hupy_config(repo)
+    ignored_path_globs = config.ttg.ignored_path_globs
+    disable_tt_detect_by_type = config.ttg.disable_tt_detect_by_type
+
     try:
         cached_files = (
             subprocess.check_output(
@@ -128,20 +126,12 @@ def perform_triage_tags_gating(repo):
 
     if CommitType.FEATURE_LANDING in commit_type:
         logger.debug("TTG on Feature Landing merge")
-        _perform_triage_tags_by_filtering_group(
-            repo,
-            TriageTagType.LOUDS,
-            config.ttg.ignored_path_globs,
-            config.ttg.disable_tt_detect_by_type,
-        )
+        _perform_triage_tags_by_filtering_group(repo, TriageTagType.LOUDS)
 
     elif CommitType.VERSION_RELEASE in commit_type:
         logger.debug("TTG on Version Release merge")
         _perform_triage_tags_by_filtering_group(
-            repo,
-            TriageTagType.LOUDS | TriageTagType.STEADYS,
-            config.ttg.ignored_path_globs,
-            config.ttg.disable_tt_detect_by_type,
+            repo, TriageTagType.LOUDS | TriageTagType.STEADYS
         )
 
     else:

@@ -46,10 +46,11 @@ def _get_version_bump_prefix(source_version, target_version):
         return ""
 
 
-def _get_release_type_word(version, pch_config):
+def _get_release_type_word(version, repo):
     """
     map a version string to its release-type word
     """
+    pch_config = load_hupy_config(repo).pch
     tagged_words = (
         (pch_config.alpha_tag, "Alpha Release "),
         (pch_config.beta_tag, "Beta Release "),
@@ -106,8 +107,7 @@ def _gen_version_release_header(repo):
     if not version:
         return "Version Release"
 
-    pch_config = load_hupy_config(repo).pch
-    release_type = _get_release_type_word(version, pch_config)
+    release_type = _get_release_type_word(version, repo)
     if not release_type:
         return "Version Release: {}".format(version)
 

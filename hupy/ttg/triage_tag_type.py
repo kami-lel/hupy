@@ -71,6 +71,8 @@ class TriageTagType(Flag):  # ==================================================
 
     # Public Methods  **********************************************************
 
+    # HACK mv this away
+
     @classmethod
     def filter_by_group(cls, tags, group):
         """
@@ -88,6 +90,8 @@ class TriageTagType(Flag):  # ==================================================
         :rtype: list
         """
         return [tag for tag in tags if tag in group]
+
+    # HACK rf this to be its own
 
     @classmethod
     def find_first_in_line(cls, line, comment_prefix=None):
