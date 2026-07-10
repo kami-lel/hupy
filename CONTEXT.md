@@ -195,8 +195,7 @@ Ban Direct Commit — blocks a commit made directly on a protected branch (`main
 
 Flow, in order:
 
-1. loads config via `load_hupy_config(repo)` and returns immediately with `logger.skip("Ban Direct Commit disabled")` if disabled, before `logger.enter(...)` — **known bug**: this checks `config.pch.is_disabled` rather than `config.bdc.is_disabled`, so `bdc` actually follows `pch`'s disabled flag, not its own
-2. `current_branch = get_target_branch(repo)` (`cbm`)
+1. loads config via `load_hupy_config(repo)` and returns immediately with `logger.skip("Ban Direct Commit disabled")` if disabled, before `logger.enter(...)` `current_branch = get_target_branch(repo)` (`cbm`)
 3. build `protected_branches` from `.hupy.config.jsonc`'s `bdc`/`cbm` sections: `config.bdc.ban_commit_to_branches` plus `config.cbm.dev_branch_name` (if `config.bdc.ban_commit_to_dev`) and `config.cbm.main_branch_name` (if `config.bdc.ban_commit_to_main`) — `_get_protected_branches(repo)`
 4. `current_branch not in protected_branches` → `logger.skip(...)`, return (covers detached HEAD too, since `get_target_branch` returns `None` there)
 5. `CommitType.MERGE in get_current_commit_type(repo)` → `logger.pass_(...)`, return — any merge commit into a protected branch is allowed, regardless of merge type (`FEATURE_LANDING`, `VERSION_RELEASE`, `OTHER_MERGE`, …)
