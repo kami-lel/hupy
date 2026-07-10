@@ -10,11 +10,10 @@ from hupy import PROJ_LOGGER_NAME
 VER_GREP_LOGGER_NAME = PROJ_LOGGER_NAME + ".VerGrep"
 
 from .dvut import decide_version_update_type
-from .gcv import grep_current_version
-from .gsbv import grep_source_branch_version
+from .branch_version import grep_source_branch_version, grep_target_branch_version
 
 __all__ = (
     "decide_version_update_type",
-    "grep_current_version",
     "grep_source_branch_version",
+    "grep_target_branch_version",
 )
