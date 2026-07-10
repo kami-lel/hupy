@@ -1,7 +1,7 @@
 """
 vg-decide_version_update_type_test.py
 
-tests for `decide_version_update_type` in `dvut.py`
+tests for `decide_version_update_type` in `version_bump.py`
 """
 
 from hupy.ver_grep import decide_version_update_type

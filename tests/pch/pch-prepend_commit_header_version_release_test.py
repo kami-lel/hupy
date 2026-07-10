@@ -29,9 +29,9 @@ def _prepare(repo_dir):
 
 
 def _patch_version(value):
-    """stub ``grep_current_version`` to return ``value``."""
+    """stub ``grep_source_branch_version`` to return ``value``."""
     return mock.patch(
-        "hupy.pch.prepend_commit_header.grep_current_version",
+        "hupy.pch.prepend_commit_header.grep_source_branch_version",
         return_value=value,
     )
 

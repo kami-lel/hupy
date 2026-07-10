@@ -10,7 +10,7 @@ import tempfile
 import git
 
 from hupy.kamilog import getLogger
-from hupy.ver_grep import grep_current_version, grep_source_branch_version
+from hupy.ver_grep import grep_source_branch_version
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
@@ -36,7 +36,7 @@ def _gen_feature_landing_header_content(repo):
 
 
 def _gen_version_release_header_content(_):
-    version = grep_current_version()
+    version = grep_source_branch_version()
     if version:
         return "Version Release: {}".format(version)
     else:
@@ -81,6 +81,7 @@ _HEADER_GENERATORS = {
 }
 
 
+# FIXME no need aux
 def _prepend_commit_header_by_type(commit_type, repo_root):
     """
     prepend a header line and a blank line to the commit message file.

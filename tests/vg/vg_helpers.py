@@ -1,7 +1,8 @@
 """
 vg_helpers.py
 
-repo-building helpers for `grep_source_branch_version` tests; commits
+repo-building helpers for `grep_source_branch_version` and
+`grep_target_branch_version` tests; commits
 a caller-chosen version file onto a Feature Landing merge's source
 branch (and optionally its target branch) before the merge starts, so
 the merge stays in progress (`MERGE_HEAD` intact) with real, readable
