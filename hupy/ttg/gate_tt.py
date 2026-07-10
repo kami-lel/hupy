@@ -36,7 +36,10 @@ def _is_path_ignored(file_path, ignored_path_globs):
 
 
 def _perform_triage_tags_by_filtering_group(
-    repo, filtering_tt_group, ignored_path_globs
+    repo,
+    filtering_tt_group,
+    ignored_path_globs,
+    disable_tt_detect_by_type=False,
 ):
     try:
         cached_files = (
@@ -64,7 +67,9 @@ def _perform_triage_tags_by_filtering_group(
             continue
 
         tags_in_file = detect_triage_tags_in_staged_file(
-            file_path, repo_root=repo.working_dir
+            file_path,
+            repo_root=repo.working_dir,
+            disable_tt_detect_by_type=disable_tt_detect_by_type,
         )
         filtered = TriageTagType.filter_by_group(
             [tag for tag, _, _ in tags_in_file],
@@ -124,7 +129,10 @@ def perform_triage_tags_gating(repo):
     if CommitType.FEATURE_LANDING in commit_type:
         logger.debug("TTG on Feature Landing merge")
         _perform_triage_tags_by_filtering_group(
-            repo, TriageTagType.LOUDS, config.ttg.ignored_path_globs
+            repo,
+            TriageTagType.LOUDS,
+            config.ttg.ignored_path_globs,
+            config.ttg.disable_tt_detect_by_type,
         )
 
     elif CommitType.VERSION_RELEASE in commit_type:
@@ -133,6 +141,7 @@ def perform_triage_tags_gating(repo):
             repo,
             TriageTagType.LOUDS | TriageTagType.STEADYS,
             config.ttg.ignored_path_globs,
+            config.ttg.disable_tt_detect_by_type,
         )
 
     else:

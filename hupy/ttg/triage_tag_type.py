@@ -90,20 +90,32 @@ class TriageTagType(Flag):  # ==================================================
         return [tag for tag in tags if tag in group]
 
     @classmethod
-    def find_first_in_line(cls, line):
+    def find_first_in_line(cls, line, comment_prefix=None):
         """
         find first triage tag in a line.
 
         scan a line for the first occurrence of a triage tag and
-        return the corresponding ``TriageTagType`` member.
+        return the corresponding ``TriageTagType`` member. when
+        ``comment_prefix`` is given, only a tag occurring after that
+        comment-leader token on the line counts as a match; otherwise
+        the tag is matched anywhere in the line.
 
 
         :param line: line of text to scan
         :type line: str
+        :param comment_prefix: comment-leader token (eg ``"//"``,
+                ``"#"``, ``"<!--"``) the tag must follow, or ``None``
+                to match the tag anywhere in the line
+        :type comment_prefix: str or None
         :return: the first ``TriageTagType`` member found, or ``None``
         :rtype: TriageTagType or None
         """
-        match = re.search(_TT_PATTERN, line)
+        pattern = (
+            _TT_PATTERN
+            if comment_prefix is None
+            else re.escape(comment_prefix) + r".*?" + _TT_PATTERN
+        )
+        match = re.search(pattern, line)
         if not match:
             return None
 
