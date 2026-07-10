@@ -32,6 +32,8 @@ class _VerGrep(BaseModel):
     configuration for version grep hook
     """
 
+    # TODO allow to be turned off
+
     version_file: pathlib.Path
     version_line_pattern: str
 
@@ -95,6 +97,8 @@ class _Pch(BaseModel):
     configuration for the PCH module (pre-commit hook)
     """
 
+    # TODO allow to be turned off
+
     enable_vertical_slice: bool
     enable_pre_alpha: bool
     alpha_tag: str
@@ -107,6 +111,8 @@ class _Bdc(BaseModel):
     configuration for the BDC module (ban direct commit)
     """
 
+    # TODO allow to be turned off
+
     ban_commit_to_main: bool
     ban_commit_to_dev: bool
     ban_commit_to_branches: list[str]
@@ -116,6 +122,8 @@ class _Hb(BaseModel):
     """
     configuration for the HB module (hook bracket)
     """
+
+    # TODO allow to be turned off
 
     pre_commit: list[str]
     prepare_commit_msg: list[str]

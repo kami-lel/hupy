@@ -5,7 +5,7 @@ extract a repo's version string by regex-matching a line in a
 configured version file
 """
 
-# Todo allow ver grep to be turned off
+# TODO allow ver grep to be turned off
 
 from hupy import PROJ_LOGGER_NAME
 
