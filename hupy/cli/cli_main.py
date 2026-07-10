@@ -36,7 +36,7 @@ register_cli_prepare_commit_msg_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
 
 
-# Todo add state file
-# Todo allow tmp skip some feature for next round
+# TODO add state file
+# TODO allow tmp skip some feature for next round
 
 # todo dry run feature for hooks CLI
