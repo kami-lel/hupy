@@ -319,7 +319,7 @@ prepend_commit_header(repo)
 
 Extracts a repo's version string by regex-matching a line in a configured version file. *PCH* uses it to fill in the `<version>` placeholder on the merge types below; if `ver_grep` isn't configured, the header falls back to the plain form with no number.
 
-See [`.hupy.config.json` Documentation](hupy_config_doc.md#ver_grep) to set it up.
+See [`.hupy.config.json` Documentation](hupy_config_doc.md#vg) to set it up.
 
 
 

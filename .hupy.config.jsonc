@@ -1,6 +1,6 @@
 {
   "hupy_version": "0.3.0",
-  "ver_grep": {
+  "vg": {
     "is_disabled": false,
     "version_file": "pyproject.toml",
     "version_line_pattern": "^version = \"(.*)\""

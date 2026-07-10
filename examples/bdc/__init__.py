@@ -47,7 +47,7 @@ def prepare_demo_repo_on_branch(branch_name, filename, fixture_name="tt_none.py"
     """
     dest_dir = tempfile.mkdtemp(prefix="bdc_demo_")
     git.Repo.clone_from(str(_BUNDLE_PATH), dest_dir, branch=MAIN_BRANCH)
-    # HUPy resolves ``ver_grep.version_file`` against the process cwd,
+    # HUPy resolves ``vg.version_file`` against the process cwd,
     # so the bundled setup.cfg must be found from inside the repo
     os.chdir(dest_dir)
     repo = git.Repo(dest_dir)

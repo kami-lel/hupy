@@ -27,19 +27,19 @@ logger.propagate = False
 # helpers  #####################################################################
 def _load_ver_grep_settings(repo):
     """
-    load the ``ver_grep`` section of the HUPy config for ``repo``
+    load the ``vg`` section of the HUPy config for ``repo``
 
     :param repo: git repository object
     :type repo: git.Repo
     """
     config = load_hupy_config(repo)
 
-    if config.ver_grep.is_unconfigured():
+    if config.vg.is_unconfigured():
         return None
 
-    version_file = config.ver_grep.version_file
+    version_file = config.vg.version_file
     logger.debug("version_file:\t{}".format(version_file))
-    pattern = config.ver_grep.version_line_pattern
+    pattern = config.vg.version_line_pattern
     logger.debug("version_line_pattern:\t{}".format(pattern))
     return version_file, pattern
 
@@ -100,7 +100,7 @@ def grep_source_branch_version():
     :raises SystemExit: version file not found on the source branch,
             or the pattern does not match any line
     :return: the captured group from the first matching line, or
-            ``""`` if ver_grep is not configured
+            ``""`` if vg is not configured
     :rtype: str
     """
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
@@ -128,7 +128,7 @@ def grep_target_branch_version():
     :raises SystemExit: version file not found on the target branch,
             or the pattern does not match any line
     :return: the captured group from the first matching line, or
-            ``""`` if ver_grep is not configured
+            ``""`` if vg is not configured
     :rtype: str
     """
     repo = git.Repo(os.getcwd(), search_parent_directories=True)

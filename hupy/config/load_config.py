@@ -39,7 +39,7 @@ def load_hupy_config(repo):
     :param repo: git repository object
     :type repo: git.Repo
     :raises SystemExit: config file not found or is malformed,
-            including a ``ver_grep`` section left at its empty
+            including a ``vg`` section left at its empty
             defaults
     :return: the loaded and validated configuration
     :rtype: HupyConfigFile

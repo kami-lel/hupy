@@ -146,7 +146,7 @@ class HupyConfigFile(BaseModel):
     """
 
     hupy_version: str
-    ver_grep: _VerGrep
+    vg: _VerGrep
     ttg: _Ttg
     cbm: _Cbm
     pch: _Pch
