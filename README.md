@@ -1,10 +1,6 @@
+# `hupy` (Hooks Utility Python) README
 
-
-> **Hooks Utility Python** — a toolkit for enforcing commit quality via git hooks.
-
-<!--
-Todo togglable ban direct commit to main/dev
--->
+> a toolkit for enforcing commit quality via git hooks.
 
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).

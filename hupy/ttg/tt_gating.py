@@ -77,9 +77,7 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
                 stripped_line = line.strip()
                 match = re.search(_TT_PATTERN, stripped_line)
                 if match:
-                    colored_tag = renderer.color_triage_tag(
-                        match.group(1)
-                    )
+                    colored_tag = renderer.color_triage_tag(match.group(1))
                     stripped_line = (
                         stripped_line[: match.start()]
                         + colored_tag
@@ -101,7 +99,7 @@ def perform_triage_tags_gating(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
-    logger.enter("performing TTG")
+    logger.enter("perform Triage Tag Gating")
 
     commit_type = get_current_commit_type(repo)
 

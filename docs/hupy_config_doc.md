@@ -20,6 +20,7 @@
 | `ver_grep` | how to read the repo's version string — see below |
 | `cbm` | branch names/prefixes the *CBM* module (commit, branch, and merge types) classifies against — see below |
 | `pch` | how *Prepend Commit Header* understands versions and picks a header — see below |
+| `bdc` | branches that *Ban Direct Commit* blocks direct commits to — see below |
 
 
 
@@ -183,3 +184,55 @@ Configures how *Prepend Commit Header* understands a resolved version and which 
 | `release_candidate_tag` | `-rc` | version suffix identifying a release candidate |
 
 Leave any of `alpha_tag`, `beta_tag`, `release_candidate_tag` empty to disable that tag: *PCH* will no longer recognize that release type and skips its header.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## `bdc`
+
+Configures *Ban Direct Commit*: blocks a commit made directly on a protected
+branch, while still allowing that branch to receive commits through a
+merge (eg. `feature → dev`, `dev → main`). Only the direct-commit path is
+blocked; merging is unaffected.
+
+| Sub-field | Default |
+|---|---|
+| `ban_commit_to_dev` | `true` |
+| `ban_commit_to_main` | `true` |
+| `ban_commit_to_branches` | `[]` |
+
+`ban_commit_to_branches` is a list of branch names, matched exactly, that
+must not be directly committed to, on top of whatever
+`ban_commit_to_dev`/`ban_commit_to_main` already cover.

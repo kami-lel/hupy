@@ -13,6 +13,7 @@
 - **`hupy.ver_grep.grep_target_branch_version()`** and **`hupy.ver_grep.decide_version_update_type()`** — read a merge's target-branch version and classify a major/minor/patch version bump between source and target branches, now wired into the Version Release, Hotfix Release, and Release Cut headers as a `Major `/`Minor `/`Patch ` prefix
 - **release-type detection in the Version Release header** — `hupy.pch` classifies the source version as Alpha, Beta, Release Candidate, Pre-Alpha, Vertical Slice, Prototype, or Stable and labels the header accordingly, eg `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`, `Release Candidate: 1.3.0-rc.1`; a version that doesn't parse as a `major.minor.patch` core still falls back to plain `Version Release: <version>`
 - **`pch` config section** — new section in `.hupy.config.json` (`enable_vertical_slice`, `enable_pre_alpha`, `alpha_tag`, `beta_tag`, `release_candidate_tag`) configures which release types `hupy.pch` recognizes and how; an empty tag disables recognition of that release type
+- **Ban Direct Commit** — a `pre-commit` check, wired ahead of Triage Tag Gating, that blocks a commit made directly on a protected branch (`dev`/`main` by default) while still allowing that branch to receive commits through a merge, eg. `feature → dev`; a new `bdc` section in `.hupy.config.json` (`ban_commit_to_dev`, `ban_commit_to_main`, `ban_commit_to_branches`) configures which branches are protected
 
 ### Changed
 
@@ -24,6 +25,7 @@
 - restructured `hupy.ver_grep` (flat module, single `grep_repo_version()`) into a package split into `grep_source_branch_version()`/`grep_target_branch_version()`, each reading the branch tip via `git show` rather than the working tree
 - consolidated `docs/pch_doc.md` into a new `docs/cbm_doc.md` guide covering Branch/Merge concepts, PCH headers, and `ver_grep`
 - Catch Up header now includes the target branch name, previously plain `"Catch Up"`
+- `hupy pre-commit`'s and `hupy prepare-commit-msg`'s entry/success log lines lowercased and reworded for consistency (eg. `"Start pre-commit stage"` → `"start pre-commit stage"`, `"pre-commit HUPy hooks"` → `"pre-commit stage finished"`)
 
 ### Deprecated
 
