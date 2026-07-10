@@ -38,8 +38,12 @@ SCENARIOS = (
     "version_release_pass",
 )
 
-# CBM merge types PCH does not yet handle; only used by the
-# ``examples/pch`` skip-demo scripts, not by unit tests
+# demo-only repo scaffolds with no TT-tag file manifest, used by
+# ``examples/pch`` demo scripts, not by unit tests: the first six are
+# CBM merge types PCH's header generators cover but that have no
+# dedicated ``tests/pch/`` file yet; the ``release_*`` ones below
+# exercise the Version Release header's release-type/bump-prefix
+# wording (``examples/pch/release-*-demo.py``)
 DEMO_BUCKETS = (
     "sync_backport",
     "catch_up",
@@ -47,6 +51,12 @@ DEMO_BUCKETS = (
     "hotfix_backport",
     "release_cut",
     "release_backport",
+    "release_fail_parse",
+    "release_minor_prototype",
+    "release_alpha",
+    "release_beta",
+    "release_major_stable",
+    "release_minor_pre_alpha",
 )
 
 
@@ -231,6 +241,51 @@ def _setup_release_backport(repo_dir):
     repo.git.merge("--no-commit", "--no-ff", "release/2.4.0")
 
 
+def _setup_version_release_with_versions(repo_dir, source_version, target_version=None):
+    # a dev-into-main in-progress merge with explicit source/target
+    # versions, for demoing a specific Version Release header
+    # release-type/bump-prefix combination; when target_version is
+    # given, main's version is rewritten first, so the comparison
+    # isn't pinned to the bundle's default 1.2.3
+    repo = git.Repo(str(repo_dir))
+    if target_version is not None:
+        _bump_source_branch_version(repo_dir, target_version)
+    repo.git.checkout("-q", "-b", DEV_BRANCH)
+    _bump_source_branch_version(repo_dir, source_version)
+    repo.git.checkout("-q", MAIN_BRANCH)
+    repo.git.merge("--no-commit", "--no-ff", DEV_BRANCH)
+
+
+def _setup_release_fail_parse(repo_dir):
+    _setup_version_release_with_versions(repo_dir, "v2024.07-rc1")
+
+
+def _setup_release_minor_prototype(repo_dir):
+    _setup_version_release_with_versions(
+        repo_dir, "0.4.0", target_version="0.3.0"
+    )
+
+
+def _setup_release_alpha(repo_dir):
+    _setup_version_release_with_versions(repo_dir, "1.3.0-alpha.1")
+
+
+def _setup_release_beta(repo_dir):
+    _setup_version_release_with_versions(repo_dir, "1.3.0-beta.1")
+
+
+def _setup_release_major_stable(repo_dir):
+    _setup_version_release_with_versions(
+        repo_dir, "2.0.0", target_version="1.2.3"
+    )
+
+
+def _setup_release_minor_pre_alpha(repo_dir):
+    _setup_version_release_with_versions(
+        repo_dir, "0.9.0", target_version="0.8.5"
+    )
+
+
 _BUCKET_SETUP_FUNCS = {
     "non_merge_commit": _setup_non_merge_commit,
     "regular_merge": _setup_regular_merge,
@@ -245,6 +300,12 @@ _DEMO_BUCKET_SETUP_FUNCS = {
     "hotfix_backport": _setup_hotfix_backport,
     "release_cut": _setup_release_cut,
     "release_backport": _setup_release_backport,
+    "release_fail_parse": _setup_release_fail_parse,
+    "release_minor_prototype": _setup_release_minor_prototype,
+    "release_alpha": _setup_release_alpha,
+    "release_beta": _setup_release_beta,
+    "release_major_stable": _setup_release_major_stable,
+    "release_minor_pre_alpha": _setup_release_minor_pre_alpha,
 }
 
 # legacy scenario -> (bucket, default files) presets, kept so the

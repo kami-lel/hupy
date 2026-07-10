@@ -4,7 +4,8 @@ pch-prepend_commit_header_version_release_test.py
 tests for `prepend_commit_header` on Version Release merges; message
 formatting internals are already exercised in detail by the Feature
 Finish scenario tests, so this file only confirms header selection,
-the basic rewrite, and the version-number suffix drawn from ver_grep
+the basic rewrite, and the release-type/bump-prefix wording drawn
+from ver_grep
 """
 
 from unittest import mock
@@ -35,6 +36,14 @@ def _patch_version(value):
     """stub ``grep_source_branch_version`` to return ``value``."""
     return mock.patch(
         "hupy.pch.prepend_commit_header.grep_source_branch_version",
+        return_value=value,
+    )
+
+
+def _patch_target_version(value):
+    """stub ``grep_target_branch_version`` to return ``value``."""
+    return mock.patch(
+        "hupy.pch.prepend_commit_header.grep_target_branch_version",
         return_value=value,
     )
 
@@ -108,7 +117,13 @@ class TestVersionReleaseHeaderWithVersion:
             self._HEADER + "\n\nsubject only\n"
         )
 
-    def test_non_semver_version_string_is_used_verbatim(self, repo_dir):
+
+class TestVersionReleaseHeaderScenarios:
+    """the six release-type/bump-prefix combinations pch's
+    ``examples/pch/release-*-demo.py`` scripts also demonstrate
+    end-to-end against a real repo"""
+
+    def test_fail_parse_version_falls_back_to_plain_prefix(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
@@ -116,82 +131,64 @@ class TestVersionReleaseHeaderWithVersion:
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Stable Release: v2024.07-rc1\n\nsubject only\n"
+            "Version Release: v2024.07-rc1\n\nsubject only\n"
         )
 
-
-class TestVersionReleaseHeaderReleaseType:
-    """release-type word, driven by the mocked source version alone;
-    the real target branch's ``1.2.3`` never triggers a bump here"""
-
-    def test_alpha_pre_release(self, repo_dir):
+    def test_minor_prototype_release(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("1.2.3-alpha.1"):
+        with _patch_version("0.4.0"), _patch_target_version("0.3.0"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Alpha Release: 1.2.3-alpha.1\n\nsubject only\n"
+            "Minor Prototype Release: 0.4.0\n\nsubject only\n"
         )
 
-    def test_beta_pre_release(self, repo_dir):
+    def test_alpha_release_has_no_bump_prefix(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("1.2.3-beta.1"):
+        # target set to a version that would otherwise trigger a
+        # major bump, proving alpha releases skip the bump prefix
+        with _patch_version("1.3.0-alpha.1"), _patch_target_version("0.9.0"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Beta Release: 1.2.3-beta.1\n\nsubject only\n"
+            "Alpha Release: 1.3.0-alpha.1\n\nsubject only\n"
         )
 
-    def test_zero_major_is_prototype(self, repo_dir):
+    def test_beta_release_has_no_bump_prefix(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("0.3.2"):
+        # target set to a version that would otherwise trigger a
+        # major bump, proving beta releases skip the bump prefix
+        with _patch_version("1.3.0-beta.1"), _patch_target_version("0.9.0"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Prototype Release: 0.3.2\n\nsubject only\n"
+            "Beta Release: 1.3.0-beta.1\n\nsubject only\n"
         )
 
-
-class TestVersionReleaseHeaderBumpPrefix:
-    """bump prefix, driven by comparing the mocked source version
-    against the real target branch's ``1.2.3`` (see prep_repo.py's
-    version_release bucket)"""
-
-    def test_major_bump(self, repo_dir):
+    def test_major_stable_release(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("2.0.0"):
+        with _patch_version("2.0.0"), _patch_target_version("1.2.3"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
             "Major Stable Release: 2.0.0\n\nsubject only\n"
         )
 
-    def test_minor_bump(self, repo_dir):
+    def test_minor_pre_alpha_release(self, repo_dir):
         repo = _prepare(repo_dir)
         write_commit_editmsg(repo_dir, "subject only\n")
 
-        with _patch_version("1.3.0"):
+        with _patch_version("0.9.0"), _patch_target_version("0.8.5"):
             prepend_commit_header(repo)
 
         assert read_commit_editmsg(repo_dir) == (
-            "Minor Stable Release: 1.3.0\n\nsubject only\n"
-        )
-
-    def test_patch_bump(self, repo_dir):
-        repo = _prepare(repo_dir)
-        write_commit_editmsg(repo_dir, "subject only\n")
-
-        with _patch_version("1.2.4"):
-            prepend_commit_header(repo)
-
-        assert read_commit_editmsg(repo_dir) == (
-            "Patch Stable Release: 1.2.4\n\nsubject only\n"
+            "Minor Pre-Alpha Release: 0.9.0\n\nsubject only\n"
         )
