@@ -22,7 +22,7 @@ def _prepare_commit_msg_main(args):  ###########################################
     commit header.
     """
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
-    config = load_hupy_config(os.getcwd())
+    config = load_hupy_config(repo)
     kamilog.set_logging_level_by_namespace(
         args, verbosity=config.default_logger_verbosity
     )

@@ -24,17 +24,17 @@ class BranchType(Enum):
     USER = auto()
 
     @classmethod
-    def from_name(cls, branch_name, repo_path):
+    def from_name(cls, branch_name, repo):
         """
         :param branch_name: name of the git branch to classify
         :type branch_name: str
-        :param repo_path: path to the repo root, or to any path inside
-                    it; used to load the ``cbm`` config section
-        :type repo_path: str
+        :param repo: git repository object; used to load the ``cbm``
+                    config section
+        :type repo: git.Repo
         :return: the branch type matching ``branch_name``
         :rtype: BranchType
         """
-        cbm_config = load_hupy_config(repo_path).cbm
+        cbm_config = load_hupy_config(repo).cbm
 
         if branch_name == cbm_config.dev_branch_name:
             return cls.DEV

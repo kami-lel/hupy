@@ -21,7 +21,7 @@ def _classify(branch_name, **cbm_overrides):
     with mock.patch(
         "hupy.cbm.branch_type.load_hupy_config", return_value=config
     ):
-        return BranchType.from_name(branch_name, "/repo")
+        return BranchType.from_name(branch_name, mock.sentinel.repo)
 
 
 # tests  ########################################################################
@@ -139,11 +139,11 @@ class TestFromNamePrecedence:
         )
 
 
-class TestFromNamePassesRepoPath:
-    def test_repo_path_forwarded_to_load_hupy_config(self):
+class TestFromNamePassesRepo:
+    def test_repo_forwarded_to_load_hupy_config(self):
         config = HupyConfigFile()
         with mock.patch(
             "hupy.cbm.branch_type.load_hupy_config", return_value=config
         ) as mocked:
-            BranchType.from_name("dev", "/some/repo/path")
-        mocked.assert_called_once_with("/some/repo/path")
+            BranchType.from_name("dev", mock.sentinel.repo)
+        mocked.assert_called_once_with(mock.sentinel.repo)

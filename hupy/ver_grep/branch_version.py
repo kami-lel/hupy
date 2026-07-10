@@ -25,12 +25,14 @@ logger.propagate = False
 
 
 # helpers  #####################################################################
-def _load_ver_grep_settings():
+def _load_ver_grep_settings(repo):
     """
-    load the ``ver_grep`` section of the HUPy config for the current
-    working directory
+    load the ``ver_grep`` section of the HUPy config for ``repo``
+
+    :param repo: git repository object
+    :type repo: git.Repo
     """
-    config = load_hupy_config(os.getcwd())
+    config = load_hupy_config(repo)
 
     if config.ver_grep.is_unconfigured():
         return None
@@ -101,12 +103,12 @@ def grep_source_branch_version():
             ``""`` if ver_grep is not configured
     :rtype: str
     """
-    settings = _load_ver_grep_settings()
+    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    settings = _load_ver_grep_settings(repo)
     if settings is None:
         return ""
     version_file, pattern = settings
 
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
     source_branch = get_source_branch(repo)
 
     content = _read_version_file_at_ref(repo, source_branch, version_file)
@@ -129,12 +131,12 @@ def grep_target_branch_version():
             ``""`` if ver_grep is not configured
     :rtype: str
     """
-    settings = _load_ver_grep_settings()
+    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    settings = _load_ver_grep_settings(repo)
     if settings is None:
         return ""
     version_file, pattern = settings
 
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
     target_branch = get_target_branch(repo)
 
     content = _read_version_file_at_ref(repo, target_branch, version_file)

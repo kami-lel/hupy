@@ -141,11 +141,9 @@ def get_current_commit_type(repo):
         return _commit_type_cache[repo.git_dir]
 
     source = get_source_branch(repo)
-    source_type = BranchType.from_name(source, repo.working_dir)
+    source_type = BranchType.from_name(source, repo)
     target_type = (
-        None
-        if target is None
-        else BranchType.from_name(target, repo.working_dir)
+        None if target is None else BranchType.from_name(target, repo)
     )
 
     commit_type = CommitType.decide_commit_type(source_type, target_type)
