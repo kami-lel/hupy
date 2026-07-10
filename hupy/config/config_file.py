@@ -110,8 +110,6 @@ class _Pch(BaseModel):
     configuration for the PCH module (pre-commit hook)
     """
 
-    # TODO allow to be turned off
-
     is_disabled: bool
 
     enable_vertical_slice: bool

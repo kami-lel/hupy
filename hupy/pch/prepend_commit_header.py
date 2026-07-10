@@ -176,6 +176,11 @@ def prepend_commit_header(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
+    config = load_hupy_config(repo)
+    if config.pch.is_disabled:
+        logger.skip("Prepend Commit Header disabled")
+        return
+
     logger.enter("perform Prepend Commit Header")
 
     commit_type = get_current_commit_type(repo)
