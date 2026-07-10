@@ -10,6 +10,7 @@ import tempfile
 
 from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
+from hupy.should_run_module import should_run_module
 from hupy.ver_grep import (
     decide_version_update_type,
     grep_source_branch_version,
@@ -168,17 +169,18 @@ _HEADER_GENERATORS = {
 
 
 # Public API  ##################################################################
-def prepend_commit_header(repo):
+def prepend_commit_header(repo, state_file):
     """
     prepend commit type header to the current commit message.
 
 
     :param repo: git repository object
     :type repo: git.Repo
+    :param state_file: the open HUPy state file, as yielded by
+            ``open_state_file``
+    :type state_file: HupyStateFile
     """
-    config = load_hupy_config(repo)
-    if config.pch.is_disabled:
-        logger.skip("Prepend Commit Header disabled")
+    if not should_run_module(repo, state_file, "pch"):
         return
 
     logger.enter("perform Prepend Commit Header")

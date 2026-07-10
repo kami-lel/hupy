@@ -11,7 +11,7 @@ defaults the schema doesn't provide
 import json5
 
 from hupy.config.config_file import HupyConfigFile
-from hupy.config.write_config import DEFAULT_CONFIG_ASSET
+from hupy.config.config_file_path import DEFAULT_CONFIG_ASSET
 
 __all__ = ("CONFIG_FIXTURE_PATH", "load_config_fixture")
 

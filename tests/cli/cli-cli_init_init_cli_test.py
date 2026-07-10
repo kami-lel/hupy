@@ -9,8 +9,7 @@ writing, and error paths for non-git or nonexistent targets
 
 import pytest
 
-from hupy.config.load_config import CONFIG_FILENAME
-from hupy.config.write_config import DEFAULT_CONFIG_ASSET
+from hupy.config.config_file_path import CONFIG_FILENAME, DEFAULT_CONFIG_ASSET
 from hupy.cli.cli_init import _HOOK_STUBS_DIR
 from cli_helpers import (
     get_configured_hooks_path,

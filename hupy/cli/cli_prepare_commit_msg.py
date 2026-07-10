@@ -5,8 +5,8 @@ import os
 import git
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.config.load_config import load_hupy_config
 from hupy.pch.prepend_commit_header import prepend_commit_header
+from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
 logger = kamilog.getLogger(PROJ_LOGGER_NAME)
@@ -22,17 +22,18 @@ def _prepare_commit_msg_main(args):  ###########################################
     commit header.
     """
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
-    config = load_hupy_config(repo)
-    kamilog.set_logging_level_by_namespace(
-        args, verbosity=config.default_logger_verbosity
-    )
 
-    logger.enter("start prepare-commit-msg stage")
+    with open_state_file(repo) as state_file:
+        kamilog.set_logging_level_by_namespace(
+            args, verbosity=state_file.logger_verbosity
+        )
 
-    prepend_commit_header(repo)
+        logger.enter("start prepare-commit-msg stage")
 
-    logger.succ("prepare-commit-msg stage finished")
-    logger.done("all HUPy hooks finished")
+        prepend_commit_header(repo, state_file)
+
+        logger.succ("prepare-commit-msg stage finished")
+        logger.done("all HUPy hooks finished")
 
 
 # Public API  ##################################################################

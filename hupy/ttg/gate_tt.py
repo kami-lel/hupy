@@ -7,6 +7,7 @@ block commits that introduce triage tags on protected branches
 
 from hupy.kamilog import getLogger
 from hupy.config.load_config import load_hupy_config
+from hupy.should_run_module import should_run_module
 from ..ttg import TTG_LOGGER_NAME
 from ..cbm import CommitType, get_current_commit_type
 from .triage_tag_type import TriageTagType
@@ -73,17 +74,18 @@ def _perform_triage_tags_by_filtering_group(repo, filtering_tt_group):
 
 
 # Public API  ##################################################################
-def perform_triage_tags_gating(repo):
+def perform_triage_tags_gating(repo, state_file):
     """
     execute triage tag gating for the current commit.
 
 
     :param repo: git repository object
     :type repo: git.Repo
+    :param state_file: the open HUPy state file, as yielded by
+            ``open_state_file``
+    :type state_file: HupyStateFile
     """
-    config = load_hupy_config(repo)
-    if config.ttg.is_disabled:
-        logger.skip("Triage Tag Gating disabled")
+    if not should_run_module(repo, state_file, "ttg"):
         return
 
     logger.enter("perform Triage Tag Gating")

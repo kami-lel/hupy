@@ -12,8 +12,10 @@ from config_fixture import load_config_fixture
 
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 from hupy.cbm import CommitType
+from hupy.state.state_file import HupyStateFile
 
 _REPO = object()
+_STATE_FILE = HupyStateFile()
 
 
 # helpers  ######################################################################
@@ -48,13 +50,15 @@ def _run(
     with mock.patch(
         "hupy.bdc.ban_direct_commit.load_hupy_config", return_value=config
     ), mock.patch(
+        "hupy.should_run_module.load_hupy_config", return_value=config
+    ), mock.patch(
         "hupy.bdc.ban_direct_commit.get_target_branch",
         return_value=current_branch,
     ), mock.patch(
         "hupy.bdc.ban_direct_commit.get_current_commit_type",
         return_value=commit_type,
     ):
-        return ban_direct_commit(_REPO)
+        return ban_direct_commit(_REPO, _STATE_FILE)
 
 
 # tests  ########################################################################

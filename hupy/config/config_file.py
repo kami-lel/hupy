@@ -146,8 +146,7 @@ class HupyConfigFile(BaseModel):
     """
 
     hupy_version: str
-    default_logger_verbosity: int  # Fixme mv to state file
-    ver_grep: _VerGrep
+    vg: _VerGrep
     ttg: _Ttg
     cbm: _Cbm
     pch: _Pch

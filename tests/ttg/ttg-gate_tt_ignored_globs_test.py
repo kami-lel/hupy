@@ -15,8 +15,10 @@ from config_fixture import load_config_fixture
 from prep_repo import prepare_repo_with_files
 
 from hupy.ttg.gate_tt import perform_triage_tags_gating
+from hupy.state.state_file import HupyStateFile
 
 _BUCKET = "feature_landing"
+_STATE_FILE = HupyStateFile()
 
 
 # helpers  ######################################################################
@@ -29,8 +31,10 @@ def _run(repo_dir, files, ignored_path_globs):
     )
     with mock.patch(
         "hupy.ttg.gate_tt.load_hupy_config", return_value=config
+    ), mock.patch(
+        "hupy.should_run_module.load_hupy_config", return_value=config
     ):
-        perform_triage_tags_gating(git.Repo(str(repo_dir)))
+        perform_triage_tags_gating(git.Repo(str(repo_dir)), _STATE_FILE)
 
 
 def _assert_gated(repo_dir, files, ignored_path_globs=()):

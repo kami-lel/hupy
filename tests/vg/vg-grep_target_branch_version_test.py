@@ -32,7 +32,7 @@ def _grep(pattern=_PATTERN, version_file=_VERSION_FILE):
     """
     config = load_config_fixture(
         overrides={
-            "ver_grep": {
+            "vg": {
                 "version_file": version_file,
                 "version_line_pattern": pattern,
             }

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import git
 
-from hupy.config.write_config import DEFAULT_CONFIG_ASSET
+from hupy.config.config_file_path import DEFAULT_CONFIG_ASSET
 
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
@@ -141,7 +141,7 @@ def _setup_version_release(repo_dir, files):
 
 
 def _chdir_into_repo(repo_dir):
-    # HUPy resolves ``ver_grep.version_file`` against the process cwd,
+    # HUPy resolves ``vg.version_file`` against the process cwd,
     # so tests must chdir into the prepared repo for the bundled
     # ``setup.cfg`` to be found; not restored after the test, since
     # each test starts a fresh scenario repo anyway
