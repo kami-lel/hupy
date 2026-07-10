@@ -65,6 +65,7 @@ def register_cli_verify_parser(cli_subparser):
     """
     verify_parser = cli_subparser.add_parser(
         "verify-config-file",
+        aliases=["v"],
         help=__doc__,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
