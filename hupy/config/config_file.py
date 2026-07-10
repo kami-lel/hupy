@@ -32,6 +32,8 @@ class _VerGrep(BaseModel):
     configuration for version grep hook
     """
 
+    is_disabled: bool
+
     version_file: pathlib.Path
     version_line_pattern: str
 
@@ -52,6 +54,9 @@ class _VerGrep(BaseModel):
         otherwise error if ``version_file`` does not point to a real
         file.
         """
+        if self.is_disabled:
+            return self
+
         if self.is_unconfigured():
             renderer = AnsiRenderer(sys.stdout)
             logger.warning(
@@ -79,6 +84,16 @@ class _VerGrep(BaseModel):
         return self
 
 
+class _Ttg(BaseModel):
+    """
+    configuration for Triage Tag Gating
+    """
+
+    is_disabled: bool
+    disable_tt_detect_by_type: bool
+    ignored_path_globs: list[str]
+
+
 class _Cbm(BaseModel):
     """
     configuration for the CBM module (commit, branch, and merge types)
@@ -95,6 +110,8 @@ class _Pch(BaseModel):
     configuration for the PCH module (pre-commit hook)
     """
 
+    is_disabled: bool
+
     enable_vertical_slice: bool
     enable_pre_alpha: bool
     alpha_tag: str
@@ -107,6 +124,7 @@ class _Bdc(BaseModel):
     configuration for the BDC module (ban direct commit)
     """
 
+    is_disabled: bool
     ban_commit_to_main: bool
     ban_commit_to_dev: bool
     ban_commit_to_branches: list[str]
@@ -117,6 +135,9 @@ class _Hb(BaseModel):
     configuration for the HB module (hook bracket)
     """
 
+    # Todo allow to be turned off
+
+    is_disabled: bool
     pre_commit: list[str]
     prepare_commit_msg: list[str]
 
@@ -129,6 +150,7 @@ class HupyConfigFile(BaseModel):
     hupy_version: str
     default_logger_verbosity: int  # Fixme mv to state file
     ver_grep: _VerGrep
+    ttg: _Ttg
     cbm: _Cbm
     pch: _Pch
     bdc: _Bdc

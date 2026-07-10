@@ -41,6 +41,11 @@ def ban_direct_commit(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
+    config = load_hupy_config(repo)
+    if config.pch.is_disabled:
+        logger.skip("Ban Direct Commit disabled")
+        return
+
     logger.enter("perform Ban Direct Commit")
 
     current_branch = get_target_branch(repo)

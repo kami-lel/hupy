@@ -9,6 +9,8 @@
 - **`verify-config-file`** — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, reporting success or the validation error
 - **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
 - **`--copy-hooks`/`--create-config-file` flags on `hupy init`** — run either step alone, or both together (same as passing neither); a step registry in `cli_init.py` makes adding further steps/flags a one-line change
+- **per-module `is_disabled` config flag** — `ver_grep`, `ttg`, `pch`, and `bdc` each gain an `is_disabled: bool` field in `.hupy.config.jsonc`; setting it skips that module's check entirely (`ver_grep`'s validator returns early without the unconfigured-warning; `ttg`/`pch`/`bdc` each `logger.skip(...)` and return before doing any work) — `hb` already carried the field from `dev` but has no implementation yet to wire it into
+- **new `ttg` config section** — `is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`; only `is_disabled` is consumed by `tt_gating` so far, the other two fields are schema-only, not yet read by `tt_detect`/`tt_gating`
 
 ### Changed
 

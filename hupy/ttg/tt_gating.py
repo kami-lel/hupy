@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
+from hupy.config.load_config import load_hupy_config
 from ..ttg import TTG_LOGGER_NAME
 from ..cbm import CommitType, get_current_commit_type
 from .tt_detect import (
@@ -97,6 +98,11 @@ def perform_triage_tags_gating(repo):
     :param repo: git repository object
     :type repo: git.Repo
     """
+    config = load_hupy_config(repo)
+    if config.ttg.is_disabled:
+        logger.skip("Triage Tag Gating disabled")
+        return
+
     logger.enter("perform Triage Tag Gating")
 
     commit_type = get_current_commit_type(repo)
