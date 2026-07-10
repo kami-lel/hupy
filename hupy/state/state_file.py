@@ -5,7 +5,7 @@ define the HUPy state schema (``hupy-state.json``) as a pydantic
 model
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 __all__ = ("HupyStateFile",)
 
@@ -19,3 +19,4 @@ class HupyStateFile(BaseModel):
     """
 
     logger_verbosity: int = 1
+    skip_once: list[str] = Field(default_factory=list)
