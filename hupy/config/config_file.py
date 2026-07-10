@@ -135,8 +135,6 @@ class _Hb(BaseModel):
     configuration for the HB module (hook bracket)
     """
 
-    # Todo allow to be turned off
-
     is_disabled: bool
     pre_commit: list[str]
     prepare_commit_msg: list[str]
