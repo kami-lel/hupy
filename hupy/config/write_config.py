@@ -12,13 +12,13 @@ from hupy import PROJ_LOGGER_NAME
 from hupy.config.load_config import get_config_file_path
 from hupy.kamilog import getLogger
 
-__all__ = ("create_default_config_file",)
+__all__ = ("DEFAULT_CONFIG_ASSET", "create_default_config_file")
 
 logger = getLogger(PROJ_LOGGER_NAME)
 
 # constants  ###################################################################
 
-_DEFAULT_CONFIG_ASSET = (
+DEFAULT_CONFIG_ASSET = (
     pathlib.Path(__file__).resolve().parent.parent
     / "assets"
     / ".hupy.config.jsonc"
@@ -46,4 +46,4 @@ def create_default_config_file(repo, force):
         )
 
     logger.debug("HUPy config file written: {}".format(config_path))
-    shutil.copyfile(_DEFAULT_CONFIG_ASSET, config_path)
+    shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)

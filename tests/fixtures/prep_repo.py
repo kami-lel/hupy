@@ -15,13 +15,14 @@ from pathlib import Path
 
 import git
 
+from hupy.config.write_config import DEFAULT_CONFIG_ASSET
+
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
 
 _FIXTURES_DIR = Path(__file__).parent
 _BUNDLE_PATH = _FIXTURES_DIR / "default_repo.bundle"
 _FIXTURES_ROOT = _FIXTURES_DIR.parent / "ttg" / "fixtures"
-_CONFIG_FIXTURE_PATH = _FIXTURES_DIR / "config" / "default_config.jsonc"
 
 COMMIT_BUCKETS = (
     "non_merge_commit",
@@ -149,10 +150,10 @@ def _chdir_into_repo(repo_dir):
 
 def _write_config_file(repo_dir):
     # the bundle no longer carries a committed HUPy config file, so
-    # write the shared fixture straight onto disk, untracked, for
-    # ``load_hupy_config`` to read
+    # write the shipped default config straight onto disk, untracked,
+    # for ``load_hupy_config`` to read
     shutil.copyfile(
-        _CONFIG_FIXTURE_PATH, Path(repo_dir) / ".hupy.config.jsonc"
+        DEFAULT_CONFIG_ASSET, Path(repo_dir) / ".hupy.config.jsonc"
     )
 
 

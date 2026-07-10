@@ -11,7 +11,7 @@ import json5
 import pytest
 
 from hupy.config.config_file import HupyConfigFile
-from hupy.config.write_config import _DEFAULT_CONFIG_ASSET
+from hupy.config.write_config import DEFAULT_CONFIG_ASSET
 
 # fixtures  #####################################################################
 
@@ -19,7 +19,7 @@ from hupy.config.write_config import _DEFAULT_CONFIG_ASSET
 @pytest.fixture
 def shipped_config():
     """the shipped config asset, parsed but not yet schema-validated."""
-    return json5.loads(_DEFAULT_CONFIG_ASSET.read_text())
+    return json5.loads(DEFAULT_CONFIG_ASSET.read_text())
 
 
 # tests  ########################################################################
