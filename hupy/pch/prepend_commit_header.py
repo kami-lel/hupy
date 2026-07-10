@@ -72,6 +72,8 @@ def _gen_backport_header(header_word):
 
 # generate header  =============================================================
 
+# TODO demo & test for all types
+
 
 def _gen_version_release_header(_):
     # FIXME stable release & prototype & alpha/beta release w/ major/minor/patch
