@@ -57,6 +57,18 @@ def _gen_bumped_version_header(header_word):
         return header_word
 
 
+def _gen_backport_header(header_word):
+    """
+    build a "<header_word> from: <version>" header, or plain
+    ``header_word`` when no source version resolves
+    """
+    version = grep_source_branch_version()
+    if version:
+        return "{} from: {}".format(header_word, version)
+    else:
+        return header_word
+
+
 # generate header  =============================================================
 
 
@@ -75,11 +87,7 @@ def _gen_feature_landing_header(repo):
 
 
 def _gen_sync_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Sync Backport from: {}".format(version)
-    else:
-        return "Sync Backport"
+    return _gen_backport_header("Sync Backport")
 
 
 def _gen_catch_up_header(_):
@@ -91,11 +99,7 @@ def _gen_hotfix_release_header(_):
 
 
 def _gen_hotfix_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Hotfix Backport from: {}".format(version)
-    else:
-        return "Hotfix Backport"
+    return _gen_backport_header("Hotfix Backport")
 
 
 def _gen_release_cut_header(_):
@@ -103,11 +107,7 @@ def _gen_release_cut_header(_):
 
 
 def _gen_release_backport_header(_):
-    version = grep_source_branch_version()
-    if version:
-        return "Release Backport from: {}".format(version)
-    else:
-        return "Release Backport"
+    return _gen_backport_header("Release Backport")
 
 
 _HEADER_GENERATORS = {
