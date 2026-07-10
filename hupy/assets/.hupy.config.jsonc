@@ -18,8 +18,14 @@
     // fields disable it, so the header falls back to plain `Version Release`
     //
     // eg. pyproject.toml `version = "1.0.0"` -> `"^version = \"(.*)\""`
+    "is_disabled": false,
     "version_file": "", // file to read, relative to repo root
     "version_line_pattern": "" // regex; first capture group `( )` is version
+  },
+  "ttg": { // ##################################################################
+    // *Triage Tag Gating*: blocks commits that introduce disallowed TT
+    "is_disabled": false,
+    "ignored_path_globs": [] // glob patterns excluded from TT scanning
   },
   "cbm": { // ##################################################################
     // branch naming *CBM* classifies against to pick a merge type. unmatched
@@ -32,6 +38,7 @@
   "pch": { // ##################################################################
     // how *Prepend Commit Header* reads a version and picks a header; leave a
     // tag empty to disable that release type's header
+    "is_disabled": false,
     "enable_vertical_slice": false, // enable the Vertical Slice header
     "enable_pre_alpha": true, // enable the Pre-Alpha header
     "alpha_tag": "-alpha", // version suffix identifying an alpha release
@@ -41,11 +48,13 @@
   "bdc": { // ##################################################################
     // *Ban Direct Commit*: blocks direct commits to protected branches; merges
     // (eg. `feature -> dev`) are unaffected
+    "is_disabled": false,
     "ban_commit_to_main": true,
     "ban_commit_to_dev": false,
     "ban_commit_to_branches": [] // exact branch names, on top of the above
   },
   "hb": { // ###################################################################
+    "is_disabled": false,
     "pre_commit": [],
     "prepare_commit_msg": []
   }

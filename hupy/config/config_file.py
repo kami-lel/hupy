@@ -34,6 +34,8 @@ class _VerGrep(BaseModel):
 
     # TODO allow to be turned off
 
+    is_disabled: bool
+
     version_file: pathlib.Path
     version_line_pattern: str
 
@@ -81,6 +83,17 @@ class _VerGrep(BaseModel):
         return self
 
 
+class _Ttg(BaseModel):
+    """
+    configuration for Triage Tag Gating
+    """
+
+    # TODO allow to be turned off
+
+    is_disabled: bool
+    ignored_path_globs: list[str]
+
+
 class _Cbm(BaseModel):
     """
     configuration for the CBM module (commit, branch, and merge types)
@@ -99,6 +112,8 @@ class _Pch(BaseModel):
 
     # TODO allow to be turned off
 
+    is_disabled: bool
+
     enable_vertical_slice: bool
     enable_pre_alpha: bool
     alpha_tag: str
@@ -113,6 +128,7 @@ class _Bdc(BaseModel):
 
     # TODO allow to be turned off
 
+    is_disabled: bool
     ban_commit_to_main: bool
     ban_commit_to_dev: bool
     ban_commit_to_branches: list[str]
@@ -125,6 +141,7 @@ class _Hb(BaseModel):
 
     # TODO allow to be turned off
 
+    is_disabled: bool
     pre_commit: list[str]
     prepare_commit_msg: list[str]
 
@@ -137,6 +154,7 @@ class HupyConfigFile(BaseModel):
     hupy_version: str
     default_logger_verbosity: int  # Fixme mv to state file
     ver_grep: _VerGrep
+    ttg: _Ttg
     cbm: _Cbm
     pch: _Pch
     bdc: _Bdc
