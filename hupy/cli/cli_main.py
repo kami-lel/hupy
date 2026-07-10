@@ -43,4 +43,3 @@ register_cli_ich_parser(cli_subparser)
 # Todo allow tmp skip some feature for next round
 
 # todo dry run feature for hooks CLI
-# todo use OpenAI to prepare commit message
