@@ -44,7 +44,17 @@ _MODULE_NAME_TO_ABBR = {
 }
 
 
-# helpers  #####################################################################
+# auxiliary  ###################################################################
+def _format_modules():
+    """
+    build an aligned "abbr  full-name" listing of every skippable
+    module, one per line, for the ``skip-once`` parser description
+    """
+    width = max(len(abbr) for abbr in _MODULE_ABBR_TO_NAME)
+    return "\n".join(
+        "  {:<{width}}  {}".format(abbr, name, width=width)
+        for abbr, name in _MODULE_ABBR_TO_NAME.items()
+    )
 
 
 def _skip_once_main(args):
@@ -78,20 +88,15 @@ def register_cli_skip_once_parser(cli_subparser):
         "skip-once",
         aliases=["s"],
         help="skip modules in next hook run",
-        description=__doc__
-        + """
+        description=__doc__ + """
 
-modules: {}
+modules:
+{}
 
 each flagged module is skipped exactly once, consumed by the next
 pre-commit/prepare-commit-msg run that checks it, regardless of its
 is_disabled config setting
-""".format(
-            ", ".join(
-                "{} ({})".format(name, abbr)
-                for abbr, name in _MODULE_ABBR_TO_NAME.items()
-            )
-        ),
+""".format(_format_modules()),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -101,8 +106,10 @@ is_disabled config setting
         nargs="+",
         choices=tuple(_MODULE_ABBR_TO_NAME.keys())
         + tuple(_MODULE_NAME_TO_ABBR.keys()),
-        help="module(s) to skip once on their next hook run, by full "
-        "name or abbr",
+        help=(
+            "module(s) to skip once on their next hook run, by full "
+            "name or abbr"
+        ),
     )
 
     add_verbose_arguments(skip_once_parser)
