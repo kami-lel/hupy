@@ -90,6 +90,15 @@ class _Cbm(BaseModel):
     release_branch_prefix: str = Field(default="release", min_length=1)
 
 
+class _Pch(BaseModel):
+    """
+    configuration for the PCH module (pre-commit hook)
+    """
+
+    enable_vertical_slice: bool = False
+    enable_pre_alpha: bool = True
+
+
 class HupyConfigFile(BaseModel):
     """
     schema for the HUPy config file (``.hupy.config.json``)
@@ -99,3 +108,4 @@ class HupyConfigFile(BaseModel):
     default_logger_verbosity: int = 1
     ver_grep: _VerGrep = Field(default_factory=_VerGrep)
     cbm: _Cbm = Field(default_factory=_Cbm)
+    pch: _Pch = Field(default_factory=_Pch)
