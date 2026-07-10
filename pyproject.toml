@@ -7,7 +7,7 @@ name = "HUPy"
 version = "0.3.0"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
-dependencies = ["GitPython>=3.1", "pydantic>=2"]
+dependencies = ["GitPython>=3.1", "pydantic>=2", "json5>=0.9"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
@@ -19,6 +19,6 @@ include = ["hupy*"]
 [tool.setuptools.package-data]
 hupy = [
     "assets/hook-stubs/*",
-    "assets/default-config/hupy-cache-config.json",
-    "assets/default-config/.hupy.persistent-config.json",
+    "assets/default-config/hupy-cache-config.jsonc",
+    "assets/default-config/.hupy.persistent-config.jsonc",
 ]

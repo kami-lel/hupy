@@ -1,6 +1,6 @@
 # HUPy File `.hupy.config.json` Documentation
 
-<!-- TODO consider using jsonc -->
+<!-- HACK move doc to jsonc  -->
 
 `.hupy.config.json` is *HUPy*'s per-repository config. `python -m hupy init` writes it to the repository root; commit it so every clone shares the same behavior.
 
