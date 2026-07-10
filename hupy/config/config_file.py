@@ -132,7 +132,9 @@ class HupyConfigFile(BaseModel):
         current_version = version("HUPy")
         if self.hupy_version != current_version:
             logger.warning(
-                "hupy_version mismatch: config has {}, installed {}".format(
+                "version mismatch:\n"
+                "config file version:\t{}\n"
+                "installed HUPy version:\t{}".format(
                     self.hupy_version, current_version
                 )
             )

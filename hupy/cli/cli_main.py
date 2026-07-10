@@ -10,6 +10,7 @@ from hupy.cli.cli_pre_commit import register_cli_pre_commit_parser
 from hupy.cli.cli_prepare_commit_msg import (
     register_cli_prepare_commit_msg_parser,
 )
+from hupy.cli.cli_verify import register_cli_verify_parser
 
 __all__ = ("cli_parser", "cli_subparser")
 
@@ -36,10 +37,10 @@ register_cli_pre_commit_parser(cli_subparser)
 register_cli_prepare_commit_msg_parser(cli_subparser)
 register_cli_icc_parser(cli_subparser)
 register_cli_ich_parser(cli_subparser)
+register_cli_verify_parser(cli_subparser)
 
 
 # FIXME work w/ both cache & persistent
-# TODO add CLI verify config
 # Todo allow tmp skip some feature for next round
 
 # todo dry run feature for hooks CLI
