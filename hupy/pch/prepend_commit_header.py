@@ -8,7 +8,11 @@ import os
 import tempfile
 
 from hupy.kamilog import getLogger
-from hupy.ver_grep import decide_version_update_type, grep_source_branch_version
+from hupy.ver_grep import (
+    decide_version_update_type,
+    grep_source_branch_version,
+    grep_target_branch_version,
+)
 from . import PCH_LOGGER_NAME
 from ..cbm import (
     CommitType,
@@ -37,6 +41,20 @@ def _get_version_bump_prefix(source_version, target_version):
         return "Patch "
     else:
         return ""
+
+
+def _gen_bumped_version_header(header_word):
+    """
+    build a "<header_word>: <version>" header, prefixed with the
+    version's major/minor/patch bump word when a source version
+    resolves
+    """
+    version = grep_source_branch_version()
+    if version:
+        prefix = _get_version_bump_prefix(version, grep_target_branch_version())
+        return "{}{}: {}".format(prefix, header_word, version)
+    else:
+        return header_word
 
 
 # generate header  =============================================================
@@ -69,12 +87,7 @@ def _gen_catch_up_header(_):
 
 
 def _gen_hotfix_release_header(_):
-    # FIXME w/ major/minor/patch
-    version = grep_source_branch_version()
-    if version:
-        return "Hotfix Release: {}".format(version)
-    else:
-        return "Hotfix Release"
+    return _gen_bumped_version_header("Hotfix Release")
 
 
 def _gen_hotfix_backport_header(_):
@@ -86,12 +99,7 @@ def _gen_hotfix_backport_header(_):
 
 
 def _gen_release_cut_header(_):
-    # FIXME w/ major/minor/patch
-    version = grep_source_branch_version()
-    if version:
-        return "Release Cut: {}".format(version)
-    else:
-        return "Release Cut"
+    return _gen_bumped_version_header("Release Cut")
 
 
 def _gen_release_backport_header(_):
