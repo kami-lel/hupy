@@ -27,7 +27,7 @@ logger = getLogger(PCH_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
+# auxiliary  ###################################################################
 
 
 def _gen_feature_landing_header_content(repo):
@@ -81,11 +81,28 @@ _HEADER_GENERATORS = {
 }
 
 
-# FIXME no need aux
-def _prepend_commit_header_by_type(commit_type, repo_root):
+# Public API  ##################################################################
+
+
+def prepend_commit_header(repo_root):
     """
-    prepend a header line and a blank line to the commit message file.
+    prepend commit type header to the current commit message.
+
+
+    :param repo_root: path to the git repository or any of its
+            subdirectories
+    :type repo_root: str
     """
+    logger.enter("prepending commit header")
+
+    commit_type = get_current_commit_type(repo_root)
+
+    if commit_type not in _HEADER_GENERATORS:
+        logger.skip("regular commit/merge")
+        return
+
+    logger.debug("prepending header on {} merge".format(commit_type.name))
+
     repo = git.Repo(repo_root, search_parent_directories=True)
     commit_editmsg_path = os.path.join(repo.git_dir, "COMMIT_EDITMSG")
 
@@ -120,30 +137,5 @@ def _prepend_commit_header_by_type(commit_type, repo_root):
     except BaseException:
         os.unlink(tmp_path)
         raise
-
-
-# Public API  ##################################################################
-
-
-def prepend_commit_header(repo_root):
-    """
-    prepend commit type header to the current commit message.
-
-
-    :param repo_root: path to the git repository or any of its
-            subdirectories
-    :type repo_root: str
-    """
-    logger.enter("prepending commit header")
-
-    commit_type = get_current_commit_type(repo_root)
-
-    if commit_type in _HEADER_GENERATORS:
-        logger.debug("prepending header on {} merge".format(commit_type.name))
-        _prepend_commit_header_by_type(commit_type, repo_root)
-
-    else:
-        logger.skip("regular commit/merge")
-        return
 
     logger.pass_("commit header prepended")
