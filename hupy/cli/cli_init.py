@@ -10,8 +10,6 @@ import git
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config.write_config import create_default_config_file
-from hupy.state.write_state import write_default_state_file
-
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -53,8 +51,6 @@ performs:
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
 - create a default HUPy config file (.hupy.config.json) at repository root
-- create a default HUPy state file (hupy-state.json) in the repo's
-  .git directory
 """
 
 
@@ -120,19 +116,11 @@ def _run_create_config_file(args, repo):
     create_default_config_file(repo, args.force)
 
 
-def _run_create_state_file(args, repo):
-    """
-    step: create a default HUPy state file in the repo's .git directory.
-    """
-    write_default_state_file(repo, args.force)
-
-
 # registry mapping each init step to its arg dest and runner;  add a new
 # step by appending a (dest, runner) pair here
 _INIT_STEPS = [
     ("copy_hooks", _run_copy_hooks),
     ("create_config_file", _run_create_config_file),
-    ("create_state_file", _run_create_state_file),
 ]
 
 
@@ -236,20 +224,11 @@ def register_cli_init_parser(cli_subparser):
     )
 
     init_parser.add_argument(
-        "--create-state-file",
-        dest="create_state_file",
-        action="store_true",
-        default=False,
-        help="only create the HUPy state file",
-    )
-
-    init_parser.add_argument(
         "-f",
         "--force",
         action="store_true",
         default=False,
-        help="override an existing hook stub, HUPy config file, and/or "
-        "HUPy state file",
+        help="override an existing hook stub and/or HUPy config file",
     )
 
     add_verbose_arguments(init_parser)

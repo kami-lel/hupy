@@ -66,5 +66,3 @@ def load_hupy_config(repo):
             "HUPy config file is malformed: {}\n{}".format(config_path, e)
         )
         raise SystemExit(1) from e
-
-    # TODO directly create new ones
