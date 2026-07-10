@@ -54,15 +54,15 @@ Todo pyproject.toml lacks requires-python, authors, license, classifiers, keywor
 **Clone and install locally**
 
 ```bash
-git clone https://github.com/kami-lel/hooks-utility-py.git
-cd hooks-utility-py
+git clone https://github.com/kami-lel/hupy.git
+cd hupy
 pip install .
 ```
 
 Or install **directly from GitHub**
 
 ```bash
-pip install git+https://github.com/kami-lel/hooks-utility-py.git
+pip install git+https://github.com/kami-lel/hupy.git
 ```
 
 
@@ -72,11 +72,11 @@ pip install git+https://github.com/kami-lel/hooks-utility-py.git
 Initialize `hupy` inside the git repository to protect:
 
 ```bash
-python -m hupy init
+hupy init
 ```
 
 - copies the default hook stub scripts into the repo's hooks directory
-- writes a default `.hupy.config.json` at the repository root
+- writes a default `.hupy.config.jsonc` at the repository root
 
 See [HUPy File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
 

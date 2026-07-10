@@ -9,6 +9,9 @@ description = "Hooks Utility Python: git hook utilities for commit quality enfor
 readme = "README.md"
 dependencies = ["GitPython>=3.1", "pydantic>=2", "json5>=0.9"]
 
+[project.scripts]
+hupy = "hupy.__main__:main"
+
 [project.optional-dependencies]
 dev = ["pytest"]
 
