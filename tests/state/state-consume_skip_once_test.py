@@ -2,7 +2,7 @@
 state-consume_skip_once_test.py
 
 tests for `HupyStateFile.consume_skip_once` and
-`HupyStateFile.clear_skip_once` in `state_file.py`
+`HupyStateFile.reset_for_next_commit` in `state_file.py`
 """
 
 from hupy.state.state_file import HupyStateFile
@@ -42,13 +42,13 @@ class TestConsumeSkipOnceFlagged:
         assert state.consume_skip_once("bdc") is True
 
 
-class TestClearSkipOnce:
+class TestResetForNextCommit:
     def test_empties_the_flag_set(self):
         state = HupyStateFile(skip_once={"bdc", "ttg"})
-        state.clear_skip_once()
+        state.reset_for_next_commit()
         assert state.skip_once == set()
 
     def test_no_op_when_already_empty(self):
         state = HupyStateFile()
-        state.clear_skip_once()
+        state.reset_for_next_commit()
         assert state.skip_once == set()
