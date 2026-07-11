@@ -24,7 +24,7 @@ logger = getLogger(STATE_LOGGER_NAME)
 logger.propagate = False
 
 
-# lock  #########################################################################
+# lock  ########################################################################
 
 _STATE_LOCK = threading.Lock()
 
