@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-prepare-commit-msg-lead-demo.py
+pcm-lead-type-filter-demo.py
 
 demo: prepare-commit-msg hook, lead bracket configured with two
 commands: one unrestricted (validate the current branch name before

@@ -57,7 +57,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.6.0"
+__version__ = "2.7.0"
 __author__ = "kamiLeL"
 
 
@@ -1332,6 +1332,7 @@ def _gen_comment_banner_generic(
     padding,
     *,
     line_width=80,
+    horizontal_offset=0,
     file=sys.stdout,
     renderer=None,
 ):
@@ -1380,8 +1381,11 @@ def _gen_comment_banner_generic(
         )
     else:  # centered (mode == "c")
         remaining = line_width - len(content) - len(_CONTENT_SPACING) * 2
-        left = remaining // 2
+        # horizontal_offset nudges Content sideways: -1 left, +1 right
+        left = remaining // 2 + horizontal_offset
         right = remaining - left
+        if left < 0 or right < 0:
+            raise ValueError("param horizontal_offset out of range")
         padded_content = (
             renderer.color_grey(padding * left)
             + _CONTENT_SPACING
@@ -1412,6 +1416,10 @@ def gen_comment_banner_centered(*args, **kwargs):
     :type padding: str or int
     :param line_width: total output width; defaults to ``80``
     :type line_width: int
+    :param horizontal_offset: nudge the centered content sideways by this
+            many columns; negative shifts left, positive shifts right;
+            defaults to ``0``
+    :type horizontal_offset: int
     :param file: output stream, used only for ANSI TTY detection;
             defaults to ``sys.stdout``
     :type file: IO
@@ -1422,10 +1430,13 @@ def gen_comment_banner_centered(*args, **kwargs):
     :rtype: str
     :raises ValueError: if ``content`` contains ``"\\n"`` or exceeds
             ``line_width``; if ``padding`` is not exactly one printable
-            non-space character or outside range 1-5 if int
+            non-space character or outside range 1-5 if int; if
+            ``horizontal_offset`` pushes either fill side below zero
     :example:
     >>> gen_comment_banner_centered("hi", "=", line_width=20)
     '=======  hi  ======='
+    >>> gen_comment_banner_centered("hi", "=", line_width=20, horizontal_offset=2)
+    '=========  hi  ====='
     >>> gen_comment_banner_centered("hi", 2, line_width=20)
     '=======  hi  ======='
     """

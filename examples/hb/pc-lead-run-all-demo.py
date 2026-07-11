@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pre-commit-lead-demo.py
+pc-lead-run-all-demo.py
 
 demo: pre-commit hook, lead bracket configured with two commands
 (a lint check and a format check)

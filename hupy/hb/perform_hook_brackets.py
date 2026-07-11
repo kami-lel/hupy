@@ -7,15 +7,33 @@ run the bracketed commands configured around a HUPy git hook
 import subprocess
 import sys
 
+
+from hupy.kamilog import (
+    AnsiRenderer,
+    AnsiStyle,
+    getLogger,
+    gen_comment_banner_centered,
+    gen_comment_banner_left_just,
+)
 from hupy.cbm import CommitType, get_current_commit_type
 from hupy.config.load_config import load_hupy_config
-from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.should_run_module import should_run_module
 from . import HB_LOGGER_NAME
 
 # logger  ######################################################################
 logger = getLogger(HB_LOGGER_NAME)
 logger.propagate = False
+
+
+# constants  ###################################################################
+
+_renderer = AnsiRenderer(sys.stdout)
+
+_START_LINE = gen_comment_banner_centered("START", 1, renderer=_renderer)
+
+_END_LINE = gen_comment_banner_centered(
+    "END", 1, line_width=58, horizontal_offset=-11, renderer=_renderer
+)
 
 
 # auxiliaries  #################################################################
@@ -37,7 +55,7 @@ def _is_hb_cmd_applicable(hb_cmd, commit_type):
     return bool(allow_filter & commit_type)
 
 
-def _run_hb_cmd(repo, hb_cmd):
+def _run_hb_cmd(repo, heading, hb_cmd):
     """
     :param repo: git repository object
     :type repo: git.Repo
@@ -45,22 +63,24 @@ def _run_hb_cmd(repo, hb_cmd):
     :type hb_cmd: _HbCmd
     """
     # HACK write better interactions
-    logger.enter("run bracketed command: {}".format(hb_cmd.cmd))
+    logger.info("run HB: {}".format(heading))
+    cmd = hb_cmd.cmd
+    logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
 
-    result = subprocess.run(hb_cmd.cmd, shell=True, cwd=repo.working_tree_dir)
+    result = subprocess.run(
+        cmd, shell=True, cwd=repo.working_tree_dir, check=False
+    )
+    logger.debug(_END_LINE)
 
     if result.returncode == 0:
-        logger.pass_("bracketed command succeeded: {}".format(hb_cmd.cmd))
-        return
+        logger.pass_("HB succeeded: {}".format(heading))
 
-    if hb_cmd.allow_failure:
-        logger.warning(
-            "bracketed command failed, ignored: {}".format(hb_cmd.cmd)
-        )
-        return
+    elif hb_cmd.allow_failure:
+        logger.warning("HB failed, but ignored: {}".format(heading))
 
-    logger.fail("bracketed command failed: {}".format(hb_cmd.cmd))
-    raise SystemExit(result.returncode)
+    else:
+        logger.fail("HB failed: {}".format(heading))
+        raise SystemExit(result.returncode)
 
 
 # Public API  ##################################################################
@@ -100,16 +120,15 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
         return
 
     commit_type = get_current_commit_type(repo)
-    renderer = AnsiRenderer(sys.stdout)
 
     for hb_cmd in cmds_list:
-        heading = hb_cmd.remark or renderer.color(
+        heading = hb_cmd.remark or _renderer.color(
             hb_cmd.cmd, AnsiStyle.UNDERLINE
         )
-        logger.enter("HB command: " + heading)
+        logger.enter("start bracket: " + heading)
 
         if not _is_hb_cmd_applicable(hb_cmd, commit_type):
             logger.skip("due to commit type filtered: {}".format(heading))
             continue
 
-        _run_hb_cmd(repo, hb_cmd)
+        _run_hb_cmd(repo, heading, hb_cmd)

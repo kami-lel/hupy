@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pre-commit-trail-empty-demo.py
+pc-trail-empty-skip-demo.py
 
 demo: pre-commit hook, trail bracket configured with no commands
 expected result: the trail bracket is skipped

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-prepare-commit-msg-trail-demo.py
+pcm-trail-fail-abort-demo.py
 
-demo: prepare-commit-msg hook, trail bracket configured with one
-command (log the final commit message)
-expected result: the trail command runs
+demo: prepare-commit-msg hook, trail bracket configured with two
+commands: log the final commit message, then a lint that exits
+non-zero
+expected result: the log command runs, the lint command fails, prints
+its error to the terminal, and aborts the trail bracket with its
+non-zero exit code
 """
 
 import pathlib
@@ -16,7 +19,13 @@ from __init__ import prepare_demo_repo, run_hb
 
 _HB_OVERRIDES = {
     "prepare_commit_msg": {
-        "trail": [{"cmd": "echo '>> log commit message'"}],
+        "trail": [
+            {"cmd": "echo '>> log commit message'"},
+            {
+                "cmd": "echo '>> commit message lint failed' >&2; exit 1",
+                "remark": "Lint the Prepared Commit Message",
+            },
+        ],
     },
 }
 
@@ -34,9 +43,13 @@ def _prepare_demo_repo():
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
     print(
-        "scenario:\tprepare-commit-msg, trail bracket w/ 1 configured command"
+        "scenario:\tprepare-commit-msg, trail bracket w/ 2 configured "
+        "commands, the second exits non-zero"
     )
-    print("expected:\tthe trail command runs")
+    print(
+        "expected:\tthe log command runs, the lint command fails and "
+        "aborts the bracket"
+    )
     print()
 
     demo_repo_1 = _prepare_demo_repo()
