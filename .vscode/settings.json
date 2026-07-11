@@ -10,6 +10,6 @@
   "better-todo-tree.filtering.excludeGlobs": [
     "tests/fixtures/**",
     "tests/**/fixtures/**",
-    "examples/ttg/**",
+    "examples/ttg/**"
   ],
 }
