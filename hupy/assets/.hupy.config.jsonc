@@ -24,7 +24,7 @@
     "hotfix_branch_prefix": "hotfix", // prefix (before `/`) marking hotfix
     "release_branch_prefix": "release" // prefix (before `/`) marking release
   },
-  "bdc": { // ##################################################################
+  "bdc": { // Ban Direct Commit ################################################
     // block direct commits to protected branches,
     // allowing only merging into these branches
     //
@@ -45,15 +45,25 @@
     "disable_tt_detect_by_type": false,
     "ignored_path_globs": [] // glob patterns excluded from TT scanning
   },
-  "pch": { // ##################################################################
-    // how *Prepend Commit Header* reads a version and picks a header; leave a
-    // tag empty to disable that release type's header
+  "pch": { // Prepend Commit Header ############################################
+    // adds a short header line to the top of the commit message
+    //
+    // disable BDC
     "is_disabled": false,
-    "enable_vertical_slice": false, // enable the Vertical Slice header
-    "enable_pre_alpha": true, // enable the Pre-Alpha header
-    "alpha_tag": "-alpha", // version suffix identifying an alpha release
-    "beta_tag": "-beta", // version suffix identifying a beta release
-    "release_candidate_tag": "-rc" // suffix identifying a release candidate
+    // enable the Vertical Slice header:
+    // recognize 0.4.0~0.9.0 as Vertical Slice (instead of Prototype)
+    "enable_vertical_slice": false,
+    // enable the Pre-Alpha header:
+    // recognize 0.9.0 as Pre-Alpha (instead of Prototype/Vertical Slice)
+    "enable_pre_alpha": true,
+    // version suffix identifying Alpha release:
+    // if this string is present as part of version, consider it Alpha;
+    // leave empty string to disable Alpha header
+    "alpha_tag": "-alpha",
+    // version suffix identifying Beta release, v.s. Alpha
+    "beta_tag": "-beta",
+    // version suffix identifying Release Candidate, v.s. Alpha
+    "release_candidate_tag": "-rc"
   },
   "hb": { // ###################################################################
     // *Hook Bracket*: run extra commands around HUPy's own hook logic
