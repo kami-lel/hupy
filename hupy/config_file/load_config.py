@@ -25,15 +25,16 @@ logger = getLogger(CONFIG_LOGGER_NAME)
 # cache  #######################################################################
 
 # pylint: disable-next=invalid-name
-_config_cache = None
+_config_cache = {}  # keyed by repo.git_dir
 
 
 # Public API  ##################################################################
 def load_hupy_config(repo):
     """
     load and validate the HUPy config file (``.hupy.config.jsonc``)
-    from ``repo``, caching the result so it only loads from disk
-    once; exits the process if the file is missing or malformed.
+    from ``repo``, caching the result per repository so it only loads
+    from disk once per ``repo``; exits the process if the file is
+    missing or malformed.
 
 
     :param repo: git repository object
@@ -44,20 +45,18 @@ def load_hupy_config(repo):
     :return: the loaded and validated configuration
     :rtype: HupyConfigFile
     """
-    # pylint: disable-next=global-statement
-    global _config_cache
-
-    if _config_cache is not None:
-        return _config_cache
+    git_dir = repo.git_dir
+    if git_dir in _config_cache:
+        return _config_cache[git_dir]
 
     config_path = get_config_file_path(repo)
 
     try:
-        _config_cache = HupyConfigFile.model_validate(
+        _config_cache[git_dir] = HupyConfigFile.model_validate(
             json5.loads(config_path.read_text())
         )
         logger.debug("config file loaded: {}".format(config_path))
-        return _config_cache
+        return _config_cache[git_dir]
 
     except FileNotFoundError as e:
         logger.error("config file not found: {}".format(config_path))
