@@ -100,7 +100,7 @@ def register_cli_skip_once_parser(cli_subparser):
     """
     skip_once_parser = cli_subparser.add_parser(
         "skip-once",
-        aliases=["s"],
+        aliases=["so"],
         help=_SKIP_ONCE_HELP,
         description=_SKIP_ONCE_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
