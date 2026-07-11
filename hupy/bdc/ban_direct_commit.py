@@ -7,8 +7,8 @@ block commits made directly on protected branches
 from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.should_run_module import should_run_module
-from ..cbm import CommitType
-from ..cbm.get_current_commit_type import (
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import (
     get_current_commit_type,
     get_target_branch,
 )
