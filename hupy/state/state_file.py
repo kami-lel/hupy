@@ -21,23 +21,6 @@ class HupyStateFile(BaseModel):
     logger_verbosity: int = 1  # FIXME change better name
     skip_once: set[str] = Field(default_factory=set)
 
-    # BUG no need
-    def consume_skip_once(self, module_abbr):
-        """
-        check ``module_abbr`` against ``skip_once``. the flag stays
-        set for the rest of the round, since a module may be checked
-        multiple times in one round (eg ``hb``'s lead/trail brackets
-        across both hook stages); call ``reset_for_next_commit`` once
-        the round finishes to spend it.
-
-
-        :param module_abbr: module abbreviation, eg ``"bdc"``
-        :type module_abbr: str
-        :return: ``True`` if ``module_abbr`` is flagged
-        :rtype: bool
-        """
-        return module_abbr in self.skip_once
-
     def reset_for_next_commit(self):
         """
         empty ``skip_once``, spending every flag now that the round has finished
