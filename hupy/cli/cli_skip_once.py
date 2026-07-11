@@ -8,9 +8,8 @@ skipped for exactly one upcoming hook run
 import argparse
 import os
 
-import git
-
 from hupy import PROJ_LOGGER_NAME
+from hupy.cli.cli_init import load_git_repo
 from hupy.kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
@@ -76,7 +75,7 @@ def _skip_once_main(args):
     """
     set_logging_level_by_namespace(args, logger=logger)
 
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    repo = load_git_repo(os.getcwd())
 
     abbrs = [
         _MODULE_NAME_TO_ABBR.get(module, module) for module in args.modules

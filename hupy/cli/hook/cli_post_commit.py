@@ -2,9 +2,8 @@
 
 import os
 
-import git
-
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.cli_init import load_git_repo
 from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
@@ -20,7 +19,7 @@ def _post_commit_main(args):  ##################################################
     dispatch for the ``post-commit`` subcommand: reset one-time state
     for the next commit.
     """
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    repo = load_git_repo(os.getcwd())
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(

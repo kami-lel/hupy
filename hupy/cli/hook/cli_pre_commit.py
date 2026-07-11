@@ -2,9 +2,8 @@
 
 import os
 
-import git
-
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.cli_init import load_git_repo
 from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 from hupy.ttg.gate_tt import perform_triage_tags_gating
@@ -22,7 +21,7 @@ def _pre_commit_main(args):  ###################################################
     dispatch for the ``pre-commit`` subcommand: execute direct-commit
     ban and triage tag gating.
     """
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    repo = load_git_repo(os.getcwd())
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(

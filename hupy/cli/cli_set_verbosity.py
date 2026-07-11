@@ -7,9 +7,8 @@ verbosity used during hook runs
 
 import os
 
-import git
-
 from hupy import PROJ_LOGGER_NAME
+from hupy.cli.cli_init import load_git_repo
 from hupy.kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
@@ -40,7 +39,7 @@ def _set_verbosity_main(args):
     """
     set_logging_level_by_namespace(args, logger=root_logger)
 
-    repo = git.Repo(os.getcwd(), search_parent_directories=True)
+    repo = load_git_repo(os.getcwd())
 
     with open_state_file(repo) as state_file:
         state_file.hooks_logger_verbosity = args.verbosity
