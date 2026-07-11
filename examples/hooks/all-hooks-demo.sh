@@ -4,10 +4,10 @@
 #
 # run every demo in examples/hooks/ in sequence, on the same repo:
 # Feature Landing merge (add-user-authentication into develop) through
-# `hupy hook pre-commit`, then through `hupy hook prepare-commit-msg`
-# (mirroring
-# git's own hook order), at default and `-vvv` verbosity
-# expected result: both PASS
+# `hupy hook pre-commit`, then through `hupy hook prepare-commit-msg`,
+# then through `hupy hook post-commit` (mirroring git's own hook
+# order), at default and `-vvv` verbosity
+# expected result: all three PASS
 
 set -euo pipefail
 
@@ -40,6 +40,12 @@ _run_prepare_commit_msg() {
     (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "$@")
 }
 
+_run_post_commit() {
+    local repo_dir="$1"
+    shift
+    (cd "$repo_dir" && python3 -m hupy hook post-commit "$@")
+}
+
 
 # demo  ########################################################################
 
@@ -57,6 +63,9 @@ _run_pre_commit "$demo_repo_1"
 
 printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "-"
 _run_prepare_commit_msg "$demo_repo_1"
+
+printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "-"
+_run_post_commit "$demo_repo_1"
 echo
 
 printf '%s\n' "w/ -vvv" | python3 -m hupy.kamilog cb center "="
@@ -67,3 +76,6 @@ _run_pre_commit "$demo_repo_2" -vvv
 
 printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "-"
 _run_prepare_commit_msg "$demo_repo_2" -vvv
+
+printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "-"
+_run_post_commit "$demo_repo_2" -vvv
