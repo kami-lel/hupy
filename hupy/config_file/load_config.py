@@ -8,9 +8,9 @@ validating it against :class:`HupyConfigFile`
 import json5
 from pydantic import ValidationError
 
-from hupy.config import CONFIG_LOGGER_NAME
-from hupy.config.config_file import HupyConfigFile
-from hupy.config.config_file_path import get_config_file_path
+from hupy.config_file import CONFIG_LOGGER_NAME
+from hupy.config_file.config_file import HupyConfigFile
+from hupy.config_file.config_file_path import get_config_file_path
 from hupy.kamilog import getLogger
 
 __all__ = ("load_hupy_config",)

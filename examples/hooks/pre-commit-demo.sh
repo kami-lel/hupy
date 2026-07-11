@@ -4,7 +4,7 @@
 #
 # demo: Feature Landing merge (add-user-authentication into develop)
 # staging two files with no Loud triage tags — a.py (Steady) and
-# b.py (Quiet) — driven through the actual `hupy pre-commit` CLI
+# b.py (Quiet) — driven through the actual `hupy hook pre-commit` CLI
 # expected result: PASS, triage tag gating does not block the commit
 
 set -euo pipefail
@@ -28,7 +28,7 @@ _prepare_demo_repo() {
 _run_ttg() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy pre-commit "$@")
+    (cd "$repo_dir" && python3 -m hupy hook pre-commit "$@")
 }
 
 

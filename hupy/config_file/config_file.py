@@ -18,7 +18,7 @@ from pydantic import (
 )
 
 from hupy.cbm.commit_type import CommitType
-from hupy.config import CONFIG_LOGGER_NAME
+from hupy.config_file import CONFIG_LOGGER_NAME
 from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 
 __all__ = ("HupyConfigFile",)

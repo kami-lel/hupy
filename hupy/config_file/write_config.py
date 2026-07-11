@@ -8,7 +8,7 @@ repo's root as its HUPy config file
 import shutil
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.config_file_path import (
+from hupy.config_file.config_file_path import (
     DEFAULT_CONFIG_ASSET,
     get_config_file_path,
 )

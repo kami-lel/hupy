@@ -5,7 +5,7 @@
 # demo: Version Release merge (develop into main) with the
 # in-progress merge message copied into COMMIT_EDITMSG (mirroring
 # what git itself does before invoking the commit-msg hook), driven
-# through the actual `hupy prepare-commit-msg` CLI
+# through the actual `hupy hook prepare-commit-msg` CLI
 # expected result: header prepended to COMMIT_EDITMSG
 
 set -euo pipefail
@@ -29,7 +29,7 @@ _prepare_demo_repo() {
 _run_pch() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy prepare-commit-msg "$@")
+    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "$@")
 }
 
 

@@ -75,21 +75,33 @@ class TestShouldRunModuleSkipOnce:
         result, _ = _run(module_abbr, skip_once={module_abbr})
         assert result is False
 
-    def test_flag_is_consumed(self):
+    def test_flag_is_not_consumed(self):
         _, state_file = _run("ttg", skip_once={"ttg"})
-        assert "ttg" not in state_file.skip_once
+        assert "ttg" in state_file.skip_once
 
-    def test_only_matching_module_is_consumed(self):
+    def test_only_matching_module_is_flagged(self):
         _, state_file = _run("bdc", skip_once={"bdc", "ttg"})
-        assert state_file.skip_once == {"ttg"}
+        assert state_file.skip_once == {"bdc", "ttg"}
 
-    def test_second_call_after_consumption_runs_normally(self):
+    def test_second_call_within_round_still_skips(self):
         config = load_config_fixture(overrides={"pch": {"is_disabled": False}})
         state_file = HupyStateFile(skip_once={"pch"})
         with mock.patch(
             "hupy.should_run_module.load_hupy_config", return_value=config
         ):
             first = should_run_module(_REPO, state_file, "pch")
+            second = should_run_module(_REPO, state_file, "pch")
+        assert first is False
+        assert second is False
+
+    def test_runs_again_after_round_cleared(self):
+        config = load_config_fixture(overrides={"pch": {"is_disabled": False}})
+        state_file = HupyStateFile(skip_once={"pch"})
+        with mock.patch(
+            "hupy.should_run_module.load_hupy_config", return_value=config
+        ):
+            first = should_run_module(_REPO, state_file, "pch")
+            state_file.reset_for_next_commit()
             second = should_run_module(_REPO, state_file, "pch")
         assert first is False
         assert second is True

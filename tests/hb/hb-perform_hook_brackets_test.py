@@ -140,7 +140,7 @@ class TestPerformHookBracketsSkips:
         )
         assert calls == []
 
-    def test_skip_once_flag_skips_and_is_consumed(self):
+    def test_skip_once_flag_skips_and_stays_flagged(self):
         _, calls, state_file = _run(
             "pre-commit",
             True,
@@ -148,7 +148,7 @@ class TestPerformHookBracketsSkips:
             skip_once={"hb"},
         )
         assert calls == []
-        assert "hb" not in state_file.skip_once
+        assert "hb" in state_file.skip_once
 
     def test_skip_once_with_unrelated_key_runs_normally(self):
         _, calls, state_file = _run(

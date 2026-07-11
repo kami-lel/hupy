@@ -15,7 +15,7 @@ from pathlib import Path
 
 import git
 
-from hupy.config.config_file_path import DEFAULT_CONFIG_ASSET
+from hupy.config_file.config_file_path import DEFAULT_CONFIG_ASSET
 
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"

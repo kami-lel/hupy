@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-"{{PYTHON}}" -m hupy pre-commit
+"{{PYTHON}}" -m hupy hook pre-commit
