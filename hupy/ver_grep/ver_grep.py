@@ -20,6 +20,9 @@ logger.propagate = False
 renderer = AnsiRenderer(sys.stdout)
 
 
+# Todo expose grep ver as CLI
+
+
 # Public API  ##################################################################
 def grep_version(repo, state_file, ref):
     """
