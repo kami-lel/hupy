@@ -3,11 +3,13 @@
 // #
 // # per-repository HUPy config;
 // # commit it so every clone shares the same behavior
+// FIXME add links
 // #############################################################################
 {
   // HUPy version, do not edit
   "hupy_version": "0.3.0",
   "vg": { // VerGrep  ##########################################################
+    // FIXME rewrite ver grep
     // reads the repo's version string for *Prepend Commit Header*; empty
     // fields disable it, so the header falls back to plain `Version Release`
     //
@@ -70,8 +72,11 @@
     // version suffix identifying Release Candidate, v.s. Alpha
     "release_candidate_tag": "-rc"
   },
-  "hb": { // ###################################################################
+  "hb": { // Hook Bracket ######################################################
     // *Hook Bracket*: run extra commands around HUPy's own hook logic
+    // FIXME rewrite HB
+    //
+    // disable HB
     "is_disabled": false,
     "pre_commit": {
       "lead": [], // run before pre-commit's core checks

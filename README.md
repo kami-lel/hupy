@@ -6,9 +6,7 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 
-<!-- FIXME rewrite .hupy.config.jsonc docs
-FIXME rewrite readme
--->
+<!-- FIXME rewrite readme -->
 
 <!-- todo reimplement ensure file modified -->
 
