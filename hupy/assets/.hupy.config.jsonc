@@ -86,13 +86,27 @@
     // - "remark" (optional, string): description/name of entry,
     //   strictly used in logger
     //
-    // "allow_commit_types" include all commit types
-    // which this command should be ran, possible values:
-    // "REGULAR_COMMIT", "OTHER_COMMIT",
-    // "MERGE" (union of every merge subtype below)
-    // "FEATURE_LANDING", "VERSION_RELEASE", "SYNC_BACKPORT",
-    // "CATCH_UP", "HOTFIX_RELEASE", "HOTFIX_BACKPORT",
-    // "RELEASE_CUT", "RELEASE_BACKPORT", "OTHER_MERGE"
+    // "allow_commit_types" include all commit types which
+    // this command should be ran, possible values:
+    //
+    // - non-merge commits
+    //   - "REGULAR_COMMIT",
+    //   - "OTHER_COMMIT",
+    // - merge commits:
+    //   - "FEATURE_LANDING"
+    //   - "VERSION_RELEASE"
+    //   - "SYNC_BACKPORT"
+    //   - "CATCH_UP"
+    //   - "HOTFIX_RELEASE"
+    //   - "HOTFIX_BACKPORT"
+    //   - "RELEASE_CUT"
+    //   - "RELEASE_BACKPORT"
+    //   - "OTHER_MERGE"
+    // - merge categories (union of merge subtypes above):
+    //   - "MERGE" (all merge commits)
+    //   - "RELEASE": VERSION_RELEASE | HOTFIX_RELEASE | RELEASE_CUT
+    //   - "BACKPORT": SYNC_BACKPORT | HOTFIX_BACKPORT | RELEASE_BACKPORT
+    //   - "INTEGRATION": RELEASE | FEATURE_LANDING
     //
     // disable HB
     "is_disabled": false,

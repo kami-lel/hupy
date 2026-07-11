@@ -27,7 +27,7 @@ class CommitType(Flag):  #######################################################
     REGULAR_COMMIT = auto()
     OTHER_COMMIT = auto()
 
-    # merge
+    # merge commits
     FEATURE_LANDING = auto()
     VERSION_RELEASE = auto()
     SYNC_BACKPORT = auto()
