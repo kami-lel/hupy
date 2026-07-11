@@ -22,8 +22,6 @@ logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
 
-# TODO callers (prepend_commit_header.py) still use the old
-# no-arg signature; thread repo/state_file through them
 # Public API  ##################################################################
 def grep_source_branch_version(repo, state_file):
     """

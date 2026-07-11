@@ -130,9 +130,9 @@ Top-level module (`hupy/should_run_module.py`) centralizing the run/skip decisio
 
 Reads a branch's version string by regex over a configured version file at that branch's git tip (not the working tree, which mid-merge holds only the target's possibly-conflicted content); consumed by `pch`.
 
-**Public API** (`hupy/ver_grep/__init__.py`): `grep_source_branch_version()` · `grep_target_branch_version()` · `decide_version_update_type(source_version, target_version)`.
+**Public API** (`hupy/ver_grep/__init__.py`): `grep_source_branch_version(repo, state_file)` · `grep_target_branch_version(repo, state_file)` · `decide_version_update_type(source_version, target_version)`.
 
-- The two grep functions take no args; each resolves the repo from `os.getcwd()`, loads the `vg` config, resolves its branch via `cbm`, reads the version file at that ref via `repo.git.show(f"{ref}:{version_file}")`, and returns the first capturing-group match. Flow: unconfigured → `warning` + return `""`; file missing at tip or no matching line → `error` + `SystemExit(1)`. No run/skip gate beyond `is_unconfigured()`.
+- The two grep functions take `repo`/`state_file`, gate on `should_run_module(repo, state_file, "vg")`, load the `vg` config, resolve their branch via `cbm`, read the version file at that ref via `repo.git.show(f"{ref}:{version_file}")`, and return the first capturing-group match. Flow: unconfigured, gated-off, file missing at tip, or no matching line → `warning` + return `""`.
 - **`decide_version_update_type`** — parses `major.minor.patch` cores (ignoring suffixes), returns `"x"`/`"y"`/`"z"` for major/minor/patch or `""` if unparsable or not a bump. Not yet wired into `pch`; available for future use.
 - Own logger `VER_GREP_LOGGER_NAME` (`"HU.VerGrep"`), propagation disabled.
 

@@ -74,26 +74,28 @@ def _get_release_type_word(version, repo):
     return ""
 
 
-def _gen_bumped_version_header(header_word):
+def _gen_bumped_version_header(header_word, repo, state_file):
     """
     build a "<header_word>: <version>" header, prefixed with the
     version's major/minor/patch bump word when a source version
     resolves
     """
-    version = grep_source_branch_version()
+    version = grep_source_branch_version(repo, state_file)
     if version:
-        prefix = _get_version_bump_prefix(version, grep_target_branch_version())
+        prefix = _get_version_bump_prefix(
+            version, grep_target_branch_version(repo, state_file)
+        )
         return "{}{}: {}".format(prefix, header_word, version)
     else:
         return header_word
 
 
-def _gen_backport_header(header_word):
+def _gen_backport_header(header_word, repo, state_file):
     """
     build a "<header_word> from: <version>" header, or plain
     ``header_word`` when no source version resolves
     """
-    version = grep_source_branch_version()
+    version = grep_source_branch_version(repo, state_file)
     if version:
         return "{} from: {}".format(header_word, version)
     else:
@@ -103,8 +105,8 @@ def _gen_backport_header(header_word):
 # generate header  =============================================================
 
 
-def _gen_version_release_header(repo):
-    version = grep_source_branch_version()
+def _gen_version_release_header(repo, state_file):
+    version = grep_source_branch_version(repo, state_file)
     if not version:
         return "Version Release"
 
@@ -120,40 +122,40 @@ def _gen_version_release_header(repo):
         bump_prefix = ""
     else:
         bump_prefix = _get_version_bump_prefix(
-            version, grep_target_branch_version()
+            version, grep_target_branch_version(repo, state_file)
         )
 
     return "{}: {}".format((bump_prefix + release_type).rstrip(), version)
 
 
-def _gen_feature_landing_header(repo):
+def _gen_feature_landing_header(repo, state_file):
     branch_name = get_source_branch(repo)
     return "Feature Landing: {}".format(branch_name)
 
 
-def _gen_sync_backport_header(_):
-    return _gen_backport_header("Sync Backport")
+def _gen_sync_backport_header(repo, state_file):
+    return _gen_backport_header("Sync Backport", repo, state_file)
 
 
-def _gen_catch_up_header(repo):
+def _gen_catch_up_header(repo, state_file):
     branch_name = get_target_branch(repo)
     return "Catch Up: {}".format(branch_name)
 
 
-def _gen_hotfix_release_header(_):
-    return _gen_bumped_version_header("Hotfix Release")
+def _gen_hotfix_release_header(repo, state_file):
+    return _gen_bumped_version_header("Hotfix Release", repo, state_file)
 
 
-def _gen_hotfix_backport_header(_):
-    return _gen_backport_header("Hotfix Backport")
+def _gen_hotfix_backport_header(repo, state_file):
+    return _gen_backport_header("Hotfix Backport", repo, state_file)
 
 
-def _gen_release_cut_header(_):
-    return _gen_bumped_version_header("Release Cut")
+def _gen_release_cut_header(repo, state_file):
+    return _gen_bumped_version_header("Release Cut", repo, state_file)
 
 
-def _gen_release_backport_header(_):
-    return _gen_backport_header("Release Backport")
+def _gen_release_backport_header(repo, state_file):
+    return _gen_backport_header("Release Backport", repo, state_file)
 
 
 _HEADER_GENERATORS = {
@@ -208,7 +210,7 @@ def prepend_commit_header(repo, state_file):
             )
             target.append(line)
 
-    header = _HEADER_GENERATORS[commit_type](repo)
+    header = _HEADER_GENERATORS[commit_type](repo, state_file)
 
     logger.debug("generated header:\n" + header)
 
