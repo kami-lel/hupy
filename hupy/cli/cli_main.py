@@ -36,4 +36,4 @@ register_cli_set_verbosity_parser(cli_subparser)
 register_cli_hook_parser(cli_subparser)
 
 
-# todo dry run feature for hooks CLI
+# todo dry run feature in CLI

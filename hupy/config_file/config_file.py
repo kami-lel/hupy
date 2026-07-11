@@ -68,6 +68,8 @@ class _VerGrep(BaseModel):  # ==================================================
         if self.is_disabled:
             return self
 
+        # Todo validate 1st capture group
+
         if self.is_unconfigured():
             renderer = AnsiRenderer(sys.stdout)
             logger.warning(
@@ -226,6 +228,7 @@ class _Hb(BaseModel):
     is_disabled: bool
     pre_commit: _HbBracket
     prepare_commit_msg: _HbBracket
+    post_commit: _HbBracket
 
     # Public Method  -----------------------------------------------------------
 
@@ -239,6 +242,7 @@ class _Hb(BaseModel):
         return {
             "pre-commit": self.pre_commit,
             "prepare-commit-msg": self.prepare_commit_msg,
+            "post-commit": self.post_commit,
         }.get(hook_name)
 
 

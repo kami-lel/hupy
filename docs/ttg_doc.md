@@ -1,8 +1,8 @@
 # Triage Tag Gating (TTG) Documentation
 
-**Triage Tag Gating** is *HUPy*'s `pre-commit` hook. It blocks a merge into a protected branch when the staged changes still contain **triage tags** — the `TODO` / `FIXME` / `HACK` / `BUG` markers that flag unfinished or provisional work — so half-done code doesn't slip into `dev` or `main`.
+**Triage Tag Gating** It blocks a merge into a protected branch when the staged changes still contain **triage tags** — the `TODO` / `FIXME` / `HACK` / `BUG` markers that flag unfinished or provisional work — so half-done code doesn't slip into `dev` or `main`.
 
-## Triage Tags
+### Triage Tags
 
 Each marker comes in three tiers, distinguished by letter case:
 
@@ -14,7 +14,7 @@ Each marker comes in three tiers, distinguished by letter case:
 
 The tier signals how much the marker matters — Loud demands attention, Quiet is a low-priority note.
 
-## What It Gates
+### What It Gates
 
 TTG only acts on the two protected merges, and the release gate is stricter:
 
@@ -26,8 +26,4 @@ TTG only acts on the two protected merges, and the release gate is stricter:
 
 Quiet tags are never blocked, so low-priority notes can travel with the code.
 
-## When It Blocks
-
-If a gated marker is found in the staged changes, the commit is **stopped** and *HUPy* prints each offending file and line so you can see exactly what to resolve. To get past the gate, either finish and remove the marker, or **lower its tier** — e.g. change a `TODO` to a `todo` — to signal it's an accepted, low-priority note.
-
-Every other commit passes straight through untouched.
+TTG runs in the pre-commit stage, right after [Ban Direct Commit](bdc_doc.md) — see the [Hook Flow](flow_doc.md) for where it fits. **Feature Landing** and **Version Release** are merge types defined in [Commit, Branch & Merge](cbm_doc.md).

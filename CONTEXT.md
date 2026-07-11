@@ -1,266 +1,161 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — the git hook stage CLI commands (`pre-commit`, `prepare-commit-msg`) moved from top-level `hupy <stage>` into a new `hupy hook <stage>` subcommand group (`hupy/cli/hook/` package), joined by a new `post-commit` stage that resets one-time state for the next commit round. `HupyStateFile.skip_once` is no longer consumed on check: `consume_skip_once(module_abbr)` is gone, `should_run_module` now does a plain membership test against `skip_once`, and the whole set is spent by the new `HupyStateFile.reset_for_next_commit()` (replacing `clear_skip_once()`), called from the new `post-commit` stage rather than at the end of `prepare-commit-msg`. `HupyStateFile`'s `logger_verbosity` field renamed to `hooks_logger_verbosity`, now set via a new `set-verbosity`/`sv` CLI subcommand rather than only read. `hupy skip-once`/`so` gained a `-u`/`--unset` flag to remove a module's one-time skip flag. The `hupy.config` package was also renamed to `hupy.config_file` this round (module paths only, schema unchanged). See `state`/`should_run_module`/`cli` in Module Details for the full design, and `CHANGELOG.md` for the complete history of prior rounds — this line now tracks only the most recent change, not a cumulative log.*
+*Last updated: 2026-07-12 — condensed for the upcoming first stable release; `hb`'s bracket coverage extended to `post-commit` (`_Hb.post_commit`, `hook post-commit` now runs the lead/trail brackets ahead of `reset_for_next_commit()`). For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
 **hupy** (Hooks Utility Python) is a Python reimplementation of the bash `hooks_utility.sh` — a toolkit of utilities called from git hook scripts to enforce commit quality and branch hygiene.
 
-Status: **v0.3.0 released** — `cbm` (Commit/Branch/Merge, formerly `commit_type`), `kamilog`, `cli` (including `init`), `config_file`, `pch` (Prepend Commit Header, now covering 8 merge types), `ver_grep`, the `ttg` package (Triage Tag Gating), and `bdc` (Ban Direct Commit, the planned `branch_protection` utility) are implemented; `ensure_file_edited` is not yet started.
+Package `HUPy` (import name `hupy`) · build `setuptools` · Python `>=3.10` · install `pip install -e ".[dev]"` · dependencies `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`.
 
-Package: `HUPy` (import name `hupy`) · build: `setuptools` · install: `pip install -e ".[dev]"` · dependencies: `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`
+Implemented: `cbm`, `bdc`, `ttg`, `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `cli` (incl. `init`), `kamilog`. Not started: `ensure_file_edited` (a bash-era utility still to be ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py`).
 
 ## Architecture
 
-Each utility is a standalone module in the `hupy/` package, callable independently from any git hook script. No cross-module dependencies are assumed, except within the `ttg` package itself; `pch`'s/`ttg`'s/`bdc`'s use of `cbm`; `cbm`'s/`ver_grep`'s/`bdc`'s use of `config_file`; and `bdc`'s/`ttg`'s/`pch`'s use of the top-level `should_run_module`, which itself depends on both `config_file` and `state`.
+Each utility is a standalone module in `hupy/`, callable from any git hook script. Cross-module edges: within `ttg`; `pch`/`ttg`/`bdc` → `cbm`; `cbm`/`ver_grep`/`bdc` → `config_file`; `bdc`/`ttg`/`pch` → `should_run_module`, which itself depends on `config_file` and `state`.
 
-| Module | Status | Responsibility |
-|---|---|---|
-| `cli` | **implemented** | CLI entrypoint, argument parsing/dispatch (`cli_main.py`); `init` subcommand and Git repo loading (`cli_init.py`); `hook` subcommand group nesting the `pre-commit`/`prepare-commit-msg`/`post-commit` stage runners (`hook/cli_pre_commit.py`, `hook/cli_prepare_commit_msg.py`, `hook/cli_post_commit.py`); `set-verbosity` hook-logging-level setter (`cli_set_verbosity.py`); `skip-once` one-time module-skip flagger (`cli_skip_once.py`) |
-| `cbm` | **implemented** | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` enum member (formerly the flat `commit_type` module) |
-| `config_file` | **implemented** | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc` (including the nested `vg` and `cbm` sections), cached loading (as JSON5) resolved against an already-open `git.Repo`, and default-config-copying helpers |
-| `state` | **implemented** | `HupyStateFile` pydantic schema for `hupy-state.json` (process verbosity, one-time module-skip flags), path resolution inside `repo.git_dir`, and thread-/process-safe atomic load-and-save via `open_state_file(repo)` |
-| `should_run_module` | **implemented** | top-level gate combining a module's config `is_disabled` flag with its `hupy-state.json` `skip_once` flag into one run/skip decision; consumed by `bdc`/`ttg`/`pch` — `vg`/`hb` are listed as skippable (`skip-once` accepts them) but have no call site consuming the gate yet |
-| `kamilog` | **implemented** | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
-| `pch` | **implemented** | prepend header lines to in-progress commit messages for all 8 `cbm` merge types; several append a version number via `ver_grep` when configured |
-| `ver_grep` | **implemented** | extract a merge's source/target branch version string by regex-matching a line in a configured version file, read at that branch's git tip; also classifies major/minor/patch version bumps |
-| `ttg.triage_tag_type` | **implemented** | `TriageTagType` flag enum (3 tiers × 4 kinds) |
-| `ttg.comment_style` | **implemented** | map a file extension to its comment-leader token, for type-aware TT matching |
-| `ttg.detect_tt` | **implemented** | scan staged diffs for triage tag annotation markers, tiered by loudness |
-| `ttg.staged_files` | **implemented** | list staged files in a repo, filtered against `ignored_path_globs` |
-| `ttg.report_tt` | **implemented** | render/log gated triage tag findings and abort the commit |
-| `ttg.gate_tt` | **implemented** | gate commits by triage tag presence on protected branches |
-| `bdc` | **implemented** | Ban Direct Commit — block a commit made directly on a protected branch, while still allowing that branch to receive commits through a merge |
-| `ensure_file_edited` | not yet implemented | require specific files or line ranges to be modified in the commit; a bash-era utility being ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py` |
+| Module | Responsibility |
+|---|---|
+| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the `hook` group nesting the `pre-commit`/`prepare-commit-msg`/`post-commit` stage runners (`hook/`); `verify-config-file` (`cli_verify.py`); `set-verbosity`/`sv` (`cli_set_verbosity.py`); `skip-once`/`so` (`cli_skip_once.py`) |
+| `cbm` | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` |
+| `config_file` | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc`, cached JSON5 loading resolved against an open `git.Repo`, and default-config copying |
+| `state` | `HupyStateFile` pydantic schema for `hupy-state.json` (verbosity, one-time skips), path resolution inside `repo.git_dir`, atomic thread-/process-safe load-and-save |
+| `should_run_module` | top-level gate combining a module's config `is_disabled` flag with its `skip_once` state flag into one run/skip decision |
+| `kamilog` | customized logging with extra levels, ANSI color, diff compression, comment banners, and a standalone CLI |
+| `pch` | prepend header lines to in-progress merge commit messages; several stamp a version via `ver_grep` |
+| `ver_grep` | extract a branch's version string by regex over a configured version file at that branch's git tip; classify major/minor/patch bumps |
+| `ttg` | Triage Tag Gating — scan staged diffs for triage tags and abort commits that introduce them on protected branches |
+| `bdc` | Ban Direct Commit — block a commit made directly on a protected branch, while still allowing merges into it |
 
 ### Design Principles
 
 - **composable** — each utility works alone or combined inside a hook script
-- **mostly stateless** — relies primarily on git state and file diffs; the one exception is `hupy-state.json` (see `state` in Module Details), a small process-local file holding transient operator intent (logger verbosity, one-time module skips) rather than repo policy — that stays in the tracked, reviewable `.hupy.config.jsonc`
+- **mostly stateless** — relies on git state and file diffs; the one exception is `hupy-state.json` (transient operator intent — verbosity, one-time skips), kept out of the tracked, reviewable `.hupy.config.jsonc`
 - **simple defaults** — sensible behavior out of the box
 
 ### Hook Integration Model
 
-**Decision**: `hupy init` sets a repo up with two artifacts:
+`hupy init` sets a repo up with two artifacts:
 
-1. A tracked, dot-prefixed config file at the repo root, **`.hupy.config.jsonc`** (JSON5/JSONC, comments allowed) — the config surface: which features (`ttg`, `pch`, and future ones) are enabled, and in what order they run per hook stage. Being tracked/committed, it's reviewable and shared across clones the same way any other project file is. Default content is copied verbatim from a packaged asset, `hupy/assets/.hupy.config.jsonc` (see `config_file` in Module Details), whose own comments document each field — not generated from `HupyConfigFile` defaults, since the schema no longer carries any.
-2. Three thin stub scripts copied into the repo's actual hooks directory: `pre-commit`, `prepare-commit-msg`, and `post-commit`, sourced from the packaged `hupy/assets/hook-stubs/`. Each stub does nothing but invoke the corresponding CLI stage group — `"<python>" -m hupy hook pre-commit` / `"<python>" -m hupy hook prepare-commit-msg` / `"<python>" -m hupy hook post-commit` — which then reads `.hupy.config.jsonc` via `load_hupy_config(repo)`; today `vg` and `cbm` are consumed (feature enable/order fields aren't in `HupyConfigFile` yet — see `cli` and `config_file` in Module Details). Each stage also opens `hupy-state.json` via `open_state_file(repo)` for the run's verbosity baseline and one-time module skips — see `state` in Module Details; unlike the two `init`-written artifacts above, this file is not created by `init`, it's created lazily (from schema defaults) the first time any stage runs. The `post-commit` stage carries no hook bracket or config-driven feature — it exists solely to clear `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed, since clearing it any earlier (eg in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them.
+1. **`.hupy.config.jsonc`** — a tracked, dot-prefixed JSON5/JSONC file at the repo root. The config surface: which features are enabled and in what order they run per stage. Copied verbatim from the packaged asset `hupy/assets/.hupy.config.jsonc`, whose `//` comments document each field (the schema itself carries no defaults).
+2. **Hook stubs** — thin `pre-commit`, `prepare-commit-msg`, and `post-commit` scripts copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub only invokes its stage: `"<python>" -m hupy hook <stage>`.
 
-- **Config surface = `.hupy.config.jsonc`, not the hook script.** This reverses an earlier "config surface = the script itself" decision (see *Prior rejections* below). The hook stub is a fixed, content-free trampoline; enabling/disabling a feature and controlling its order both become a config edit, not a bash edit.
-- **Dot-prefixed naming (`.hupy.config.jsonc`, not `hupy.config.jsonc`)**: chosen by analogy to the Python ecosystem's single-purpose tool-config dotfiles (`.flake8`, `.pylintrc`, `.coveragerc`, `.isort.cfg`), and specifically to `.pre-commit-config.yaml` — the closest sibling in the ecosystem (same domain: tracked, root-level git-hook-orchestration config) and the exact framework rejected below as a dependency. Visible top-level docs in this repo (`AGENTS.md`, `CHANGELOG.md`, `CONTEXT.md`) were considered as a naming precedent and rejected — those are human-authored prose meant to be read, not tool-consumed config. The `.jsonc` extension (renamed from `.json`) reflects the file now being parsed as JSON5 rather than strict JSON, so it can carry the `//` comments documenting each field.
-- **Hooks directory is resolved, not fixed to `.git/hooks/`.** `hupy.cli.cli_init._resolve_hooks_dir(repo)` reads `core.hooksPath` via GitPython's `config_reader()` and joins it onto `repo.working_tree_dir` if set (resolving relative to the repo root; an absolute configured path is used as-is since `pathlib` path-joining drops the left side when the right side is absolute), otherwise falls back to `pathlib.Path(repo.git_dir) / "hooks"`. `--hooks-dir` overrides this resolution entirely. `init` itself never writes `core.hooksPath` — an earlier design's redirection-at-a-tracked-directory approach (see *Prior rejections*) is unnecessary now that the hook scripts carry no meaningful content of their own; the reviewable content lives in `.hupy.config.jsonc` instead.
-- **Per-file conflict checks, not directory-level.** `_copy_hook_stubs` only checks whether each individual target filename (`pre-commit`, `prepare-commit-msg`) already exists — not whether the hooks directory itself exists. `.git/hooks/` always exists after `git init` (populated with git's own `*.sample` files), so a directory-existence check would force `-f` on every default-path run; per-file checks let a fresh repo's first `init` succeed without `-f` while still protecting a real pre-existing hook.
-- **Calls the CLI, not internal functions.** The stub invokes `<python> -m hupy <subcommand>` rather than importing `hupy.ttg`/`hupy.pch` Python functions directly, because the CLI subcommands are `hupy`'s stable, documented public interface.
-- **Interpreter path is baked in at install time, not resolved from `PATH`.** The packaged stub templates carry a `"{{PYTHON}}"` placeholder; `_copy_hook_stubs` substitutes it with `sys.executable` (the interpreter running `hupy init`) before writing each stub. A bare `python`/`python3` on `PATH` is unreliable for a git hook: hooks run in whatever environment invokes `git commit` — an IDE's built-in git integration, for instance, does not source the project's venv onto `PATH` — so a bare interpreter name can resolve to a system Python lacking both `hupy` and its dependencies (`ModuleNotFoundError: No module named 'git'`). Baking in the absolute path makes the hook work regardless of which client or shell state triggers the commit. A consequence: re-running `hupy init --force` is required after moving/recreating the virtualenv the package is installed in, since the old absolute path would otherwise go stale.
-- **`-f`/`--force` gates the hook stubs and the config file independently** — `_copy_hook_stubs` and `create_default_config_file` each perform their own existence/`force` check, so (e.g.) a pre-existing config with fresh hooks still aborts on the config step even though the hooks were already written; `init` is not atomic across the two artifacts (mirrors the non-atomicity of the prior design between copying scripts and configuring `core.hooksPath`).
-- **Enforcement caveat**: none of the above is enforceable, only convenient. Git hooks are client-side and opt-in (`git commit --no-verify` bypasses them entirely, and a developer can simply never run `hupy init`). Guaranteed enforcement, if ever needed, requires a server-side mechanism (CI required-checks, branch protection, or a self-hosted server's `pre-receive` hook), independent of this model.
+Key decisions:
 
-#### Prior rejections
-
-Kept for their still-relevant reasoning, though the decisions above have since reversed or replaced them:
-
-An earlier design wired `hupy` into git with a plain bash script per hook stage, tracked in the consuming repo at `scripts/hupy-hooks/<hook-name>`, calling the CLI directly in sequence, with `git config core.hooksPath scripts/hupy-hooks` pointing git at that tracked directory (`git config core.hooksPath` looks for a file named exactly after the hook type in the target directory — why the CLI's `pre-commit`/`prepare-commit-msg` subcommand groups are named after the git hook stages, which is unchanged). Feature enable/disable was a comment-toggle on the CLI-call line inside that tracked script, and execution order was simply the line order. Symlinking tracked files into `.git/hooks/` was considered and rejected at the time — same one-time-setup burden as `core.hooksPath`, but fragile on Windows (requires symlink privileges/`core.symlinks`).
-
-Rejected the `pre-commit`-framework route (pre-commit.com): it would add a hard dependency on an external hook manager (install, `.pre-commit-config.yaml`, `rev:` pinning) on top of `hupy` itself, plus its own packaging burden (`.pre-commit-hooks.yaml`, `language: python` entry points, `pass_filenames: false` on every hook since neither `ttg` nor `pch` accept positional file args, and a second `pre-commit install --hook-type prepare-commit-msg` for `pch` specifically since it needs that stage) — at odds with the *composable*/*simple defaults* principles above and with `hupy`'s bash-script origin. Wrapping `hupy` as a `.pre-commit-hooks.yaml` hook is technically easy and may be revisited later as an optional secondary path, but is not planned work.
-
-Previously rejected a declarative config file (`.hupy.toml` or similar): the reasoning at the time was that it would require a config-loading module (parsing, validation, defaults-merging) that didn't exist, and that TOML tables have no inherent execution order (would need an explicit `sequence = [...]` key to recover what the bash script's line order gave for free). That rejection is reversed by the current design, which adopts `.hupy.config.json` as the config surface — the intent is for execution order to be expressed explicitly in JSON (e.g. an array per stage) rather than relied upon implicitly, though the schema itself isn't implemented yet (see `setup` in Module Details).
-
-`examples/{pch,ttg}/*.py` remain demo/test scripts (see Testing Infrastructure) run standalone for scenario walkthroughs — they are not, and were never meant to be, install-ready hook scripts, and this is unaffected by the redesign.
+- **Config surface is the file, not the script.** The stub is a fixed trampoline; enabling/ordering a feature is a config edit, not a bash edit.
+- **Dot-prefixed naming** by analogy to `.flake8`/`.pre-commit-config.yaml` (tracked, root-level tool config); `.jsonc` reflects JSON5 parsing so `//` comments can document fields.
+- **Hooks directory is resolved, not fixed.** `_resolve_hooks_dir(repo)` reads `core.hooksPath` (joined onto the work tree, absolute paths used as-is), else falls back to `.git/hooks`; `--hooks-dir` overrides. `init` never writes `core.hooksPath`.
+- **Per-file conflict checks.** `_copy_hook_stubs` checks each target filename, not the directory (which always exists after `git init`), so a fresh repo's first `init` needs no `-f`.
+- **Interpreter path baked in at install time.** The stub template's `{{PYTHON}}` placeholder is substituted with `sys.executable`; a bare `python` on `PATH` is unreliable for hooks fired by an IDE that never sourced the venv. Consequence: re-run `hupy init --force` after moving the venv.
+- **`-f`/`--force` gates the stubs and the config file independently** — `init` is not atomic across the two artifacts.
+- **`post-commit`'s only config-driven feature is its `hb` bracket** — it otherwise exists to spend `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them. Both the lead and trail `hb` brackets run before `reset_for_next_commit()`, so their commands still see the round's `skip_once` state.
+- **Enforcement caveat**: git hooks are client-side and opt-in (`--no-verify` bypasses them). Guaranteed enforcement needs a server-side mechanism, out of scope here.
 
 ## Module Details
 
 ### `cbm`
 
-Commit/Branch/Merge — classifies branch names and in-progress commits from git state (formerly the flat `commit_type` module).
+Commit/Branch/Merge — classifies branch names and in-progress commits from git state.
 
-**Public API**: `BranchType`, `CommitType`, `get_current_commit_type(repo)`, `get_source_branch(repo)`, `get_target_branch(repo)` (`hupy/cbm/__init__.py`); all take an already-open `git.Repo`, not a path.
+**Public API** (`hupy/cbm/__init__.py`): `BranchType`, `CommitType`, `get_current_commit_type(repo)`, `get_source_branch(repo)`, `get_target_branch(repo)` — all take an open `git.Repo`.
 
-**`BranchType(Enum)`** — `FEATURE` | `DEV` | `MAIN` | `HOTFIX` | `RELEASE` | `USER`. `BranchType.from_name(branch_name, repo)` classifies against the `cbm` section of `.hupy.config.jsonc` (via `load_hupy_config(repo).cbm`), checked in order: `dev_branch_name` → `DEV`, `main_branch_name` → `MAIN`, `f"{hotfix_branch_prefix}/"` prefix → `HOTFIX`, `f"{release_branch_prefix}/"` prefix → `RELEASE`, any other `/` in the name → `USER`, otherwise → `FEATURE`. Branch names are no longer hardcoded (previously module-level `MAIN_BRANCH = "main"`/`DEV_BRANCH = "dev"` constants).
+- **`BranchType(Enum)`** — `FEATURE`/`DEV`/`MAIN`/`HOTFIX`/`RELEASE`/`USER`. `from_name(branch_name, repo)` classifies against the `cbm` config section in order: `dev_branch_name`→`DEV`, `main_branch_name`→`MAIN`, `hotfix_branch_prefix/`→`HOTFIX`, `release_branch_prefix/`→`RELEASE`, any other `/`→`USER`, else `FEATURE`.
+- **`CommitType(Flag)`** — level 1 `MERGE`/`OTHER_COMMIT`; level 2 (under `MERGE`) the eight merge types plus `OTHER_MERGE`. `decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE,DEV)`→`FEATURE_LANDING`, `(DEV,MAIN)`→`VERSION_RELEASE`, `(MAIN,DEV)`→`SYNC_BACKPORT`, `(DEV,FEATURE)`→`CATCH_UP`, `(HOTFIX,MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX,DEV)`→`HOTFIX_BACKPORT`, `(RELEASE,MAIN)`→`RELEASE_CUT`, `(RELEASE,DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full tables and Mermaid graphs.
+- **`get_current_commit_type(repo)`** in order: no `MERGE_HEAD`→`OTHER_COMMIT`; multi-line `MERGE_HEAD` (octopus)→`OTHER_MERGE`; SHA matching a remote tracking ref of the target (pull merge)→`OTHER_MERGE`; else classify source/target branches and `decide_commit_type`. Detached HEAD → `get_target_branch` returns `None`, handled without error.
 
-**`CommitType(Flag)`** — two-level bitmask hierarchy:
-
-- level 1: `MERGE` | `OTHER_COMMIT`
-- level 2 (under `MERGE`): `FEATURE_LANDING` | `VERSION_RELEASE` | `SYNC_BACKPORT` | `CATCH_UP` | `HOTFIX_RELEASE` | `HOTFIX_BACKPORT` | `RELEASE_CUT` | `RELEASE_BACKPORT` | `OTHER_MERGE`
-
-`CommitType.decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE, DEV)`→`FEATURE_LANDING`, `(DEV, MAIN)`→`VERSION_RELEASE`, `(MAIN, DEV)`→`SYNC_BACKPORT`, `(DEV, FEATURE)`→`CATCH_UP`, `(HOTFIX, MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX, DEV)`→`HOTFIX_BACKPORT`, `(RELEASE, MAIN)`→`RELEASE_CUT`, `(RELEASE, DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full Branch/Merge Type concept tables and Mermaid graphs.
-
-`get_current_commit_type(repo)` classification logic (in order):
-
-1. no `MERGE_HEAD` → `OTHER_COMMIT`
-2. `MERGE_HEAD` has multiple lines (octopus merge) → `OTHER_MERGE`
-3. `MERGE_HEAD` SHA matches any remote tracking ref of the target branch (pull merge) → `OTHER_MERGE`
-4. otherwise resolve `BranchType.from_name` for source and target branches and call `CommitType.decide_commit_type`
-
-`CHERRY_PICK_HEAD` and `REVERT_HEAD` detection is present in git but the corresponding `CommitType` members are not yet defined.
-
-`_is_pull_merge(repo, sha, target_branch)` returns `False` early if `target_branch` is `None` (detached HEAD) to avoid `TypeError` when accessing `remote.refs[None]`. `get_target_branch(repo)` returns `None` on detached HEAD.
-
-`get_source_branch`/`get_target_branch`/`get_current_commit_type` each cache their result per `repo.git_dir` in module-level dicts, so repeated calls against the same `git.Repo` (e.g. from both `pch` and `ttg` dispatch) hit git only once.
-
-Repo construction/error handling (`git.InvalidGitRepositoryError`/`NoSuchPathError`) is the caller's responsibility — these functions take a `git.Repo`, they don't build one.
-
-Not yet exposed as its own CLI subcommand (`# todo consider expose commit type as part of cli`) — currently only consumed internally by `pch` and `ttg`.
+The three lookup functions cache per `repo.git_dir`, so repeated calls (e.g. from both `pch` and `ttg`) hit git once. Repo construction/error handling is the caller's job. Not yet its own CLI subcommand (`# todo consider expose commit type as part of cli`).
 
 ### `pch`
 
-Prepend Commit Header — rewrites in-progress commit messages to prepend informational headers for merge commits.
+Prepend Commit Header — rewrites in-progress merge commit messages to prepend an informational header.
 
-**Public API**: `prepend_commit_header(repo, state_file)` — returns immediately if `should_run_module(repo, state_file, "pch")` is `False` (config-disabled or one-time-skipped; see `should_run_module` in Module Details), before `logger.enter(...)` or any commit-type detection; otherwise detects current commit type via `cbm.get_current_commit_type(repo)`, then prepends an appropriate header and rewrites `.git/COMMIT_EDITMSG`
+**Public API**: `prepend_commit_header(repo, state_file)` — returns immediately if `should_run_module(repo, state_file, "pch")` is `False`; else detects the commit type via `cbm` and rewrites `.git/COMMIT_EDITMSG`. A `_HEADER_GENERATORS` dict keyed by `CommitType` holds one generator per merge type:
 
-Header generation logic — a `_HEADER_GENERATORS` dict keyed by `CommitType`, one generator per merge type:
-
-| `CommitType` | Header format |
+| `CommitType` | Header |
 |---|---|
-| `FEATURE_LANDING` | `"Feature Landing: <source-branch-name>"` (via `get_source_branch(repo)`) |
-| `VERSION_RELEASE` | `"<bump><release-type>: <version>"`, eg `"Minor Prototype Release: 0.4.0"`, `"Alpha Release: 1.3.0-alpha.1"`, `"Release Candidate: 1.3.0-rc.1"` — see release-type/bump breakdown below; falls back to `"Version Release: <version>"` when the version doesn't parse as a `major.minor.patch` core, or plain `"Version Release"` with no source version at all |
-| `SYNC_BACKPORT` | `"Sync Backport from: <version>"` or plain `"Sync Backport"` |
-| `CATCH_UP` | `"Catch Up: <target-branch-name>"` (via `get_target_branch(repo)`) |
-| `HOTFIX_RELEASE` | `"<bump>Hotfix Release: <version>"` or plain `"Hotfix Release"` |
-| `HOTFIX_BACKPORT` | `"Hotfix Backport from: <version>"` or plain `"Hotfix Backport"` |
-| `RELEASE_CUT` | `"<bump>Release Cut: <version>"` or plain `"Release Cut"` |
-| `RELEASE_BACKPORT` | `"Release Backport from: <version>"` or plain `"Release Backport"` |
+| `FEATURE_LANDING` | `Feature Landing: <source-branch>` |
+| `VERSION_RELEASE` | `<bump><release-type>: <version>` (e.g. `Minor Prototype Release: 0.4.0`, `Alpha Release: 1.3.0-alpha.1`); falls back to `Version Release: <version>` or plain `Version Release` |
+| `SYNC_BACKPORT` | `Sync Backport from: <version>` or `Sync Backport` |
+| `CATCH_UP` | `Catch Up: <target-branch>` |
+| `HOTFIX_RELEASE` | `<bump>Hotfix Release: <version>` or `Hotfix Release` |
+| `HOTFIX_BACKPORT` | `Hotfix Backport from: <version>` or `Hotfix Backport` |
+| `RELEASE_CUT` | `<bump>Release Cut: <version>` or `Release Cut` |
+| `RELEASE_BACKPORT` | `Release Backport from: <version>` or `Release Backport` |
 
-`<bump>` above (`_get_version_bump_prefix`, from `ver_grep.decide_version_update_type`) is `"Major "`/`"Minor "`/`"Patch "`/`""`, comparing source vs target version; empty when no bump is detected or a version doesn't resolve.
+`<bump>` (`Major `/`Minor `/`Patch `/`""`) comes from `ver_grep.decide_version_update_type` comparing source vs target versions. `VERSION_RELEASE`'s `<release-type>` comes from `_get_release_type_word(version, pch_config)`, checked in order: `alpha_tag`/`beta_tag`/`release_candidate_tag` as a substring → Alpha/Beta/Release Candidate (each skipped if its tag is empty); else `enable_pre_alpha` + `0.9.z` → Pre-Alpha; else `enable_vertical_slice` + `0.5.z`–`0.9.z` → Vertical Slice; else any `0.x.z` → Prototype; else `>=1.0.0` → Stable; else `""` (triggers the plain fallback). `<bump>` is forced empty for Alpha/Beta/RC.
 
-`VERSION_RELEASE`'s `<release-type>` comes from `_get_release_type_word(version, pch_config)` (`pch_config = load_hupy_config(repo).pch`), checked in this order: `pch_config.alpha_tag`/`beta_tag`/`release_candidate_tag` as a substring of `version` → `"Alpha Release "`/`"Beta Release "`/`"Release Candidate "` (each check skipped if its tag is empty — RC's word already reads "Release Candidate", so it doesn't also get a trailing "Release"); else `enable_pre_alpha` and a `0.9.z` core → `"Pre-Alpha Release "`; else `enable_vertical_slice` and a `0.5.z`-`0.9.z` core → `"Vertical Slice Release "`; else any other `0.x.z` core → `"Prototype Release "`; else `>=1.0.0` → `"Stable Release "`; else `""` (unparsable, triggers the plain fallback above). `<bump>` is forced to `""` for the Alpha/Beta/Release Candidate release types even when a bump would otherwise be detected.
-
-`OTHER_COMMIT`/`OTHER_MERGE` (not in `_HEADER_GENERATORS`) → file left untouched, no exception.
-
-The rewrite separates comment lines (starting with `#`) from content, placing all comments after the content block to preserve git's template comments. Non-destructive on failure: if the atomic write via `os.replace()` fails, the original file is untouched and the temporary file is cleaned up.
-
-**Known gap**: `examples/pch/hotfix-backport-demo.py`'s docstring/expected output still says "skip (merge type not yet handled by PCH)", left over from before `HOTFIX_BACKPORT` gained a generator above — it's stale relative to the current code and should be updated to expect a header.
-
-README flags a planned scenario not yet covered by `examples/pch/`/`tests/pch/`: keeping a feature branch up to date by merging `dev` back *into* it (as opposed to the Feature Landing direction, feature → `dev`) — this is now `CATCH_UP` above and has a demo/bucket, but no dedicated `tests/pch/` assertions yet.
+`OTHER_COMMIT`/`OTHER_MERGE` → file untouched. The rewrite moves `#` comment lines after the content block and writes atomically via `os.replace()`, leaving the original intact on failure.
 
 ### `config_file`
 
-Config schema, loading, and default-copying for `.hupy.config.jsonc`.
+Schema, loading, and default-copying for `.hupy.config.jsonc`.
 
-**Public API**: `CONFIG_LOGGER_NAME` (`hupy/config_file/__init__.py`, `= "HU.config-file"`) · `HupyConfigFile` (`config_file.py`, renamed from `hupy_config_file.py`/`HupyConfig`/`model.py`) · `CONFIG_FILENAME`, `DEFAULT_CONFIG_ASSET`, `get_config_file_path(repo)` (`config_file_path.py`) · `load_hupy_config(repo)` (`load_config.py`) · `create_default_config_file(repo, force)` (`write_config.py`, renamed from `write_default_config(repo_root, force)`)
+**Public API**: `CONFIG_LOGGER_NAME` (`__init__.py`) · `HupyConfigFile` (`config_file.py`) · `CONFIG_FILENAME`, `DEFAULT_CONFIG_ASSET`, `get_config_file_path(repo)` (`config_file_path.py`) · `load_hupy_config(repo)` (`load_config.py`) · `create_default_config_file(repo, force)` (`write_config.py`).
 
-- **`HupyConfigFile(BaseModel)`** — `hupy_version: str`, `vg: _VerGrep`, `ttg: _Ttg`, `cbm: _Cbm`, `pch: _Pch`, `bdc: _Bdc`, and `hb: _Hb`. The former `default_logger_verbosity: int` field (base verbosity for `-v`/`-q` offsets) has since been removed and replaced by `hupy-state.json`'s `hooks_logger_verbosity` (see `state` in Module Details) — process behavior, not per-repo policy, matching the `# Fixme mv to state file` marker that used to sit on this field. **None of the remaining fields, nor any nested `_VerGrep`/`_Ttg`/`_Cbm`/`_Pch`/`_Bdc`/`_Hb` field, carry a Python-side default any more** — every value must come from the config file on disk. The single source of default values is now the shipped asset `hupy/assets/.hupy.config.jsonc` (see `create_default_config_file` below), not the pydantic schema; `tests/fixtures/config_fixture.py`'s `load_config_fixture(overrides)` fills this gap for tests by deep-merging onto that same shipped asset rather than constructing `HupyConfigFile` from partial kwargs
-- A `model_validator(mode="after")` on `HupyConfigFile` compares `hupy_version` against `importlib.metadata.version("HUPy")` and `logger.warning(...)`s (via `CONFIG_LOGGER_NAME`) on a mismatch, without raising — catches a config file left over from an older `hupy` install after the package itself is upgraded
-- **per-module `is_disabled: bool`** — `_VerGrep`, `_Ttg`, `_Pch`, and `_Bdc` each carry this field (`_Hb` already had it before this round, unconsumed since `hb` has no implementation yet). `ttg`/`pch`/`bdc` now check it via the shared top-level `should_run_module(repo, state_file, module_abbr)` gate (see `should_run_module` in Module Details) rather than each checking `config.<mod>.is_disabled` directly; `_VerGrep` is the one exception — its own `model_validator` still reads `is_disabled` directly, at config-validation time, purely to suppress the unconfigured-field warning (see `_VerGrep(BaseModel)` below), not to gate whether `ver_grep`'s functions run
-- **`_VerGrep(BaseModel)`** — `is_disabled: bool`, `version_file: pathlib.Path`, `version_line_pattern: str`, exposed on `HupyConfigFile` as the **`vg`** field (see `ver_grep` in Module Details for how these are consumed). `is_unconfigured()` returns `True` when `version_file` is empty/`"."` (`pathlib.Path("")` normalizes to `.`) or `version_line_pattern` is blank. A `model_validator(mode="after")` returns immediately when `is_disabled` is `True` (before the unconfigured check, so a disabled `vg` never logs the unconfigured warning either); otherwise calls `is_unconfigured()` and, if `True`, logs a `logger.warning(...)` via `CONFIG_LOGGER_NAME` rather than raising — an unconfigured (but not disabled) `vg` is a valid, non-fatal state (e.g. the shipped default config's empty `version_file`/`version_line_pattern`)
-- **`_Ttg(BaseModel)`** — `is_disabled: bool`, `disable_tt_detect_by_type: bool`, `ignored_path_globs: list[str]`; all three now consumed by `ttg.gate_tt`: `is_disabled` by `perform_triage_tags_gating`, `disable_tt_detect_by_type`/`ignored_path_globs` by `_perform_triage_tags_by_filtering_group` (see `ttg.gate_tt`/`ttg.detect_tt`/`ttg.staged_files` in Module Details)
-- **`_Cbm(BaseModel)`** — `main_branch_name: str`, `dev_branch_name: str`, `hotfix_branch_prefix: str`, `release_branch_prefix: str` (all `Field(min_length=1)`); consumed by `cbm.branch_type.BranchType.from_name` (see `cbm` in Module Details)
-- **`_Pch(BaseModel)`** — `is_disabled: bool`, `enable_vertical_slice: bool`, `enable_pre_alpha: bool`, `alpha_tag: str`, `beta_tag: str`, `release_candidate_tag: str` (the tag fields are plain strs, no `min_length` — empty disables that tag's recognition); consumed by `pch.prepend_commit_header` (`is_disabled` at the top of `prepend_commit_header`, the rest by `_get_release_type_word` — see `pch` in Module Details)
-- **`_Bdc(BaseModel)`** — `is_disabled: bool`, `ban_commit_to_main: bool`, `ban_commit_to_dev: bool`, `ban_commit_to_branches: list[str]`; consumed by `bdc.ban_direct_commit` via the shared `should_run_module` gate (see `bdc`/`should_run_module` in Module Details) — the previous known gap where the disabled check read the wrong config field is resolved by that gate's generic `getattr(config, module_abbr).is_disabled` lookup
-- **`load_hupy_config(repo)`** — takes an already-open `git.Repo`, not a path (resolving the repo is the caller's job, e.g. via `hupy.cli.cli_init.load_git_repo(repo_path)`). Reads `get_config_file_path(repo)` (`config_file_path.py`: `pathlib.Path(repo.working_tree_dir) / CONFIG_FILENAME`), parses it with `json5.loads()` (comments/trailing commas tolerated), then `HupyConfigFile.model_validate()`-validates the resulting dict; on `FileNotFoundError` or `pydantic.ValidationError`, logs and `raise SystemExit(1) from e` rather than propagating the exception. Caches the validated instance in a module-level `_config_cache` so the file is read from disk only once per process — repeated calls (e.g. from `cli_pre_commit`/`cli_prepare_commit_msg`/`cli_verify` dispatch, `cbm.branch_type`, `ver_grep.branch_version`, and `should_run_module`) return the same instance
-- **`create_default_config_file(repo, force)`** — same existence/`force` conflict pattern as `_copy_hook_stubs` (see `cli` below), but now `shutil.copyfile`s the packaged asset `hupy/assets/.hupy.config.jsonc` (path in `config_file_path.DEFAULT_CONFIG_ASSET`) to `get_config_file_path(repo)` verbatim, rather than serializing `HupyConfigFile()` defaults — the asset's own `//` comments are the field documentation (replacing the deleted `docs/hupy_config_doc.md`; `# Fixme rework .jsonc comments, along w/ complete doc rewrite` marks that pass as still pending). Used by `hupy init`, not by `load_hupy_config`
-- **`verify-config-file`** CLI subcommand (`cli_verify.py`, see `cli` below) just calls `load_hupy_config(repo)` and reports success/failure — no separate validation function of its own
-- `tests/config_file/config-shipped_config_file_test.py` asserts the shipped asset both validates against `HupyConfigFile` and has `hupy_version` matching the installed package version — guards against the asset drifting from the schema or going stale across a version bump; `write_default_config`/`create_default_config_file` itself has no dedicated test file (still exercised indirectly through `tests/cli/cli-cli_init_init_cli_test.py`; `# todo unit test for configs` in `hupy/config_file/__init__.py`)
+- **`HupyConfigFile(BaseModel)`** — `hupy_version: str`, plus nested sections `vg`/`ttg`/`cbm`/`pch`/`bdc`/`hb`. **No field carries a Python-side default** — every value comes from the file on disk; the shipped asset `hupy/assets/.hupy.config.jsonc` is the sole source of defaults. A `model_validator` warns (does not raise) when `hupy_version` mismatches `importlib.metadata.version("HUPy")`.
+- **per-module `is_disabled: bool`** on `vg`/`ttg`/`pch`/`bdc`/`hb`; `ttg`/`pch`/`bdc` check it via `should_run_module`, `vg` reads it in its own validator only to suppress the unconfigured warning.
+- **`_VerGrep`** (`vg`) — `is_disabled`, `version_file`, `version_line_pattern`. `is_unconfigured()` is `True` when either is blank; a validator warns (not raises) on an unconfigured-but-enabled `vg`.
+- **`_Ttg`** — `is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`.
+- **`_Cbm`** — `main_branch_name`, `dev_branch_name`, `hotfix_branch_prefix`, `release_branch_prefix` (all `min_length=1`).
+- **`_Pch`** — `is_disabled`, `enable_vertical_slice`, `enable_pre_alpha`, `alpha_tag`, `beta_tag`, `release_candidate_tag` (empty tag disables that recognition).
+- **`_Bdc`** — `is_disabled`, `ban_commit_to_main`, `ban_commit_to_dev`, `ban_commit_to_branches`.
+- **`load_hupy_config(repo)`** — reads `get_config_file_path(repo)`, parses with `json5.loads()`, validates, and caches per process; on `FileNotFoundError`/`ValidationError` logs and `raise SystemExit(1)`.
+- **`create_default_config_file(repo, force)`** — `shutil.copyfile`s the packaged asset verbatim (same existence/`force` pattern as the hook stubs). Used by `hupy init`.
+
+`# Fixme rework .jsonc comments, along w/ complete doc rewrite` marks a pending pass on the asset's field docs (which replaced the deleted `docs/hupy_config_doc.md`).
 
 ### `state`
 
-Local, untracked process state for `hupy-state.json` — the one deliberate exception to the *mostly stateless* design principle above (see Design Principles). Mirrors `config_file`'s shape (schema module + path-resolver module) but resolves inside the repo's `.git` directory rather than its working tree, since this file is never meant to be committed or shared across clones.
+Local, untracked process state for `hupy-state.json` — the one exception to *mostly stateless*. Mirrors `config_file`'s shape but resolves inside `.git`, so it is never committed or shared.
 
-**Public API**: `STATE_LOGGER_NAME` (`hupy/state/__init__.py`) · `HupyStateFile` (`state_file.py`) · `STATE_FILENAME`, `get_state_file_path(repo)` (`state_file_path.py`) · `open_state_file(repo)` (`open_state.py`)
+**Public API**: `STATE_LOGGER_NAME` · `HupyStateFile` · `STATE_FILENAME`, `get_state_file_path(repo)` · `open_state_file(repo)`.
 
-**Known gap**: `STATE_LOGGER_NAME = PROJ_LOGGER_NAME + "state"` is missing the `.` separator every other `*_LOGGER_NAME` constant uses (`CONFIG_LOGGER_NAME = PROJ_LOGGER_NAME + ".config"`, `TTG_LOGGER_NAME = "HU.TTG"`, etc.), so it resolves to `"HUstate"` rather than the expected `"HU.state"` — functionally harmless (still a valid, distinct logger name) but inconsistent with the rest of the codebase's logger-naming convention.
+- **`HupyStateFile(BaseModel)`** — `hooks_logger_verbosity: int = 1`, `skip_once: set[str]`. These carry real defaults (no shipped asset; a missing file is a normal first run).
+- **`skip_once`** — a one-time module-skip set, *checked not consumed* by `should_run_module` (plain membership), so a flag stays set across every check within a round. `skip-once -u` removes entries.
+- **`reset_for_next_commit()`** — empties `skip_once`; called only by `hook post-commit`, spending the set exactly once per round.
+- **`get_state_file_path(repo)`** = `repo.git_dir / STATE_FILENAME` (inside `.git/`, unlike `get_config_file_path`).
+- **`open_state_file(repo)`** — a context manager making read+write thread- and process-safe (in-process `threading.Lock` **and** an `fcntl.flock`'d `.lock` sibling); reads via `model_construct` (no validation, tolerant of hand edits), yields fresh defaults if absent, writes back atomically via `tempfile` + `os.replace` after the `with` block. Callers hold it open for their whole dispatch body, so one open+save cycle covers the invocation.
 
-- **`HupyStateFile(BaseModel)`** — `hooks_logger_verbosity: int = 1`, `skip_once: set[str] = Field(default_factory=set)`. Unlike `HupyConfigFile`'s fields, these two carry real Python-side defaults, since there is no shipped default asset for this file — a missing `hupy-state.json` is a normal first-run state, not an error
-- **`skip_once`** — a one-time module-skip set, checked (not consumed) by `should_run_module` via plain membership (see below), so a flag set by `skip-once` stays set across every check within a round (eg `hb`'s lead/trail brackets, checked across both the `pre-commit` and `prepare-commit-msg` hook stages); `skip-once`'s new `-u`/`--unset` flag removes entries directly (see `cli` in Module Details)
-- **`HupyStateFile.reset_for_next_commit()`** — empties `skip_once` in one call; `hook/cli_post_commit._post_commit_main` calls it as the whole body of the new `post-commit` hook stage, so the whole set is spent exactly once per commit round, after `commit-msg`-adjacent tooling has had a chance to observe the flags (clearing any earlier, eg at the end of `prepare-commit-msg`, was rejected — see Hook Integration Model)
-- **`STATE_FILENAME`** (`= "hupy-state.json"`) · **`get_state_file_path(repo)`** — `pathlib.Path(repo.git_dir) / STATE_FILENAME`, i.e. inside `.git/`, not the working-tree root like `get_config_file_path` — this is what keeps the state file untracked and per-clone rather than shared
-- **`open_state_file(repo)`** — a `@contextlib.contextmanager` that makes reading and writing `hupy-state.json` thread- and process-safe: acquires an in-process `threading.Lock` **and** an `fcntl.flock`'d `.lock` sibling file (so two separate `hupy` processes racing on the same repo, not just two threads in one process, serialize correctly), reads the existing file via `HupyStateFile.model_construct(**json.loads(...))` (no validation — deliberately permissive of a hand-edited or slightly-stale file) if it exists, else yields fresh `HupyStateFile()` defaults; after the caller's `with` block finishes, writes the (possibly-mutated) state back via `tempfile.mkstemp` + `os.fdopen`/`model_dump_json(indent=2)` + `os.replace` (atomic rename, so a crash mid-write never leaves a corrupt file), cleaning up the tempfile if the write itself fails; the file lock is released in a `finally` regardless of outcome. Callers (`hook/cli_pre_commit`, `hook/cli_prepare_commit_msg`, `hook/cli_post_commit`, `cli_skip_once`, `cli_set_verbosity`) hold this context open for their entire dispatch body, so every state read/mutation across a single hook invocation shares one open+save cycle
-- No dedicated CLI subcommand initializes `hupy-state.json` the way `init --create-config-file` does for `.hupy.config.jsonc` — it's created lazily, from schema defaults, by whichever of `hook pre-commit`/`hook prepare-commit-msg`/`hook post-commit`/`skip-once`/`set-verbosity` runs first
+**Known gap**: `STATE_LOGGER_NAME` resolves to `"HUstate"` (missing the `.` separator every other `*_LOGGER_NAME` uses) — harmless but inconsistent.
 
 ### `should_run_module`
 
-Top-level module (`hupy/should_run_module.py`), not nested in any package — same tier as `kamilog.py`. Centralizes the run/skip decision that `bdc`, `ttg`, and `pch` each used to make on their own by checking `config.<mod>.is_disabled` directly.
+Top-level module (`hupy/should_run_module.py`) centralizing the run/skip decision `bdc`/`ttg`/`pch` used to each make on their own.
 
-**Public API**: `should_run_module(repo, state_file, module_abbr)` — checks two independent skip sources and returns `True` only if neither fires:
+**Public API**: `should_run_module(repo, state_file, module_abbr)` — returns `True` only if neither skip source fires: (1) `getattr(config, module_abbr).is_disabled` (checked first, cheap cached read); (2) `module_abbr in state_file.skip_once` (membership, not consumed). Config-disabled ordering means a disabled module never masks a pending `skip_once` flag — it stays queued for a round where the module is enabled. Both branches log via `logger.skip(...)` using a local `_MODULE_ABBR_TO_NAME` display map.
 
-1. `getattr(config, module_abbr).is_disabled` (loaded via `load_hupy_config(repo)`) — checked first, since it's a cheap in-memory read (config is cached) and requires no `state_file` I/O
-2. `module_abbr in state_file.skip_once` — only reached if step 1 didn't already return `False`; a plain membership test, not a consuming check, so the flag stays set for every call within the round (see `state` in Module Details on how/when it's spent); this ordering also means a config-disabled module never masks a pending `skip_once` flag — the flag stays queued for a future round where the module is actually enabled
-
-Both branches log via `logger.skip(...)` (shared `PROJ_LOGGER_NAME` logger, not a dedicated `*_LOGGER_NAME`) using a display name resolved from a local `_MODULE_ABBR_TO_NAME` dict (`"vg"`→`"VerGrep"`, `"ttg"`→`"Triage Tag Gating"`, `"pch"`→`"Prepend Commit Header"`, `"bdc"`→`"Ban Direct Commit"`, `"hb"`→`"Hook Bracket"`) — Title Case, distinct from `cli_skip_once.py`'s own kebab-case full-name mapping used for CLI argument matching (see `cli` in Module Details); the two mappings currently duplicate the same five abbrs rather than sharing one source.
-
-**Known gap**: only `bdc`, `ttg`, `pch`, and `hb` (via `perform_hook_brackets`) actually call `should_run_module`. `vg` is listed in `cli_skip_once.SKIPPABLE_MODULE` and has an entry in this module's own `_MODULE_ABBR_TO_NAME`, so `hupy skip-once vg` succeeds and writes to `skip_once` without error — but nothing ever calls `should_run_module(repo, state_file, "vg")` to consult that flag, so flagging it is currently a silent no-op. `vg` (`ver_grep`) has no standalone CLI entry point of its own to gate — it's only ever invoked internally by `pch`.
+**Known gap**: only `bdc`/`ttg`/`pch`/`hb` call this. `vg` is skippable and mapped, so `hupy skip-once vg` writes the flag without error, but nothing consults it (`vg` has no standalone entry point — it's only invoked internally by `pch`).
 
 ### `ver_grep`
 
-Reads a merge's source/target branch version string by regex-matching a line in a configured version file, resolved at that branch's git tip (not the working tree — mid-merge, the working tree only ever holds the target branch's, possibly conflicted, content); consumed by `pch` to append version numbers to several merge-type commit headers. Formerly a flat module exposing a single `grep_repo_version()`, now a package split by branch role, plus a version-bump classifier.
+Reads a branch's version string by regex over a configured version file at that branch's git tip (not the working tree, which mid-merge holds only the target's possibly-conflicted content); consumed by `pch`.
 
-**Public API** (`hupy/ver_grep/__init__.py`): `grep_source_branch_version()` · `grep_target_branch_version()` · `decide_version_update_type(source_version, target_version)`
+**Public API** (`hupy/ver_grep/__init__.py`): `grep_source_branch_version()` · `grep_target_branch_version()` · `decide_version_update_type(source_version, target_version)`.
 
-- **`grep_source_branch_version()` / `grep_target_branch_version()`** (`branch_version.py`) — both take no arguments; each resolves `repo = git.Repo(os.getcwd(), search_parent_directories=True)`, loads the `vg` config section via `load_hupy_config(repo)`, resolves the relevant branch name via `cbm.get_source_branch(repo)`/`get_target_branch(repo)`, then reads that branch's version file at its tip via `repo.git.show(f"{ref}:{version_file}")` and `re.search(pattern, line)`s each line in order, returning the first capturing-group match. Note: `is_disabled` is checked inside `_VerGrep`'s own `model_validator` (see `config_file` in Module Details), not here, and these functions are not wired through `should_run_module` (see `should_run_module` in Module Details) — they have no run/skip gate of their own beyond `is_unconfigured()`. Flow, in order:
-  1. if `config.vg.is_unconfigured()` → `logger.warning(...)` and return `""` — a non-fatal, expected state, not an error
-  2. if `version_file` doesn't exist at that branch's tip → `logger.error(...)` + `raise SystemExit(1)`
-  3. no line matches the pattern → `logger.error(...)` + `raise SystemExit(1)`
-- **`decide_version_update_type(source_version, target_version)`** (`version_bump.py`) — parses `major.minor.patch` cores via `^(\d+)\.(\d+)\.(\d+)` (ignoring any pre-release/build suffix), returns `"x"` for a major bump, `"y"` for minor, `"z"` for patch, or `""` if unparsable or not actually a bump (equal or lower) — **not yet wired into `pch`**, available for future use (e.g. picking a header word by bump size)
+- The two grep functions take no args; each resolves the repo from `os.getcwd()`, loads the `vg` config, resolves its branch via `cbm`, reads the version file at that ref via `repo.git.show(f"{ref}:{version_file}")`, and returns the first capturing-group match. Flow: unconfigured → `warning` + return `""`; file missing at tip or no matching line → `error` + `SystemExit(1)`. No run/skip gate beyond `is_unconfigured()`.
+- **`decide_version_update_type`** — parses `major.minor.patch` cores (ignoring suffixes), returns `"x"`/`"y"`/`"z"` for major/minor/patch or `""` if unparsable or not a bump. Not yet wired into `pch`; available for future use.
 - Own logger `VER_GREP_LOGGER_NAME` (`"HU.VerGrep"`), propagation disabled.
 
-### `ttg.triage_tag_type`
+### `ttg`
 
-**`TriageTagType(Flag)`** — 12 members across 3 tiers × 4 kinds (`TODO`/`FIXME`/`HACK`/`BUG`), each matched case-sensitively (`TODO` loud, `Todo` steady, `todo` quiet); composite groups `LOUDS`/`STEADYS`/`QUIETS` (by tier) and `TODOS`/`FIXMES`/`HACKS`/`BUGS` (by kind) are pre-defined flag combinations. Purely the enum definition — no line-scanning or filtering methods live here any more; group membership is checked directly via `Flag`'s native `in` operator (eg `tag in TriageTagType.LOUDS`) rather than a dedicated classmethod.
+Triage Tag Gating — blocks commits that introduce annotation markers on protected branches. All modules share `TTG_LOGGER_NAME` (`"HU.TTG"`), defined in `__init__.py` **before** the re-export line to avoid a circular import.
 
-### `ttg.comment_style`
-
-Maps a file's extension to the comment-leader token expected for that language.
-
-**Public API**: `get_comment_prefix_for_file(file_path)` → `str | None` — looks up `pathlib.Path(file_path).suffix.lower()` against a fixed dict (`//` C-style: `.c`/`.cpp`/`.java`/`.js`/`.ts`/`.go`/`.rs`/…; `#` hash-style: `.py`/`.sh`/`.rb`/`.yaml`/…; `<!--` HTML-style: `.html`/`.xml`/`.md`/…); returns `None` for an unmapped or missing extension, in which case `detect_tt` falls back to matching a TT tag anywhere in the line.
-
-### `ttg.detect_tt`
-
-Scans staged git diffs for triage tag annotation markers.
-
-**Public API**: `detect_triage_tags_in_staged_file(file_path, repo_root=None, disable_tt_detect_by_type=False)` → `list[(TriageTagType, str, int)]` — runs `git diff --cached -- file_path`, tracks the current line number from each hunk header, and for every added (`+`) line records the first matching tag, the line text, and its line number via the module-private `_find_first_tag_in_line(line, comment_prefix)`. `comment_prefix` is `None` when `disable_tt_detect_by_type` is `True` (match anywhere in the line); otherwise it's `comment_style.get_comment_prefix_for_file(file_path)`, and when non-`None` only a tag occurring after that comment-leader token counts as a match.
-
-`_TT_PATTERN` (the tag-matching regex) and `_find_first_tag_in_line` live here rather than in `triage_tag_type.py`, since this is their only caller; `ttg.report_tt` imports `_TT_PATTERN` back from here to re-match the tag for highlighting when rendering a gated finding.
-
-### `ttg.staged_files`
-
-Lists a repo's staged files and filters them against configured ignore globs.
-
-**Public API**: `get_staged_file_paths(repo)` — runs `git diff --cached --name-only`, `raise SystemExit(1)` on a `subprocess.CalledProcessError`; `is_path_ignored(file_path, ignored_path_globs)` — `fnmatch.fnmatch`es `file_path` against each glob.
-
-### `ttg.report_tt`
-
-Renders and logs gated triage tag findings, then aborts the commit.
-
-**Public API**: `report_gated_tags(filtered_results)` — takes the `file_path -> [(tag, line, line_no)]` mapping built by `gate_tt`, logs `logger.fail(...)`, renders a per-file comment banner (`kamilog.gen_comment_banner_centered`, `"-"` fill) with each gated line, highlighting the matched tag via `AnsiRenderer.color_triage_tag` (re-matching with `detect_tt._TT_PATTERN`), then `raise SystemExit(1)`.
-
-### `ttg.gate_tt`
-
-Triage tag (TT) gating — blocks commits that introduce annotation markers on protected branches.
-
-**Public API**: `perform_triage_tags_gating(repo, state_file)` — returns immediately if `should_run_module(repo, state_file, "ttg")` is `False` (config-disabled or one-time-skipped; see `should_run_module` in Module Details), before `logger.enter(...)` or any commit-type detection; otherwise detects current commit type via `cbm.get_current_commit_type(repo)` and gates on the tag tiers appropriate to that merge type
-
-Gating policy by commit type:
-
-- `FEATURE_LANDING` → gates `LOUDS`
-- `VERSION_RELEASE` → gates `LOUDS | STEADYS`
-- anything else → skipped, no gating
-
-`_perform_triage_tags_by_filtering_group(repo, filtering_tt_group)` loads `config.ttg` itself, rather than receiving already-loaded values as parameters (`load_hupy_config` is cached, so a second call is cheap), then orchestrates three steps, each its own helper: `staged_files.get_staged_file_paths(repo)` to list staged files; `_collect_gated_tags(...)`, which loops those files, skips ones matching `staged_files.is_path_ignored(...)`, calls `detect_tt.detect_triage_tags_in_staged_file(...)`, and filters the result by `tag in filtering_tt_group`; and, only when gated tags were found, `report_tt.report_gated_tags(filtered_results)`.
-
-`gate_tt`, `detect_tt`, `staged_files`, and `report_tt` share one logger, `TTG_LOGGER_NAME` (`"HU.TTG"`), defined in `hupy/ttg/__init__.py` **before** the `from .gate_tt import ...` line — each module imports `TTG_LOGGER_NAME` back from the package `__init__`, so the definition must precede the import or it fails with a circular-import `ImportError`. `cbm` keeps its own separate logger, `CBM_LOGGER_NAME` (`"HU.CBM"`).
+- **`triage_tag_type`** — `TriageTagType(Flag)`, 12 members (3 tiers × 4 kinds), case-sensitive; composite groups `LOUDS`/`STEADYS`/`QUIETS` and `TODOS`/`FIXMES`/`HACKS`/`BUGS` checked via native `in`.
+- **`comment_style`** — `get_comment_prefix_for_file(file_path)` → comment-leader token (`//`/`#`/`<!--`) or `None` for an unmapped extension (then TT matches anywhere in the line).
+- **`detect_tt`** — `detect_triage_tags_in_staged_file(file_path, repo_root=None, disable_tt_detect_by_type=False)` → `list[(TriageTagType, str, int)]`; runs `git diff --cached`, records the first tag per added line. When type-aware, only a tag after the comment leader counts. `_TT_PATTERN` lives here; `report_tt` imports it back for highlighting.
+- **`staged_files`** — `get_staged_file_paths(repo)` (`SystemExit(1)` on git error); `is_path_ignored(file_path, ignored_path_globs)` via `fnmatch`.
+- **`report_tt`** — `report_gated_tags(filtered_results)` logs `fail`, renders a per-file comment banner highlighting each matched tag, then `SystemExit(1)`.
+- **`gate_tt`** — `perform_triage_tags_gating(repo, state_file)`: returns early if `should_run_module(..., "ttg")` is `False`; else gates by commit type — `FEATURE_LANDING` → `LOUDS`, `VERSION_RELEASE` → `LOUDS | STEADYS`, anything else → skip. Orchestrates list → collect (filter by ignore globs + tier) → report.
 
 ### `bdc`
 
-Ban Direct Commit — blocks a commit made directly on a protected branch (`main` by default; `ban_commit_to_dev` defaults `False`), while still allowing that branch to receive commits through a merge (eg. `feature → dev`, `dev → main`); only the direct-commit path is blocked, merging is unaffected. Implements the previously-planned `branch_protection` utility (see Status line above).
+Ban Direct Commit — blocks a commit made directly on a protected branch while still allowing merges into it.
 
-**Public API**: `ban_direct_commit(repo, state_file)` (`hupy/bdc/ban_direct_commit.py`, re-exported from `hupy/bdc/__init__.py`) — wired into `cli.cli_pre_commit` ahead of `perform_triage_tags_gating`.
-
-Flow, in order:
-
-1. returns immediately if `should_run_module(repo, state_file, "bdc")` is `False` (config-disabled or one-time-skipped; see `should_run_module` in Module Details), before `logger.enter(...)`; otherwise `current_branch = get_target_branch(repo)` (`cbm`)
-3. build `protected_branches` from `.hupy.config.jsonc`'s `bdc`/`cbm` sections: `config.bdc.ban_commit_to_branches` plus `config.cbm.dev_branch_name` (if `config.bdc.ban_commit_to_dev`) and `config.cbm.main_branch_name` (if `config.bdc.ban_commit_to_main`) — `_get_protected_branches(repo)`
-4. `current_branch not in protected_branches` → `logger.skip(...)`, return (covers detached HEAD too, since `get_target_branch` returns `None` there)
-5. `CommitType.MERGE in get_current_commit_type(repo)` → `logger.pass_(...)`, return — any merge commit into a protected branch is allowed, regardless of merge type (`FEATURE_LANDING`, `VERSION_RELEASE`, `OTHER_MERGE`, …)
-6. otherwise: `logger.fail(...)` + `raise SystemExit(1)` — a non-merge commit landing directly on a protected branch
-
-Own logger `BDC_LOGGER_NAME` (`"HU.BDC"`), propagation disabled.
+**Public API**: `ban_direct_commit(repo, state_file)` — wired into `hook pre-commit` ahead of `perform_triage_tags_gating`. Flow: early return if `should_run_module(..., "bdc")` is `False`; build `protected_branches` from `config.bdc.ban_commit_to_branches` plus `dev`/`main` per their `ban_commit_to_*` flags; `current_branch not in protected` → skip (covers detached HEAD); `MERGE in get_current_commit_type(repo)` → pass (any merge allowed); else `fail` + `SystemExit(1)`. Own logger `BDC_LOGGER_NAME` (`"HU.BDC"`).
 
 ### `cli`
 
-Argument parser and entrypoint for the `hupy` command-line tool; a package (`hupy/cli/`, formerly a flat `hupy/cli.py`) split by subcommand.
-
-**Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action) — both in `cli_main.py` · `register_cli_init_parser`/`load_git_repo`/`INIT_LOGGER_NAME`/`REPO_PATH_HELP`/`_copy_hook_stubs`/`_resolve_hooks_dir` (`cli_init.py`) · `register_cli_hook_parser` (`hook/cli_hook.py`) · `register_cli_pre_commit_parser` (`hook/cli_pre_commit.py`) · `register_cli_prepare_commit_msg_parser` (`hook/cli_prepare_commit_msg.py`) · `register_cli_post_commit_parser` (`hook/cli_post_commit.py`) · `register_cli_verify_parser` (`cli_verify.py`) · `register_cli_skip_once_parser`/`SKIPPABLE_MODULE` (`cli_skip_once.py`)
-
-The CLI has five top-level subcommands, mirroring the hook stages and setup; the three git hook stages nest under a `hook` subcommand group:
+Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. Five top-level subcommands, the three git hook stages nested under `hook`:
 
 ```
 hupy init
@@ -272,70 +167,36 @@ hupy skip-once (alias: so)
 hupy set-verbosity (alias: sv)
 ```
 
-- **`cli_main.py`** — main parser and dispatch, unchanged in shape from the old `cli.py`: `prog="hupy"` (a literal string, not `__package__`, since this module now lives *inside* the `hupy.cli` package and `__package__` would otherwise resolve to `"hupy.cli"`), `description=__doc__`; imports each subcommand module's `register_*_parser` and calls them in turn against `cli_subparser`
-- **`init`** — implemented in `cli_init.py` (moved from the former `hupy/setup/cli_init.py`); onboards a repository onto `hupy` by writing the three hook stubs and a default `.hupy.config.jsonc`. Dispatch runs through a step registry, `_INIT_STEPS = [("copy_hooks", _run_copy_hooks), ("create_config_file", _run_create_config_file)]`, so adding a further step/flag pair is a one-line addition to the list plus one `add_argument` call. `_init_main(args)` flow:
-  1. `repo = load_git_repo(args.repo_path)` — see `load_git_repo` below
-  2. resolve `repo_root = pathlib.Path(repo.working_tree_dir)` — deliberately *not* the raw `args.repo_path`, so that running `hupy init` from any subdirectory still anchors `hooks_dir`/`repo_root` at the true repository root
-  3. `selected_steps = [(dest, run_step) for dest, run_step in _INIT_STEPS if getattr(args, dest)]`, falling back to the full `_INIT_STEPS` list when neither `--copy-hooks` nor `--create-config-file` is passed (so plain `hupy init` still does both, unchanged from before this step registry existed)
-  4. each selected step runs in registry order, passing it `args`/`repo`:
-     - `_run_copy_hooks` resolves `hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)` (see Hook Integration Model for the `core.hooksPath`/`.git/hooks` fallback logic) then calls `_copy_hook_stubs(hooks_dir, args.force)` — `hooks_dir.mkdir(parents=True, exist_ok=True)` (no error if it already exists — see Hook Integration Model on why this is per-file, not directory-level), then for each file in `hupy/assets/hook-stubs/`: if the target already exists, without `force` → `logger.error(...)` + `raise SystemExit(1)` (leaving that and any later files untouched); with `force`, `logger.warning(...)` then overwrites; otherwise reads the template text, substitutes `{{PYTHON}}` with `sys.executable` (see Hook Integration Model), writes it, and `shutil.copymode` (preserves the executable bit, since the substitution is a text read/write rather than `shutil.copy2`)
-     - `_run_create_config_file` calls `create_default_config_file(repo, args.force)` (`hupy/config_file/write_config.py`) — same existence/`force` pattern as the hooks step, but for a single file: `get_config_file_path(repo)`, `shutil.copyfile`d from the packaged asset `hupy/assets/.hupy.config.jsonc` rather than generated from `HupyConfigFile` defaults (see `config_file` in Module Details)
-  - `_resolve_hooks_dir`/`_copy_hook_stubs` and their supporting constants (`_HOOK_STUBS_DIR`, `_PYTHON_PLACEHOLDER`) now live directly in `cli_init.py` — formerly in a separate `cli_ich.py` module (deleted along with `cli_icc.py`'s `init-create-config`; see `CHANGELOG.md` for the removal), which required a deferred, in-function import to avoid a circular import. That workaround is gone now that everything lives in one module
-- **`verify-config-file`** — implemented in `cli_verify.py`; loads and validates the repo's `.hupy.config.jsonc` via `load_hupy_config(repo)`, logging success or letting the `SystemExit(1)` from a missing/malformed file propagate. Shares `load_git_repo`, `INIT_LOGGER_NAME`, and `REPO_PATH_HELP` from `cli_init.py`; takes the same `REPO_PATH`/`-v`/`-q` arguments as `init` but no `-f`/`--force` (it doesn't write anything)
-- **`load_git_repo(repo_path)`** — `git.Repo(repo_path, search_parent_directories=True)`; on `InvalidGitRepositoryError`/`NoSuchPathError`, `logger.exception(...)` then `raise SystemExit(1) from e`, **before** any filesystem writes happen. Used by `init`, `verify-config-file` (both via their respective `_*_main`), and `config.load_hupy_config` (via `hupy.cli.cli_init.load_git_repo`), so all resolve the same way from any subdirectory of the repo
-- **`init`/`verify-config-file` CLI arguments**: both share `REPO_PATH` (positional, optional, `type=pathlib.Path`, default=`pathlib.Path(os.getcwd())`, help text from the shared `REPO_PATH_HELP` constant) and `-v`/`-q` verbosity; `-f`/`--force` gates whichever selected step(s) `init` runs (not present on `verify-config-file`, which writes nothing); `--hooks-dir HOOKS_DIR` (`type=pathlib.Path`, default `None` → resolved in the copy-hooks step) and the step-selector flags `--copy-hooks`/`--create-config-file` (both `action="store_true"`, `dest`s matching the `_INIT_STEPS` registry) are `init`-only
-- Known gap: `REPO_PATH`'s default is `pathlib.Path(os.getcwd())` evaluated once, when `register_cli_init_parser`/`register_cli_verify_parser` run at module-import time — not per invocation. In a long-lived process (or across a test session that imports these modules once) this default is frozen to whatever the cwd was at first import, not the cwd at call time, despite the help text's "default=current working directory" implying otherwise. `tests/cli/` works around this by always passing `REPO_PATH` explicitly rather than relying on the default
-- Packaged templates: `hupy/assets/hook-stubs/{pre-commit,prepare-commit-msg,post-commit}` (thin `"{{PYTHON}}" -m hupy hook <stage>` wrappers, no `.bash` extension since git requires the exact hook name in the hooks directory) and `hupy/assets/.hupy.config.jsonc` (the default config content, see `config_file` in Module Details), bundled via `[tool.setuptools.package-data]` in `pyproject.toml` (`hupy = ["assets/hook-stubs/*", "assets/.hupy.config.jsonc"]`)
-- **`hook`** (`hook/cli_hook.py`) — a content-free subcommand group: `register_cli_hook_parser` nests `pre-commit`/`prepare-commit-msg`/`post-commit` under it and defaults `func` to printing help when `hupy hook` is called with no stage
-- **`hook pre-commit`** (`hook/cli_pre_commit.py`) — builds `repo = git.Repo(os.getcwd(), search_parent_directories=True)`, then opens `hupy-state.json` via `with open_state_file(repo) as state_file:` (see `state` in Module Details) for the rest of its body: applies `-v`/`-q` verbosity on top of `state_file.hooks_logger_verbosity`, then calls `ban_direct_commit(repo, state_file)` followed by `perform_triage_tags_gating(repo, state_file)`; logs entry/exit via the logger. No longer loads `.hupy.config.jsonc` itself — each called function loads it internally via `should_run_module`/its own `load_hupy_config(repo)` call
-- **`hook prepare-commit-msg`** (`hook/cli_prepare_commit_msg.py`) — same `git.Repo`-build-then-`open_state_file`-then-verbosity pattern, then calls `prepend_commit_header(repo, state_file)`; logs entry/exit via the logger. No longer clears `skip_once` at the end of its dispatch — that now happens in `hook post-commit` below
-- **`hook post-commit`** (`hook/cli_post_commit.py`) — same `open_state_file`/verbosity pattern, then calls `state_file.reset_for_next_commit()`, spending the whole `skip_once` set for the round (see `state`/`should_run_module` in Module Details); carries no hook bracket or config-driven feature of its own (see Hook Integration Model)
-- **`set-verbosity`** (alias `sv`, `cli_set_verbosity.py`) — sets `state_file.hooks_logger_verbosity` from a single optional positional `VERBOSITY` int argument (default `1`) inside `open_state_file(repo)`, for use as a baseline by the next `hook`/`skip-once` invocation; takes `-v`/`-q` like the other subcommands, applied against the default base `verbosity=0` (it has no prior state-derived baseline of its own to offset)
-- **`skip-once`** (alias `so`, `cli_skip_once.py`) — flags one or more modules to be skipped for the next commit round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; a local `_MODULE_ABBR_TO_NAME`/`_MODULE_NAME_TO_ABBR` pair maps each abbr to a kebab-case full name (`"vg"`↔`"ver-grep"`, `"ttg"`↔`"triage-tag-gating"`, `"pch"`↔`"prepend-commit-header"`, `"bdc"`↔`"ban-direct-commit"`, `"hb"`↔`"hook-bracket"` — distinct from `should_run_module`'s Title Case display names, see `should_run_module` in Module Details), so the `modules` positional argument (`nargs="+"`) accepts either form; `_skip_once_main` normalizes each to its abbr, then calls `state_file.skip_once.update(abbrs)`, or, when `-u`/`--unset` is passed, `state_file.skip_once.difference_update(abbrs)` instead, inside `open_state_file(repo)`. Reuses the shared `PROJ_LOGGER_NAME` logger rather than a dedicated sub-logger. Building `SKIPPABLE_MODULE`/the name maps is currently duplicated between here and `should_run_module.py`'s own `_MODULE_ABBR_TO_NAME` (different casing, same five abbrs) — not yet factored out to a shared location
-- **dispatch functions are module-level**, each in their own module (`hook.cli_pre_commit._pre_commit_main`, `hook.cli_prepare_commit_msg._prepare_commit_msg_main`, `hook.cli_post_commit._post_commit_main`, `cli_verify._verify_main`, `cli_skip_once._skip_once_main`, `cli_set_verbosity._set_verbosity_main`) — they call the public functions from `ttg.gate_tt`, `pch.prepend_commit_header`, `bdc.ban_direct_commit`, and `state.open_state.open_state_file` directly, not via a CLI re-entry
-- **verbosity** — the three `hook` stage dispatch functions call `kamilog.set_logging_level_by_namespace(args, verbosity=state_file.hooks_logger_verbosity)`, so `hupy-state.json`'s `hooks_logger_verbosity` sets the baseline and each `-v`/`-q` shifts it by one step (this used to come from `.hupy.config.jsonc`'s now-removed `default_logger_verbosity` field — see `config_file` in Module Details); `set-verbosity` is how that baseline gets changed persistently. This targets the shared `PROJ_LOGGER_NAME` (`"HU"`) root logger, and child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.CBM"`, `"HU.config-file"`, `"HU.VerGrep"`, `"HU.BDC"`) inherit the resulting level since they set none of their own. `cli_init.py`'s `init`, `cli_verify.py`'s `verify-config-file`, `cli_skip_once.py`'s `skip-once`, and `cli_set_verbosity.py`'s `set-verbosity` call the same function but without a state-derived baseline (`set_logging_level_by_namespace(args, logger=logger)`, base `verbosity=0`), since none of them can assume `hupy-state.json`/`.hupy.config.jsonc` is loadable yet
+- **`cli_main.py`** — main parser (`prog="hupy"`) and dispatch; imports each subcommand module's `register_*_parser`.
+- **`init`** (`cli_init.py`) — onboards a repo via a `_INIT_STEPS` registry (`copy_hooks`, `create_config_file`); plain `hupy init` runs both, `--copy-hooks`/`--create-config-file` select one. Resolves `repo_root` from `repo.working_tree_dir` (so running from a subdir still anchors correctly). `_copy_hook_stubs` mkdir-p's the hooks dir, then per file: conflict without `-f` → `SystemExit(1)`, else substitute `{{PYTHON}}`→`sys.executable`, write, and `shutil.copymode` to preserve the executable bit.
+- **`verify-config-file`** (`cli_verify.py`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`; shares `load_git_repo`/`REPO_PATH_HELP` with `init` but takes no `-f`.
+- **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify-config-file`, and `load_hupy_config`.
+- **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare.
+  - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then `ban_direct_commit` → `perform_triage_tags_gating`.
+  - **`hook prepare-commit-msg`** — same pattern, then `prepend_commit_header`.
+  - **`hook post-commit`** — same pattern, then the `hb` lead bracket, the `hb` trail bracket, then `state_file.reset_for_next_commit()`.
+- **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
+- **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
+- Packaged templates `hupy/assets/hook-stubs/{pre-commit,prepare-commit-msg,post-commit}` and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
 
-Dispatch follows a simple pattern: subcommand dispatch functions receive the parsed `argparse.Namespace`, load config where one exists, handle verbosity, and call the corresponding public utility function.
+**Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `cli_skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
 
 ### `kamilog`
 
-Customized logging module vendored from [github.com/kami-lel/kamilog](https://github.com/kami-lel/kamilog) (v2.3.1).
+Customized logging vendored from [github.com/kami-lel/kamilog](https://github.com/kami-lel/kamilog) (v2.3.1).
 
-Key entities:
+- **`KamiLogger`** — `logging.Logger` subclass adding `.enter()`/`.skip()`/`.succ()`/`.pass_()`/`.done()`/`.fail()` for six extra levels.
+- **`AnsiColor`/`AnsiRenderer`** — TTY-aware 16-color ANSI (no-op off a TTY).
+- **`getLogger(name, *, datefmt=DATEFMT_TIME, relative_to=None)`** — factory returning a `KamiLogger` with stdout (<WARNING) and stderr (≥WARNING) handlers pre-attached.
+- **`add_verbose_arguments(parser)`**; **`set_logging_level_by_namespace(...)`** (verbosity offset atop a base); **`set_logging_level_by_verbosity(...)`**.
+- The `hook` stages call `set_logging_level_by_namespace(args, verbosity=state_file.hooks_logger_verbosity)`, targeting the shared `"HU"` root; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.CBM"`, `"HU.config-file"`, `"HU.VerGrep"`, `"HU.BDC"`) set `propagate = False` and inherit the level.
+- **comment banners** — `gen_comment_banner_centered/left_just/right_just(...)` and `gen_comment_banner_zero(...)`; CLI `python -m hupy.kamilog cb/cb0` reads stdin and prints padded/boxed banners. Known gap: the CLI's `padding` is read as a raw string, so the int `1`–`5` presets don't resolve — pass the literal character.
 
-- **`KamiLogger`** — `logging.Logger` subclass; adds `.enter()`, `.skip()`, `.succ()`, `.pass_()`, `.done()`, `.fail()` methods for six extra levels between standard ones
-- **`AnsiColor` / `AnsiRenderer`** — TTY-aware 16-color ANSI support; coloring is a no-op when the stream is not a TTY
-- **`_LogFormatEngine` / `_LogFormatter`** — builds `LEVEL source: message` lines with optional absolute or relative timestamps
-- **`_DiffOnlyEngine`** — sliding-window diff compression; replaces repeated character runs with `〃\t` markers aligned to 8-column tab stops
-- **`getLogger(name, *, datefmt=DATEFMT_TIME, relative_to=None)`** — public factory; returns a `KamiLogger` with stdout handler (< WARNING) and stderr handler (≥ WARNING) pre-attached; timestamps on by default (`DATEFMT_TIME`, `HH:MM:SS`)
-- **`add_verbose_arguments(parser)`** — adds `-v`/`-q` (`action="count"`) to an argparse parser
-- **`set_logging_level_by_namespace(namespace, *, verbosity=0, logger=None, logger_name=None)`** — adds `namespace.verbose`/`namespace.quiet` counts as an offset atop a base `verbosity`, then sets the resulting level; this is what `cli/cli_main.py` and `cli/cli_init.py` call
-- **`set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None)`** — sets a logger's level directly from a plain verbosity int, no namespace involved
-- loggers created via `getLogger()` in `cbm` (`CBM_LOGGER_NAME`), `pch.prepend_commit_header`, `cli.cli_init`, `config.config_file` (`CONFIG_LOGGER_NAME`), `ver_grep`, and `ttg.gate_tt` each set `logger.propagate = False` — every logger already carries its own stdout/stderr handlers from `getLogger()`, so leaving propagation on would double-print every record through the root logger's handlers too
-- **comment banners (CB0~CB5)** — `gen_comment_banner_centered/left_just/right_just(content, padding, *, line_width=80)` pad a single line to `line_width` with a fill character (or int `1`~`5` preset: `#`/`=`/`*`/`+`/`-`); `gen_comment_banner_zero(lines, *, line_width=80)` boxes multiple lines with top/bottom `#` rulers
-- **CLI** (`python -m hupy.kamilog ...`) — `comment_banner`/`cb <mode c|l|r> <padding>` reads one line from stdin and prints a padded banner; `comment_banner_zero`/`cb0` reads all lines from stdin and prints a boxed banner; both accept `-w/--line-width` and `-e/--stderr`
-  - known gap: the CLI's `padding` argument is read as a raw string, so the documented int `1`~`5` preset shorthand (e.g. `cb c 1`) does not resolve to a fill character — pass the literal character (e.g. `cb c "#"`) instead
-
-Custom log levels (numeric order):
-
-| level | value | meaning |
-|---|---|---|
-| `ENTER` | 15 | entering a hook or test case |
-| `SKIP` | 16 | skipping a hook or test case |
-| `SUCC` | 17 | task or operation succeeded |
-| `PASS` | 21 | hook or test case passed |
-| `DONE` | 25 | task or operation completed |
-| `FAIL` | 45 | hook or test case failed |
+Custom levels (numeric): `ENTER` 15, `SKIP` 16, `SUCC` 17, `PASS` 21, `DONE` 25, `FAIL` 45.
 
 ## Annotation Markers
 
-Branch protection operates on *triage tags* grouped into three tiers:
-
-- **Loud** — all-caps (`TODO`, `FIXME`, `HACK`, `BUG`): blocked on protected branches by default
-- **Steady** — title-case (`Todo`, `Fixme`, …): configurable
-- **Quiet** — lowercase (`todo`, `fixme`, …): configurable
-
-Full taxonomy is defined in the global `CLAUDE.md` under **Triage Tags**.
+Gating operates on *triage tags* in three tiers — **Loud** (all-caps `TODO`/`FIXME`/`HACK`/`BUG`, blocked by default), **Steady** (title-case, configurable), **Quiet** (lowercase, configurable). Full taxonomy is in the global `CLAUDE.md` under **Triage Tags**.
 
 ## Package Layout
 
@@ -344,154 +205,73 @@ hupy/                             # installable package
   __init__.py                     # PROJ_LOGGER_NAME = "HU"
   __main__.py                     # `python -m hupy` entry point
   cli/                            # CLI package: parsing & dispatch
-    __init__.py
-    cli_main.py                   # cli_parser/cli_subparser, subcommand registration
-    cli_init.py                   # `init` subcommand; load_git_repo(repo_path)
-    cli_verify.py                  # `verify-config-file` subcommand
-    cli_skip_once.py               # `skip-once`/`so` subcommand; SKIPPABLE_MODULE
-    cli_set_verbosity.py           # `set-verbosity`/`sv` subcommand
-    hook/                          # `hook` subcommand group: git hook stage runners
-      __init__.py
-      cli_hook.py                  # register_cli_hook_parser; nests the stages below
-      cli_pre_commit.py             # `hook pre-commit` dispatch
-      cli_prepare_commit_msg.py      # `hook prepare-commit-msg` dispatch
-      cli_post_commit.py             # `hook post-commit` dispatch: reset_for_next_commit()
-  cbm/                             # Commit/Branch/Merge package (formerly flat commit_type.py)
-    __init__.py                   # CBM_LOGGER_NAME = "HU.CBM"; re-exports below
-    branch_type.py                 # BranchType enum + from_name(branch_name, repo)
-    commit_type.py                 # CommitType flag + decide_commit_type(source, target)
-    get_current_commit_type.py     # get_current_commit_type/get_source_branch/get_target_branch(repo)
-  bdc/                             # Ban Direct Commit package
-    __init__.py                   # BDC_LOGGER_NAME = "HU.BDC"; re-exports below
-    ban_direct_commit.py           # ban_direct_commit(repo, state_file)
-  config_file/                    # HUPy config schema, load, and write helpers
-    __init__.py                   # CONFIG_LOGGER_NAME
-    config_file.py                 # HupyConfigFile pydantic model (schema, no defaults); _VerGrep (exposed as `vg`); _Cbm; _Pch; _Bdc
-    config_file_path.py            # CONFIG_FILENAME = ".hupy.config.jsonc"; DEFAULT_CONFIG_ASSET; get_config_file_path(repo)
-    load_config.py                # load_hupy_config(repo): git.Repo in, read JSON5 + validate, cache
-    write_config.py               # create_default_config_file(repo, force): copies the packaged asset below
-  state/                          # HUPy state schema and file writing (hupy-state.json)
-    __init__.py                   # STATE_LOGGER_NAME
-    state_file.py                  # HupyStateFile pydantic model: hooks_logger_verbosity, skip_once; reset_for_next_commit()
-    state_file_path.py             # STATE_FILENAME = "hupy-state.json"; get_state_file_path(repo) (inside repo.git_dir)
-    open_state.py                  # open_state_file(repo): atomic, thread-/process-safe load+save context manager
-  should_run_module.py            # should_run_module(repo, state_file, module_abbr): config is_disabled + state skip_once gate
-  assets/                         # packaged non-code data files
-    .hupy.config.jsonc             # default config content, commented; copied verbatim by create_default_config_file
-    hook-stubs/                   # default hook stub scripts
-      pre-commit                  # thin wrapper: `"{{PYTHON}}" -m hupy hook pre-commit`
-      prepare-commit-msg          # thin wrapper: `"{{PYTHON}}" -m hupy hook prepare-commit-msg`
-      post-commit                 # thin wrapper: `"{{PYTHON}}" -m hupy hook post-commit`
-  kamilog.py                      # vendored logging module (v2.3.1)
-  pch/                            # Prepend Commit Header package
-    __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"
-    prepend_commit_header.py      # main function: rewrite COMMIT_EDITMSG; _HEADER_GENERATORS per merge type
-  ttg/                            # Triage Tag Gating package
-    __init__.py                   # TTG_LOGGER_NAME = "HU.TTG"
-    triage_tag_type.py             # TriageTagType flag enum
-    comment_style.py               # file extension -> comment-leader token
-    detect_tt.py                  # scan staged diffs for TT markers, type-aware
-    staged_files.py                # list staged files, filter ignored_path_globs
-    report_tt.py                   # render/log gated TT findings
-    gate_tt.py                     # gate commits by TT tier
-  ver_grep/                       # version-grepping package (formerly flat ver_grep.py)
-    __init__.py                   # VER_GREP_LOGGER_NAME = "HU.VerGrep"; re-exports below
-    branch_version.py              # grep_source_branch_version()/grep_target_branch_version()
-    version_bump.py                # decide_version_update_type(source_version, target_version)
+    cli_main.py                   # cli_parser/cli_subparser, registration
+    cli_init.py                   # `init`; load_git_repo(repo_path)
+    cli_verify.py                 # `verify-config-file`
+    cli_skip_once.py              # `skip-once`/`so`; SKIPPABLE_MODULE
+    cli_set_verbosity.py          # `set-verbosity`/`sv`
+    hook/                         # `hook` group: git hook stage runners
+      cli_hook.py                 # nests the three stages below
+      cli_pre_commit.py           # `hook pre-commit`
+      cli_prepare_commit_msg.py   # `hook prepare-commit-msg`
+      cli_post_commit.py          # `hook post-commit`: hb brackets + reset_for_next_commit()
+  cbm/                            # Commit/Branch/Merge
+    branch_type.py                # BranchType + from_name(branch_name, repo)
+    commit_type.py                # CommitType + decide_commit_type(source, target)
+    get_current_commit_type.py    # get_current_commit_type/get_source_branch/get_target_branch
+  bdc/                            # Ban Direct Commit
+    ban_direct_commit.py          # ban_direct_commit(repo, state_file)
+  config_file/                    # config schema, load, write
+    config_file.py                # HupyConfigFile + nested sections (no defaults)
+    config_file_path.py           # CONFIG_FILENAME; DEFAULT_CONFIG_ASSET; get_config_file_path
+    load_config.py                # load_hupy_config(repo): read JSON5 + validate, cache
+    write_config.py               # create_default_config_file(repo, force)
+  state/                          # hupy-state.json schema and I/O
+    state_file.py                 # HupyStateFile: hooks_logger_verbosity, skip_once; reset_for_next_commit()
+    state_file_path.py            # STATE_FILENAME; get_state_file_path (inside .git)
+    open_state.py                 # open_state_file(repo): atomic, locked load+save
+  should_run_module.py            # should_run_module(repo, state_file, module_abbr)
+  assets/                         # packaged data
+    .hupy.config.jsonc            # default config, commented; copied verbatim
+    hook-stubs/{pre-commit,prepare-commit-msg,post-commit}  # `"{{PYTHON}}" -m hupy hook <stage>`
+  kamilog.py                      # vendored logging (v2.3.1)
+  pch/prepend_commit_header.py    # rewrite COMMIT_EDITMSG; _HEADER_GENERATORS
+  ttg/                            # Triage Tag Gating
+    triage_tag_type.py            # TriageTagType flag enum
+    comment_style.py              # extension -> comment leader
+    detect_tt.py                  # scan staged diffs, type-aware
+    staged_files.py               # list staged, filter ignored globs
+    report_tt.py                  # render/log gated findings
+    gate_tt.py                    # gate by TT tier
+  ver_grep/                       # version grepping
+    branch_version.py             # grep_source_branch_version/grep_target_branch_version
+    version_bump.py               # decide_version_update_type
 docs/
-  ttg_doc.md                      # user doc: TTG tiers & per-merge gating
-  cbm_doc.md                      # user doc: CBM concepts + PCH merge-commit headers + ver_grep API
-                                    # (config field docs now live as comments in hupy/assets/.hupy.config.jsonc)
+  ttg_doc.md                      # TTG tiers & per-merge gating
+  cbm_doc.md                      # CBM concepts + PCH headers + ver_grep API
+                                  # (config field docs live in hupy/assets/.hupy.config.jsonc)
 examples/
-  hooks/                           # bash demos driving the real `hupy <stage>` CLI end-to-end
-    pre-commit-demo.sh             # Feature Landing merge, steady+quiet TT only; expects PASS
-    prepare-commit-msg-demo.sh     # Version Release merge; expects header prepended
-    all-hooks-demo.sh              # runs every demo in this folder in sequence (currently empty)
-                                    # all three prep their repo by shelling out to tests/fixtures/prep_repo.py
-  pch/                            # __init__.py (shared demo helpers) + 16 runnable demo scripts:
-                                    # feature-landing, sync-backport, catch-up, hotfix-release,
-                                    # hotfix-backport, release-cut, release-backport,
-                                    # skip-regular-commit, skip-unrelated-merge, and 7 vr-*
-                                    # (Version Release) scripts, one per release-type/bump-prefix
-                                    # combination: vr-{alpha,beta,rc,fail-parse,minor-prototype,
-                                    # minor-pre-alpha,major-stable}-demo.py
-  ttg/                            # __init__.py (shared demo helpers) + 6 runnable demo scripts:
-                                    # {pass,fail}-{feature-landing,version-release},
-                                    # skip-{irrelevant-merge,non-merge-commit}
-  bdc/                             # __init__.py (shared demo helpers) + 3 runnable demo scripts:
-                                    # fail-direct-commit-to-main, pass-version-release-merge,
-                                    # skip-non-protected-branch
+  hooks/                          # bash demos driving the real `hupy hook <stage>` CLI:
+                                  # pre-commit, prepare-commit-msg, post-commit, all-hooks
+                                  # (each preps its repo via tests/fixtures/prep_repo.py)
+  pch/                            # __init__.py helpers + 16 demo scripts (7 vr-* Version Release)
+  ttg/                            # __init__.py helpers + 6 demo scripts
+  bdc/                            # __init__.py helpers + 3 demo scripts
 tests/
-  conftest.py                     # root-level shared `repo_dir` fixture (tmp_path / "repo")
-  cbm/                             # CBM-specific tests
-    conftest.py                   # sys.path shim onto tests/fixtures/ for config_fixture import
-    cbm-branch_type_test.py        # BranchType.from_name classification & config precedence
-    cbm-commit_type_test.py        # CommitType.decide_commit_type over all branch-type pairs
-    grct/                          # get_current_commit_type/get_source_branch/get_target_branch tests
-      conftest.py
-      cbm-grct-get_current_commit_type_test.py
-      cbm-grct-get_source_branch_test.py
-      cbm-grct-get_target_branch_test.py
-  vg/                              # ver_grep-specific tests
-    conftest.py
-    vg_helpers.py                  # shared merge-repo-with/without-version-file builders
-    vg-decide_version_update_type_test.py
-    vg-grep_source_branch_version_test.py
-    vg-grep_target_branch_version_test.py
-  cli/                            # cli (init subcommand + hook stub install) tests
-    conftest.py                   # `git_repo_dir` fixture (builds on root `repo_dir`)
-    cli_helpers.py                 # `run_init_cli`, `get_configured_hooks_path`,
-                                    # `set_configured_hooks_path` helpers
-    cli-cli_init_copy_hook_stubs_test.py
-    cli-cli_init_resolve_hooks_dir_test.py
-    cli-cli_init_init_cli_test.py
-  config_file/                    # config_file-package-specific tests
-    config-shipped_config_file_test.py  # shipped .hupy.config.jsonc asset validates & version matches
-  state/                           # state-package-specific tests
-    state-reset_for_next_commit_test.py  # HupyStateFile.reset_for_next_commit
-  should_run_module/               # tests for the top-level should_run_module.py (no enclosing package)
-    conftest.py                    # sys.path shim onto tests/fixtures/ for config_fixture import
-    should_run_module_test.py      # is_disabled/skip_once combinations across all 5 skippable modules
-  pch/                            # PCH-specific tests
-    conftest.py                   # sys.path shim onto tests/fixtures/ for prep_repo import
-    pch_helpers.py                # COMMIT_EDITMSG seed/read helpers
-    pch-prepend_commit_header_skip_test.py
-    pch-prepend_commit_header_feature_landing_test.py
-    pch-prepend_commit_header_version_release_test.py
-    pch-prepend_commit_header_error_test.py
-  ttg/                            # TTG-specific tests
-    conftest.py                   # sys.path shim onto tests/fixtures/ for prep_repo import
-    fixtures/                     # per-scenario fixture files used by prep_repo.py (tt_*.py, ...)
-    ttg-comment_style_test.py
-    ttg-detect_tt_test.py
-    ttg-gate_tt_feature_landing_test.py
-    ttg-gate_tt_version_release_test.py
-    ttg-gate_tt_non_merge_test.py
-    ttg-gate_tt_regular_merge_test.py
-    ttg-gate_tt_ignored_globs_test.py
-    ttg-gate_tt_error_test.py     # patches hupy.ttg.staged_files.subprocess.check_output
-  bdc/                             # BDC-specific tests
-    conftest.py                   # sys.path shim onto tests/fixtures/ for config_fixture import
-    bdc-ban_direct_commit_test.py
-  fixtures/                       # fixtures shared by every suite (not package-specific)
-    default_repo.bundle           # minimal git bundle fixture for repo cloning
-    prep_repo.py                  # scenario repo generator (CLI + importable); also writes .hupy.config.jsonc
-    config_fixture.py             # load_config_fixture(overrides): deep-merges overrides onto the shipped hupy/assets/.hupy.config.jsonc
-.hupy.config.jsonc                # this repo dogfoods hupy on itself; includes cbm section
+  conftest.py                     # root `repo_dir` fixture (tmp_path / "repo")
+  fixtures/                       # cross-suite fixtures (not package-specific)
+    default_repo.bundle           # minimal git bundle
+    prep_repo.py                  # scenario repo generator (CLI + importable); writes .hupy.config.jsonc
+    config_fixture.py             # load_config_fixture(overrides): deep-merge onto shipped asset
+  cbm/ vg/ cli/ config_file/ state/ should_run_module/ pch/ ttg/ bdc/  # per-module suites
+.hupy.config.jsonc                # this repo dogfoods hupy on itself
 pyproject.toml
 ```
 
 ### Testing Infrastructure
 
-- **pytest fixtures** (`repo_dir`) — path under `tmp_path` for the scenario repo, populated by `prep_repo.py`; defined once in the root `tests/conftest.py` and shared by every suite (`tests/cli/conftest.py`'s `git_repo_dir` builds on it); fixtures are scoped per-test and auto-cleaned by `tmp_path`
-- **git bundle fixture** (`tests/fixtures/default_repo.bundle`) — minimal single-file repo fixture; `prep_repo.py` clones it and dynamically constructs scenarios (branches, commits, MERGE_HEAD state, staged files from `tests/ttg/fixtures/*.py`)
-- **`tests/fixtures/prep_repo.py`** — the shared repo-scenario builder, used by `tests/pch/`, `tests/ttg/` unit tests and, indirectly, by the `examples/pch/*-demo.py` and `examples/ttg/*-demo.py` demos. Exposes three builders: `prepare_repo(dest_dir, scenario)` for the legacy TTG/PCH `SCENARIOS` that unit tests also exercise (`non_merge_commit`, `irrelevant_merge`, `feature_landing_{pass,fail}`, `version_release_{pass,fail}`), `prepare_repo_with_files(dest_dir, commit_bucket, files)` for an arbitrary file manifest against one of the `COMMIT_BUCKETS` (used by both unit tests and the `examples/ttg/*-demo.py` scripts), and `prepare_demo_repo(dest_dir, demo_bucket)` for the demo-only `DEMO_BUCKETS` — six merge types (`sync_backport`, `catch_up`, `hotfix_release`, `hotfix_backport`, `release_cut`, `release_backport`) with no dedicated `tests/pch/` assertions yet, only `examples/pch/*-demo.py` scripts, plus seven `release_*` buckets (`release_fail_parse`, `release_minor_prototype`, `release_alpha`, `release_beta`, `release_rc`, `release_major_stable`, `release_minor_pre_alpha`) that back the `vr-*-demo.py` scripts specifically, each pinning a Version Release release-type/bump-prefix combination. Also runnable standalone as a CLI with mutually exclusive `--scenario <name>` / `--demo-bucket <name>` flags plus `--dest`, printing the prepared repo path; `examples/hooks/prepare-commit-msg-demo.sh` shells out to this CLI rather than re-implementing repo setup in bash.
-- **`examples/pch/__init__.py`** / **`examples/ttg/__init__.py`** — aux helpers shared across each directory's `*-demo.py` scripts, deduplicated out of what was previously identical `_prepare_demo_repo`/`_run_*` code copy-pasted into every demo file. Each does the `sys.path.insert` onto `tests/fixtures/` and wraps `prep_repo.py`'s builders (`prepare_demo_repo_by_scenario`/`prepare_demo_repo_by_bucket` + `run_pch` for `pch`; `prepare_demo_repo` + `run_ttg` for `ttg`, the latter calling `perform_triage_tags_gating` directly rather than the full `pre-commit` CLI). Demo scripts pull these in with `from __init__ import ...` — this resolves because Python auto-adds a directly-run script's own directory to `sys.path`, so no additional path wiring is needed in the demo files themselves.
-- **test file naming** — nested-package modules follow `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py` (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate_tt_*_test.py`, `hupy/cbm/branch_type.py` → `tests/cbm/cbm-branch_type_test.py`, `hupy/ver_grep/branch_version.py` → `tests/vg/vg-grep_*_branch_version_test.py`, `hupy/state/state_file.py` → `tests/state/state-reset_for_next_commit_test.py`), split further by scenario group; `hupy/cbm/get_current_commit_type.py`'s three public functions each get their own file, nested under `tests/cbm/grct/` (the abbreviation mirrors the module name). A top-level module with no enclosing package (`hupy/should_run_module.py`) still gets its own directory under `tests/`, dropping the `<pkg>-` filename prefix since there's no package to name it after (`tests/should_run_module/should_run_module_test.py`). `ttg.staged_files` and `ttg.report_tt` have no dedicated test file of their own — both are exercised indirectly through the `ttg-gate_tt_*_test.py` suites (`staged_files.get_staged_file_paths`'s git-error path is covered by `ttg-gate_tt_error_test.py`, which patches `hupy.ttg.staged_files.subprocess.check_output`)
-- **`tests/cli/`** (formerly `tests/setup/`, renamed with the `hupy/setup/` → `hupy/cli/` move) — unit tests for `_copy_hook_stubs` and `_resolve_hooks_dir` each get their own file (`cli-cli_init_copy_hook_stubs_test.py`, `cli-cli_init_resolve_hooks_dir_test.py`); both now import their targets from `cli_init.py` directly, since `cli_icc.py`/`cli_ich.py` were deleted and those helpers moved there. The copy-stubs file also covers the `{{PYTHON}}` → `sys.executable` substitution (placeholder replaced, baked path absolute, packaged templates still carry the placeholder — see `cli` in Module Details). `create_default_config_file` (in `hupy/config_file/write_config.py`) has no dedicated test file of its own (see `config_file` in Module Details) and is instead exercised via `cli-cli_init_init_cli_test.py`, which asserts the written file is byte-identical to the packaged asset (`hupy/assets/.hupy.config.jsonc`), rather than matching a serialized `HupyConfigFile()`. `cli-cli_init_init_cli_test.py` covers the CLI wiring end-to-end, since that's the other meaningful public surface (unlike `ttg`/`pch`, which test their public function directly without a separate CLI-wiring suite) — `cli_helpers.run_init_cli(args_list)` (formerly `setup_helpers.py`) builds a standalone `init` subparser via `register_cli_init_parser` and dispatches through it, exercising `--hooks-dir`/`--copy-hooks`/`--create-config-file`/`-f`/`-v`/`-q` the same way the real `hupy` CLI would; a `TestInitStepFlags` class asserts `--copy-hooks` alone skips the config file, `--create-config-file` alone skips the hooks, both flags together (or neither) produce both; `git_repo_dir` (in `conftest.py`) gives a fresh `git.Repo.init`-ed repo rather than reusing `ttg`'s scenario-bucket fixtures, since `init` doesn't care about commit type or branch state. Tests always pass `REPO_PATH` explicitly rather than relying on its default, since that default is frozen at module-import time (see `cli` in Module Details). 29 tests total; no dedicated test file exists yet for `cli_verify.py`'s own subcommand wiring (its behavior is exercised indirectly through `init`'s shared helpers).
-- **`tests/cbm/`** — `cbm-branch_type_test.py` patches `hupy.cbm.branch_type.load_hupy_config` to stub `_Cbm` config, built via `tests/fixtures/config_fixture.py`'s `load_config_fixture(overrides)` rather than constructing `HupyConfigFile` directly (its fields carry no defaults any more — see `config_file` in Module Details), covering default and overridden branch names/prefixes and precedence between DEV/MAIN/HOTFIX/RELEASE/USER/FEATURE, and confirming `repo` is forwarded through to `load_hupy_config`; `cbm-commit_type_test.py` parametrizes `CommitType.decide_commit_type` over all 8 known `(BranchType, BranchType)` pairs plus a set of unmapped pairs (all → `OTHER_MERGE`); `grct/` covers `get_current_commit_type`/`get_source_branch`/`get_target_branch` against real repo fixtures — regular commits, octopus/pull merges, detached HEAD, and per-repo caching behavior — with `grct/conftest.py` noting that repo construction/error handling is the caller's job, not these functions'.
-- **`tests/vg/`** — `vg-decide_version_update_type_test.py` covers major/minor/patch bump classification, no-update and unparsable cases, and pre-release/build-suffix stripping; `vg-grep_source_branch_version_test.py`/`vg-grep_target_branch_version_test.py` (mirror images of each other) patch `hupy.ver_grep.branch_version.load_hupy_config` and use shared `vg_helpers.py` fixtures (`prepare_merge_repo_with_version`, `prepare_merge_repo_without_version_file`) to assert each function reads its own branch's tip specifically (not the other branch's, not the working tree), first-match-wins, not-configured returning `""`, and `SystemExit` on a missing version file or no matching line.
-- **`tests/state/state-reset_for_next_commit_test.py`** — direct unit tests on `HupyStateFile.reset_for_next_commit`, no config/repo fixtures needed: empties a populated `skip_once` set, no-op when already empty.
-- **`tests/should_run_module/should_run_module_test.py`** — patches `hupy.should_run_module.load_hupy_config` (a separate patch target from each consuming module's own `load_hupy_config` reference, since Python binds `from ... import` at each call site) and constructs `HupyStateFile` instances directly, parametrized across all 5 entries in `should_run_module`'s `_MODULE_ABBR_TO_NAME`. Asserts: enabled + unflagged runs; `is_disabled` blocks regardless of `skip_once`; `skip_once` blocks and is left set (membership check, not consumed — only the matching entry, siblings left alone); `is_disabled` is checked first and short-circuits *without* touching a pending `skip_once` flag; a second call within the same round still skips (flag stays set); and a call after `reset_for_next_commit()` runs normally (flag spent at round end).
-- **`tests/bdc/bdc-ban_direct_commit_test.py`** — patches `hupy.bdc.ban_direct_commit.load_hupy_config`/`get_target_branch`/`get_current_commit_type` (rather than building a real repo fixture, since `ban_direct_commit` only needs config values and a branch/commit-type pair) to assert: an unprotected branch, a `dev`/`main` branch with its `ban_commit_to_*` flag disabled, and a detached HEAD (`current_branch=None`) are all skipped; a `dev`/`main` name read from the `cbm` config (not hardcoded `"dev"`/`"main"`) and an entry in `ban_commit_to_branches` are all protected; and, once protected, a non-merge commit raises `SystemExit(1)` while a merge commit of any `CommitType` (`FEATURE_LANDING`, `VERSION_RELEASE`, `OTHER_MERGE`) is allowed. 11 tests total. `examples/bdc/__init__.py` provides two demo-repo builders exercised by the 3 `examples/bdc/*-demo.py` scripts: `prepare_demo_repo_by_bucket` (reuses `prep_repo.py`'s `COMMIT_BUCKETS` for a passing merge scenario) and `prepare_demo_repo_on_branch` (clones the shared bundle, checks out a fresh unprotected branch, commits directly on it — the fail/skip scenarios), plus `run_bdc` which calls `ban_direct_commit` directly and swallows the `SystemExit` it raises on failure.
-- **`tests/pch/pch-prepend_commit_header_version_release_test.py`** — patches `hupy.pch.prepend_commit_header.grep_source_branch_version`/`grep_target_branch_version` (rather than `load_hupy_config`, since the version-string plumbing is already covered by `tests/vg/`) to assert: plain `"Version Release"` with no source version, plain `"Version Release: <version>"` on an unparsable version, and — in `TestVersionReleaseHeaderScenarios` — all 7 release-type/bump-prefix combinations (Alpha, Beta, Release Candidate, Pre-Alpha, Prototype, Stable, each with/without a bump prefix as applicable). 24 tests total in `tests/pch/`, 12 in this file. The 6 newer merge types (`SYNC_BACKPORT`, `CATCH_UP`, `HOTFIX_RELEASE`, `HOTFIX_BACKPORT`, `RELEASE_CUT`, `RELEASE_BACKPORT`) still have no equivalent dedicated test file — only `examples/pch/*-demo.py` scripts exercise them, one per type.
+- **Fixtures** — the root `tests/conftest.py` defines `repo_dir` (under `tmp_path`, auto-cleaned), shared by every suite; `tests/cli/conftest.py`'s `git_repo_dir` builds on it. `tests/fixtures/config_fixture.py`'s `load_config_fixture(overrides)` builds a validated `HupyConfigFile` by deep-merging `overrides` onto the shipped default asset — the standard way to build config now that the schema carries no defaults.
+- **Repo scenarios** — `tests/fixtures/prep_repo.py` clones `default_repo.bundle` and constructs branches/commits/merge state. Three builders: `prepare_repo(dest, scenario)` for the TTG/PCH `SCENARIOS` unit tests exercise; `prepare_repo_with_files(dest, bucket, files)` for an arbitrary manifest against a `COMMIT_BUCKET`; `prepare_demo_repo(dest, bucket)` for demo-only `DEMO_BUCKETS` (six merge types with no `tests/pch/` assertions yet) plus seven `release_*` buckets backing the `vr-*` scripts. Also runnable standalone (`--scenario`/`--demo-bucket` + `--dest`); the bash demos shell out to it. `prep_repo.py` copies the shipped `DEFAULT_CONFIG_ASSET` onto each scenario repo as an untracked `.hupy.config.jsonc`.
+- **Demo helpers** — `examples/{pch,ttg,bdc}/__init__.py` hold the `sys.path` shim onto `tests/fixtures/` plus the repo-prep + library-call wrappers shared by that directory's `*-demo.py` scripts, pulled in with `from __init__ import ...` (a run script's own directory is auto-added to `sys.path`).
+- **Test file naming** — mirrors source: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py`, split further by scenario group (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate_tt_*_test.py`, `hupy/cbm/get_current_commit_type.py`'s three functions → `tests/cbm/grct/cbm-grct-*_test.py`). A top-level module with no package (`hupy/should_run_module.py`) gets its own directory, dropping the `<pkg>-` prefix. Suites needing shared fixtures `sys.path.insert(tests/fixtures)` in their `conftest.py`.
+- **Coverage notes** — `ttg.staged_files`/`ttg.report_tt` are covered indirectly through `ttg-gate_tt_*` (the git-error path via `ttg-gate_tt_error_test.py`, which patches `subprocess.check_output`); `create_default_config_file` is exercised through `cli-cli_init_init_cli_test.py` (asserting the written file is byte-identical to the asset), with no dedicated test file. The six newer merge types have only `examples/pch/*-demo.py` scripts, no dedicated `tests/pch/` assertions yet. Suites patch each module's own `load_hupy_config` reference (bound per call site by `from ... import`).
