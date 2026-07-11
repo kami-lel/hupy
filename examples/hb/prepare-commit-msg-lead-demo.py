@@ -22,7 +22,7 @@ _HB_OVERRIDES = {
             {"cmd": "echo '>> validate branch name'"},
             {
                 "cmd": "echo '>> tag release notes'",
-                "commit_types": ["RELEASE_CUT"],
+                "allow_commit_types": ["RELEASE_CUT"],
             },
         ],
     },

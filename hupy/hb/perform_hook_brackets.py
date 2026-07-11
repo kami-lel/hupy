@@ -5,10 +5,11 @@ run the bracketed commands configured around a HUPy git hook
 """
 
 import subprocess
+import sys
 
 from hupy.cbm import CommitType, get_current_commit_type
 from hupy.config.load_config import load_hupy_config
-from hupy.kamilog import getLogger
+from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.should_run_module import should_run_module
 from . import HB_LOGGER_NAME
 
@@ -18,7 +19,7 @@ logger.propagate = False
 
 
 # auxiliaries  #################################################################
-def _is_hb_cmd_applicable(repo, hb_cmd):
+def _is_hb_cmd_applicable(hb_cmd, commit_type):
     """
     :param repo: git repository object
     :type repo: git.Repo
@@ -27,14 +28,13 @@ def _is_hb_cmd_applicable(repo, hb_cmd):
     :return: if ``hb_cmd`` should run for the current commit type
     :rtype: bool
     """
-    if not hb_cmd.commit_types:
+    if not hb_cmd.allow_commit_types:
         return True  # no filter configured, always applicable
 
-    # commit_types names an allow list, so applicable means it matches
-    allow_filter = CommitType.build_allow_filter(hb_cmd.commit_types)
-    return CommitType.is_commit_type_allowed(
-        allow_filter, get_current_commit_type(repo)
-    )
+    allow_filter = CommitType.build_allow_filter(hb_cmd.allow_commit_types)
+    logger.debug("allow commit types: {}".format(allow_filter))
+
+    return bool(allow_filter & commit_type)
 
 
 def _run_hb_cmd(repo, hb_cmd):
@@ -99,10 +99,17 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
         )
         return
 
+    commit_type = get_current_commit_type(repo)
+    renderer = AnsiRenderer(sys.stdout)
+
     for hb_cmd in cmds_list:
-        if not _is_hb_cmd_applicable(repo, hb_cmd):
+        # TODO or remark
+        heading = renderer.color(hb_cmd.cmd, AnsiStyle.UNDERLINE)
+        logger.enter("HB command: " + heading)
+
+        if not _is_hb_cmd_applicable(hb_cmd, commit_type):
             # HACK write better interactions
-            logger.skip("commit type mismatch, skipped: {}".format(hb_cmd.cmd))
+            logger.skip("commit type filtered, skip: {}".format(heading))
             continue
 
         _run_hb_cmd(repo, hb_cmd)

@@ -89,29 +89,6 @@ class CommitType(Flag):  #######################################################
         # FIXME work w/ illegal names
         return reduce(or_, (cls[name] for name in filters), cls(0))
 
-    @classmethod
-    def is_commit_type_allowed(cls, filters, commit_type):
-        """
-        decide whether ``commit_type`` falls inside the ``filters``
-        allow list instance; since ``MERGE`` unions every merge
-        subtype, a filter of ``MERGE`` admits any merge commit
-
-
-        :param filters: the allow list instance to test against
-        :type filters: CommitType
-        :param commit_type: the commit type to test
-        :type commit_type: CommitType
-        :return: True if commit_type shares a bit with filters
-        :rtype: bool
-        :example:
-        >>> CommitType.is_commit_type_allowed(
-        ...     CommitType.MERGE,
-        ...     CommitType.FEATURE_LANDING,
-        ... )
-        True
-        """
-        return bool(filters & commit_type)
-
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
     (BranchType.FEATURE, BranchType.DEV): CommitType.FEATURE_LANDING,

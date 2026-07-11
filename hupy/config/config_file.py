@@ -161,8 +161,9 @@ class _HbCmd(BaseModel):
     # fields  ------------------------------------------------------------------
 
     cmd: str
-    commit_types: list[str] = Field(default_factory=list)
+    allow_commit_types: list[str] = Field(default_factory=list)
     allow_failure: bool = False
+    remark: str = ""
 
 
 class _HbBracket(BaseModel):

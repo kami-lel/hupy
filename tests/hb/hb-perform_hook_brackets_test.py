@@ -179,7 +179,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             "pre-commit",
             True,
             pre_commit_lead=[
-                {"cmd": "echo lead", "commit_types": ["FEATURE_LANDING"]}
+                {"cmd": "echo lead", "allow_commit_types": ["FEATURE_LANDING"]}
             ],
             commit_type=CommitType.FEATURE_LANDING,
             run_returncodes=[0],
@@ -191,17 +191,17 @@ class TestPerformHookBracketsCommitTypeFilter:
             "pre-commit",
             True,
             pre_commit_lead=[
-                {"cmd": "echo lead", "commit_types": ["FEATURE_LANDING"]}
+                {"cmd": "echo lead", "allow_commit_types": ["FEATURE_LANDING"]}
             ],
             commit_type=CommitType.REGULAR_COMMIT,
         )
         assert calls == []
 
-    def test_empty_commit_types_list_has_no_restriction(self):
+    def test_empty_allow_commit_types_list_has_no_restriction(self):
         _, calls, _ = _run(
             "pre-commit",
             True,
-            pre_commit_lead=[{"cmd": "echo lead", "commit_types": []}],
+            pre_commit_lead=[{"cmd": "echo lead", "allow_commit_types": []}],
             commit_type=CommitType.OTHER_COMMIT,
             run_returncodes=[0],
         )
@@ -214,7 +214,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             pre_commit_lead=[
                 {
                     "cmd": "echo lead",
-                    "commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
+                    "allow_commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
                 }
             ],
             commit_type=CommitType.VERSION_RELEASE,
@@ -226,7 +226,7 @@ class TestPerformHookBracketsCommitTypeFilter:
         _, calls, _ = _run(
             "pre-commit",
             True,
-            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            pre_commit_lead=[{"cmd": "echo lead", "allow_commit_types": ["MERGE"]}],
             commit_type=CommitType.HOTFIX_BACKPORT,
             run_returncodes=[0],
         )
@@ -236,7 +236,7 @@ class TestPerformHookBracketsCommitTypeFilter:
         _, calls, _ = _run(
             "pre-commit",
             True,
-            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            pre_commit_lead=[{"cmd": "echo lead", "allow_commit_types": ["MERGE"]}],
             commit_type=CommitType.REGULAR_COMMIT,
         )
         assert calls == []
@@ -247,10 +247,10 @@ class TestPerformHookBracketsCommitTypeFilter:
             True,
             pre_commit_lead=[
                 {"cmd": "echo always"},
-                {"cmd": "echo release-only", "commit_types": ["RELEASE_CUT"]},
+                {"cmd": "echo release-only", "allow_commit_types": ["RELEASE_CUT"]},
                 {
                     "cmd": "echo feature-only",
-                    "commit_types": ["FEATURE_LANDING"],
+                    "allow_commit_types": ["FEATURE_LANDING"],
                 },
             ],
             commit_type=CommitType.FEATURE_LANDING,
@@ -267,7 +267,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             "pre-commit",
             True,
             pre_commit_lead=[
-                {"cmd": "echo lead", "commit_types": ["FEATURE_LANDING"]}
+                {"cmd": "echo lead", "allow_commit_types": ["FEATURE_LANDING"]}
             ],
             commit_type=CommitType.VERSION_RELEASE,
         )
@@ -280,7 +280,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             pre_commit_lead=[
                 {
                     "cmd": "echo lead",
-                    "commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
+                    "allow_commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
                 }
             ],
             commit_type=CommitType.SYNC_BACKPORT,
@@ -291,7 +291,7 @@ class TestPerformHookBracketsCommitTypeFilter:
         _, calls, _ = _run(
             "pre-commit",
             True,
-            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            pre_commit_lead=[{"cmd": "echo lead", "allow_commit_types": ["MERGE"]}],
             commit_type=CommitType.OTHER_MERGE,
             run_returncodes=[0],
         )
@@ -301,7 +301,7 @@ class TestPerformHookBracketsCommitTypeFilter:
         _, calls, _ = _run(
             "pre-commit",
             True,
-            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            pre_commit_lead=[{"cmd": "echo lead", "allow_commit_types": ["MERGE"]}],
             commit_type=CommitType.OTHER_COMMIT,
         )
         assert calls == []
@@ -311,7 +311,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             "pre-commit",
             True,
             pre_commit_lead=[
-                {"cmd": "echo lead", "commit_types": ["REGULAR_COMMIT"]}
+                {"cmd": "echo lead", "allow_commit_types": ["REGULAR_COMMIT"]}
             ],
             commit_type=CommitType.REGULAR_COMMIT,
             run_returncodes=[0],
@@ -323,7 +323,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             "pre-commit",
             False,
             pre_commit_trail=[
-                {"cmd": "echo trail", "commit_types": ["FEATURE_LANDING"]}
+                {"cmd": "echo trail", "allow_commit_types": ["FEATURE_LANDING"]}
             ],
             commit_type=CommitType.FEATURE_LANDING,
             run_returncodes=[0],
