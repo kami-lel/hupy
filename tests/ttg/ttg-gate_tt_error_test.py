@@ -42,8 +42,9 @@ class TestPerformTriageTagsGatingErrors:
         )
         repo = git.Repo(str(repo_dir))
         with mock.patch.object(
-            repo.git,
+            git.Git,
             "diff",
+            create=True,
             side_effect=git.GitCommandError("git diff", 1),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -61,8 +62,9 @@ class TestPerformTriageTagsGatingErrors:
         )
         repo = git.Repo(str(repo_dir))
         with mock.patch.object(
-            repo.git,
+            git.Git,
             "diff",
+            create=True,
             side_effect=git.GitCommandError(
                 "git diff", 128, "fatal: Permission denied"
             ),
@@ -82,8 +84,9 @@ class TestPerformTriageTagsGatingErrors:
         )
         repo = git.Repo(str(repo_dir))
         with mock.patch.object(
-            repo.git,
+            git.Git,
             "diff",
+            create=True,
             side_effect=git.GitCommandError(
                 "git diff", 1, "fatal: unknown error"
             ),

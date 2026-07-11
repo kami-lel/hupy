@@ -74,8 +74,9 @@ class TestDetectTriageTagsInStagedFile:
     def test_git_error_raises_system_exit(self, repo_dir):
         repo = git.Repo(str(repo_dir))
         with mock.patch.object(
-            repo.git,
+            git.Git,
             "diff",
+            create=True,
             side_effect=git.GitCommandError("git diff", 1),
         ):
             with pytest.raises(SystemExit) as exc_info:
@@ -86,8 +87,9 @@ class TestDetectTriageTagsInStagedFile:
     def test_git_error_on_missing_file(self, repo_dir):
         repo = git.Repo(str(repo_dir))
         with mock.patch.object(
-            repo.git,
+            git.Git,
             "diff",
+            create=True,
             side_effect=git.GitCommandError(
                 "git diff", 128, "fatal: path does not exist"
             ),
