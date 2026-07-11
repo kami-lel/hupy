@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+"{{PYTHON}}" -m hupy hook post-commit

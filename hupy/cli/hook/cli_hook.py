@@ -1,5 +1,6 @@
 """``hook`` subcommand group for HUPy: git hook stage runners"""
 
+from hupy.cli.hook.cli_post_commit import register_cli_post_commit_parser
 from hupy.cli.hook.cli_pre_commit import register_cli_pre_commit_parser
 from hupy.cli.hook.cli_prepare_commit_msg import (
     register_cli_prepare_commit_msg_parser,
@@ -15,8 +16,8 @@ _HOOK_DOC = "run git hook stage commands"
 def register_cli_hook_parser(cli_subparser):
     """
     register the ``hook`` subcommand parser, nesting the individual
-    git hook stage runners (``pre-commit``, ``prepare-commit-msg``)
-    beneath it.
+    git hook stage runners (``pre-commit``, ``prepare-commit-msg``,
+    ``post-commit``) beneath it.
     """
     hook_parser = cli_subparser.add_parser(
         "hook",
@@ -28,3 +29,4 @@ def register_cli_hook_parser(cli_subparser):
 
     register_cli_pre_commit_parser(hook_subparser)
     register_cli_prepare_commit_msg_parser(hook_subparser)
+    register_cli_post_commit_parser(hook_subparser)
