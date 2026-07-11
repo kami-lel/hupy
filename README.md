@@ -5,19 +5,9 @@
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
-
-<!-- Fixme rewrite readme -->
+<!-- FIXME manual trimming -->
 
 <!-- todo reimplement ensure file modified -->
-
-
-
-
-
-
-
-
-
 
 
 
@@ -27,7 +17,8 @@
 - 🚫 **Ban Direct Commit** — block commits made directly on a protected branch (`main` by default), while still allowing that branch to receive commits through a merge
 - 🛡️ **Triage Tag Gating** — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
 - ✏️ **Prepend Commit Header** — auto-generate descriptive headers for merge commit types, stamping the project version on releases
-- 🔍 **Commit/Branch/Merge detection** — classify branch types and in-progress commit types from git state, shared across the hooks above
+- 🔗 **Hook Bracket** — run your own lead/trail shell commands around each hook stage, no custom hook required
+- 🔍 **Commit/Branch/Merge detection** — classify branch types and in-progress commit types from git state, shared across the features above
 
 
 
@@ -70,9 +61,13 @@ hupy init
 ```
 
 - copies the default hook stub scripts into the repo's hooks directory
-- writes a default `.hupy.config.jsonc` at the repository root
+- writes a default `.hupy.config.jsonc` at the repository root — commit it, so every clone shares the same behavior; each section is commented in place with what it controls
 
-See [HUPy File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy* behavior.
+Verify the config file at any time:
+
+```bash
+hupy verify-config-file
+```
 
 
 
@@ -94,7 +89,13 @@ See [Hook Flow Documentation](docs/flow_doc.md) for the end-to-end diagram of ho
 
 See the per-feature docs for detailed usage:
 
+- [Commit, Branch & Merge (CBM)](docs/cbm_doc.md) — shared branch and merge type classification
 - [Ban Direct Commit (BDC)](docs/bdc_doc.md)
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
 - [Prepend Commit Header (PCH)](docs/pch_doc.md)
-- [Commit, Branch & Merge (CBM)](docs/cbm_doc.md)
+- [Hook Bracket (HB)](docs/hb_doc.md)
+
+#### Other Commands
+
+- `hupy skip-once` — skip a module (`vg`, `ttg`, `pch`, `bdc`, `hb`) for exactly one upcoming hook run
+- `hupy set-verbosity` — set the base logging verbosity used during hook runs

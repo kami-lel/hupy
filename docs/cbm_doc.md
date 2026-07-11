@@ -1,5 +1,7 @@
 # Commit, Branch & Merge Documentation
 
+CBM classifies branch types and in-progress merge types from git state; this classification is shared by [Ban Direct Commit](bdc_doc.md), [Triage Tag Gating](ttg_doc.md), [Prepend Commit Header](pch_doc.md), and [Hook Bracket](hb_doc.md). See the [Hook Flow](flow_doc.md) for how these features run together.
+
 ### Branch Type
 
 | Branch Type | Default Name | Config File Field | Remarks |
