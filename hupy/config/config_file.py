@@ -9,7 +9,7 @@ import pathlib
 import sys
 from importlib.metadata import version
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from hupy.config import CONFIG_LOGGER_NAME
 from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
@@ -31,6 +31,10 @@ class _VerGrep(BaseModel):  # ==================================================
     """
     configuration for version grep hook
     """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
 
     is_disabled: bool
 
@@ -89,6 +93,10 @@ class _Cbm(BaseModel):  # ======================================================
     configuration for the CBM module (commit, branch, and merge types)
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     main_branch_name: str = Field(min_length=1)
     dev_branch_name: str = Field(min_length=1)
     hotfix_branch_prefix: str = Field(min_length=1)
@@ -99,6 +107,10 @@ class _Bdc(BaseModel):  # ======================================================
     """
     configuration for the BDC module (ban direct commit)
     """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
 
     is_disabled: bool
     ban_commit_to_main: bool
@@ -111,6 +123,10 @@ class _Ttg(BaseModel):  # ======================================================
     configuration for Triage Tag Gating
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     is_disabled: bool
     disable_tt_detect_by_type: bool
     ignored_path_globs: list[str]
@@ -120,6 +136,10 @@ class _Pch(BaseModel):  # ======================================================
     """
     configuration for the PCH module (pre-commit hook)
     """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
 
     is_disabled: bool
 
@@ -136,6 +156,10 @@ class _HbCmd(BaseModel):
     a single bracketed command run alongside a HUPy git hook
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     cmd: str
     commit_types: list[str] = Field(default_factory=list)
     allow_failure: bool = False
@@ -146,6 +170,10 @@ class _HbBracket(BaseModel):
     lead/trail commands bracketing one HUPy git hook
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     lead: list[_HbCmd] = Field(default_factory=list)
     trail: list[_HbCmd] = Field(default_factory=list)
 
@@ -155,9 +183,15 @@ class _Hb(BaseModel):
     configuration for the HB module (hook bracket)
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     is_disabled: bool
     pre_commit: _HbBracket
     prepare_commit_msg: _HbBracket
+
+    # Public Method  -----------------------------------------------------------
 
     def get_bracket(self, hook_name):
         """
@@ -177,6 +211,10 @@ class HupyConfigFile(BaseModel):  ##############################################
     schema for the HUPy config file (``.hupy.config.json``)
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
     hupy_version: str
     vg: _VerGrep
     cbm: _Cbm
@@ -184,6 +222,8 @@ class HupyConfigFile(BaseModel):  ##############################################
     ttg: _Ttg
     pch: _Pch
     hb: _Hb
+
+    # validators  --------------------------------------------------------------
 
     @model_validator(mode="after")
     def _validate_hupy_version(self):
