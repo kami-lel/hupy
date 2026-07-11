@@ -72,7 +72,7 @@ hupy init
 Verify the config file at any time:
 
 ```bash
-hupy verify-config-file
+hupy verify
 ```
 
 

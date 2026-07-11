@@ -1,5 +1,3 @@
-"""verify the HUPy config file"""
-
 import argparse
 import os
 import pathlib
@@ -31,8 +29,9 @@ logger.propagate = False
 
 # constants  ###################################################################
 
+_VERIFY_DOC = "verify the HUPy config file"
 
-_DESCRIPTION = __doc__ + """
+_DESCRIPTION = _VERIFY_DOC + """
 
 validate the HUPy config file (.hupy.config.jsonc) at repository root
 """
@@ -110,7 +109,7 @@ def register_cli_verify_parser(cli_subparser):
     verify_parser = cli_subparser.add_parser(
         "verify",
         aliases=["v"],
-        help=__doc__,
+        help=_VERIFY_DOC,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
