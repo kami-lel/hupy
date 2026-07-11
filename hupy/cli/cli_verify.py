@@ -44,8 +44,7 @@ def _verify_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_namespace(args, logger=logger)
-    # BUG logger setting is incorrect
+    set_logging_level_by_namespace(args)
 
     repo_path = args.repo_path
 
@@ -58,10 +57,10 @@ def _verify_main(args):
     with open_state_file(repo) as state_file:
         load_hupy_config(repo)
         logger.pass_("config file verified")
-        grep_version(repo, state_file, "HEAD")
-        logger.pass_("VerGrep verified")
+        version = grep_version(repo, state_file, "HEAD")
+        logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        # TODO add assert stubs existed
+        # TODO add assert stubs existed w/ counting
         logger.pass_("hook stubs exist")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
