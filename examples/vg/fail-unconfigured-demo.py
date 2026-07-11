@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-pass-basic-demo.py
+fail-unconfigured-demo.py
 
-demo: version file committed with a line matching the configured
-pattern, whose one capture group holds the version string
-expected result: PASS, "1.2.3" grepped
+demo: `version_file` (and `version_line_pattern`) left empty in the
+HUPy config, VerGrep's default, unconfigured state
+expected result: fail, empty string returned
 """
 
 import pathlib
@@ -15,12 +15,16 @@ from hupy.kamilog import (
 )
 from __init__ import prepare_demo_repo, run_vg
 
+_VERSION_CONTENT = "1.2.3\n"
+
 
 # helpers  #####################################################################
 
 
 def _prepare_demo_repo():
-    return prepare_demo_repo(version_content="1.2.3\n")
+    return prepare_demo_repo(
+        version_file="", version_line_pattern="", version_content=None
+    )
 
 
 # demo  ########################################################################
@@ -28,8 +32,8 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tversion file committed, line matches configured pattern")
-    print('expected:\tPASS, "1.2.3" grepped')
+    print("scenario:\tVerGrep left unconfigured (empty version_file/pattern)")
+    print("expected:\tFAIL, empty string returned")
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

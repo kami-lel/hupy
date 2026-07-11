@@ -76,6 +76,4 @@ def prepare_demo_repo(
 def run_vg(repo_dir, ref="HEAD", verbosity=1):
     set_logging_level_by_verbosity(verbosity, logger_name=VER_GREP_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
-    version = grep_version(repo, _STATE_FILE, ref)
-    print("grepped version:\t{!r}".format(version))
-    return version
+    return grep_version(repo, _STATE_FILE, ref)
