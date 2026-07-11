@@ -19,9 +19,21 @@ logger.propagate = False
 
 
 # Public API  ##################################################################
-
-
 def grep_version(repo, state_file, ref):
+    """
+    grep the version string from a version file at a given git ref
+
+
+    :param repo: git repository to read the version file from
+    :type repo: git.Repo
+    :param state_file:
+    :type state_file: HupyStateFile
+    :param ref: git ref to read the version file at
+    :type ref: str
+    :return: the grepped version; or
+            "" if unconfigured, missing, or unmatched
+    :rtype: str
+    """
 
     # FIXME general better log content
     if should_run_module(repo, state_file, "vg"):
