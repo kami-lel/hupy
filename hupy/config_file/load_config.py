@@ -56,13 +56,12 @@ def load_hupy_config(repo):
         _config_cache = HupyConfigFile.model_validate(
             json5.loads(config_path.read_text())
         )
+        logger.debug("config file loaded: {}".format(config_path))
         return _config_cache
 
     except FileNotFoundError as e:
-        logger.error("HUPy config file not found: {}".format(config_path))
+        logger.error("config file not found: {}".format(config_path))
         raise SystemExit(1) from e
     except ValidationError as e:
-        logger.error(
-            "HUPy config file is malformed: {}\n{}".format(config_path, e)
-        )
+        logger.error("config file is malformed: {}\n{}".format(config_path, e))
         raise SystemExit(1) from e

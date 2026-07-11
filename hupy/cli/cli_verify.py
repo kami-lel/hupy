@@ -4,7 +4,8 @@ import argparse
 import os
 import pathlib
 
-from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
+from hupy import PROJ_LOGGER_NAME
+from hupy.cli.cli_init import REPO_PATH_HELP, load_git_repo
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
@@ -21,7 +22,7 @@ from hupy.kamilog import (
 # logger  ######################################################################
 
 
-logger = getLogger(INIT_LOGGER_NAME)
+logger = getLogger(PROJ_LOGGER_NAME + ".verify")
 logger.propagate = False
 
 
@@ -46,6 +47,7 @@ def _verify_main(args):
     :type args: argparse.Namespace
     """
     set_logging_level_by_namespace(args, logger=logger)
+    # BUG logger setting is incorrect
 
     repo_path = args.repo_path
 
@@ -57,7 +59,9 @@ def _verify_main(args):
 
     with open_state_file(repo) as state_file:
         load_hupy_config(repo)
+        logger.succ("config file verified")
         grep_version(repo, state_file, "HEAD")
+        logger.succ("VerGrep verified")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
