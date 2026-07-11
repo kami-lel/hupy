@@ -1,9 +1,5 @@
 # Commit, Branch & Merge Documentation
 
-<!-- FIXME rewrite cbm doc -->
-
-## Concepts
-
 ### Branch Type
 
 | Branch Type | Default Name | Config File Field | Remarks |
