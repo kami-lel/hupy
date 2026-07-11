@@ -53,7 +53,7 @@ def should_run_module(repo, state_file, module_abbr):
         logger.skip("{} disabled in config file".format(module_name))
         return False
 
-    if state_file.consume_skip_once(module_abbr):
+    if module_abbr in state_file.skip_once:
         logger.skip("{} skipped once".format(module_name))
         return False
 
