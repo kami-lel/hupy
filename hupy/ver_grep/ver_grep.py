@@ -2,6 +2,8 @@
 ver_grep.py
 """
 
+import re
+
 import git
 
 from hupy.should_run_module import should_run_module
@@ -16,24 +18,12 @@ logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
 
-# auxiliaries  ##################################################################
-def _read_version_file_at_ref(repo, ref, version_file):
-    """
-    :return: the file's content at ref; or ``None`` when absent
-    """
-    try:
-        return repo.git.show("{}:{}".format(ref, version_file.as_posix()))
-    except git.GitCommandError:
-        logger.warning(
-            "version file not found on {}: {}".format(ref, version_file)
-        )
-        return None
-
-
 # Public API  ##################################################################
 
 
 def grep_version(repo, state_file, ref):
+
+    # FIXME general better log content
     if should_run_module(repo, state_file, "vg"):
         return ""
 
@@ -46,7 +36,38 @@ def grep_version(repo, state_file, ref):
     logger.debug("version_line_pattern:\t{}".format(pattern))
 
     if str(version_file) in ("", ".") or not pattern.strip():
-        logger.warning("unconfigured")  # TODO better word
+        logger.warning("unconfigured")
         return ""
 
-    pass  # TODO TODO
+    # load version file  -------------------------------------------------------
+    try:
+        content = repo.git.show("{}:{}".format(ref, version_file.as_posix()))
+    except git.GitCommandError:
+        logger.warning(
+            "version file not found on {}: {}".format(ref, version_file)
+        )
+        return ""
+
+    # grep version from content  -----------------------------------------------
+    for line in content.splitlines():
+        match = re.search(pattern, line)
+        if match:
+            logger.debug("matched line on {}:\n{}".format(ref, line))
+            if not match.groups():  # pattern lacks a capture group
+                logger.warning(
+                    "pattern has no capture group on {}: {}".format(
+                        ref, pattern
+                    )
+                )
+                return ""
+            version = match.group(1)
+            logger.debug("version grepped on {}:\t{}".format(ref, version))
+            return version
+
+    logger.warning(
+        "no line matches pattern in {} on {}: {}".format(
+            version_file, ref, pattern
+        )
+    )
+
+    return ""

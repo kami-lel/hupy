@@ -8,8 +8,6 @@ the working tree mid-merge holds the (possibly conflicted) target
 branch content
 """
 
-# FIXME refactor use new pattern
-
 import os
 import pathlib
 import re
@@ -30,61 +28,9 @@ logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
 
-# auxiliaries  #################################################################
-
-
-def _grep_version_from_content(
-    content, version_file, pattern, branch_label="current branch"
-):
-    """
-    regex-match ``pattern`` line by line against ``content``, returning
-    the first capturing group of the first matching line
-
-    :param branch_label: human-readable source of ``content``, used to
-            disambiguate log output, eg ``"source branch"`` or
-            ``"target branch"``
-    :type branch_label: str
-    """
-    for line in content.splitlines():
-        match = re.search(pattern, line)
-        if match:
-            logger.debug("matched line on {}:\n{}".format(branch_label, line))
-            if not match.groups():  # pattern lacks a capture group
-                logger.warning(
-                    "pattern has no capture group on {}: {}".format(
-                        branch_label, pattern
-                    )
-                )
-                return ""
-            version = match.group(1)
-            logger.debug(
-                "version grepped on {}:\t{}".format(branch_label, version)
-            )
-            return version
-
-    logger.warning(
-        "no line matches pattern in {} on {}: {}".format(
-            version_file, branch_label, pattern
-        )
-    )
-    return ""
-
-
-def _read_version_file_at_ref(repo, ref, version_file):
-    """
-    read version_file's content as it exists at ref, or ``None`` when
-    the file is absent on that ref
-    """
-    try:
-        return repo.git.show("{}:{}".format(ref, version_file.as_posix()))
-    except git.GitCommandError:
-        logger.warning(
-            "version file not found on {}: {}".format(ref, version_file)
-        )
-        return None
-
-
 # Public API  ##################################################################
+# FIXME refactor use new pattern
+# TODO both take repo
 def grep_source_branch_version():
     """
     extract version string from the source (incoming) branch's version
@@ -143,35 +89,3 @@ def grep_target_branch_version():
     return _grep_version_from_content(
         content, version_file, pattern, branch_label="target branch"
     )
-
-
-def verify_version_grep(repo):
-    """
-    run the full grep process against the working tree, to surface
-    misconfigured ``vg`` fields early; warns, never exits.
-
-
-    :param repo: git repository object
-    :type repo: git.Repo
-    """
-    config = load_hupy_config(repo)
-    if config.vg.is_disabled:
-        logger.skip("VerGrep disabled")
-        return
-
-    settings = _load_ver_grep_settings(repo)
-    if settings is None:  # unconfigured; already warned at config load
-        return
-    version_file, pattern = settings
-
-    full_path = pathlib.Path(repo.working_tree_dir) / version_file
-    if not full_path.exists():
-        logger.warning("version file not found: {}".format(version_file))
-        return
-
-    content = full_path.read_text(encoding="utf-8")
-    version = _grep_version_from_content(
-        content, version_file, pattern, branch_label="working tree"
-    )
-    if version:
-        logger.pass_("version grepped: {}".format(version))
