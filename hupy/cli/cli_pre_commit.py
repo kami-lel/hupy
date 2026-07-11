@@ -5,6 +5,7 @@ import os
 import git
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 from hupy.ttg.gate_tt import perform_triage_tags_gating
 from hupy.bdc.ban_direct_commit import ban_direct_commit
@@ -30,8 +31,10 @@ def _pre_commit_main(args):  ###################################################
 
         logger.enter("start pre-commit stage")
 
+        perform_hook_brackets(repo, state_file, "pre-commit", True)
         ban_direct_commit(repo, state_file)
         perform_triage_tags_gating(repo, state_file)
+        perform_hook_brackets(repo, state_file, "pre-commit", False)
 
         logger.succ("pre-commit stage finished")
 
