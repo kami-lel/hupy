@@ -16,7 +16,7 @@
     // file path which version string can be found,
     // relative to repo root
     "version_file": "",
-    // regex pattern to match line contatining version string;
+    // regex pattern to match line containing version string;
     // first capture group `( )` is version
     "version_line_pattern": ""
   },
