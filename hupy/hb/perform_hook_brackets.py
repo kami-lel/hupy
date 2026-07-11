@@ -30,8 +30,8 @@ def _is_hb_cmd_applicable(repo, hb_cmd):
     if not hb_cmd.commit_types:
         return True  # no filter configured, always applicable
 
-    # commit_types is a skip filter, so applicable means not skipped
-    return not CommitType.is_commit_type_skipped(
+    # commit_types is an allow filter, so applicable means it matches
+    return CommitType.is_commit_type_allowed(
         hb_cmd.commit_types, get_current_commit_type(repo)
     )
 

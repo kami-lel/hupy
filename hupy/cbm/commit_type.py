@@ -64,18 +64,18 @@ class CommitType(Flag):
         return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
 
     @classmethod
-    def build_skip_filter(cls, filters):
+    def build_allow_filter(cls, filters):
         """
         merge the commit type members named in ``filters`` into a
-        single ``CommitType`` skip filter with ``|``
+        single ``CommitType`` allow filter with ``|``
 
 
         :param filters: names of commit type members to merge
         :type filters: list[str]
-        :return: the merged skip filter
+        :return: the merged allow filter
         :rtype: CommitType
         :example:
-        >>> CommitType.build_skip_filter(
+        >>> CommitType.build_allow_filter(
         ...     ["FEATURE_LANDING", "VERSION_RELEASE"]
         ... )
         <CommitType.FEATURE_LANDING|VERSION_RELEASE: 1027>
@@ -84,28 +84,28 @@ class CommitType(Flag):
         return reduce(or_, (cls[name] for name in filters))
 
     @classmethod
-    def is_commit_type_skipped(cls, filters, commit_type):
+    def is_commit_type_allowed(cls, filters, commit_type):
         """
         check whether ``commit_type`` shares a bit with the commit
         types named in ``filters``, used to decide whether a hook
-        bracket should be skipped for the current commit
+        bracket is allowed to run for the current commit
 
 
-        :param filters: names of commit type members to merge into a
-                skip filter
+        :param filters: names of commit type members to merge into an
+                allow filter
         :type filters: list[str]
         :param commit_type: the commit type to test
         :type commit_type: CommitType
         :return: True if commit_type matches any type named in filters
         :rtype: bool
         :example:
-        >>> CommitType.is_commit_type_skipped(
+        >>> CommitType.is_commit_type_allowed(
         ...     ["FEATURE_LANDING", "VERSION_RELEASE"],
         ...     CommitType.FEATURE_LANDING,
         ... )
         True
         """
-        merged_filter = cls.build_skip_filter(filters)
+        merged_filter = cls.build_allow_filter(filters)
         return bool(merged_filter & commit_type)
 
 
