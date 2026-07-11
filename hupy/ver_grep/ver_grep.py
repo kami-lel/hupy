@@ -81,7 +81,7 @@ def grep_version(repo, state_file, ref):
                 return ""
 
             version = match.group(1)
-            logger.debug("version grepped on {}:\t{}".format(ref, version))
+            logger.debug("version grepped on {}:\t{!r}".format(ref, version))
             return version
 
     logger.warning(
