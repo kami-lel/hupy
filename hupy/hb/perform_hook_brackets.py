@@ -13,7 +13,6 @@ from hupy.kamilog import (
     AnsiStyle,
     getLogger,
     gen_comment_banner_centered,
-    gen_comment_banner_left_just,
 )
 from hupy.cbm import CommitType, get_current_commit_type
 from hupy.config.load_config import load_hupy_config
@@ -29,10 +28,12 @@ logger.propagate = False
 
 _renderer = AnsiRenderer(sys.stdout)
 
-_START_LINE = gen_comment_banner_centered("START", 1, renderer=_renderer)
+_OPT_HEADING = "HB OUTPUT"
+
+_START_LINE = gen_comment_banner_centered(_OPT_HEADING, "v", renderer=_renderer)
 
 _END_LINE = gen_comment_banner_centered(
-    "END", 1, line_width=58, horizontal_offset=-11, renderer=_renderer
+    _OPT_HEADING, "^", line_width=58, horizontal_offset=-11, renderer=_renderer
 )
 
 
@@ -62,7 +63,6 @@ def _run_hb_cmd(repo, heading, hb_cmd):
     :param hb_cmd: a single bracketed command
     :type hb_cmd: _HbCmd
     """
-    # HACK write better interactions
     logger.info("run HB: {}".format(heading))
     cmd = hb_cmd.cmd
     logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
@@ -125,7 +125,7 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
         heading = hb_cmd.remark or _renderer.color(
             hb_cmd.cmd, AnsiStyle.UNDERLINE
         )
-        logger.enter("start bracket: " + heading)
+        logger.enter("HB subroutine: " + heading)
 
         if not _is_hb_cmd_applicable(hb_cmd, commit_type):
             logger.skip("due to commit type filtered: {}".format(heading))
