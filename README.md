@@ -5,6 +5,8 @@
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
+<!-- Todo last review entire project -->
+
 <!-- todo reimplement ensure file modified -->
 
 
