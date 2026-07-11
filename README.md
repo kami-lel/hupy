@@ -9,8 +9,6 @@
 <!-- FIXME rewrite .hupy.config.jsonc docs
 FIXME rewrite all components docs
 FIXME rewrite readme
-
-TODO pyproject.toml lacks license.
 -->
 
 <!-- todo reimplement ensure file modified -->
