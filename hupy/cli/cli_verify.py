@@ -10,8 +10,6 @@ from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
 
-# TODO use pass to indicate success
-# TODO add assert stubs existed
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -59,9 +57,12 @@ def _verify_main(args):
 
     with open_state_file(repo) as state_file:
         load_hupy_config(repo)
-        logger.succ("config file verified")
+        logger.pass_("config file verified")
         grep_version(repo, state_file, "HEAD")
-        logger.succ("VerGrep verified")
+        logger.pass_("VerGrep verified")
+
+        # TODO add assert stubs existed
+        logger.pass_("hook stubs exist")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
