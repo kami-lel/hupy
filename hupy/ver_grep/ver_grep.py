@@ -63,7 +63,7 @@ def grep_version(repo, state_file, ref):
         content = repo.git.show("{}:{}".format(ref, version_file.as_posix()))
     except git.GitCommandError:
         logger.warning(
-            "version file not found on {}: {}".format(ref, version_file)
+            "missing version file on {}: {}".format(ref, version_file)
         )
         return ""
 
