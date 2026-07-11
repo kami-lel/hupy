@@ -44,7 +44,7 @@ def _collect_gated_tags(
 
         tags_in_file = detect_triage_tags_in_staged_file(
             file_path,
-            repo_root=repo.working_dir,
+            repo,
             disable_tt_detect_by_type=disable_tt_detect_by_type,
         )
         gated_tags = [

@@ -5,7 +5,8 @@ triage tag detection in staged git diffs
 """
 
 import re
-import subprocess
+
+import git
 
 from hupy.kamilog import getLogger
 from hupy.ttg import TTG_LOGGER_NAME
@@ -81,7 +82,7 @@ def _find_first_tag_in_line(line, comment_prefix=None):
 
 
 def detect_triage_tags_in_staged_file(
-    file_path, repo_root=None, disable_tt_detect_by_type=False
+    file_path, repo, disable_tt_detect_by_type=False
 ):
     """
     detect triage tags in staged additions.
@@ -95,12 +96,11 @@ def detect_triage_tags_in_staged_file(
     to matching the tag anywhere in the line.
 
 
-    :param file_path: path to the file to scan, relative to
-            ``repo_root`` when given
+    :param file_path: path to the file to scan, relative to the
+            repository root
     :type file_path: str
-    :param repo_root: path to the git repository or any of its
-            subdirectories; defaults to the current directory
-    :type repo_root: str or None
+    :param repo: git repository object
+    :type repo: git.Repo
     :param disable_tt_detect_by_type: when ``True``, ignore the
             file's extension and match tags anywhere in the line
     :type disable_tt_detect_by_type: bool
@@ -117,13 +117,8 @@ def detect_triage_tags_in_staged_file(
     )
 
     try:
-        diff_output = subprocess.check_output(
-            ("git", "diff", "--cached", "--", file_path),
-            text=True,
-            stderr=subprocess.PIPE,
-            cwd=repo_root,
-        )
-    except subprocess.CalledProcessError as e:
+        diff_output = repo.git.diff("--cached", "--", file_path)
+    except git.GitCommandError as e:
         logger.critical("unable to get git diff for file: %s", file_path)
         raise SystemExit(1) from e
 

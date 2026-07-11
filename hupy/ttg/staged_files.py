@@ -5,7 +5,8 @@ list staged files in a repo, filtered against ignored path globs
 """
 
 import fnmatch
-import subprocess
+
+import git
 
 from hupy.ttg import TTG_LOGGER_NAME
 from hupy.kamilog import getLogger
@@ -31,18 +32,9 @@ def get_staged_file_paths(repo):
     :rtype: list
     """
     try:
-        cached_files = (
-            subprocess.check_output(
-                ("git", "diff", "--cached", "--name-only"),
-                text=True,
-                stderr=subprocess.PIPE,
-                cwd=repo.working_dir,
-            )
-            .strip()
-            .split("\n")
-        )
-    except subprocess.CalledProcessError as e:
+        output = repo.git.diff("--cached", "--name-only")
+    except git.GitCommandError as e:
         logger.critical("unable to get git cached files")
         raise SystemExit(1) from e
 
-    return [file_path for file_path in cached_files if file_path]
+    return [file_path for file_path in output.splitlines() if file_path]
