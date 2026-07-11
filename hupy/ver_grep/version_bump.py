@@ -5,8 +5,6 @@ decide which part of the version core (major/minor/patch) a source
 branch's version bumps relative to a target branch's version
 """
 
-# FIXME refactor use new pattern
-
 import re
 
 from hupy.kamilog import getLogger
