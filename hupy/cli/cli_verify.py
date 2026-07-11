@@ -42,7 +42,34 @@ validate the HUPy config file (.hupy.config.jsonc) at repository root
 
 
 def _verify_hook_stubs(repo):
-    pass  # TODO
+    """
+    verify every HUPy hook stub is installed in ``repo``'s hooks dir
+    (content of each installed file is not checked)
+
+
+    :param repo: repository to verify
+    :type repo: git.Repo
+    :raises SystemExit: ``repo``'s hooks dir is missing one or more
+            hook stub scripts
+    :return: number of hook stub scripts verified
+    :rtype: int
+    """
+    hooks_dir = _resolve_hooks_dir(repo)
+
+    stub_names = {stub_file.name for stub_file in HOOK_STUBS_DIR.iterdir()}
+    installed_names = (
+        {installed_file.name for installed_file in hooks_dir.iterdir()}
+        if hooks_dir.is_dir()
+        else set()
+    )
+
+    missing_names = stub_names - installed_names
+    if missing_names:
+        for missing_name in sorted(missing_names):
+            logger.fail("missing hook stub: {}".format(missing_name))
+        raise SystemExit(1)
+
+    return len(stub_names)
 
 
 def _verify_main(args):
