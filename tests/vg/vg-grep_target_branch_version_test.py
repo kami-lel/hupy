@@ -6,8 +6,6 @@ tests for `grep_target_branch_version` in `branch_version.py`
 
 from unittest import mock
 
-import pytest
-
 from config_fixture import load_config_fixture
 
 from hupy.ver_grep import grep_target_branch_version
@@ -101,8 +99,8 @@ class TestGrepTargetBranchVersionNotConfigured:
         assert _grep(pattern="") == ""
 
 
-class TestGrepTargetBranchVersionErrors:
-    def test_missing_version_file_on_target_branch_raises_system_exit(
+class TestGrepTargetBranchVersionGracefulEmpty:
+    def test_missing_version_file_on_target_branch_returns_empty(
         self, repo_dir
     ):
         # target_content omitted: the target branch never commits
@@ -110,25 +108,28 @@ class TestGrepTargetBranchVersionErrors:
         prepare_merge_repo_with_version(
             repo_dir, _VERSION_FILE, source_content="1.2.3\n"
         )
-        with pytest.raises(SystemExit) as ei:
-            _grep()
-        assert ei.value.code == 1
+        assert _grep() == ""
 
-    def test_missing_version_file_on_both_branches_raises_system_exit(
+    def test_missing_version_file_on_both_branches_returns_empty(
         self, repo_dir
     ):
         prepare_merge_repo_without_version_file(repo_dir)
-        with pytest.raises(SystemExit) as ei:
-            _grep()
-        assert ei.value.code == 1
+        assert _grep() == ""
 
-    def test_no_matching_line_raises_system_exit(self, repo_dir):
+    def test_no_matching_line_returns_empty(self, repo_dir):
         prepare_merge_repo_with_version(
             repo_dir,
             _VERSION_FILE,
             source_content="1.2.3\n",
             target_content="unreleased\n",
         )
-        with pytest.raises(SystemExit) as ei:
-            _grep()
-        assert ei.value.code == 1
+        assert _grep() == ""
+
+    def test_pattern_without_capture_group_returns_empty(self, repo_dir):
+        prepare_merge_repo_with_version(
+            repo_dir,
+            _VERSION_FILE,
+            source_content="1.2.3\n",
+            target_content="1.2.3\n",
+        )
+        assert _grep(pattern=r"\d+\.\d+\.\d+") == ""

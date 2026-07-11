@@ -6,8 +6,6 @@ tests for `grep_source_branch_version` in `branch_version.py`
 
 from unittest import mock
 
-import pytest
-
 from config_fixture import load_config_fixture
 
 from hupy.ver_grep import grep_source_branch_version
@@ -89,17 +87,17 @@ class TestGrepSourceBranchVersionNotConfigured:
         assert _grep(pattern="") == ""
 
 
-class TestGrepSourceBranchVersionErrors:
-    def test_missing_version_file_on_source_branch_raises_system_exit(
+class TestGrepSourceBranchVersionGracefulEmpty:
+    def test_missing_version_file_on_source_branch_returns_empty(
         self, repo_dir
     ):
         prepare_merge_repo_without_version_file(repo_dir)
-        with pytest.raises(SystemExit) as ei:
-            _grep()
-        assert ei.value.code == 1
+        assert _grep() == ""
 
-    def test_no_matching_line_raises_system_exit(self, repo_dir):
+    def test_no_matching_line_returns_empty(self, repo_dir):
         prepare_merge_repo_with_version(repo_dir, _VERSION_FILE, "unreleased\n")
-        with pytest.raises(SystemExit) as ei:
-            _grep()
-        assert ei.value.code == 1
+        assert _grep() == ""
+
+    def test_pattern_without_capture_group_returns_empty(self, repo_dir):
+        prepare_merge_repo_with_version(repo_dir, _VERSION_FILE, "1.2.3\n")
+        assert _grep(pattern=r"\d+\.\d+\.\d+") == ""
