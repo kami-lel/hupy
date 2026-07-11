@@ -38,7 +38,7 @@ def grep_version(repo, state_file, ref):
     """
 
     # FIXME verify & update general logger printed out
-    if should_run_module(repo, state_file, "vg"):
+    if not should_run_module(repo, state_file, "vg"):
         return ""
 
     # get version file path & pattern  -----------------------------------------
