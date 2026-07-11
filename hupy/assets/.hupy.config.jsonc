@@ -74,13 +74,37 @@
   },
   "hb": { // Hook Bracket ######################################################
     // run extra commands around HUPy's own hook logic
-    // FIXME rewrite HB
+    //
+    // a single HB command entry include fields:
+    //
+    // - "cmd": shell command to be ran (at repository root)
+    // - "allow_commit_types" (optional, list of string): v.i.
+    // - "allow_failure" (optional, boolean):
+    //   allowing failed command proceeded with committing
+    // - "remark" (optional, string): description/name of entry,
+    //   strictly used in logger
+    //
+    // "allow_commit_types" include all commit types
+    // which this command should be ran, possible values:
+    // "REGULAR_COMMIT", "OTHER_COMMIT",
+    // "MERGE" (union of every merge subtype below)
+    // "FEATURE_LANDING", "VERSION_RELEASE", "SYNC_BACKPORT",
+    // "CATCH_UP", "HOTFIX_RELEASE", "HOTFIX_BACKPORT",
+    // "RELEASE_CUT", "RELEASE_BACKPORT", "OTHER_MERGE"
     //
     // disable HB
     "is_disabled": false,
     "pre_commit": {
       // run before pre-commit's core logic
-      "lead": [],
+      "lead": [
+        // example entry:
+        // {
+        //   "cmd": "npm test",
+        //   "allow_commit_types": ["FEATURE_LANDING"],
+        //   "allow_failure": true,
+        //   "remark": "Pre-Feature Landing Unit Test"
+        // }
+      ],
       // run after pre-commit's core logic
       "trail": []
     },
