@@ -20,6 +20,7 @@ sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.pch import prepend_commit_header  # noqa: E402
+from hupy.state.state_file import HupyStateFile  # noqa: E402
 from prep_repo import (  # noqa: E402
     prepare_demo_repo as _prepare_bucket_repo,
     prepare_repo as _prepare_scenario_repo,
@@ -45,6 +46,6 @@ def run_pch(repo_dir, verbosity=1):
     os.chdir(repo_dir)
     try:
         repo = git.Repo(repo_dir, search_parent_directories=True)
-        prepend_commit_header(repo)
+        prepend_commit_header(repo, HupyStateFile())
     finally:
         os.chdir(cwd)

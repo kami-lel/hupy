@@ -22,6 +22,7 @@ sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from hupy.bdc import BDC_LOGGER_NAME, ban_direct_commit  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
+from hupy.state.state_file import HupyStateFile  # noqa: E402
 from prep_repo import (  # noqa: E402
     MAIN_BRANCH,
     prepare_repo_with_files as _prepare_bucket_repo,
@@ -66,6 +67,6 @@ def run_bdc(repo_dir, verbosity=1):
     set_logging_level_by_verbosity(verbosity, logger_name=BDC_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     try:
-        ban_direct_commit(repo)
+        ban_direct_commit(repo, HupyStateFile())
     except SystemExit:
         pass

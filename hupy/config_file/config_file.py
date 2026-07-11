@@ -19,7 +19,7 @@ from pydantic import (
 
 from hupy.cbm.commit_type import CommitType
 from hupy.config_file import CONFIG_LOGGER_NAME
-from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
+from hupy.kamilog import getLogger
 
 __all__ = ("HupyConfigFile",)
 
@@ -47,54 +47,6 @@ class _VerGrep(BaseModel):  # ==================================================
 
     version_file: pathlib.Path
     version_line_pattern: str
-
-    def is_unconfigured(self):
-        """
-        :return: if ``version_file`` or ``version_line_pattern`` is unset
-        :rtype: bool
-        """
-        return (
-            str(self.version_file) in ("", ".")
-            or not self.version_line_pattern.strip()
-        )
-
-    @model_validator(mode="after")
-    def _validate_version_grep_hook(self):
-        """
-        warn once, at creation, when the version grep hook is unset;
-        otherwise error if ``version_file`` does not point to a real
-        file.
-        """
-        if self.is_disabled:
-            return self
-
-        # Todo validate 1st capture group
-
-        if self.is_unconfigured():
-            renderer = AnsiRenderer(sys.stdout)
-            logger.warning(
-                "VerGrep not configured:\nmust set {}, {} to enable".format(
-                    renderer.color("version_file", AnsiStyle.BOLD),
-                    renderer.color("version_line_pattern", AnsiStyle.BOLD),
-                )
-            )
-            return self
-
-        logger.debug("version_file:\t{}".format(self.version_file))
-        logger.debug(
-            "version_line_pattern:\t{}".format(self.version_line_pattern)
-        )
-
-        if not self.version_file.exists():
-            try:
-                raise FileNotFoundError(
-                    "version file not found: {}".format(self.version_file)
-                )
-            except FileNotFoundError as e:
-                logger.exception("version file not found")
-                raise SystemExit(1) from e
-
-        return self
 
 
 class _Cbm(BaseModel):  # ======================================================
