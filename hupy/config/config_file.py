@@ -7,9 +7,7 @@ model
 
 import pathlib
 import sys
-from functools import reduce
 from importlib.metadata import version
-from operator import or_
 
 from pydantic import (
     BaseModel,
@@ -193,10 +191,14 @@ class _HbCmd(BaseModel):
         if not isinstance(filters, list):
             return filters
 
-        # FIXME work w/ illegal names
-        return reduce(
-            or_, (CommitType[name] for name in filters), CommitType(0)
-        )
+        result = CommitType(0)
+        for name in filters:
+            try:
+                result |= CommitType[name]
+            except KeyError:
+                logger.warning("illegal commit type name: {}".format(name))
+
+        return result
 
 
 class _HbBracket(BaseModel):
