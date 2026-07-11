@@ -23,6 +23,7 @@ _HB_OVERRIDES = {
             {
                 "cmd": "echo '>> tag release notes'",
                 "allow_commit_types": ["RELEASE_CUT"],
+                "remark": "Append Release Notes on a Release Cut Merge",
             },
         ],
     },

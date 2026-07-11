@@ -103,13 +103,13 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
     renderer = AnsiRenderer(sys.stdout)
 
     for hb_cmd in cmds_list:
-        # TODO or remark
-        heading = renderer.color(hb_cmd.cmd, AnsiStyle.UNDERLINE)
+        heading = hb_cmd.remark or renderer.color(
+            hb_cmd.cmd, AnsiStyle.UNDERLINE
+        )
         logger.enter("HB command: " + heading)
 
         if not _is_hb_cmd_applicable(hb_cmd, commit_type):
-            # HACK write better interactions
-            logger.skip("commit type filtered, skip: {}".format(heading))
+            logger.skip("due to commit type filtered: {}".format(heading))
             continue
 
         _run_hb_cmd(repo, hb_cmd)

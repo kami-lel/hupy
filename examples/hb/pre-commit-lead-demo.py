@@ -17,7 +17,10 @@ from __init__ import prepare_demo_repo, run_hb
 _HB_OVERRIDES = {
     "pre_commit": {
         "lead": [
-            {"cmd": "echo '>> lint check'"},
+            {
+                "cmd": "echo '>> lint check'",
+                "remark": "Lint the Staged Sources Before Committing",
+            },
             {"cmd": "echo '>> format check'"},
         ],
     },
