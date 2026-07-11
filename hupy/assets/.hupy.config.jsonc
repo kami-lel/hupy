@@ -73,22 +73,28 @@
     "release_candidate_tag": "-rc"
   },
   "hb": { // Hook Bracket ######################################################
-    // *Hook Bracket*: run extra commands around HUPy's own hook logic
+    // run extra commands around HUPy's own hook logic
     // FIXME rewrite HB
     //
     // disable HB
     "is_disabled": false,
     "pre_commit": {
-      "lead": [], // run before pre-commit's core checks
-      "trail": [] // run after pre-commit's core checks
+      // run before pre-commit's core logic
+      "lead": [],
+      // run after pre-commit's core logic
+      "trail": []
     },
     "prepare_commit_msg": {
-      "lead": [], // run before prepare-commit-msg's core logic
-      "trail": [] // run after prepare-commit-msg's core logic
+      // run before prepare-commit-msg's core logic
+      "lead": [],
+      // run after prepare-commit-msg's core logic
+      "trail": []
     },
     "post_commit": {
-      "lead": [], // run before post-commit's core logic
-      "trail": [] // run after post-commit's core logic
+      // run before post-commit's core logic
+      "lead": [],
+      // run after post-commit's core logic
+      "trail": []
     }
   }
 }
