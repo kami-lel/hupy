@@ -84,16 +84,6 @@ class _VerGrep(BaseModel):
         return self
 
 
-class _Ttg(BaseModel):
-    """
-    configuration for Triage Tag Gating
-    """
-
-    is_disabled: bool
-    disable_tt_detect_by_type: bool
-    ignored_path_globs: list[str]
-
-
 class _Cbm(BaseModel):
     """
     configuration for the CBM module (commit, branch, and merge types)
@@ -103,6 +93,27 @@ class _Cbm(BaseModel):
     dev_branch_name: str = Field(min_length=1)
     hotfix_branch_prefix: str = Field(min_length=1)
     release_branch_prefix: str = Field(min_length=1)
+
+
+class _Bdc(BaseModel):
+    """
+    configuration for the BDC module (ban direct commit)
+    """
+
+    is_disabled: bool
+    ban_commit_to_main: bool
+    ban_commit_to_dev: bool
+    ban_commit_to_branches: list[str]
+
+
+class _Ttg(BaseModel):
+    """
+    configuration for Triage Tag Gating
+    """
+
+    is_disabled: bool
+    disable_tt_detect_by_type: bool
+    ignored_path_globs: list[str]
 
 
 class _Pch(BaseModel):
@@ -117,17 +128,6 @@ class _Pch(BaseModel):
     alpha_tag: str
     beta_tag: str
     release_candidate_tag: str
-
-
-class _Bdc(BaseModel):
-    """
-    configuration for the BDC module (ban direct commit)
-    """
-
-    is_disabled: bool
-    ban_commit_to_main: bool
-    ban_commit_to_dev: bool
-    ban_commit_to_branches: list[str]
 
 
 class _Hb(BaseModel):
@@ -147,10 +147,10 @@ class HupyConfigFile(BaseModel):
 
     hupy_version: str
     vg: _VerGrep
-    ttg: _Ttg
     cbm: _Cbm
-    pch: _Pch
     bdc: _Bdc
+    ttg: _Ttg
+    pch: _Pch
     hb: _Hb
 
     @model_validator(mode="after")

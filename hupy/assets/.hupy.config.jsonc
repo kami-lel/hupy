@@ -17,14 +17,6 @@
     "version_file": "", // file to read, relative to repo root
     "version_line_pattern": "" // regex; first capture group `( )` is version
   },
-  "ttg": { // ##################################################################
-    // *Triage Tag Gating*: blocks commits that introduce disallowed TT
-    "is_disabled": false,
-    // when true, match TT anywhere in the line instead of requiring
-    // the comment leader for the file's extension (eg `//`, `#`, `<!--`)
-    "disable_tt_detect_by_type": false,
-    "ignored_path_globs": [] // glob patterns excluded from TT scanning
-  },
   "cbm": { // ##################################################################
     // branch naming *CBM* classifies against to pick a merge type. unmatched
     // branches with a `/` count as User; anything else as Feature
@@ -32,6 +24,22 @@
     "dev_branch_name": "dev", // exact name of the dev branch
     "hotfix_branch_prefix": "hotfix", // prefix (before `/`) marking hotfix
     "release_branch_prefix": "release" // prefix (before `/`) marking release
+  },
+  "bdc": { // ##################################################################
+    // *Ban Direct Commit*: blocks direct commits to protected branches; merges
+    // (eg. `feature -> dev`) are unaffected
+    "is_disabled": false,
+    "ban_commit_to_main": true,
+    "ban_commit_to_dev": false,
+    "ban_commit_to_branches": [] // exact branch names, on top of the above
+  },
+  "ttg": { // ##################################################################
+    // *Triage Tag Gating*: blocks commits that introduce disallowed TT
+    "is_disabled": false,
+    // when true, match TT anywhere in the line instead of requiring
+    // the comment leader for the file's extension (eg `//`, `#`, `<!--`)
+    "disable_tt_detect_by_type": false,
+    "ignored_path_globs": [] // glob patterns excluded from TT scanning
   },
   "pch": { // ##################################################################
     // how *Prepend Commit Header* reads a version and picks a header; leave a
@@ -42,14 +50,6 @@
     "alpha_tag": "-alpha", // version suffix identifying an alpha release
     "beta_tag": "-beta", // version suffix identifying a beta release
     "release_candidate_tag": "-rc" // suffix identifying a release candidate
-  },
-  "bdc": { // ##################################################################
-    // *Ban Direct Commit*: blocks direct commits to protected branches; merges
-    // (eg. `feature -> dev`) are unaffected
-    "is_disabled": false,
-    "ban_commit_to_main": true,
-    "ban_commit_to_dev": false,
-    "ban_commit_to_branches": [] // exact branch names, on top of the above
   },
   "hb": { // ###################################################################
     "is_disabled": false,
