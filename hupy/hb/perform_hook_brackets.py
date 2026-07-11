@@ -28,7 +28,7 @@ logger.propagate = False
 
 _renderer = AnsiRenderer(sys.stdout)
 
-_OPT_HEADING = "HB OUTPUT"
+_OPT_HEADING = "OUTPUT"
 
 _START_LINE = gen_comment_banner_centered(_OPT_HEADING, "v", renderer=_renderer)
 
