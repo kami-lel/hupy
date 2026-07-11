@@ -27,7 +27,7 @@ class CommitType(Flag):  #######################################################
     REGULAR_COMMIT = auto()
     OTHER_COMMIT = auto()
 
-    # merge subtypes
+    # merge
     FEATURE_LANDING = auto()
     VERSION_RELEASE = auto()
     SYNC_BACKPORT = auto()
@@ -38,18 +38,13 @@ class CommitType(Flag):  #######################################################
     RELEASE_BACKPORT = auto()
     OTHER_MERGE = auto()
 
-    # merge category
-    MERGE = (
-        FEATURE_LANDING
-        | VERSION_RELEASE
-        | SYNC_BACKPORT
-        | CATCH_UP
-        | HOTFIX_RELEASE
-        | HOTFIX_BACKPORT
-        | RELEASE_CUT
-        | RELEASE_BACKPORT
-        | OTHER_MERGE
-    )
+    # merge categories
+    # release = merge into main
+    RELEASE = VERSION_RELEASE | HOTFIX_RELEASE | RELEASE_CUT
+    BACKPORT = SYNC_BACKPORT | HOTFIX_BACKPORT | RELEASE_BACKPORT
+    INTEGRATION = RELEASE | FEATURE_LANDING
+    # all merges
+    MERGE = INTEGRATION | BACKPORT | CATCH_UP | OTHER_MERGE
 
     # Public Method  -----------------------------------------------------------
 
