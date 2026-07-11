@@ -101,7 +101,32 @@ See the per-feature docs for detailed usage:
 - [Prepend Commit Header (PCH)](docs/pch_doc.md)
 - [Hook Bracket (HB)](docs/hb_doc.md)
 
-#### Other Commands
 
-- `hupy skip-once` — skip a module (`vg`, `ttg`, `pch`, `bdc`, `hb`) for exactly one upcoming hook run
-- `hupy set-verbosity` — set the base logging verbosity used during hook runs
+
+
+
+
+### `skip-once` command
+
+Need to get a single commit through without loosening the config — a hotfix under time pressure, a false positive from TTG, a merge PCH mis-classifies? Rather than editing `.hupy.config.jsonc` and remembering to revert it, skip the offending module(s) (`vg`, `ttg`, `pch`, `bdc`, `hb`) for just the next hook run:
+
+```bash
+hupy skip-once MODULE [MODULE ...]
+```
+
+The skip is consumed automatically by the next `pre-commit`/`prepare-commit-msg` run, so behavior snaps back to normal right after. Change your mind first? Pass `-u`/`--unset` to clear a pending skip.
+
+
+
+
+
+
+### `set-verbosity` command
+
+Turn up logging when a hook's behavior looks wrong and you need to see what *HUPy* is actually deciding, or turn it down to keep commits quiet day-to-day:
+
+```bash
+hupy set-verbosity [VERBOSITY]
+```
+
+Unlike `skip-once`, this setting persists across hook runs until changed again; defaults to `1` when `VERBOSITY` is omitted.
