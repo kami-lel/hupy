@@ -17,12 +17,14 @@
     "version_line_pattern": "" // regex; first capture group `( )` is version
   },
   "cbm": { // ##################################################################
-    // branch naming *CBM* classifies against to pick a merge type. unmatched
-    // branches with a `/` count as User; anything else as Feature
-    "main_branch_name": "main", // exact name of the main branch
-    "dev_branch_name": "dev", // exact name of the dev branch
-    "hotfix_branch_prefix": "hotfix", // prefix (before `/`) marking hotfix
-    "release_branch_prefix": "release" // prefix (before `/`) marking release
+    // exact name of main branch
+    "main_branch_name": "main",
+    // exact name of dev branch
+    "dev_branch_name": "dev",
+    // branch name prefix (before `/`) marking hotfix branch
+    "hotfix_branch_prefix": "hotfix",
+    // branch name prefix (before `/`) marking release branch
+    "release_branch_prefix": "release"
   },
   "bdc": { // Ban Direct Commit ################################################
     // block direct commits to protected branches,
