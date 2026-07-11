@@ -20,9 +20,7 @@ from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
 
-SKIP_ONCE_LOGGER_NAME = PROJ_LOGGER_NAME + ".skip_once"
-
-logger = getLogger(SKIP_ONCE_LOGGER_NAME)
+logger = getLogger(PROJ_LOGGER_NAME)
 logger.propagate = False
 
 
