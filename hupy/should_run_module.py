@@ -7,7 +7,7 @@ one-time ``skip_once`` set
 """
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 
 __all__ = ("should_run_module",)
@@ -53,7 +53,7 @@ def should_run_module(repo, state_file, module_abbr):
         logger.skip("{} disabled in config file".format(module_name))
         return False
 
-    if state_file.consume_skip_once(module_abbr):
+    if module_abbr in state_file.skip_once:
         logger.skip("{} skipped once".format(module_name))
         return False
 

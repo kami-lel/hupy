@@ -10,7 +10,6 @@
 FIXME rewrite all components docs
 FIXME rewrite readme
 
-Todo hooks bracket: actually implemented
 TODO pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
 -->
 

@@ -10,8 +10,8 @@ from importlib.metadata import version
 import json5
 import pytest
 
-from hupy.config.config_file import HupyConfigFile
-from hupy.config.config_file_path import DEFAULT_CONFIG_ASSET
+from hupy.config_file.config_file import HupyConfigFile
+from hupy.config_file.config_file_path import DEFAULT_CONFIG_ASSET
 
 # fixtures  #####################################################################
 

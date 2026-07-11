@@ -5,7 +5,7 @@ import os
 import pathlib
 
 from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 
 
 from hupy.kamilog import (

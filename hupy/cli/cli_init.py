@@ -9,7 +9,7 @@ import sys
 import git
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.write_config import create_default_config_file
+from hupy.config_file.write_config import create_default_config_file
 
 from hupy.kamilog import (
     add_verbose_arguments,

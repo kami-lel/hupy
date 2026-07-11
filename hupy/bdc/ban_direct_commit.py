@@ -4,10 +4,14 @@ ban_direct_commit.py
 block commits made directly on protected branches
 """
 
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.should_run_module import should_run_module
-from ..cbm import CommitType, get_current_commit_type, get_target_branch
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import (
+    get_current_commit_type,
+    get_target_branch,
+)
 from . import BDC_LOGGER_NAME
 
 # logger  ######################################################################
@@ -58,7 +62,7 @@ def ban_direct_commit(repo, state_file):
 
     commit_type = get_current_commit_type(repo)
 
-    if CommitType.MERGE in commit_type:
+    if commit_type in CommitType.MERGE:
         logger.pass_("merging into protected branch")
         return
 

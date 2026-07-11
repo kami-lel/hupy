@@ -13,8 +13,11 @@ import re
 
 import git
 
-from hupy.cbm import get_source_branch, get_target_branch
-from hupy.config.load_config import load_hupy_config
+from hupy.cbm.get_current_commit_type import (
+    get_source_branch,
+    get_target_branch,
+)
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from . import VER_GREP_LOGGER_NAME
 

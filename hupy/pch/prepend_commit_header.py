@@ -8,7 +8,7 @@ import os
 import re
 import tempfile
 
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.should_run_module import should_run_module
 from hupy.ver_grep import (
@@ -17,8 +17,8 @@ from hupy.ver_grep import (
     grep_target_branch_version,
 )
 from . import PCH_LOGGER_NAME
-from ..cbm import (
-    CommitType,
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import (
     get_current_commit_type,
     get_source_branch,
     get_target_branch,
