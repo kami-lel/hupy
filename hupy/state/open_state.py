@@ -11,6 +11,8 @@ import os
 import tempfile
 import threading
 
+from pydantic import ValidationError
+
 from hupy.kamilog import getLogger
 from hupy.state import STATE_LOGGER_NAME
 from hupy.state.state_file import HupyStateFile
@@ -27,6 +29,45 @@ logger.propagate = False
 _STATE_LOCK = threading.Lock()
 
 _LOCK_FILE_SUFFIX = ".lock"
+
+
+# auxiliary  ###################################################################
+
+
+def _load_state(state_path):
+    """
+    load ``state_path`` into a :class:`HupyStateFile`, falling back to a
+    fresh default instance when the file is absent or corrupt; a corrupt
+    file is overwritten on the next save so commits are never blocked
+
+
+    :param state_path: path to the HUPy state file
+    :type state_path: pathlib.Path
+    :return: the loaded state, or a default instance on absence/corruption
+    :rtype: HupyStateFile
+    """
+    if not state_path.exists():
+        logger.info(
+            "missing hupy-state.json, create from defaults:\t{}".format(
+                state_path
+            )
+        )
+        return HupyStateFile()
+
+    try:
+        return HupyStateFile(**json.loads(state_path.read_text()))
+    except (
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+        ValidationError,
+        TypeError,
+    ) as e:
+        logger.warning(
+            "hupy-state.json corrupt, reset to defaults:\t{}\n{}".format(
+                state_path, e
+            )
+        )
+        return HupyStateFile()
 
 
 # Public API  ##################################################################
@@ -51,14 +92,7 @@ def open_state_file(repo):
 
         try:
             logger.debug("open HUPy state file: {}".format(state_path))
-            if state_path.exists():
-                state = HupyStateFile(**json.loads(state_path.read_text()))
-            else:
-                logger.info(
-                    "hupy-state.json not found, create from defaults:\t{}"
-                    .format(state_path)
-                )
-                state = HupyStateFile()
+            state = _load_state(state_path)
 
             yield state
 
