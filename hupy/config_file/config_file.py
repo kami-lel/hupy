@@ -48,49 +48,6 @@ class _VerGrep(BaseModel):  # ==================================================
     version_file: pathlib.Path
     version_line_pattern: str
 
-    # HACK rm both fx
-
-    def is_unconfigured(self):
-        """
-        :return: if ``version_file`` or ``version_line_pattern`` is unset
-        :rtype: bool
-        """
-        return (
-            str(self.version_file) in ("", ".")
-            or not self.version_line_pattern.strip()
-        )
-
-    @model_validator(mode="after")
-    def _validate_version_grep_hook(self):
-        """
-        warn once, at creation, when the version grep hook is unset,
-        or when ``version_file`` does not point to a real file.
-        """
-        if self.is_disabled:
-            return self
-
-        if self.is_unconfigured():
-            renderer = AnsiRenderer(sys.stdout)
-            logger.warning(
-                "VerGrep not configured:\nmust set {}, {} to enable".format(
-                    renderer.color("version_file", AnsiStyle.BOLD),
-                    renderer.color("version_line_pattern", AnsiStyle.BOLD),
-                )
-            )
-            return self
-
-        logger.debug("version_file:\t{}".format(self.version_file))
-        logger.debug(
-            "version_line_pattern:\t{}".format(self.version_line_pattern)
-        )
-
-        if not self.version_file.exists():
-            logger.warning(
-                "version file not found: {}".format(self.version_file)
-            )
-
-        return self
-
 
 class _Cbm(BaseModel):  # ======================================================
     """
