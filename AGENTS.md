@@ -32,7 +32,7 @@ Test layout mirrors source layout: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-
 
 Cross-suite fixtures live in `tests/fixtures/`, not colocated with any package. The root `tests/conftest.py` defines the shared `repo_dir` fixture (`tmp_path / "repo"`). Suites that need `prep_repo` or `config_fixture` `sys.path.insert(tests/fixtures)` in their own `conftest.py`. Build config via `config_fixture.load_config_fixture(overrides)` — deep-merges onto the shipped asset — never by constructing `HupyConfigFile` from partial kwargs (its fields carry no defaults).
 
-Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the git bundle (`tests/fixtures/default_repo.bundle`), constructs branches/commits/merge state, and copies the shipped `DEFAULT_CONFIG_ASSET` onto each repo as an untracked `.hupy.config.jsonc`. Also runnable standalone:
+Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the git bundle (`tests/fixtures/default_repo.bundle`), constructs branches/commits/merge state, and copies the shipped `DEFAULT_CONFIG_ASSET` onto each repo as an untracked `.hupy.config.jsonc`, with `vg.version_file`/`version_line_pattern` pointed at the repo's `setup.cfg`. Also runnable standalone:
 
 ```bash
 python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/demo_repo

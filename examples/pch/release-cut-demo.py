@@ -2,10 +2,10 @@
 """
 release-cut-demo.py
 
-demo: Release Cut merge (release/2.4.0 into main), a CBM merge type
-that CBM already classifies (see hupy/cbm/commit_type.py) but that
-PCH does not yet prepend a header for
-expected result: skip (merge type not yet handled by PCH)
+demo: Release Cut merge (release/1.3.0 into main), a CBM merge type
+that PCH prepends a header for with minor version bump prefix
+expected result: header prepended to COMMIT_EDITMSG,
+"Minor Release Cut: 1.3.0"
 """
 
 import pathlib
@@ -32,8 +32,10 @@ def _prepare_demo_repo():
 
 def main():
     print(gen_comment_banner_zero([pathlib.Path(__file__).name]))
-    print("scenario:\tRelease Cut merge (release/2.4.0 into main)")
-    print("expected:\tSKIP (merge type not yet handled by PCH)")
+    print("scenario:\tRelease Cut merge (release/1.3.0 into main)")
+    print(
+        'expected:\tPASS, header "Minor Release Cut: 1.3.0" prepended'
+    )
     print()
 
     print(gen_comment_banner_centered("print out", "#"))

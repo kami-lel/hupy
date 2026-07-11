@@ -19,6 +19,8 @@ from hupy.state.state_file_path import get_state_file_path
 __all__ = ("open_state_file",)
 
 logger = getLogger(STATE_LOGGER_NAME)
+logger.propagate = False
+
 
 # lock  #########################################################################
 

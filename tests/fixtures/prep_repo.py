@@ -7,6 +7,7 @@ buckets, for reuse by unit tests and by the ``examples/ttg`` and
 ``tests/``
 """
 
+import json
 import os
 import shutil
 import tempfile
@@ -14,6 +15,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import git
+import json5
 
 from hupy.config_file.config_file_path import DEFAULT_CONFIG_ASSET
 
@@ -151,10 +153,16 @@ def _chdir_into_repo(repo_dir):
 def _write_config_file(repo_dir):
     # the bundle no longer carries a committed HUPy config file, so
     # write the shipped default config straight onto disk, untracked,
-    # for ``load_hupy_config`` to read
-    shutil.copyfile(
-        DEFAULT_CONFIG_ASSET, Path(repo_dir) / ".hupy.config.jsonc"
-    )
+    # for ``load_hupy_config`` to read; configure vg section to grep
+    # from setup.cfg since all demo repos have a version there
+    config_path = Path(repo_dir) / ".hupy.config.jsonc"
+    shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
+
+    # parse, configure vg section, write back
+    config = json5.loads(config_path.read_text())
+    config["vg"]["version_file"] = "setup.cfg"
+    config["vg"]["version_line_pattern"] = r"version\s*=\s*(\S+)"
+    config_path.write_text(json.dumps(config))
 
 
 def _write_and_commit(repo_dir, filename, content):

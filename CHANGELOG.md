@@ -20,6 +20,7 @@
 
 ### Changed
 
+- `ban_direct_commit`'s skip/pass/fail log messages now include the branch name
 - config file renamed **`.hupy.config.json`** → **`.hupy.config.jsonc`**, now parsed as JSON5 (comments and trailing commas allowed) via the new `json5` dependency
 - `hupy init`/`init-create-config` now write a fresh config by copying a packaged asset (`hupy/assets/.hupy.config.jsonc`) verbatim, rather than generating one from `HupyConfigFile`'s field defaults; `HupyConfigFile`'s fields no longer carry defaults themselves — the shipped asset is now the single source of default values, with its comments documenting each field in place of the old `docs/hupy_config_doc.md`
 - renamed `write_default_config` → `create_default_config_file` (now takes a `git.Repo`, not a bare `repo_root` path); renamed `hupy/config/hupy_config_file.py` → `hupy/config_file/config_file.py`, and the `hupy.config` package itself renamed to `hupy.config_file`
@@ -38,6 +39,12 @@
 - **`init-create-config`/`init-copy-hooks` subcommands** — superseded by `hupy init`'s new `--create-config-file`/`--copy-hooks` flags; `cli_icc.py`/`cli_ich.py` deleted, their `_copy_hook_stubs`/`_resolve_hooks_dir` helpers and supporting constants moved into `cli_init.py`
 
 ### Fixed
+
+- `tests/fixtures/prep_repo.py`'s `_write_config_file` left `vg.version_file`/`version_line_pattern` blank, so every demo/test repo it builds silently fell back to the unconfigured warning instead of grepping the committed `setup.cfg`; now points `vg` at `setup.cfg` with a matching pattern
+- `examples/bdc/__init__.py`'s `prepare_demo_repo_on_branch` never wrote `.hupy.config.jsonc`, so `skip-non-protected-branch-demo.py` (and any other demo built on it) errored with a config-file-not-found log instead of demoing the skip path
+- `hupy.pch`'s `_get_release_type_word` could match an `alpha_tag`/`beta_tag`/`release_candidate_tag` substring (eg `-rc`) against a non-semver version before the semver-shaped checks ran, misclassifying an unparsable version like `v2024.07-rc1` as a tagged release instead of falling back to the plain `Version Release` header; tag checks now only run once the version's `major.minor.patch` core has matched
+- `examples/pch/release-cut-demo.py` claimed PCH still skips `RELEASE_CUT` merges and named a mismatched source branch; corrected to match `pch`'s actual `Release Cut` header support
+- `hupy.state.open_state`'s logger (`HU.state`) now disables propagation like every other module logger, fixing state log lines printing twice
 
 ### Security
 

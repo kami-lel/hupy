@@ -54,17 +54,17 @@ def ban_direct_commit(repo, state_file):
 
     logger.enter("perform Ban Direct Commit")
 
-    current_branch = get_target_branch(repo)
+    branch = get_target_branch(repo)
 
-    if current_branch not in _get_protected_branches(repo):
-        logger.skip("not a protected branch")
+    if branch not in _get_protected_branches(repo):
+        logger.skip("not a protected branch: {}".format(branch))
         return
 
     commit_type = get_current_commit_type(repo)
 
     if commit_type in CommitType.MERGE:
-        logger.pass_("merging into protected branch")
+        logger.pass_("merging into protected branch: {}".format(branch))
         return
 
-    logger.fail("attempt direct commit to protected branch")
+    logger.fail("attempt direct commit to protected branch: {}".format(branch))
     raise SystemExit(1)
