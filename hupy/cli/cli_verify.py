@@ -9,7 +9,6 @@ from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
 
-# FIXME rename as verify
 # TODO use pass to indicate success
 # TODO add assert stubs existed
 
@@ -40,7 +39,7 @@ validate the HUPy config file (.hupy.config.jsonc) at repository root
 
 def _verify_main(args):
     """
-    dispatch for the ``verify-config-file`` subcommand.
+    dispatch for the ``verify`` subcommand.
 
 
     :param args: parsed arguments from argparse
@@ -68,10 +67,10 @@ def _verify_main(args):
 
 def register_cli_verify_parser(cli_subparser):
     """
-    register the ``verify-config-file`` subcommand parser.
+    register the ``verify`` subcommand parser.
     """
     verify_parser = cli_subparser.add_parser(
-        "verify-config-file",
+        "verify",
         aliases=["v"],
         help=__doc__,
         description=_DESCRIPTION,
