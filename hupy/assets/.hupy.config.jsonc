@@ -57,7 +57,7 @@
   "pch": { // Prepend Commit Header ############################################
     // adds a short header line to the top of the commit message
     //
-    // disable BDC
+    // disable PCH
     "is_disabled": false,
     // enable the Vertical Slice header:
     // recognize 0.4.0~0.9.0 as Vertical Slice (instead of Prototype)
