@@ -150,6 +150,17 @@ class TestPerformHookBracketsSkips:
         assert calls == []
         assert "hb" not in state_file.skip_once
 
+    def test_skip_once_with_unrelated_key_runs_normally(self):
+        _, calls, state_file = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead"}],
+            skip_once={"bdc"},
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert "bdc" in state_file.skip_once
+
     def test_empty_commands_list_runs_nothing(self):
         result, calls, _ = _run("pre-commit", True)
         assert result is None
@@ -185,6 +196,70 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.REGULAR_COMMIT,
         )
         assert calls == []
+
+    def test_empty_commit_types_list_has_no_restriction(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead", "commit_types": []}],
+            commit_type=CommitType.OTHER_COMMIT,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_multiple_filter_names_matches_any_of_them(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {
+                    "cmd": "echo lead",
+                    "commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
+                }
+            ],
+            commit_type=CommitType.VERSION_RELEASE,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_generic_merge_filter_matches_any_merge_subtype(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            commit_type=CommitType.HOTFIX_BACKPORT,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_generic_merge_filter_skips_regular_commit(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            commit_type=CommitType.REGULAR_COMMIT,
+        )
+        assert calls == []
+
+    def test_per_command_filtering_runs_only_matching_commands(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {"cmd": "echo always"},
+                {"cmd": "echo release-only", "commit_types": ["RELEASE_CUT"]},
+                {
+                    "cmd": "echo feature-only",
+                    "commit_types": ["FEATURE_LANDING"],
+                },
+            ],
+            commit_type=CommitType.FEATURE_LANDING,
+            run_returncodes=[0, 0],
+        )
+        assert calls == [
+            mock.call("echo always", shell=True, cwd="/repo"),
+            mock.call("echo feature-only", shell=True, cwd="/repo"),
+        ]
 
 
 class TestPerformHookBracketsCommandFailure:

@@ -62,7 +62,6 @@ def _run_hb_cmd(repo, hb_cmd):
     raise SystemExit(result.returncode)
 
 
-# TODO fuller set of UT
 # Public API  ##################################################################
 def perform_hook_brackets(repo, state_file, hook_name, is_lead):
     """
