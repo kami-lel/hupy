@@ -9,8 +9,9 @@ identify the type of an in-progress git commit
 import os
 
 from hupy.kamilog import getLogger
+from hupy.cbm import CBM_LOGGER_NAME
 from hupy.cbm.branch_type import BranchType
-from hupy.cbm.commit_type import CommitType, CBM_LOGGER_NAME
+from hupy.cbm.commit_type import CommitType
 
 __all__ = ("get_current_commit_type", "get_source_branch", "get_target_branch")
 
