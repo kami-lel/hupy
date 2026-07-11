@@ -69,11 +69,17 @@ hupy init
 - copies the default hook stub scripts into the repo's hooks directory
 - writes a default `.hupy.config.jsonc` at the repository root — commit it, so every clone shares the same behavior; each section is commented in place with what it controls
 
-Verify the config file at any time:
+Verify the HUPy setup at any time:
 
 ```bash
 hupy verify
 ```
+
+`verify` checks that:
+
+- the config file (`.hupy.config.jsonc`) loads and validates against the schema
+- the version string can be grepped per the `VerGrep` config
+- every packaged hook stub is installed in the repo's hooks directory
 
 
 

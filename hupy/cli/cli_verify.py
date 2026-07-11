@@ -29,11 +29,16 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-_VERIFY_DOC = "verify the HUPy config file"
+_VERIFY_DOC = "verify HUPy is setup for the repository"
 
 _DESCRIPTION = _VERIFY_DOC + """
 
-validate the HUPy config file (.hupy.config.jsonc) at repository root
+check that HUPy is correctly set up, verifying:
+
+- config file (.hupy.config.jsonc) at repository root loads and
+  validates against the schema
+- version string can be grepped per the VerGrep config
+- every packaged hook stub is installed in the repo's hooks directory
 """
 
 
