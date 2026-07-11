@@ -8,6 +8,8 @@ the working tree mid-merge holds the (possibly conflicted) target
 branch content
 """
 
+# FIXME refactor use new pattern
+
 import os
 import pathlib
 import re
@@ -63,9 +65,7 @@ def _grep_version_from_content(
     for line in content.splitlines():
         match = re.search(pattern, line)
         if match:
-            logger.debug(
-                "matched line on {}:\n{}".format(branch_label, line)
-            )
+            logger.debug("matched line on {}:\n{}".format(branch_label, line))
             if not match.groups():  # pattern lacks a capture group
                 logger.warning(
                     "pattern has no capture group on {}: {}".format(

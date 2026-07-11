@@ -48,6 +48,8 @@ class _VerGrep(BaseModel):  # ==================================================
     version_file: pathlib.Path
     version_line_pattern: str
 
+    # HACK rm both fx
+
     def is_unconfigured(self):
         """
         :return: if ``version_file`` or ``version_line_pattern`` is unset
