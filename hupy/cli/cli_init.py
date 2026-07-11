@@ -50,7 +50,7 @@ performs:
 - copy default HUPy hook stub scripts into the repo's hooks directory
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
-- create a default HUPy config file (.hupy.config.json) at repository root
+- create a default HUPy config file (.hupy.config.jsonc) at repository root
 """
 
 

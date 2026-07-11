@@ -1,7 +1,7 @@
 """
 config_file.py
 
-define the HUPy config schema (``.hupy.config.json``) as a pydantic
+define the HUPy config schema (``.hupy.config.jsonc``) as a pydantic
 model
 """
 
@@ -200,7 +200,7 @@ class _Hb(BaseModel):
 
 class HupyConfigFile(BaseModel):  ##############################################
     """
-    schema for the HUPy config file (``.hupy.config.json``)
+    schema for the HUPy config file (``.hupy.config.jsonc``)
     """
 
     model_config = ConfigDict(extra="forbid")
