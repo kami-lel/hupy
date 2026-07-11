@@ -4,7 +4,7 @@ get_current_commit_type.py
 identify the type of an in-progress git commit
 """
 
-# todo consider expose commit type as part of cli
+# todo expose commit type in CLI
 
 import os
 
