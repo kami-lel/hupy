@@ -5,8 +5,6 @@ commit type flag: categorize git commits by merge strategy
 """
 
 from enum import Flag, auto
-from functools import reduce
-from operator import or_
 
 from hupy.cbm.branch_type import BranchType
 
@@ -67,27 +65,6 @@ class CommitType(Flag):  #######################################################
         :rtype: CommitType
         """
         return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
-
-    @classmethod
-    def build_allow_filter(cls, filters):
-        """
-        merge the commit type members named in ``filters`` into a
-        single ``CommitType`` allow list instance with ``|``; a name
-        of ``MERGE`` pulls in every merge subtype at once
-
-
-        :param filters: names of commit type members to merge
-        :type filters: list[str]
-        :return: the merged allow list instance
-        :rtype: CommitType
-        :example:
-        >>> CommitType.build_allow_filter(
-        ...     ["FEATURE_LANDING", "VERSION_RELEASE"]
-        ... )
-        <CommitType.FEATURE_LANDING|VERSION_RELEASE: 3>
-        """
-        # FIXME work w/ illegal names
-        return reduce(or_, (cls[name] for name in filters), cls(0))
 
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {

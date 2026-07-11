@@ -14,7 +14,7 @@ from hupy.kamilog import (
     getLogger,
     gen_comment_banner_centered,
 )
-from hupy.cbm import CommitType, get_current_commit_type
+from hupy.cbm import get_current_commit_type
 from hupy.config.load_config import load_hupy_config
 from hupy.should_run_module import should_run_module
 from . import HB_LOGGER_NAME
@@ -50,10 +50,9 @@ def _is_hb_cmd_applicable(hb_cmd, commit_type):
     if not hb_cmd.allow_commit_types:
         return True  # no filter configured, always applicable
 
-    allow_filter = CommitType.build_allow_filter(hb_cmd.allow_commit_types)
-    logger.debug("allow commit types: {}".format(allow_filter))
+    logger.debug("allow commit types: {}".format(hb_cmd.allow_commit_types))
 
-    return bool(allow_filter & commit_type)
+    return bool(hb_cmd.allow_commit_types & commit_type)
 
 
 def _run_hb_cmd(repo, heading, hb_cmd):

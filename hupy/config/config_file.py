@@ -7,10 +7,19 @@ model
 
 import pathlib
 import sys
+from functools import reduce
 from importlib.metadata import version
+from operator import or_
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
+from hupy.cbm.commit_type import CommitType
 from hupy.config import CONFIG_LOGGER_NAME
 from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 
@@ -161,9 +170,33 @@ class _HbCmd(BaseModel):
     # fields  ------------------------------------------------------------------
 
     cmd: str
-    allow_commit_types: list[str] = Field(default_factory=list)
+    allow_commit_types: CommitType = CommitType(0)
     allow_failure: bool = False
     remark: str = ""
+
+    # validators  --------------------------------------------------------------
+
+    @field_validator("allow_commit_types", mode="before")
+    @classmethod
+    def _parse_allow_commit_types(cls, filters):
+        """
+        merge the config list of member names into a single
+        ``CommitType`` allow list instance; a non-list value (eg an
+        already-parsed instance) passes through to pydantic
+
+
+        :param filters: commit type member names, or a ready value
+        :type filters: list[str] or CommitType or int
+        :return: the merged allow list instance, or ``filters`` as-is
+        :rtype: CommitType or object
+        """
+        if not isinstance(filters, list):
+            return filters
+
+        # FIXME work w/ illegal names
+        return reduce(
+            or_, (CommitType[name] for name in filters), CommitType(0)
+        )
 
 
 class _HbBracket(BaseModel):
