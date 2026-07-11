@@ -12,6 +12,7 @@ from hupy.kamilog import getLogger
 from hupy.cbm import CBM_LOGGER_NAME
 from hupy.cbm.branch_type import BranchType
 from hupy.cbm.commit_type import CommitType
+from hupy.config.load_config import load_hupy_config
 
 __all__ = ("get_current_commit_type", "get_source_branch", "get_target_branch")
 
@@ -141,10 +142,12 @@ def get_current_commit_type(repo):
         _commit_type_cache[repo.git_dir] = CommitType.OTHER_MERGE
         return _commit_type_cache[repo.git_dir]
 
+    cbm_config = load_hupy_config(repo).cbm
+
     source = get_source_branch(repo)
-    source_type = BranchType.from_name(source, repo)
+    source_type = BranchType.from_name(source, cbm_config)
     target_type = (
-        None if target is None else BranchType.from_name(target, repo)
+        None if target is None else BranchType.from_name(target, cbm_config)
     )
 
     commit_type = CommitType.decide_commit_type(source_type, target_type)
