@@ -9,9 +9,9 @@ from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
 
-# Fixme rename as verify
-# Todo use pass to indicate success
-# Todo add assert stubs existed
+# FIXME rename as verify
+# TODO use pass to indicate success
+# TODO add assert stubs existed
 
 from hupy.kamilog import (
     add_verbose_arguments,
