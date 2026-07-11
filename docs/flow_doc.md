@@ -22,7 +22,8 @@ flowchart TD
 
     %% post-commit stage
     subgraph postcommit [post-commit stage]
-        post[/post-commit hook/]
+        post[/post-commit hook/] --> lead3[[Hook Bracket - lead]]
+        lead3 --> trail3[[Hook Bracket - trail]]
     end
 
     commit --> pre
@@ -30,11 +31,3 @@ flowchart TD
     trail2 --> created([commit created])
     created --> post
 ```
-
-Each stub is a thin trampoline invoking `hupy hook <stage>`:
-
-- **`pre-commit`** — [Hook Bracket](hb_doc.md) lead → [Ban Direct Commit](bdc_doc.md) → [Triage Tag Gating](ttg_doc.md) → Hook Bracket trail
-- **`prepare-commit-msg`** — [Hook Bracket](hb_doc.md) lead → [Prepend Commit Header](pch_doc.md) → Hook Bracket trail
-- **`post-commit`** — runs after the commit is created
-
-Any stage's module can be skipped for the next commit with `hupy skip-once <module>` (undo with `-u`).
