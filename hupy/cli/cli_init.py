@@ -132,7 +132,7 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_namespace(args, logger=logger)
+    set_logging_level_by_namespace(args)
 
     repo_path = args.repo_path
     repo = load_git_repo(repo_path)
