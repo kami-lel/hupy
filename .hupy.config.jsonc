@@ -5,6 +5,18 @@
     "version_file": "pyproject.toml",
     "version_line_pattern": "^version = \"(.*)\""
   },
+  "cbm": {
+    "main_branch_name": "main",
+    "dev_branch_name": "dev",
+    "hotfix_branch_prefix": "hotfix",
+    "release_branch_prefix": "release"
+  },
+  "bdc": {
+    "is_disabled": false,
+    "ban_commit_to_main": true,
+    "ban_commit_to_dev": false,
+    "ban_commit_to_branches": []
+  },
   "ttg": {
     "is_disabled": false,
     "disable_tt_detect_by_type": false,
@@ -12,12 +24,6 @@
       "tests/fixtures/**",
       "tests/**/fixtures/**"
     ]
-  },
-  "cbm": {
-    "main_branch_name": "main",
-    "dev_branch_name": "dev",
-    "hotfix_branch_prefix": "hotfix",
-    "release_branch_prefix": "release"
   },
   "pch": {
     "is_disabled": false,
@@ -27,15 +33,24 @@
     "beta_tag": "-beta",
     "release_candidate_tag": "-rc"
   },
-  "bdc": {
-    "is_disabled": false,
-    "ban_commit_to_main": true,
-    "ban_commit_to_dev": false,
-    "ban_commit_to_branches": []
-  },
   "hb": {
     "is_disabled": false,
-    "pre_commit": [],
-    "prepare_commit_msg": []
+    "pre_commit": {
+      "lead": [
+        {
+          "cmd": "pytest tests/",
+          "allow_commit_types": [
+            "MERGE"
+          ],
+          "allow_failure": false,
+          "remark": "Pytest Unit Tests"
+        }
+      ],
+      "trail": []
+    },
+    "prepare_commit_msg": {
+      "lead": [],
+      "trail": []
+    }
   }
 }

@@ -6,8 +6,6 @@ branch type flag: categorize git branches by naming convention
 
 from enum import Enum, auto
 
-from hupy.config.load_config import load_hupy_config
-
 __all__ = ("BranchType",)
 
 
@@ -24,18 +22,15 @@ class BranchType(Enum):
     USER = auto()
 
     @classmethod
-    def from_name(cls, branch_name, repo):
+    def from_name(cls, branch_name, cbm_config):
         """
         :param branch_name: name of the git branch to classify
         :type branch_name: str
-        :param repo: git repository object; used to load the ``cbm``
-                    config section
-        :type repo: git.Repo
+        :param cbm_config: the loaded ``cbm`` config section
+        :type cbm_config: hupy.config.config_file._Cbm
         :return: the branch type matching ``branch_name``
         :rtype: BranchType
         """
-        cbm_config = load_hupy_config(repo).cbm
-
         if branch_name == cbm_config.dev_branch_name:
             return cls.DEV
 

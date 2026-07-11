@@ -31,7 +31,7 @@ _LOCK_FILE_SUFFIX = ".lock"
 @contextlib.contextmanager
 def open_state_file(repo):
     """
-    open ``repo``'s HUPy state file as an unvalidated
+    open ``repo``'s HUPy state file as a validated
     :class:`HupyStateFile`, atomically saving it back on exit
     (thread- and process-safe)
 
@@ -50,9 +50,7 @@ def open_state_file(repo):
         try:
             logger.debug("open HUPy state file: {}".format(state_path))
             if state_path.exists():
-                state = HupyStateFile.model_construct(
-                    **json.loads(state_path.read_text())
-                )
+                state = HupyStateFile(**json.loads(state_path.read_text()))
             else:
                 logger.info(
                     "hupy-state.json not found, create from defaults:\t{}"

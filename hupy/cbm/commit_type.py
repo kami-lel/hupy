@@ -6,47 +6,52 @@ commit type flag: categorize git commits by merge strategy
 
 from enum import Flag, auto
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.cbm.branch_type import BranchType
 
-__all__ = ("CommitType", "CBM_LOGGER_NAME")
-
-CBM_LOGGER_NAME = PROJ_LOGGER_NAME + ".CBM"
+__all__ = ("CommitType",)
 
 
-class CommitType(Flag):
+class CommitType(Flag):  #######################################################
     """
     represent the type of an in-progress git commit with two-level
-    hierarchy: level 1 distinguishes merges from other commits;
-    level 2 further categorizes merges by source and target branch.
+    hierarchy: level 2 gives each merge subtype its own bit, level 1
+    exposes ``MERGE`` as the union of every merge subtype so a single
+    bit test can categorize both a specific subtype and any merge.
 
     See `docs/cbm_doc.md` for detailed descriptions of each merge type.
     """
 
-    _FEATURE_LANDING = auto()
-    _VERSION_RELEASE = auto()
-    _SYNC_BACKPORT = auto()
-    _CATCH_UP = auto()
-    _HOTFIX_RELEASE = auto()
-    _HOTFIX_BACKPORT = auto()
-    _RELEASE_CUT = auto()
-    _RELEASE_BACKPORT = auto()
-    _OTHER_MERGE = auto()
+    # Member  ------------------------------------------------------------------
 
-    # Public Member  -----------------------------------------------------------
-
-    MERGE = auto()
+    # non-merge commits
+    REGULAR_COMMIT = auto()
     OTHER_COMMIT = auto()
 
-    FEATURE_LANDING = MERGE | _FEATURE_LANDING
-    VERSION_RELEASE = MERGE | _VERSION_RELEASE
-    SYNC_BACKPORT = MERGE | _SYNC_BACKPORT
-    CATCH_UP = MERGE | _CATCH_UP
-    HOTFIX_RELEASE = MERGE | _HOTFIX_RELEASE
-    HOTFIX_BACKPORT = MERGE | _HOTFIX_BACKPORT
-    RELEASE_CUT = MERGE | _RELEASE_CUT
-    RELEASE_BACKPORT = MERGE | _RELEASE_BACKPORT
-    OTHER_MERGE = MERGE | _OTHER_MERGE
+    # merge subtypes
+    FEATURE_LANDING = auto()
+    VERSION_RELEASE = auto()
+    SYNC_BACKPORT = auto()
+    CATCH_UP = auto()
+    HOTFIX_RELEASE = auto()
+    HOTFIX_BACKPORT = auto()
+    RELEASE_CUT = auto()
+    RELEASE_BACKPORT = auto()
+    OTHER_MERGE = auto()
+
+    # merge category
+    MERGE = (
+        FEATURE_LANDING
+        | VERSION_RELEASE
+        | SYNC_BACKPORT
+        | CATCH_UP
+        | HOTFIX_RELEASE
+        | HOTFIX_BACKPORT
+        | RELEASE_CUT
+        | RELEASE_BACKPORT
+        | OTHER_MERGE
+    )
+
+    # Public Method  -----------------------------------------------------------
 
     @classmethod
     def decide_commit_type(cls, source, target):

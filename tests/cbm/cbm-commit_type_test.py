@@ -43,7 +43,7 @@ class TestDecideCommitTypeKnownPairs:
         ],
     )
     def test_known_pair_result_is_a_merge(self, expected):
-        assert CommitType.MERGE in expected
+        assert expected in CommitType.MERGE
 
 
 class TestDecideCommitTypeUnknownPairs:

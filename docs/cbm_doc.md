@@ -220,7 +220,7 @@ no named branch to report.
 
 **Prepend Commit Header** is *HUPy*'s `prepare-commit-msg` hook. When you make a **merge commit**, it adds a short header line to the top of the commit message so the history reads clearly at a glance — you don't have to write it yourself.
 
-It recognizes every merge type listed under [Merge Type](#merge-type) above and leaves every other commit (`OTHER_COMMIT`, `OTHER_MERGE`) untouched. The header goes on the first line, followed by a blank line and then git's original message:
+It recognizes every merge type listed under [Merge Type](#merge-type) above and leaves every other commit (`REGULAR_COMMIT`, `OTHER_MERGE`) untouched. The header goes on the first line, followed by a blank line and then git's original message:
 
 ```
 Feature Landing: add-user-auth
