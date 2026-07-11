@@ -9,14 +9,16 @@
   // HUPy version, do not edit
   "hupy_version": "0.3.0",
   "vg": { // VerGrep  ##########################################################
-    // FIXME rewrite ver grep
-    // reads the repo's version string for *Prepend Commit Header*; empty
-    // fields disable it, so the header falls back to plain `Version Release`
+    // grep repo's version string
     //
-    // eg. pyproject.toml `version = "1.0.0"` -> `"^version = \"(.*)\""`
+    // disable VerGrep
     "is_disabled": false,
-    "version_file": "", // file to read, relative to repo root
-    "version_line_pattern": "" // regex; first capture group `( )` is version
+    // file path which version string can be found,
+    // relative to repo root
+    "version_file": "",
+    // regex pattern to match line contatining version string;
+    // first capture group `( )` is version
+    "version_line_pattern": ""
   },
   "cbm": { // ##################################################################
     // exact name of main branch
