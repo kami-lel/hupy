@@ -5,7 +5,12 @@ import os
 import pathlib
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.cli.cli_init import REPO_PATH_HELP, load_git_repo
+from hupy.cli.cli_init import (
+    HOOK_STUBS_DIR,
+    REPO_PATH_HELP,
+    _resolve_hooks_dir,
+    load_git_repo,
+)
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
@@ -33,7 +38,7 @@ validate the HUPy config file (.hupy.config.jsonc) at repository root
 """
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _verify_hook_stubs(repo):
