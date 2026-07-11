@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — `verify-config-file` renamed to `verify` (alias `v`), which now also checks every packaged hook stub is installed via the newly public `HOOK_STUBS_DIR`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — first stable release `1.0.0`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -243,6 +243,7 @@ hupy/                             # installable package
     report_tt.py                  # render/log gated findings
     gate_tt.py                    # gate by TT tier
   ver_grep/                       # version grepping
+    ver_grep.py                   # grep_version(repo, state_file, ref): grep at a git ref
     branch_version.py             # grep_source_branch_version/grep_target_branch_version
     version_bump.py               # decide_version_update_type
 docs/

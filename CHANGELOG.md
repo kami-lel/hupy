@@ -6,51 +6,68 @@
 
 ### Added
 
-- **`verify`** (aliased `v`) — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, greps the current `VerGrep` version, and checks every packaged hook stub script is installed in the repo's resolved hooks dir; each step logs a `pass` line, and a missing stub logs one `fail` line per file before `SystemExit(1)`
-- **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
-- **`--copy-hooks`/`--create-config-file` flags on `hupy init`** — run either step alone, or both together (same as passing neither); a step registry in `cli_init.py` makes adding further steps/flags a one-line change
-- **per-module `is_disabled` config flag** — `vg`, `ttg`, `pch`, and `bdc` each gain an `is_disabled: bool` field in `.hupy.config.jsonc` (`vg`'s validator still returns early without the unconfigured-warning when disabled); consumed by the new centralized run-gating below — `hb` already carried the field from `dev` but has no implementation yet to wire it into
-- **new `ttg` config section** — `is_disabled`, `disable_tt_detect_by_type`, `ignored_path_globs`; all three are now consumed by `ttg.gate_tt`/`ttg.detect_tt`: `disable_tt_detect_by_type` (default `false`) requires a TT tag to follow the comment-leader token expected for the file's extension (eg `//`, `#`, `<!--`), via the new `ttg.comment_style.get_comment_prefix_for_file`, rather than matching anywhere in the line; `ignored_path_globs` skips matching staged files from TT scanning entirely
-- **HUPy state file** (`hupy-state.json`) — new `hupy.state` package: `HupyStateFile` schema (`hooks_logger_verbosity`, `skip_once`), resolved via `get_state_file_path(repo)` inside the repo's `.git` directory; `open_state_file(repo)` opens and atomically saves it back, thread- and process-safe via a file lock plus a `tempfile`/`os.replace` write; a missing file falls back to schema defaults
-- **`skip-once`/`so`** CLI subcommand — flags one or more modules (`vg`/`ttg`/`pch`/`bdc`/`hb`, or their full names like `ver-grep`/`triage-tag-gating`) to be skipped for the next commit round, recorded in `hupy-state.json`'s `skip_once` set; the new `-u`/`--unset` flag removes the flag(s) instead of setting them
-- **centralized module run-gating** — new `should_run_module(repo, state_file, module_abbr)` combines a module's config `is_disabled` flag with a one-time `skip_once` flag (a plain membership check against `HupyStateFile.skip_once`, which stays set for every call across a round, since a module like `hb` is checked multiple times per round) into a single decision; `is_disabled` is checked first and short-circuits before the `skip_once` check; `ban_direct_commit`, `perform_triage_tags_gating`, and `prepend_commit_header` each take a new `state_file` parameter and call it in place of their own former direct `is_disabled` check; the whole `skip_once` set is spent by the new `HupyStateFile.reset_for_next_commit()`, called from the new `post-commit` hook stage below
-- **`post-commit` hook stage** — new `hupy hook post-commit` subcommand, wired into the `post-commit` git hook stub, that resets one-time state (`skip_once`) for the next commit round via `HupyStateFile.reset_for_next_commit()`; `examples/hooks/post-commit-demo.sh` demonstrates it, and `all-hooks-demo.sh` now runs it
-- **`hb` post-commit bracket** — `_Hb` gains a `post_commit: _HbBracket` field (`hb.post_commit.lead`/`.trail` in `.hupy.config.jsonc`), and `_Hb.get_bracket` recognizes `"post-commit"`; `hook post-commit` now runs `perform_hook_brackets(repo, state_file, "post-commit", True)` then the `False` (trail) call, bracketing `state_file.reset_for_next_commit()` the same way `hb` already brackets `pre-commit`/`prepare-commit-msg`
-- **`set-verbosity`/`sv`** CLI subcommand — sets `hooks_logger_verbosity` in `hupy-state.json`, controlling log verbosity for subsequent hook runs
-
 ### Changed
-
-- `ban_direct_commit`'s skip/pass/fail log messages now include the branch name
-- config file renamed **`.hupy.config.json`** → **`.hupy.config.jsonc`**, now parsed as JSON5 (comments and trailing commas allowed) via the new `json5` dependency
-- `hupy init`/`init-create-config` now write a fresh config by copying a packaged asset (`hupy/assets/.hupy.config.jsonc`) verbatim, rather than generating one from `HupyConfigFile`'s field defaults; `HupyConfigFile`'s fields no longer carry defaults themselves — the shipped asset is now the single source of default values, with its comments documenting each field in place of the old `docs/hupy_config_doc.md`
-- renamed `write_default_config` → `create_default_config_file` (now takes a `git.Repo`, not a bare `repo_root` path); renamed `hupy/config/hupy_config_file.py` → `hupy/config_file/config_file.py`, and the `hupy.config` package itself renamed to `hupy.config_file`
-- git hook stage subcommands (`pre-commit`, `prepare-commit-msg`) moved from top-level `hupy <stage>` into a new `hupy hook <stage>` subcommand group (`hupy/cli/hook/` package), alongside the new `post-commit` stage above
-- **`ttg` package restructured** — `ttg.tt_gating` renamed to `ttg.gate_tt`, `ttg.tt_detect` renamed to `ttg.detect_tt`; `ttg.gate_tt` further split into `ttg.staged_files` (staged-file listing and `ignored_path_globs` filtering) and `ttg.report_tt` (rendering/logging gated-tag findings), leaving `gate_tt` holding just the gating decision itself; `triage_tag_type.py` trimmed down to the bare `TriageTagType` flag enum — its line-scanning logic moved into `detect_tt` (its only caller) and the redundant `filter_by_group` classmethod removed in favor of `TriageTagType`'s native `in`-based group membership check
-- `ttg`/`pch` auxiliary functions that need config values now call the cached `load_hupy_config(repo)` directly instead of having the value threaded down through function parameters
-- `default_logger_verbosity` removed from `HupyConfigFile`; verbosity now comes from `hupy-state.json`'s `hooks_logger_verbosity` field instead, read by each `hupy hook` stage through the new `open_state_file` context, and set via the new `set-verbosity`/`sv` CLI subcommand above
-- config field `ver_grep` renamed to **`vg`** (schema field, JSON key in `.hupy.config.jsonc`, and all references) — aligns with the `vg` abbreviation already used by `skip-once`
-- config path constants/helpers (`CONFIG_FILENAME`, `DEFAULT_CONFIG_ASSET`, `get_config_file_path`) extracted out of `load_config.py`/`write_config.py` into a new `hupy/config_file/config_file_path.py`
-- `cli_init.py`'s `_HOOK_STUBS_DIR` renamed to public `HOOK_STUBS_DIR` so `cli_verify.py` can reuse it (alongside `_resolve_hooks_dir`) to check installed hook stubs against the packaged set
 
 ### Deprecated
 
 ### Removed
 
-- `docs/hupy_config_doc.md` (folded into `.hupy.config.jsonc`'s own comments)
-- **`init-create-config`/`init-copy-hooks` subcommands** — superseded by `hupy init`'s new `--create-config-file`/`--copy-hooks` flags; `cli_icc.py`/`cli_ich.py` deleted, their `_copy_hook_stubs`/`_resolve_hooks_dir` helpers and supporting constants moved into `cli_init.py`
-
 ### Fixed
-
-- `tests/fixtures/prep_repo.py`'s `_write_config_file` left `vg.version_file`/`version_line_pattern` blank, so every demo/test repo it builds silently fell back to the unconfigured warning instead of grepping the committed `setup.cfg`; now points `vg` at `setup.cfg` with a matching pattern
-- `examples/bdc/__init__.py`'s `prepare_demo_repo_on_branch` never wrote `.hupy.config.jsonc`, so `skip-non-protected-branch-demo.py` (and any other demo built on it) errored with a config-file-not-found log instead of demoing the skip path
-- `hupy.pch`'s `_get_release_type_word` could match an `alpha_tag`/`beta_tag`/`release_candidate_tag` substring (eg `-rc`) against a non-semver version before the semver-shaped checks ran, misclassifying an unparsable version like `v2024.07-rc1` as a tagged release instead of falling back to the plain `Version Release` header; tag checks now only run once the version's `major.minor.patch` core has matched
-- `examples/pch/release-cut-demo.py` claimed PCH still skips `RELEASE_CUT` merges and named a mismatched source branch; corrected to match `pch`'s actual `Release Cut` header support
-- `hupy.state.open_state`'s logger (`HU.state`) now disables propagation like every other module logger, fixing state log lines printing twice
-- `cli_verify.py` configured its own `set_logging_level_by_namespace(args, logger=logger)`/`getLogger(...)` calls against `cli_init`'s `INIT_LOGGER_NAME`, so `verify`'s log lines were mislabeled under the init logger and its own `-v`/`-q` flags were misapplied; now uses its own `"HU.verify"` logger
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v0.3.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v1.0.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [1.0.0] - 2026-07-12
+
+First stable release.
+
+### Added
+
+- **Hook Bracket (HB)** — run your own *lead* and *trail* shell commands around each hook stage (`pre-commit`, `prepare-commit-msg`, `post-commit`) straight from `.hupy.config.jsonc`, with no custom hook script; each command can filter by commit type and choose whether its failure blocks the commit
+- **`hupy verify`** (alias `v`) — checks a repository's setup in one command: the config file loads and validates, the version string is greppable, and every packaged hook stub is installed in the hooks directory
+- **`hupy skip-once`** (alias `so`) — skip one or more modules (`vg`/`ttg`/`pch`/`bdc`/`hb`) for just the next commit without editing the config; `-u`/`--unset` clears a pending skip
+- **`hupy set-verbosity`** (alias `sv`) — set the hook log verbosity, remembered across commits
+- **`post-commit` hook stage** — a third git hook stage, added alongside `pre-commit` and `prepare-commit-msg`, that clears one-time state after a commit lands and runs its own Hook Bracket
+- **Per-module disable switch** — an `is_disabled` flag on every feature (`vg`/`ttg`/`pch`/`bdc`/`hb`) turns it off without removing its configuration
+- **Selectable `hupy init` steps** — `--copy-hooks` and `--create-config-file` each run one setup step alone; plain `hupy init` still runs both
+- **Comment-aware Triage Tag Gating** — a new `ttg` config section adds `disable_tt_detect_by_type` (only count a triage tag that follows the file's comment leader, e.g. `//`, `#`, `<!--`) and `ignored_path_globs` (exclude matching files from scanning)
+- **Config version check** — loading a config file whose `hupy_version` differs from the installed *HUPy* version now logs a warning
+
+### Changed
+
+- Config file renamed **`.hupy.config.json` → `.hupy.config.jsonc`**, now parsed as JSON5 so it can carry `//` comments and trailing commas; the shipped file documents every field inline
+- The shipped `.hupy.config.jsonc` is now the single source of default values — `hupy init` writes it verbatim, and the config schema no longer carries its own field defaults
+- Git hook stages moved from top-level `hupy <stage>` into a **`hupy hook <stage>`** command group (`pre-commit`, `prepare-commit-msg`, `post-commit`)
+- Config field `ver_grep` renamed to **`vg`**, matching the abbreviation used elsewhere
+- Log verbosity now comes from the local `hupy-state.json` (set via `set-verbosity`) rather than a config-file field
+- Ban Direct Commit log messages now name the branch involved
+
+### Removed
+
+- **`init-create-config` / `init-copy-hooks` subcommands** — replaced by `hupy init`'s new `--create-config-file` / `--copy-hooks` flags
+- `docs/hupy_config_doc.md` — its field documentation now lives inline in `.hupy.config.jsonc`
+
+### Fixed
+
+- Prepend Commit Header could misclassify an unparsable version (e.g. `v2024.07-rc1`) as a tagged pre-release; version tags are now only recognized once a `major.minor.patch` core matches
+- State log lines printed twice due to logger propagation; now emitted once
+- `verify`'s log lines were mislabeled under the init logger and its verbosity flags misapplied; it now uses its own logger
+- Several `examples/` demo scripts failed to write a `.hupy.config.jsonc` and errored instead of demonstrating their feature
+
+[1.0.0]: https://github.com/kami-lel/hupy/compare/v0.3.0...v1.0.0
 
 
 

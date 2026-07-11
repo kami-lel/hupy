@@ -78,7 +78,7 @@ hupy verify
 `verify` checks that:
 
 - the config file (`.hupy.config.jsonc`) loads and validates against the schema
-- the version string can be grepped per the `VerGrep` config
+- the version string can be grepped
 - every packaged hook stub is installed in the repo's hooks directory
 
 
