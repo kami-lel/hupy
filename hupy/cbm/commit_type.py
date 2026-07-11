@@ -6,12 +6,9 @@ commit type flag: categorize git commits by merge strategy
 
 from enum import Flag, auto
 
-from hupy import PROJ_LOGGER_NAME
 from hupy.cbm.branch_type import BranchType
 
-__all__ = ("CommitType", "CBM_LOGGER_NAME")
-
-CBM_LOGGER_NAME = PROJ_LOGGER_NAME + ".CBM"
+__all__ = ("CommitType",)
 
 
 class CommitType(Flag):

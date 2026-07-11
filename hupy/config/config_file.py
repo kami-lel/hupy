@@ -130,14 +130,24 @@ class _Pch(BaseModel):
     release_candidate_tag: str
 
 
+class _HbCmd(BaseModel):
+    """
+    a single bracketed command run alongside a HUPy git hook
+    """
+
+    cmd: str
+    commit_types: list[str] = Field(default_factory=lambda: ["ALL"])
+    allow_failure: bool = False
+
+
 class _Hb(BaseModel):
     """
     configuration for the HB module (hook bracket)
     """
 
     is_disabled: bool
-    pre_commit: list[str]
-    prepare_commit_msg: list[str]
+    pre_commit: list[_HbCmd]
+    prepare_commit_msg: list[_HbCmd]
 
 
 class HupyConfigFile(BaseModel):
