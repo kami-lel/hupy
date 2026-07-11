@@ -2,8 +2,8 @@
 // # .hupy.config.jsonc
 // #
 // # per-repository HUPy config;
-// # commit it so every clone shares the same behavior
-// FIXME add links
+// # commit it so every clone shares the same behavior;
+// # project homepage & docs q.v. https://github.com/kami-lel/hupy
 // #############################################################################
 {
   // HUPy version, do not edit
