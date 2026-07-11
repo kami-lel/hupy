@@ -3,11 +3,8 @@
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.hook.cli_hook import register_cli_hook_parser
 from hupy.cli.cli_init import register_cli_init_parser
-from hupy.cli.cli_pre_commit import register_cli_pre_commit_parser
-from hupy.cli.cli_prepare_commit_msg import (
-    register_cli_prepare_commit_msg_parser,
-)
 from hupy.cli.cli_set_verbosity import register_cli_set_verbosity_parser
 from hupy.cli.cli_skip_once import register_cli_skip_once_parser
 from hupy.cli.cli_verify import register_cli_verify_parser
@@ -36,8 +33,7 @@ register_cli_init_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
 register_cli_skip_once_parser(cli_subparser)
 register_cli_set_verbosity_parser(cli_subparser)
-register_cli_pre_commit_parser(cli_subparser)
-register_cli_prepare_commit_msg_parser(cli_subparser)
+register_cli_hook_parser(cli_subparser)
 
 
 # todo dry run feature for hooks CLI

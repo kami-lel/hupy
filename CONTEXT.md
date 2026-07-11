@@ -44,7 +44,7 @@ Each utility is a standalone module in the `hupy/` package, callable independent
 **Decision**: `hupy init` sets a repo up with two artifacts:
 
 1. A tracked, dot-prefixed config file at the repo root, **`.hupy.config.jsonc`** (JSON5/JSONC, comments allowed) — the config surface: which features (`ttg`, `pch`, and future ones) are enabled, and in what order they run per hook stage. Being tracked/committed, it's reviewable and shared across clones the same way any other project file is. Default content is copied verbatim from a packaged asset, `hupy/assets/.hupy.config.jsonc` (see `config` in Module Details), whose own comments document each field — not generated from `HupyConfigFile` defaults, since the schema no longer carries any.
-2. Two thin stub scripts copied into the repo's actual hooks directory: `pre-commit` and `prepare-commit-msg`, sourced from the packaged `hupy/assets/hook-stubs/`. Each stub does nothing but invoke the corresponding CLI stage group — `"<python>" -m hupy pre-commit` / `"<python>" -m hupy prepare-commit-msg` — which then reads `.hupy.config.jsonc` via `load_hupy_config(repo)`; today `vg` and `cbm` are consumed (feature enable/order fields aren't in `HupyConfigFile` yet — see `cli` and `config` in Module Details). Each stage also opens `hupy-state.json` via `open_state_file(repo)` for the run's verbosity baseline and one-time module skips — see `state` in Module Details; unlike the two `init`-written artifacts above, this file is not created by `init`, it's created lazily (from schema defaults) the first time either stage runs.
+2. Two thin stub scripts copied into the repo's actual hooks directory: `pre-commit` and `prepare-commit-msg`, sourced from the packaged `hupy/assets/hook-stubs/`. Each stub does nothing but invoke the corresponding CLI stage group — `"<python>" -m hupy hook pre-commit` / `"<python>" -m hupy hook prepare-commit-msg` — which then reads `.hupy.config.jsonc` via `load_hupy_config(repo)`; today `vg` and `cbm` are consumed (feature enable/order fields aren't in `HupyConfigFile` yet — see `cli` and `config` in Module Details). Each stage also opens `hupy-state.json` via `open_state_file(repo)` for the run's verbosity baseline and one-time module skips — see `state` in Module Details; unlike the two `init`-written artifacts above, this file is not created by `init`, it's created lazily (from schema defaults) the first time either stage runs.
 
 - **Config surface = `.hupy.config.jsonc`, not the hook script.** This reverses an earlier "config surface = the script itself" decision (see *Prior rejections* below). The hook stub is a fixed, content-free trampoline; enabling/disabling a feature and controlling its order both become a config edit, not a bash edit.
 - **Dot-prefixed naming (`.hupy.config.jsonc`, not `hupy.config.jsonc`)**: chosen by analogy to the Python ecosystem's single-purpose tool-config dotfiles (`.flake8`, `.pylintrc`, `.coveragerc`, `.isort.cfg`), and specifically to `.pre-commit-config.yaml` — the closest sibling in the ecosystem (same domain: tracked, root-level git-hook-orchestration config) and the exact framework rejected below as a dependency. Visible top-level docs in this repo (`AGENTS.md`, `CHANGELOG.md`, `CONTEXT.md`) were considered as a naming precedent and rejected — those are human-authored prose meant to be read, not tool-consumed config. The `.jsonc` extension (renamed from `.json`) reflects the file now being parsed as JSON5 rather than strict JSON, so it can carry the `//` comments documenting each field.
@@ -258,14 +258,14 @@ Own logger `BDC_LOGGER_NAME` (`"HU.BDC"`), propagation disabled.
 
 Argument parser and entrypoint for the `hupy` command-line tool; a package (`hupy/cli/`, formerly a flat `hupy/cli.py`) split by subcommand.
 
-**Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action) — both in `cli_main.py` · `register_cli_init_parser`/`load_git_repo`/`INIT_LOGGER_NAME`/`REPO_PATH_HELP`/`_copy_hook_stubs`/`_resolve_hooks_dir` (`cli_init.py`) · `register_cli_pre_commit_parser` (`cli_pre_commit.py`) · `register_cli_prepare_commit_msg_parser` (`cli_prepare_commit_msg.py`) · `register_cli_verify_parser` (`cli_verify.py`) · `register_cli_skip_once_parser`/`SKIPPABLE_MODULE` (`cli_skip_once.py`)
+**Public API**: `cli_parser` (ArgumentParser) · `cli_subparser` (subparsers action) — both in `cli_main.py` · `register_cli_init_parser`/`load_git_repo`/`INIT_LOGGER_NAME`/`REPO_PATH_HELP`/`_copy_hook_stubs`/`_resolve_hooks_dir` (`cli_init.py`) · `register_cli_hook_parser` (`hook/cli_hook.py`) · `register_cli_pre_commit_parser` (`hook/cli_pre_commit.py`) · `register_cli_prepare_commit_msg_parser` (`hook/cli_prepare_commit_msg.py`) · `register_cli_verify_parser` (`cli_verify.py`) · `register_cli_skip_once_parser`/`SKIPPABLE_MODULE` (`cli_skip_once.py`)
 
-The CLI has five top-level subcommands, mirroring the hook stages and setup:
+The CLI has five top-level subcommands, mirroring the hook stages and setup; the two git hook stages nest under a `hook` subcommand group:
 
 ```
 hupy init
-hupy pre-commit
-hupy prepare-commit-msg
+hupy hook pre-commit
+hupy hook prepare-commit-msg
 hupy verify-config-file
 hupy skip-once (alias: s)
 ```
@@ -369,8 +369,8 @@ hupy/                             # installable package
   assets/                         # packaged non-code data files
     .hupy.config.jsonc             # default config content, commented; copied verbatim by create_default_config_file
     hook-stubs/                   # default hook stub scripts
-      pre-commit                  # thin wrapper: `"{{PYTHON}}" -m hupy pre-commit`
-      prepare-commit-msg          # thin wrapper: `"{{PYTHON}}" -m hupy prepare-commit-msg`
+      pre-commit                  # thin wrapper: `"{{PYTHON}}" -m hupy hook pre-commit`
+      prepare-commit-msg          # thin wrapper: `"{{PYTHON}}" -m hupy hook prepare-commit-msg`
   kamilog.py                      # vendored logging module (v2.3.1)
   pch/                            # Prepend Commit Header package
     __init__.py                   # PCH_LOGGER_NAME = "HU.PCH"

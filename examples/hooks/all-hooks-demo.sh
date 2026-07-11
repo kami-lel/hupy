@@ -4,7 +4,8 @@
 #
 # run every demo in examples/hooks/ in sequence, on the same repo:
 # Feature Landing merge (add-user-authentication into develop) through
-# `hupy pre-commit`, then through `hupy prepare-commit-msg` (mirroring
+# `hupy hook pre-commit`, then through `hupy hook prepare-commit-msg`
+# (mirroring
 # git's own hook order), at default and `-vvv` verbosity
 # expected result: both PASS
 
@@ -30,13 +31,13 @@ _prepare_demo_repo() {
 _run_pre_commit() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy pre-commit "$@")
+    (cd "$repo_dir" && python3 -m hupy hook pre-commit "$@")
 }
 
 _run_prepare_commit_msg() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy prepare-commit-msg "$@")
+    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "$@")
 }
 
 
