@@ -1,6 +1,6 @@
 # Hook Flow Documentation
 
-Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature:
+Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a **Hook Bracket** — configured *lead* commands run before it, *trail* commands after:
 
 ```mermaid
 flowchart TD
@@ -8,29 +8,33 @@ flowchart TD
 
     %% pre-commit stage
     subgraph precommit [pre-commit stage]
-        pre[/pre-commit hook/] --> bdc[[Ban Direct Commit]] --> ttg[[Triage Tag Gating]]
+        pre[/pre-commit hook/] --> lead1[[Hook Bracket - lead]]
+        lead1 --> bdc[[Ban Direct Commit]] --> ttg[[Triage Tag Gating]]
+        ttg --> trail1[[Hook Bracket - trail]]
     end
 
     %% prepare-commit-msg stage
     subgraph preparemsg [prepare-commit-msg stage]
-        prep[/prepare-commit-msg hook/] --> pch[[Prepend Commit Header]]
+        prep[/prepare-commit-msg hook/] --> lead2[[Hook Bracket - lead]]
+        lead2 --> pch[[Prepend Commit Header]]
+        pch --> trail2[[Hook Bracket - trail]]
     end
 
     %% post-commit stage
     subgraph postcommit [post-commit stage]
-        post[/post-commit hook/] --> reset[[reset one-time skip state]]
+        post[/post-commit hook/]
     end
 
     commit --> pre
-    ttg --> prep
-    pch --> created([commit created])
+    trail1 --> prep
+    trail2 --> created([commit created])
     created --> post
 ```
 
 Each stub is a thin trampoline invoking `hupy hook <stage>`:
 
-- **`pre-commit`** — runs [Ban Direct Commit](bdc_doc.md) then [Triage Tag Gating](ttg_doc.md)
-- **`prepare-commit-msg`** — runs [Prepend Commit Header](pch_doc.md)
-- **`post-commit`** — spends the round's one-time `skip-once` flags (`hupy-state.json`), so they apply once and then clear
+- **`pre-commit`** — [Hook Bracket](hb_doc.md) lead → [Ban Direct Commit](bdc_doc.md) → [Triage Tag Gating](ttg_doc.md) → Hook Bracket trail
+- **`prepare-commit-msg`** — [Hook Bracket](hb_doc.md) lead → [Prepend Commit Header](pch_doc.md) → Hook Bracket trail
+- **`post-commit`** — runs after the commit is created
 
 Any stage's module can be skipped for the next commit with `hupy skip-once <module>` (undo with `-u`).
