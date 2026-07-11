@@ -80,16 +80,24 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
     if not should_run_module(repo, state_file, "hb"):
         return
 
-    logger.enter("perform Hook Bracket")
+    lead_trail = "Leading" if is_lead else "Trailing"
+    logger.enter("{} Hook Bracket for {}".format(lead_trail, hook_name))
 
     bracket = load_hupy_config(repo).hb.get_bracket(hook_name)
-    # TODO alt pattern for skip
     if bracket is None:
-        logger.skip("no bracket configured for hook: {}".format(hook_name))
+        raise ValueError("unrecognized hook name: {}".format(hook_name))
+
+    cmds_list = bracket.lead if is_lead else bracket.trail
+
+    # empty commands list
+    if not cmds_list:
+        logger.skip(
+            "no {} bracket commands for hook: {}".format(lead_trail, hook_name)
+        )
         return
 
-    hb_cmds = bracket.lead if is_lead else bracket.trail
-    for hb_cmd in hb_cmds:
+    # HACK write better interactions
+    for hb_cmd in cmds_list:
         if not _is_hb_cmd_applicable(repo, hb_cmd):
             logger.skip("commit type mismatch, skipped: {}".format(hb_cmd.cmd))
             continue
