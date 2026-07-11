@@ -6,7 +6,7 @@ run the bracketed commands configured around a HUPy git hook
 
 import subprocess
 
-from hupy.cbm import get_current_commit_type
+from hupy.cbm import CommitType, get_current_commit_type
 from hupy.config.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.should_run_module import should_run_module
@@ -17,22 +17,23 @@ logger = getLogger(HB_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
-
-
+# auxiliaries  #################################################################
 def _is_hb_cmd_applicable(repo, hb_cmd):
     """
     :param repo: git repository object
     :type repo: git.Repo
-    :param hb_cmd: a single bracketed command
+    :param hb_cmd:
     :type hb_cmd: _HbCmd
     :return: if ``hb_cmd`` should run for the current commit type
     :rtype: bool
     """
     if not hb_cmd.commit_types:
-        return True
+        return True  # no filter configured, always applicable
 
-    return get_current_commit_type(repo).name in hb_cmd.commit_types
+    # commit_types is a skip filter, so applicable means not skipped
+    return not CommitType.is_commit_type_skipped(
+        hb_cmd.commit_types, get_current_commit_type(repo)
+    )
 
 
 def _run_hb_cmd(repo, hb_cmd):
@@ -42,6 +43,7 @@ def _run_hb_cmd(repo, hb_cmd):
     :param hb_cmd: a single bracketed command
     :type hb_cmd: _HbCmd
     """
+    # HACK write better interactions
     logger.enter("run bracketed command: {}".format(hb_cmd.cmd))
 
     result = subprocess.run(hb_cmd.cmd, shell=True, cwd=repo.working_tree_dir)
@@ -97,11 +99,9 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
         )
         return
 
-    # BUG commit type filtering is wrong
-
-    # HACK write better interactions
     for hb_cmd in cmds_list:
         if not _is_hb_cmd_applicable(repo, hb_cmd):
+            # HACK write better interactions
             logger.skip("commit type mismatch, skipped: {}".format(hb_cmd.cmd))
             continue
 

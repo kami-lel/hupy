@@ -5,6 +5,8 @@ commit type flag: categorize git commits by merge strategy
 """
 
 from enum import Flag, auto
+from functools import reduce
+from operator import or_
 
 from hupy.cbm.branch_type import BranchType
 
@@ -61,7 +63,50 @@ class CommitType(Flag):
         """
         return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
 
-    # TODO TODO parse one from list of names
+    @classmethod
+    def build_skip_filter(cls, filters):
+        """
+        merge the commit type members named in ``filters`` into a
+        single ``CommitType`` skip filter with ``|``
+
+
+        :param filters: names of commit type members to merge
+        :type filters: list[str]
+        :return: the merged skip filter
+        :rtype: CommitType
+        :example:
+        >>> CommitType.build_skip_filter(
+        ...     ["FEATURE_LANDING", "VERSION_RELEASE"]
+        ... )
+        <CommitType.FEATURE_LANDING|VERSION_RELEASE: 1027>
+        """
+        # FIXME work w/ illegal names
+        return reduce(or_, (cls[name] for name in filters))
+
+    @classmethod
+    def is_commit_type_skipped(cls, filters, commit_type):
+        """
+        check whether ``commit_type`` shares a bit with the commit
+        types named in ``filters``, used to decide whether a hook
+        bracket should be skipped for the current commit
+
+
+        :param filters: names of commit type members to merge into a
+                skip filter
+        :type filters: list[str]
+        :param commit_type: the commit type to test
+        :type commit_type: CommitType
+        :return: True if commit_type matches any type named in filters
+        :rtype: bool
+        :example:
+        >>> CommitType.is_commit_type_skipped(
+        ...     ["FEATURE_LANDING", "VERSION_RELEASE"],
+        ...     CommitType.FEATURE_LANDING,
+        ... )
+        True
+        """
+        merged_filter = cls.build_skip_filter(filters)
+        return bool(merged_filter & commit_type)
 
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
