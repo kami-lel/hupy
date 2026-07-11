@@ -45,7 +45,7 @@ def _set_verbosity_main(args):
     with open_state_file(repo) as state_file:
         state_file.hooks_logger_verbosity = args.verbosity
 
-        root_logger.done("verbosity set: {}".format(args.verbosity))
+        root_logger.done("logger verbosity set: {}".format(args.verbosity))
 
 
 # Public API  ##################################################################
