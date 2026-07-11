@@ -37,4 +37,16 @@ def grep_version(repo, state_file, ref):
     if should_run_module(repo, state_file, "vg"):
         return ""
 
+    # get version file path & pattern  -----------------------------------------
+    config = load_hupy_config(repo)
+
+    version_file = config.vg.version_file
+    logger.debug("version_file:\t{}".format(version_file))
+    pattern = config.vg.version_line_pattern
+    logger.debug("version_line_pattern:\t{}".format(pattern))
+
+    if str(version_file) in ("", ".") or not pattern.strip():
+        logger.warning("unconfigured")  # TODO better word
+        return ""
+
     pass  # TODO TODO

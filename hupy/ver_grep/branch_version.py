@@ -30,24 +30,7 @@ logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
-def _load_ver_grep_settings(repo):
-    """
-    load the ``vg`` section of the HUPy config for ``repo``
-
-    :param repo: git repository object
-    :type repo: git.Repo
-    """
-    config = load_hupy_config(repo)
-
-    if config.vg.is_unconfigured():
-        return None
-
-    version_file = config.vg.version_file
-    logger.debug("version_file:\t{}".format(version_file))
-    pattern = config.vg.version_line_pattern
-    logger.debug("version_line_pattern:\t{}".format(pattern))
-    return version_file, pattern
+# auxiliaries  #################################################################
 
 
 def _grep_version_from_content(
