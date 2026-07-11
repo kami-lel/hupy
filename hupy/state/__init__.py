@@ -9,4 +9,4 @@ from hupy import PROJ_LOGGER_NAME
 STATE_LOGGER_NAME = PROJ_LOGGER_NAME + "state"
 
 
-# Hack is logger verbosity set by state?
+# HACK is logger verbosity set by state?
