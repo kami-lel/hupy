@@ -3,11 +3,12 @@ ver_grep.py
 """
 
 import re
+import sys
 
 import git
 
 from hupy.should_run_module import should_run_module
-from hupy.kamilog import getLogger
+from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME
@@ -16,6 +17,7 @@ from . import VER_GREP_LOGGER_NAME
 
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
+renderer = AnsiRenderer(sys.stdout)
 
 
 # Public API  ##################################################################
@@ -35,7 +37,7 @@ def grep_version(repo, state_file, ref):
     :rtype: str
     """
 
-    # FIXME general better log content
+    # FIXME verify & update general logger printed out
     if should_run_module(repo, state_file, "vg"):
         return ""
 
@@ -48,7 +50,12 @@ def grep_version(repo, state_file, ref):
     logger.debug("version_line_pattern:\t{}".format(pattern))
 
     if str(version_file) in ("", ".") or not pattern.strip():
-        logger.warning("unconfigured")
+        logger.warning(
+            "unconfigured:\nmust set {}, {} to enable".format(
+                renderer.color("version_file", AnsiStyle.BOLD),
+                renderer.color("version_line_pattern", AnsiStyle.BOLD),
+            )
+        )
         return ""
 
     # load version file  -------------------------------------------------------
