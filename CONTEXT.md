@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — condensed for the upcoming first stable release. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — condensed for the upcoming first stable release; `hb`'s bracket coverage extended to `post-commit` (`_Hb.post_commit`, `hook post-commit` now runs the lead/trail brackets ahead of `reset_for_next_commit()`). For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -48,7 +48,7 @@ Key decisions:
 - **Per-file conflict checks.** `_copy_hook_stubs` checks each target filename, not the directory (which always exists after `git init`), so a fresh repo's first `init` needs no `-f`.
 - **Interpreter path baked in at install time.** The stub template's `{{PYTHON}}` placeholder is substituted with `sys.executable`; a bare `python` on `PATH` is unreliable for hooks fired by an IDE that never sourced the venv. Consequence: re-run `hupy init --force` after moving the venv.
 - **`-f`/`--force` gates the stubs and the config file independently** — `init` is not atomic across the two artifacts.
-- **`post-commit` carries no feature** — it exists only to spend `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them.
+- **`post-commit`'s only config-driven feature is its `hb` bracket** — it otherwise exists to spend `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them. Both the lead and trail `hb` brackets run before `reset_for_next_commit()`, so their commands still see the round's `skip_once` state.
 - **Enforcement caveat**: git hooks are client-side and opt-in (`--no-verify` bypasses them). Guaranteed enforcement needs a server-side mechanism, out of scope here.
 
 ## Module Details
@@ -174,7 +174,7 @@ hupy set-verbosity (alias: sv)
 - **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare.
   - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then `ban_direct_commit` → `perform_triage_tags_gating`.
   - **`hook prepare-commit-msg`** — same pattern, then `prepend_commit_header`.
-  - **`hook post-commit`** — same pattern, then `state_file.reset_for_next_commit()`; no feature of its own.
+  - **`hook post-commit`** — same pattern, then the `hb` lead bracket, the `hb` trail bracket, then `state_file.reset_for_next_commit()`.
 - **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
 - **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
 - Packaged templates `hupy/assets/hook-stubs/{pre-commit,prepare-commit-msg,post-commit}` and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
@@ -214,7 +214,7 @@ hupy/                             # installable package
       cli_hook.py                 # nests the three stages below
       cli_pre_commit.py           # `hook pre-commit`
       cli_prepare_commit_msg.py   # `hook prepare-commit-msg`
-      cli_post_commit.py          # `hook post-commit`: reset_for_next_commit()
+      cli_post_commit.py          # `hook post-commit`: hb brackets + reset_for_next_commit()
   cbm/                            # Commit/Branch/Merge
     branch_type.py                # BranchType + from_name(branch_name, repo)
     commit_type.py                # CommitType + decide_commit_type(source, target)

@@ -51,6 +51,10 @@
     "prepare_commit_msg": {
       "lead": [],
       "trail": []
+    },
+    "post_commit": {
+      "lead": [],
+      "trail": []
     }
   }
 }
