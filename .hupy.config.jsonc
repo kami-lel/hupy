@@ -36,7 +36,8 @@
   "hb": {
     "is_disabled": false,
     "pre_commit": {
-      "lead": [
+      "lead": [],
+      "trail": [
         {
           "cmd": "pytest tests/",
           "allow_commit_types": [
@@ -45,8 +46,7 @@
           "allow_failure": false,
           "remark": "Pytest Unit Tests"
         }
-      ],
-      "trail": []
+      ]
     },
     "prepare_commit_msg": {
       "lead": [],
