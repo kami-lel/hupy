@@ -9,6 +9,7 @@ branch content
 """
 
 import os
+import pathlib
 import re
 
 import git
@@ -159,3 +160,35 @@ def grep_target_branch_version():
     return _grep_version_from_content(
         content, version_file, pattern, branch_label="target branch"
     )
+
+
+def verify_version_grep(repo):
+    """
+    run the full grep process against the working tree, to surface
+    misconfigured ``vg`` fields early; warns, never exits.
+
+
+    :param repo: git repository object
+    :type repo: git.Repo
+    """
+    config = load_hupy_config(repo)
+    if config.vg.is_disabled:
+        logger.skip("VerGrep disabled")
+        return
+
+    settings = _load_ver_grep_settings(repo)
+    if settings is None:  # unconfigured; already warned at config load
+        return
+    version_file, pattern = settings
+
+    full_path = pathlib.Path(repo.working_tree_dir) / version_file
+    if not full_path.exists():
+        logger.warning("version file not found: {}".format(version_file))
+        return
+
+    content = full_path.read_text(encoding="utf-8")
+    version = _grep_version_from_content(
+        content, version_file, pattern, branch_label="working tree"
+    )
+    if version:
+        logger.pass_("version grepped: {}".format(version))

@@ -6,6 +6,7 @@ import pathlib
 
 from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
 from hupy.config_file.load_config import load_hupy_config
+from hupy.ver_grep import verify_version_grep
 
 
 from hupy.kamilog import (
@@ -52,7 +53,7 @@ def _verify_main(args):
     logger.enter("HUPy config file verification for: {}".format(repo_root))
 
     load_hupy_config(repo)
-    # TODO additional validation for version etc
+    verify_version_grep(repo)
 
     logger.done("HUPy config file valid for: {}".format(repo_root))
 

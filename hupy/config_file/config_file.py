@@ -61,9 +61,8 @@ class _VerGrep(BaseModel):  # ==================================================
     @model_validator(mode="after")
     def _validate_version_grep_hook(self):
         """
-        warn once, at creation, when the version grep hook is unset;
-        otherwise error if ``version_file`` does not point to a real
-        file.
+        warn once, at creation, when the version grep hook is unset,
+        or when ``version_file`` does not point to a real file.
         """
         if self.is_disabled:
             return self
@@ -84,13 +83,9 @@ class _VerGrep(BaseModel):  # ==================================================
         )
 
         if not self.version_file.exists():
-            try:
-                raise FileNotFoundError(
-                    "version file not found: {}".format(self.version_file)
-                )
-            except FileNotFoundError as e:
-                logger.exception("version file not found")
-                raise SystemExit(1) from e
+            logger.warning(
+                "version file not found: {}".format(self.version_file)
+            )
 
         return self
 
