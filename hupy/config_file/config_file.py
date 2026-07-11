@@ -68,7 +68,7 @@ class _VerGrep(BaseModel):  # ==================================================
         if self.is_disabled:
             return self
 
-        # Todo validate 1st capture group
+        # TODO validate 1st capture group
 
         if self.is_unconfigured():
             renderer = AnsiRenderer(sys.stdout)

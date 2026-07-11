@@ -52,6 +52,7 @@ def _verify_main(args):
     logger.enter("HUPy config file verification for: {}".format(repo_root))
 
     load_hupy_config(repo)
+    # TODO additional validation for version etc
 
     logger.done("HUPy config file valid for: {}".format(repo_root))
 
