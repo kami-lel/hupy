@@ -7,7 +7,25 @@ name = "HUPy"
 version = "0.3.0"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "kamiLeL" }]
+keywords = ["git", "git-hooks", "commit", "pre-commit", "hooks"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Version Control :: Git",
+]
 dependencies = ["GitPython>=3.1", "pydantic>=2", "json5>=0.9"]
+
+[project.urls]
+Homepage = "https://github.com/kami-lel/hupy"
+Repository = "https://github.com/kami-lel/hupy"
+Issues = "https://github.com/kami-lel/hupy/issues"
 
 [project.scripts]
 hupy = "hupy.__main__:main"

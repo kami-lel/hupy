@@ -6,11 +6,9 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 
-<!-- Fixme rewrite .hupy.config.jsonc docs
-Fixme rewrite all components docs
-Fixme rewrite readme
-
-Todo pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
+<!-- FIXME rewrite .hupy.config.jsonc docs
+FIXME rewrite all components docs
+FIXME rewrite readme
 -->
 
 <!-- todo reimplement ensure file modified -->
@@ -93,29 +91,13 @@ See [HUPy File Documentation](docs/hupy_config_doc.md) for **customizing** *HUPy
 
 ## 🚀 Usage
 
-Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature:
+Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature.
 
-```mermaid
-flowchart TD
-    commit([git commit])
-
-    %% pre-commit stage
-    subgraph precommit [pre-commit stage]
-        pre[/pre-commit hook/] --> bdc[[Ban Direct Commit]] --> ttg[[Triage Tag Gating]]
-    end
-
-    %% prepare-commit-msg stage
-    subgraph preparemsg [prepare-commit-msg stage]
-        prep[/prepare-commit-msg hook/] --> pch[[Prepend Commit Header]]
-    end
-
-    commit --> pre
-    ttg --> prep
-    pch --> done([commit created])
-```
+See [Hook Flow Documentation](docs/flow_doc.md) for the end-to-end diagram of how each stage runs.
 
 See the per-feature docs for detailed usage:
 
-- [Ban Direct Commit (BDC)](docs/hupy_config_doc.md#bdc)
+- [Ban Direct Commit (BDC)](docs/bdc_doc.md)
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md)
-- [Commit, Branch & Merge (CBM) and Prepend Commit Header (PCH)](docs/cbm_doc.md)
+- [Prepend Commit Header (PCH)](docs/pch_doc.md)
+- [Commit, Branch & Merge (CBM)](docs/cbm_doc.md)
