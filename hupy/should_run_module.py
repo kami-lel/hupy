@@ -28,9 +28,6 @@ _MODULE_ABBR_TO_NAME = {
 }
 
 
-# BUG skip once bug b/t modules is called mux times
-
-
 # Public API  ##################################################################
 def should_run_module(repo, state_file, module_abbr):
     """

@@ -35,6 +35,8 @@ def _prepare_commit_msg_main(args):  ###########################################
         prepend_commit_header(repo, state_file)
         perform_hook_brackets(repo, state_file, "prepare-commit-msg", False)
 
+        state_file.clear_skip_once()
+
         logger.succ("prepare-commit-msg stage finished")
         logger.done("all HUPy hooks finished")
 

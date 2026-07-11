@@ -1,7 +1,8 @@
 """
 state-consume_skip_once_test.py
 
-tests for `HupyStateFile.consume_skip_once` in `state_file.py`
+tests for `HupyStateFile.consume_skip_once` and
+`HupyStateFile.clear_skip_once` in `state_file.py`
 """
 
 from hupy.state.state_file import HupyStateFile
@@ -25,17 +26,29 @@ class TestConsumeSkipOnceFlagged:
         state = HupyStateFile(skip_once={"bdc"})
         assert state.consume_skip_once("bdc") is True
 
-    def test_discards_the_flag(self):
+    def test_does_not_discard_the_flag(self):
         state = HupyStateFile(skip_once={"bdc"})
         state.consume_skip_once("bdc")
-        assert "bdc" not in state.skip_once
+        assert "bdc" in state.skip_once
 
-    def test_only_discards_the_matching_entry(self):
+    def test_leaves_sibling_entries_untouched(self):
         state = HupyStateFile(skip_once={"bdc", "ttg"})
         state.consume_skip_once("bdc")
-        assert state.skip_once == {"ttg"}
+        assert state.skip_once == {"bdc", "ttg"}
 
-    def test_second_call_returns_false(self):
+    def test_second_call_still_returns_true(self):
         state = HupyStateFile(skip_once={"bdc"})
         state.consume_skip_once("bdc")
-        assert state.consume_skip_once("bdc") is False
+        assert state.consume_skip_once("bdc") is True
+
+
+class TestClearSkipOnce:
+    def test_empties_the_flag_set(self):
+        state = HupyStateFile(skip_once={"bdc", "ttg"})
+        state.clear_skip_once()
+        assert state.skip_once == set()
+
+    def test_no_op_when_already_empty(self):
+        state = HupyStateFile()
+        state.clear_skip_once()
+        assert state.skip_once == set()
