@@ -32,8 +32,11 @@ _MODULE_ABBR_TO_NAME = {
 def should_run_module(repo, state_file, module_abbr):
     """
     decide whether ``module_abbr`` should run for this hook
-    invocation; consumes a matching ``skip_once`` entry from
-    ``state_file`` if present.
+    invocation: ``False`` when the module is disabled in the config
+    file, or its abbreviation is present in ``state_file``'s one-time
+    ``skip_once`` set. the ``skip_once`` check is membership only, not
+    consumed here — the set is spent later by ``reset_for_next_commit``
+    in the ``post-commit`` stage.
 
 
     :param repo: git repository object
