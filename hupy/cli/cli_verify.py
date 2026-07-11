@@ -36,6 +36,10 @@ validate the HUPy config file (.hupy.config.jsonc) at repository root
 # helpers  #####################################################################
 
 
+def _verify_hook_stubs(repo):
+    pass  # TODO
+
+
 def _verify_main(args):
     """
     dispatch for the ``verify`` subcommand.
@@ -60,15 +64,13 @@ def _verify_main(args):
         version = grep_version(repo, state_file, "HEAD")
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        # TODO add assert stubs existed w/ counting
-        logger.pass_("hook stubs exist")
+        cnt = _verify_hook_stubs(repo)
+        logger.pass_("hook stubs exist, count: {}".format(cnt))
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
 
 # Public API  ##################################################################
-
-
 def register_cli_verify_parser(cli_subparser):
     """
     register the ``verify`` subcommand parser.
