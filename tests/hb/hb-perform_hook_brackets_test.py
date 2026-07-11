@@ -93,7 +93,7 @@ class TestPerformHookBracketsFourUsageCases:
             run_returncodes=[0],
         )
         assert calls == [
-            mock.call("echo lead", shell=True, cwd="/repo"),
+            mock.call("echo lead", shell=True, cwd="/repo", check=False),
         ]
 
     def test_pre_commit_trail_runs_configured_commands(self):
@@ -104,7 +104,7 @@ class TestPerformHookBracketsFourUsageCases:
             run_returncodes=[0],
         )
         assert calls == [
-            mock.call("echo trail", shell=True, cwd="/repo"),
+            mock.call("echo trail", shell=True, cwd="/repo", check=False),
         ]
 
     def test_prepare_commit_msg_lead_runs_configured_commands(self):
@@ -115,7 +115,7 @@ class TestPerformHookBracketsFourUsageCases:
             run_returncodes=[0],
         )
         assert calls == [
-            mock.call("echo pcm-lead", shell=True, cwd="/repo"),
+            mock.call("echo pcm-lead", shell=True, cwd="/repo", check=False),
         ]
 
     def test_prepare_commit_msg_trail_runs_configured_commands(self):
@@ -126,7 +126,7 @@ class TestPerformHookBracketsFourUsageCases:
             run_returncodes=[0],
         )
         assert calls == [
-            mock.call("echo pcm-trail", shell=True, cwd="/repo"),
+            mock.call("echo pcm-trail", shell=True, cwd="/repo", check=False),
         ]
 
 
@@ -158,7 +158,7 @@ class TestPerformHookBracketsSkips:
             skip_once={"bdc"},
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
         assert "bdc" in state_file.skip_once
 
     def test_empty_commands_list_runs_nothing(self):
@@ -184,7 +184,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.FEATURE_LANDING,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_mismatched_commit_type_skips_command(self):
         _, calls, _ = _run(
@@ -205,7 +205,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.OTHER_COMMIT,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_multiple_filter_names_matches_any_of_them(self):
         _, calls, _ = _run(
@@ -220,7 +220,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.VERSION_RELEASE,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_generic_merge_filter_matches_any_merge_subtype(self):
         _, calls, _ = _run(
@@ -230,7 +230,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.HOTFIX_BACKPORT,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_generic_merge_filter_skips_regular_commit(self):
         _, calls, _ = _run(
@@ -257,8 +257,8 @@ class TestPerformHookBracketsCommitTypeFilter:
             run_returncodes=[0, 0],
         )
         assert calls == [
-            mock.call("echo always", shell=True, cwd="/repo"),
-            mock.call("echo feature-only", shell=True, cwd="/repo"),
+            mock.call("echo always", shell=True, cwd="/repo", check=False),
+            mock.call("echo feature-only", shell=True, cwd="/repo", check=False),
         ]
 
     def test_specific_merge_filter_skips_other_merge_subtype(self):
@@ -295,7 +295,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.OTHER_MERGE,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_generic_merge_filter_skips_other_commit(self):
         _, calls, _ = _run(
@@ -316,7 +316,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.REGULAR_COMMIT,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_trail_command_respects_commit_type_filter(self):
         _, calls, _ = _run(
@@ -328,7 +328,7 @@ class TestPerformHookBracketsCommitTypeFilter:
             commit_type=CommitType.FEATURE_LANDING,
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo trail", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo trail", shell=True, cwd="/repo", check=False)]
 
 
 class TestPerformHookBracketsCommandFailure:
@@ -343,8 +343,8 @@ class TestPerformHookBracketsCommandFailure:
             run_returncodes=[1, 0],
         )
         assert calls == [
-            mock.call("false", shell=True, cwd="/repo"),
-            mock.call("echo next", shell=True, cwd="/repo"),
+            mock.call("false", shell=True, cwd="/repo", check=False),
+            mock.call("echo next", shell=True, cwd="/repo", check=False),
         ]
 
     def test_disallowed_failure_raises_system_exit_with_returncode(self):
@@ -392,8 +392,8 @@ class TestPerformHookBracketsCommandFailure:
                 )
 
         assert run_mock.call_args_list == [
-            mock.call("echo first", shell=True, cwd="/repo"),
-            mock.call("false", shell=True, cwd="/repo"),
+            mock.call("echo first", shell=True, cwd="/repo", check=False),
+            mock.call("false", shell=True, cwd="/repo", check=False),
         ]
 
 
@@ -406,7 +406,7 @@ class TestPerformHookBracketsLeadTrailSelection:
             pre_commit_trail=[{"cmd": "echo trail"}],
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo", check=False)]
 
     def test_not_is_lead_runs_only_the_trail_side(self):
         _, calls, _ = _run(
@@ -416,7 +416,7 @@ class TestPerformHookBracketsLeadTrailSelection:
             pre_commit_trail=[{"cmd": "echo trail"}],
             run_returncodes=[0],
         )
-        assert calls == [mock.call("echo trail", shell=True, cwd="/repo")]
+        assert calls == [mock.call("echo trail", shell=True, cwd="/repo", check=False)]
 
     def test_empty_requested_side_skips_though_other_side_populated(self):
         _, calls, _ = _run(
@@ -440,9 +440,9 @@ class TestPerformHookBracketsSequential:
             run_returncodes=[0, 0, 0],
         )
         assert calls == [
-            mock.call("echo one", shell=True, cwd="/repo"),
-            mock.call("echo two", shell=True, cwd="/repo"),
-            mock.call("echo three", shell=True, cwd="/repo"),
+            mock.call("echo one", shell=True, cwd="/repo", check=False),
+            mock.call("echo two", shell=True, cwd="/repo", check=False),
+            mock.call("echo three", shell=True, cwd="/repo", check=False),
         ]
 
     def test_successful_run_returns_none(self):
