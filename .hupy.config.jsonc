@@ -41,7 +41,7 @@
         {
           "cmd": "pytest tests/",
           "allow_commit_types": [
-            "MERGE"
+            "INTEGRATION"
           ],
           "allow_failure": false,
           "remark": "Pytest Unit Tests"
