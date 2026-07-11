@@ -35,6 +35,7 @@ def _prepare_commit_msg_main(args):  ###########################################
         prepend_commit_header(repo, state_file)
         perform_hook_brackets(repo, state_file, "prepare-commit-msg", False)
 
+        # FIXME move to post-commit
         state_file.reset_for_next_commit()
 
         logger.succ("prepare-commit-msg stage finished")

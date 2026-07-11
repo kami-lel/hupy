@@ -5,6 +5,8 @@ define the ``skip-once`` CLI subcommand, letting a HUPy module be
 skipped for exactly one upcoming hook run
 """
 
+# BUG need unset
+
 import argparse
 import os
 
