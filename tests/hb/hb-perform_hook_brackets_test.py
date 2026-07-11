@@ -261,6 +261,75 @@ class TestPerformHookBracketsCommitTypeFilter:
             mock.call("echo feature-only", shell=True, cwd="/repo"),
         ]
 
+    def test_specific_merge_filter_skips_other_merge_subtype(self):
+        # rgs one merge subtype filter must not admit another
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {"cmd": "echo lead", "commit_types": ["FEATURE_LANDING"]}
+            ],
+            commit_type=CommitType.VERSION_RELEASE,
+        )
+        assert calls == []
+
+    def test_multiple_names_none_matching_skips_command(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {
+                    "cmd": "echo lead",
+                    "commit_types": ["FEATURE_LANDING", "VERSION_RELEASE"],
+                }
+            ],
+            commit_type=CommitType.SYNC_BACKPORT,
+        )
+        assert calls == []
+
+    def test_generic_merge_filter_matches_other_merge(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            commit_type=CommitType.OTHER_MERGE,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_generic_merge_filter_skips_other_commit(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead", "commit_types": ["MERGE"]}],
+            commit_type=CommitType.OTHER_COMMIT,
+        )
+        assert calls == []
+
+    def test_non_merge_filter_matches_regular_commit(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {"cmd": "echo lead", "commit_types": ["REGULAR_COMMIT"]}
+            ],
+            commit_type=CommitType.REGULAR_COMMIT,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_trail_command_respects_commit_type_filter(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            False,
+            pre_commit_trail=[
+                {"cmd": "echo trail", "commit_types": ["FEATURE_LANDING"]}
+            ],
+            commit_type=CommitType.FEATURE_LANDING,
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo trail", shell=True, cwd="/repo")]
+
 
 class TestPerformHookBracketsCommandFailure:
     def test_allowed_failure_warns_and_continues(self):
@@ -326,3 +395,61 @@ class TestPerformHookBracketsCommandFailure:
             mock.call("echo first", shell=True, cwd="/repo"),
             mock.call("false", shell=True, cwd="/repo"),
         ]
+
+
+class TestPerformHookBracketsLeadTrailSelection:
+    def test_is_lead_runs_only_the_lead_side(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead"}],
+            pre_commit_trail=[{"cmd": "echo trail"}],
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo lead", shell=True, cwd="/repo")]
+
+    def test_not_is_lead_runs_only_the_trail_side(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            False,
+            pre_commit_lead=[{"cmd": "echo lead"}],
+            pre_commit_trail=[{"cmd": "echo trail"}],
+            run_returncodes=[0],
+        )
+        assert calls == [mock.call("echo trail", shell=True, cwd="/repo")]
+
+    def test_empty_requested_side_skips_though_other_side_populated(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_trail=[{"cmd": "echo trail"}],
+        )
+        assert calls == []
+
+
+class TestPerformHookBracketsSequential:
+    def test_all_commands_run_in_configured_order(self):
+        _, calls, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[
+                {"cmd": "echo one"},
+                {"cmd": "echo two"},
+                {"cmd": "echo three"},
+            ],
+            run_returncodes=[0, 0, 0],
+        )
+        assert calls == [
+            mock.call("echo one", shell=True, cwd="/repo"),
+            mock.call("echo two", shell=True, cwd="/repo"),
+            mock.call("echo three", shell=True, cwd="/repo"),
+        ]
+
+    def test_successful_run_returns_none(self):
+        result, _, _ = _run(
+            "pre-commit",
+            True,
+            pre_commit_lead=[{"cmd": "echo lead"}],
+            run_returncodes=[0],
+        )
+        assert result is None
