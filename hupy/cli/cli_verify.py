@@ -53,13 +53,13 @@ def _verify_main(args):
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    logger.enter("HUPy config file verification for: {}".format(repo_root))
+    logger.enter("HUPy verify: {}".format(repo_root))
 
     with open_state_file(repo) as state_file:
         load_hupy_config(repo)
         grep_version(repo, state_file, "HEAD")
 
-    logger.done("HUPy config file valid for: {}".format(repo_root))
+    logger.done("HUPy verification completed: {}".format(repo_root))
 
 
 # Public API  ##################################################################
