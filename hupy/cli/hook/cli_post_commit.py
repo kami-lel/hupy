@@ -5,6 +5,7 @@ import os
 import git
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
@@ -25,8 +26,11 @@ def _post_commit_main(args):  ##################################################
         kamilog.set_logging_level_by_namespace(
             args, verbosity=state_file.hooks_logger_verbosity
         )
-
         logger.enter("start post-commit stage")
+
+        perform_hook_brackets(repo, state_file, "post-commit", True)
+
+        perform_hook_brackets(repo, state_file, "post-commit", False)
 
         state_file.reset_for_next_commit()
 
