@@ -50,7 +50,7 @@
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.3.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v0.3.0...dev
 
 
 
@@ -95,7 +95,7 @@
 
 - `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
 
-[0.3.0]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...v0.3.0
+[0.3.0]: https://github.com/kami-lel/hupy/compare/v0.2.0...v0.3.0
 
 
 
@@ -123,7 +123,7 @@ First version. **HUPy** is a ground-up Python reimplementation of the original b
 - **Configurable behavior** — a tracked `.hupy.config.json` controls log verbosity and the version lookup, so every clone of a repository behaves the same
 - **Documentation and examples** — a README quick-start, per-feature guides under `docs/`, and runnable demo scripts under `examples/`
 
-[0.2.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v0.2.0
+[0.2.0]: https://github.com/kami-lel/hupy/releases/tag/v0.2.0
 
 
 
