@@ -26,7 +26,7 @@ def _pre_commit_main(args):  ###################################################
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(
-            args, verbosity=state_file.logger_verbosity
+            args, verbosity=state_file.hooks_logger_verbosity
         )
 
         logger.enter("start pre-commit stage")

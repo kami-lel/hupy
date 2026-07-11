@@ -26,7 +26,7 @@ def _prepare_commit_msg_main(args):  ###########################################
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(
-            args, verbosity=state_file.logger_verbosity
+            args, verbosity=state_file.hooks_logger_verbosity
         )
 
         logger.enter("start prepare-commit-msg stage")

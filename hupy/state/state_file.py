@@ -18,7 +18,7 @@ class HupyStateFile(BaseModel):
     schema for the HUPy state file (``hupy-state.json``)
     """
 
-    logger_verbosity: int = 1  # FIXME change better name
+    hooks_logger_verbosity: int = 1
     skip_once: set[str] = Field(default_factory=set)
 
     def reset_for_next_commit(self):
