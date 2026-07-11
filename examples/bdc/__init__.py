@@ -25,6 +25,7 @@ from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from prep_repo import (  # noqa: E402
     MAIN_BRANCH,
+    _write_config_file,
     prepare_repo_with_files as _prepare_bucket_repo,
 )
 
@@ -51,6 +52,7 @@ def prepare_demo_repo_on_branch(branch_name, filename, fixture_name="tt_none.py"
     # HUPy resolves ``vg.version_file`` against the process cwd,
     # so the bundled setup.cfg must be found from inside the repo
     os.chdir(dest_dir)
+    _write_config_file(dest_dir)
     repo = git.Repo(dest_dir)
     repo.git.checkout("-q", "-b", branch_name)
 
