@@ -3,12 +3,13 @@
 import argparse
 import os
 import pathlib
+import shutil
+import sys
 
 import git
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.write_config import write_default_config
-
+from hupy.config_file.write_config import create_default_config_file
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -35,6 +36,12 @@ REPO_PATH_HELP = (
     "default=current working directory"
 )
 
+HOOK_STUBS_DIR = (
+    pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
+)
+
+_PYTHON_PLACEHOLDER = "{{PYTHON}}"
+
 
 _DESCRIPTION = __doc__ + """
 
@@ -43,11 +50,86 @@ performs:
 - copy default HUPy hook stub scripts into the repo's hooks directory
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
-- create a default HUPy config file (.hupy.config.json) at repository root
+- create a default HUPy config file (.hupy.config.jsonc) at repository root
 """
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
+
+
+def _resolve_hooks_dir(repo):
+    """
+    resolve ``repo``'s actual git hooks directory, honoring
+    ``core.hooksPath`` if configured.
+    """
+    with repo.config_reader() as reader:
+        configured = reader.get_value("core", "hooksPath", default="")
+
+    if configured:
+        return pathlib.Path(repo.working_tree_dir) / configured
+
+    return pathlib.Path(repo.git_dir) / "hooks"
+
+
+def _copy_hook_stubs(hooks_dir, force=False):
+    """
+    copy the default HUPy hook stub scripts into ``hooks_dir``
+
+
+    :param hooks_dir: directory the hook stub scripts are copied into
+    :type hooks_dir: pathlib.Path
+    :param force: whether overwrite a hook stub already present in ``hooks_dir``
+    :type force: bool, optional
+    :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
+            ``force`` is ``False``
+    """
+    logger.enter("copy hook stubs")
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    for stub_file in HOOK_STUBS_DIR.iterdir():
+        target_path = hooks_dir / stub_file.name
+
+        if target_path.exists():
+            if not force:
+                logger.error(
+                    "hook already exists (use --force to override): {}".format(
+                        target_path
+                    )
+                )
+                raise SystemExit(1)
+
+            logger.warning("overwrite existing hook: {}".format(target_path))
+
+        content = stub_file.read_text(encoding="utf-8")
+        content = content.replace(_PYTHON_PLACEHOLDER, sys.executable)
+        target_path.write_text(content, encoding="utf-8")
+        shutil.copymode(stub_file, target_path)
+
+        logger.debug("hook stub installed: {}".format(target_path))
+
+
+def _run_copy_hooks(args, repo):
+    """
+    step: copy default HUPy hook stub scripts into the repo's hooks dir.
+    """
+    hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
+    logger.debug("hooks dir: {}".format(hooks_dir))
+    _copy_hook_stubs(hooks_dir, args.force)
+
+
+def _run_create_config_file(args, repo):
+    """
+    step: create a default HUPy config file at repository root.
+    """
+    create_default_config_file(repo, args.force)
+
+
+# registry mapping each init step to its arg dest and runner;  add a new
+# step by appending a (dest, runner) pair here
+_INIT_STEPS = [
+    ("copy_hooks", _run_copy_hooks),
+    ("create_config_file", _run_create_config_file),
+]
 
 
 def _init_main(args):
@@ -58,25 +140,26 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    # deferred import: cli_ich imports from this module at load time,
-    # so importing it back at module level here would create a cycle
-    from hupy.cli.cli_ich import _copy_hook_stubs, _resolve_hooks_dir
-
-    set_logging_level_by_namespace(args, logger=logger)
+    set_logging_level_by_namespace(args)
 
     repo_path = args.repo_path
-    force = args.force
-
     repo = load_git_repo(repo_path)
-
     repo_root = pathlib.Path(repo.working_tree_dir)
-    hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
+
+    selected_steps = [
+        (dest, run_step)
+        for dest, run_step in _INIT_STEPS
+        if getattr(args, dest)
+    ]
+    # no step flag given: run every step (dft behavior)
+    if not selected_steps:
+        selected_steps = _INIT_STEPS
 
     logger.enter("HUPy Initialization for: {}".format(repo_root))
-    logger.debug("hooks dir: {}".format(hooks_dir))
 
-    _copy_hook_stubs(hooks_dir, force)
-    write_default_config(repo_root, force)
+    for dest, run_step in selected_steps:
+        logger.debug("running init step: {}".format(dest))
+        run_step(args, repo)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
 
@@ -130,6 +213,22 @@ def register_cli_init_parser(cli_subparser):
         type=pathlib.Path,
         default=None,
         help="override the folder the hook stub scripts are copied into",
+    )
+
+    init_parser.add_argument(
+        "--copy-hooks",
+        dest="copy_hooks",
+        action="store_true",
+        default=False,
+        help="only copy the hook stub scripts",
+    )
+
+    init_parser.add_argument(
+        "--create-config-file",
+        dest="create_config_file",
+        action="store_true",
+        default=False,
+        help="only create the HUPy config file",
     )
 
     init_parser.add_argument(

@@ -4,10 +4,31 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "HUPy"
-version = "0.3.0"
+version = "1.0.0"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
-dependencies = ["GitPython>=3.1", "pydantic>=2"]
+requires-python = ">=3.10"
+authors = [{ name = "kamiLeL" }]
+keywords = ["git", "git-hooks", "commit", "pre-commit", "hooks"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+dependencies = ["GitPython>=3.1", "pydantic>=2", "json5>=0.9"]
+
+[project.urls]
+Homepage = "https://github.com/kami-lel/hupy"
+Repository = "https://github.com/kami-lel/hupy"
+Issues = "https://github.com/kami-lel/hupy/issues"
+
+[project.scripts]
+hupy = "hupy.__main__:main"
 
 [project.optional-dependencies]
 dev = ["pytest"]
@@ -17,4 +38,7 @@ where = ["."]
 include = ["hupy*"]
 
 [tool.setuptools.package-data]
-hupy = ["hook-stubs/*"]
+hupy = [
+    "assets/hook-stubs/*",
+    "assets/.hupy.config.jsonc",
+]

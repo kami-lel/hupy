@@ -16,6 +16,69 @@
 
 ### Security
 
+[unreleased]: https://github.com/kami-lel/hupy/compare/v1.0.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [1.0.0] - 2026-07-12
+
+First stable release.
+
+### Added
+
+- **Hook Bracket (HB)** — run your own *lead* and *trail* shell commands around each hook stage (`pre-commit`, `prepare-commit-msg`, `post-commit`) straight from `.hupy.config.jsonc`, with no custom hook script; each command can filter by commit type and choose whether its failure blocks the commit
+- **`hupy verify`** (alias `v`) — checks a repository's setup in one command: the config file loads and validates, the version string is greppable, and every packaged hook stub is installed in the hooks directory
+- **`hupy skip-once`** (alias `so`) — skip one or more modules (`vg`/`ttg`/`pch`/`bdc`/`hb`) for just the next commit without editing the config; `-u`/`--unset` clears a pending skip
+- **`hupy set-verbosity`** (alias `sv`) — set the hook log verbosity, remembered across commits
+- **`post-commit` hook stage** — a third git hook stage, added alongside `pre-commit` and `prepare-commit-msg`, that clears one-time state after a commit lands and runs its own Hook Bracket
+- **Per-module disable switch** — an `is_disabled` flag on every feature (`vg`/`ttg`/`pch`/`bdc`/`hb`) turns it off without removing its configuration
+- **Selectable `hupy init` steps** — `--copy-hooks` and `--create-config-file` each run one setup step alone; plain `hupy init` still runs both
+- **Comment-aware Triage Tag Gating** — a new `ttg` config section adds `disable_tt_detect_by_type` (only count a triage tag that follows the file's comment leader, e.g. `//`, `#`, `<!--`) and `ignored_path_globs` (exclude matching files from scanning)
+- **Config version check** — loading a config file whose `hupy_version` differs from the installed *HUPy* version now logs a warning
+
+### Changed
+
+- Config file renamed **`.hupy.config.json` → `.hupy.config.jsonc`**, now parsed as JSON5 so it can carry `//` comments and trailing commas; the shipped file documents every field inline
+- The shipped `.hupy.config.jsonc` is now the single source of default values — `hupy init` writes it verbatim, and the config schema no longer carries its own field defaults
+- Git hook stages moved from top-level `hupy <stage>` into a **`hupy hook <stage>`** command group (`pre-commit`, `prepare-commit-msg`, `post-commit`)
+- Config field `ver_grep` renamed to **`vg`**, matching the abbreviation used elsewhere
+- Log verbosity now comes from the local `hupy-state.json` (set via `set-verbosity`) rather than a config-file field
+- Ban Direct Commit log messages now name the branch involved
+
+### Removed
+
+- **`init-create-config` / `init-copy-hooks` subcommands** — replaced by `hupy init`'s new `--create-config-file` / `--copy-hooks` flags
+- `docs/hupy_config_doc.md` — its field documentation now lives inline in `.hupy.config.jsonc`
+
+### Fixed
+
+- Prepend Commit Header could misclassify an unparsable version (e.g. `v2024.07-rc1`) as a tagged pre-release; version tags are now only recognized once a `major.minor.patch` core matches
+- State log lines printed twice due to logger propagation; now emitted once
+- `verify`'s log lines were mislabeled under the init logger and its verbosity flags misapplied; it now uses its own logger
+- Several `examples/` demo scripts failed to write a `.hupy.config.jsonc` and errored instead of demonstrating their feature
+
+[1.0.0]: https://github.com/kami-lel/hupy/compare/v0.3.0...v1.0.0
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## [0.3.0] - 2026-07-10
@@ -49,8 +112,7 @@
 
 - `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
 
-[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.3.0...dev
-[0.3.0]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...v0.3.0
+[0.3.0]: https://github.com/kami-lel/hupy/compare/v0.2.0...v0.3.0
 
 
 
@@ -78,7 +140,7 @@ First version. **HUPy** is a ground-up Python reimplementation of the original b
 - **Configurable behavior** — a tracked `.hupy.config.json` controls log verbosity and the version lookup, so every clone of a repository behaves the same
 - **Documentation and examples** — a README quick-start, per-feature guides under `docs/`, and runnable demo scripts under `examples/`
 
-[0.2.0]: https://github.com/kami-lel/hooks-utility-py/releases/tag/v0.2.0
+[0.2.0]: https://github.com/kami-lel/hupy/releases/tag/v0.2.0
 
 
 

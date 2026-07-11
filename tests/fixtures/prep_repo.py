@@ -7,6 +7,7 @@ buckets, for reuse by unit tests and by the ``examples/ttg`` and
 ``tests/``
 """
 
+import json
 import os
 import shutil
 import tempfile
@@ -14,6 +15,9 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import git
+import json5
+
+from hupy.config_file.config_file_path import DEFAULT_CONFIG_ASSET
 
 MAIN_BRANCH = "main"
 DEV_BRANCH = "dev"
@@ -139,11 +143,26 @@ def _setup_version_release(repo_dir, files):
 
 
 def _chdir_into_repo(repo_dir):
-    # HUPy resolves ``ver_grep.version_file`` against the process cwd,
+    # HUPy resolves ``vg.version_file`` against the process cwd,
     # so tests must chdir into the prepared repo for the bundled
     # ``setup.cfg`` to be found; not restored after the test, since
     # each test starts a fresh scenario repo anyway
     os.chdir(str(repo_dir))
+
+
+def _write_config_file(repo_dir):
+    # the bundle no longer carries a committed HUPy config file, so
+    # write the shipped default config straight onto disk, untracked,
+    # for ``load_hupy_config`` to read; configure vg section to grep
+    # from setup.cfg since all demo repos have a version there
+    config_path = Path(repo_dir) / ".hupy.config.jsonc"
+    shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
+
+    # parse, configure vg section, write back
+    config = json5.loads(config_path.read_text())
+    config["vg"]["version_file"] = "setup.cfg"
+    config["vg"]["version_line_pattern"] = r"version\s*=\s*(\S+)"
+    config_path.write_text(json.dumps(config))
 
 
 def _write_and_commit(repo_dir, filename, content):
@@ -317,7 +336,7 @@ _DEMO_BUCKET_SETUP_FUNCS = {
 # legacy scenario -> (bucket, default files) presets, kept so the
 # ``examples/ttg`` bash demos and the CLI below keep working unchanged.
 # each preset mirrors the most file-and-tag-heavy unit test case for
-# its bucket (see tests/ttg/ttg-tt_gating_*_test.py)
+# its bucket (see tests/ttg/ttg-gate_tt_*_test.py)
 _LEGACY_SCENARIO_PRESETS = {
     "non_merge_commit": (
         "non_merge_commit",
@@ -381,6 +400,7 @@ def prepare_repo_with_files(dest_dir, commit_bucket, files):
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
     _chdir_into_repo(dest_dir)
+    _write_config_file(dest_dir)
     _BUCKET_SETUP_FUNCS[commit_bucket](dest_dir, files)
     return str(dest_dir)
 
@@ -427,6 +447,7 @@ def prepare_demo_repo(dest_dir, demo_bucket):
 
     git.Repo.clone_from(str(_BUNDLE_PATH), str(dest_dir), branch=MAIN_BRANCH)
     _chdir_into_repo(dest_dir)
+    _write_config_file(dest_dir)
     _DEMO_BUCKET_SETUP_FUNCS[demo_bucket](dest_dir)
     return str(dest_dir)
 

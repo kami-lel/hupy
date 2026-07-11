@@ -8,11 +8,14 @@ from unittest import mock
 
 import pytest
 
+from config_fixture import load_config_fixture
+
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 from hupy.cbm import CommitType
-from hupy.config.hupy_config_file import HupyConfigFile
+from hupy.state.state_file import HupyStateFile
 
 _REPO = object()
+_STATE_FILE = HupyStateFile()
 
 
 # helpers  ######################################################################
@@ -31,19 +34,23 @@ def _run(
     run ``ban_direct_commit`` against a stubbed config and stubbed
     ``cbm`` lookups, bypassing disk/git config loading.
     """
-    config = HupyConfigFile(
-        cbm={
-            "dev_branch_name": dev_branch_name,
-            "main_branch_name": main_branch_name,
-        },
-        bdc={
-            "ban_commit_to_dev": ban_commit_to_dev,
-            "ban_commit_to_main": ban_commit_to_main,
-            "ban_commit_to_branches": list(ban_commit_to_branches),
-        },
+    config = load_config_fixture(
+        overrides={
+            "cbm": {
+                "dev_branch_name": dev_branch_name,
+                "main_branch_name": main_branch_name,
+            },
+            "bdc": {
+                "ban_commit_to_dev": ban_commit_to_dev,
+                "ban_commit_to_main": ban_commit_to_main,
+                "ban_commit_to_branches": list(ban_commit_to_branches),
+            },
+        }
     )
     with mock.patch(
         "hupy.bdc.ban_direct_commit.load_hupy_config", return_value=config
+    ), mock.patch(
+        "hupy.should_run_module.load_hupy_config", return_value=config
     ), mock.patch(
         "hupy.bdc.ban_direct_commit.get_target_branch",
         return_value=current_branch,
@@ -51,7 +58,7 @@ def _run(
         "hupy.bdc.ban_direct_commit.get_current_commit_type",
         return_value=commit_type,
     ):
-        return ban_direct_commit(_REPO)
+        return ban_direct_commit(_REPO, _STATE_FILE)
 
 
 # tests  ########################################################################
@@ -59,13 +66,13 @@ def _run(
 
 class TestBanDirectCommitUnprotectedBranch:
     def test_branch_not_in_any_protected_set_is_skipped(_):
-        assert _run("feature/x", CommitType.OTHER_COMMIT) is None
+        assert _run("feature/x", CommitType.REGULAR_COMMIT) is None
 
     def test_dev_branch_skipped_when_ban_commit_to_dev_disabled(_):
         assert (
             _run(
                 "dev",
-                CommitType.OTHER_COMMIT,
+                CommitType.REGULAR_COMMIT,
                 ban_commit_to_dev=False,
             )
             is None
@@ -75,14 +82,14 @@ class TestBanDirectCommitUnprotectedBranch:
         assert (
             _run(
                 "main",
-                CommitType.OTHER_COMMIT,
+                CommitType.REGULAR_COMMIT,
                 ban_commit_to_main=False,
             )
             is None
         )
 
     def test_detached_head_target_branch_is_skipped(_):
-        assert _run(None, CommitType.OTHER_COMMIT) is None
+        assert _run(None, CommitType.REGULAR_COMMIT) is None
 
 
 class TestBanDirectCommitProtectedBranchSources:
@@ -90,7 +97,7 @@ class TestBanDirectCommitProtectedBranchSources:
         with pytest.raises(SystemExit):
             _run(
                 "develop",
-                CommitType.OTHER_COMMIT,
+                CommitType.REGULAR_COMMIT,
                 dev_branch_name="develop",
             )
 
@@ -98,7 +105,7 @@ class TestBanDirectCommitProtectedBranchSources:
         with pytest.raises(SystemExit):
             _run(
                 "trunk",
-                CommitType.OTHER_COMMIT,
+                CommitType.REGULAR_COMMIT,
                 main_branch_name="trunk",
             )
 
@@ -106,7 +113,7 @@ class TestBanDirectCommitProtectedBranchSources:
         with pytest.raises(SystemExit):
             _run(
                 "release/1.0",
-                CommitType.OTHER_COMMIT,
+                CommitType.REGULAR_COMMIT,
                 ban_commit_to_dev=False,
                 ban_commit_to_main=False,
                 ban_commit_to_branches=["release/1.0"],
@@ -116,7 +123,7 @@ class TestBanDirectCommitProtectedBranchSources:
 class TestBanDirectCommitOnProtectedBranch:
     def test_non_merge_commit_raises_system_exit(_):
         with pytest.raises(SystemExit) as ei:
-            _run("main", CommitType.OTHER_COMMIT)
+            _run("main", CommitType.REGULAR_COMMIT)
         assert ei.value.code == 1
 
     def test_feature_landing_merge_commit_is_allowed(_):

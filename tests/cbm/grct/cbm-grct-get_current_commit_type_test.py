@@ -24,9 +24,9 @@ from hupy.cbm.get_current_commit_type import get_current_commit_type
 
 
 class TestGetCurrentCommitTypeRegularCommit:
-    def test_no_merge_head_is_other_commit(self, repo_dir):
+    def test_no_merge_head_is_regular_commit(self, repo_dir):
         repo = clone_repo(repo_dir)
-        assert get_current_commit_type(repo) == CommitType.OTHER_COMMIT
+        assert get_current_commit_type(repo) == CommitType.REGULAR_COMMIT
 
 
 class TestGetCurrentCommitTypeOctopusMerge:

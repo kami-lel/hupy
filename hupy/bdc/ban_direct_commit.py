@@ -4,9 +4,14 @@ ban_direct_commit.py
 block commits made directly on protected branches
 """
 
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
-from ..cbm import CommitType, get_current_commit_type, get_target_branch
+from hupy.should_run_module import should_run_module
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import (
+    get_current_commit_type,
+    get_target_branch,
+)
 from . import BDC_LOGGER_NAME
 
 # logger  ######################################################################
@@ -32,7 +37,7 @@ def _get_protected_branches(repo):
 
 
 # Public API  ##################################################################
-def ban_direct_commit(repo):
+def ban_direct_commit(repo, state_file):
     """
     block the current commit if it directly targets a protected
     branch.
@@ -40,20 +45,26 @@ def ban_direct_commit(repo):
 
     :param repo: git repository object
     :type repo: git.Repo
+    :param state_file: the open HUPy state file, as yielded by
+            ``open_state_file``
+    :type state_file: HupyStateFile
     """
+    if not should_run_module(repo, state_file, "bdc"):
+        return
+
     logger.enter("perform Ban Direct Commit")
 
-    current_branch = get_target_branch(repo)
+    branch = get_target_branch(repo)
 
-    if current_branch not in _get_protected_branches(repo):
-        logger.skip("not a protected branch")
+    if branch not in _get_protected_branches(repo):
+        logger.skip("not a protected branch: {}".format(branch))
         return
 
     commit_type = get_current_commit_type(repo)
 
-    if CommitType.MERGE in commit_type:
-        logger.pass_("merging into protected branch")
+    if commit_type in CommitType.MERGE:
+        logger.pass_("merging into protected branch: {}".format(branch))
         return
 
-    logger.fail("attempt direct commit to protected branch")
+    logger.fail("attempt direct commit to protected branch: {}".format(branch))
     raise SystemExit(1)

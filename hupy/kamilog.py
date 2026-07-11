@@ -33,8 +33,13 @@ __all__ = (
     "INFO",
     "PASS",
     "SUCC",
+    "NOTE",
+    "TIP",
     "DONE",
+    "HINT",
+    "IMPORTANT",
     "WARNING",
+    "CAUTION",
     "ERROR",
     "FAIL",
     "CRITICAL",
@@ -52,7 +57,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.5.0"
+__version__ = "2.7.0"
 __author__ = "kamiLeL"
 
 
@@ -78,7 +83,12 @@ class _CustomLogLevel(IntEnum):
     SKIP = (16, "SKIP ")
     SUCC = (17, "SUCC.")
     PASS = (21, "PASS ")
+    NOTE = (23, "NOTE ")
+    TIP = (24, "TIP  ")
     DONE = (25, "DONE ")
+    HINT = (26, "HINT ")
+    IMPORTANT = (27, "IMPT.")
+    CAUTION = (31, "CAUT.")
     FAIL = (45, "FAIL ")
 
 
@@ -159,6 +169,8 @@ class AnsiRenderer:  # =========================================================
     _RESET = "\033[0m"
 
     _ANSI_STYLE2CODE = {
+        AnsiStyle.BOLD: "1",
+        AnsiStyle.UNDERLINE: "4",
         AnsiStyle.RED: "31",
         AnsiStyle.BRIGHT_RED: "91",
         AnsiStyle.YELLOW: "33",
@@ -191,8 +203,6 @@ class AnsiRenderer:  # =========================================================
         AnsiStyle.BG_GREY: "100",
         AnsiStyle.BG_WHITE: "47",
         AnsiStyle.BG_BRIGHT_WHITE: "107",
-        AnsiStyle.BOLD: "1",
-        AnsiStyle.UNDERLINE: "4",
     }
 
     _LEVEL2ANSI_COLOR = {
@@ -202,8 +212,13 @@ class AnsiRenderer:  # =========================================================
         _CustomLogLevel.SUCC: AnsiStyle.GREEN,
         logging.INFO: AnsiStyle.BRIGHT_BLUE,
         _CustomLogLevel.PASS: AnsiStyle.BRIGHT_GREEN,
+        _CustomLogLevel.NOTE: AnsiStyle.BLUE,
+        _CustomLogLevel.TIP: AnsiStyle.BRIGHT_CYAN,
         _CustomLogLevel.DONE: AnsiStyle.BRIGHT_YELLOW,
+        _CustomLogLevel.HINT: AnsiStyle.CYAN,
+        _CustomLogLevel.IMPORTANT: AnsiStyle.BRIGHT_BLUE,
         logging.WARNING: AnsiStyle.YELLOW,
+        _CustomLogLevel.CAUTION: AnsiStyle.MAGENTA,
         logging.ERROR: AnsiStyle.RED,
         _CustomLogLevel.FAIL: AnsiStyle.BRIGHT_RED,
         logging.CRITICAL: AnsiStyle.BRIGHT_MAGENTA,
@@ -309,8 +324,13 @@ SKIP = _CustomLogLevel.SKIP  # 16
 SUCC = _CustomLogLevel.SUCC  # 17
 INFO = logging.INFO  # 20
 PASS = _CustomLogLevel.PASS  # 21
+NOTE = _CustomLogLevel.NOTE  # 23
+TIP = _CustomLogLevel.TIP  # 24
 DONE = _CustomLogLevel.DONE  # 25
+HINT = _CustomLogLevel.HINT  # 26
+IMPORTANT = _CustomLogLevel.IMPORTANT  # 27
 WARNING = logging.WARNING  # 30
+CAUTION = _CustomLogLevel.CAUTION  # 31
 ERROR = logging.ERROR  # 40
 FAIL = _CustomLogLevel.FAIL  # 45
 CRITICAL = logging.CRITICAL  # 50
@@ -367,6 +387,24 @@ class KamiLogger(logging.Logger):  # ===========================================
                 _CustomLogLevel.PASS, message, args, stacklevel=2, **kwargs
             )
 
+    def note(self, message, *args, **kwargs):
+        """
+        log at ``NOTE`` level (23): general aside worth noting.
+        """
+        if self.isEnabledFor(_CustomLogLevel.NOTE):
+            self._log(
+                _CustomLogLevel.NOTE, message, args, stacklevel=2, **kwargs
+            )
+
+    def tip(self, message, *args, **kwargs):
+        """
+        log at ``TIP`` level (24): actionable suggestion.
+        """
+        if self.isEnabledFor(_CustomLogLevel.TIP):
+            self._log(
+                _CustomLogLevel.TIP, message, args, stacklevel=2, **kwargs
+            )
+
     def done(self, message, *args, **kwargs):
         """
         log at ``DONE`` level (25): task or operation completed.
@@ -374,6 +412,37 @@ class KamiLogger(logging.Logger):  # ===========================================
         if self.isEnabledFor(_CustomLogLevel.DONE):
             self._log(
                 _CustomLogLevel.DONE, message, args, stacklevel=2, **kwargs
+            )
+
+    def hint(self, message, *args, **kwargs):
+        """
+        log at ``HINT`` level (26): subtle, barely-there cue.
+        """
+        if self.isEnabledFor(_CustomLogLevel.HINT):
+            self._log(
+                _CustomLogLevel.HINT, message, args, stacklevel=2, **kwargs
+            )
+
+    def important(self, message, *args, **kwargs):
+        """
+        log at ``IMPORTANT`` level (27): emphasized information.
+        """
+        if self.isEnabledFor(_CustomLogLevel.IMPORTANT):
+            self._log(
+                _CustomLogLevel.IMPORTANT,
+                message,
+                args,
+                stacklevel=2,
+                **kwargs,
+            )
+
+    def caution(self, message, *args, **kwargs):
+        """
+        log at ``CAUTION`` level (31): risk of a negative outcome.
+        """
+        if self.isEnabledFor(_CustomLogLevel.CAUTION):
+            self._log(
+                _CustomLogLevel.CAUTION, message, args, stacklevel=2, **kwargs
             )
 
     def fail(self, message, *args, **kwargs):
@@ -401,8 +470,13 @@ _PADDED_LEVELNAME_MAP = {
     _CustomLogLevel.SUCC: _CustomLogLevel.SUCC.display,
     logging.INFO: "INFO ",
     _CustomLogLevel.PASS: _CustomLogLevel.PASS.display,
+    _CustomLogLevel.NOTE: _CustomLogLevel.NOTE.display,
+    _CustomLogLevel.TIP: _CustomLogLevel.TIP.display,
     _CustomLogLevel.DONE: _CustomLogLevel.DONE.display,
+    _CustomLogLevel.HINT: _CustomLogLevel.HINT.display,
+    _CustomLogLevel.IMPORTANT: _CustomLogLevel.IMPORTANT.display,
     logging.WARNING: "WARN.",
+    _CustomLogLevel.CAUTION: _CustomLogLevel.CAUTION.display,
     logging.ERROR: "ERROR",
     _CustomLogLevel.FAIL: _CustomLogLevel.FAIL.display,
     logging.CRITICAL: "CRIT.",
@@ -1157,8 +1231,13 @@ _LOGGER_LEVEL_MAP = {
     "succ": SUCC,
     "info": INFO,
     "pass": PASS,
+    "note": NOTE,
+    "tip": TIP,
     "done": DONE,
+    "hint": HINT,
+    "important": IMPORTANT,
     "warning": WARNING,
+    "caution": CAUTION,
     "error": ERROR,
     "fail": FAIL,
     "critical": CRITICAL,
@@ -1253,6 +1332,7 @@ def _gen_comment_banner_generic(
     padding,
     *,
     line_width=80,
+    horizontal_offset=0,
     file=sys.stdout,
     renderer=None,
 ):
@@ -1301,8 +1381,11 @@ def _gen_comment_banner_generic(
         )
     else:  # centered (mode == "c")
         remaining = line_width - len(content) - len(_CONTENT_SPACING) * 2
-        left = remaining // 2
+        # horizontal_offset nudges Content sideways: -1 left, +1 right
+        left = remaining // 2 + horizontal_offset
         right = remaining - left
+        if left < 0 or right < 0:
+            raise ValueError("param horizontal_offset out of range")
         padded_content = (
             renderer.color_grey(padding * left)
             + _CONTENT_SPACING
@@ -1333,6 +1416,10 @@ def gen_comment_banner_centered(*args, **kwargs):
     :type padding: str or int
     :param line_width: total output width; defaults to ``80``
     :type line_width: int
+    :param horizontal_offset: nudge the centered content sideways by this
+            many columns; negative shifts left, positive shifts right;
+            defaults to ``0``
+    :type horizontal_offset: int
     :param file: output stream, used only for ANSI TTY detection;
             defaults to ``sys.stdout``
     :type file: IO
@@ -1343,10 +1430,13 @@ def gen_comment_banner_centered(*args, **kwargs):
     :rtype: str
     :raises ValueError: if ``content`` contains ``"\\n"`` or exceeds
             ``line_width``; if ``padding`` is not exactly one printable
-            non-space character or outside range 1-5 if int
+            non-space character or outside range 1-5 if int; if
+            ``horizontal_offset`` pushes either fill side below zero
     :example:
     >>> gen_comment_banner_centered("hi", "=", line_width=20)
     '=======  hi  ======='
+    >>> gen_comment_banner_centered("hi", "=", line_width=20, horizontal_offset=2)
+    '=========  hi  ====='
     >>> gen_comment_banner_centered("hi", 2, line_width=20)
     '=======  hi  ======='
     """

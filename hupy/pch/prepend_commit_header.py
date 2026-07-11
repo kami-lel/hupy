@@ -8,16 +8,17 @@ import os
 import re
 import tempfile
 
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
+from hupy.should_run_module import should_run_module
 from hupy.ver_grep import (
     decide_version_update_type,
     grep_source_branch_version,
     grep_target_branch_version,
 )
 from . import PCH_LOGGER_NAME
-from ..cbm import (
-    CommitType,
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import (
     get_current_commit_type,
     get_source_branch,
     get_target_branch,
@@ -46,18 +47,23 @@ def _get_version_bump_prefix(source_version, target_version):
         return ""
 
 
-def _get_release_type_word(version, pch_config):
+def _get_release_type_word(version, repo):
     """
-    map a version string to its release-type word
+    map a version string to its release-type word; check tagged
+    versions (alpha/beta/rc) before base patterns so that tagged
+    versions don't fall back to Stable Release classification
     """
-    tagged_words = (
-        (pch_config.alpha_tag, "Alpha Release "),
-        (pch_config.beta_tag, "Beta Release "),
-        (pch_config.release_candidate_tag, "Release Candidate "),
-    )
-    for tag, word in tagged_words:
-        if tag and tag in version:
-            return word
+    pch_config = load_hupy_config(repo).pch
+
+    if re.match(r"^\d+\.\d+\.\d+", version):
+        tagged_words = (
+            (pch_config.alpha_tag, "Alpha Release "),
+            (pch_config.beta_tag, "Beta Release "),
+            (pch_config.release_candidate_tag, "Release Candidate "),
+        )
+        for tag, word in tagged_words:
+            if tag and tag in version:
+                return word
 
     if pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
         return "Pre-Alpha Release "
@@ -69,29 +75,32 @@ def _get_release_type_word(version, pch_config):
         return "Prototype Release "
     if re.match(r"^\d+\.\d+\.\d+", version):
         return "Stable Release "
+
     return ""
 
 
-def _gen_bumped_version_header(header_word):
+def _gen_bumped_version_header(header_word, repo, state_file):
     """
     build a "<header_word>: <version>" header, prefixed with the
     version's major/minor/patch bump word when a source version
     resolves
     """
-    version = grep_source_branch_version()
+    version = grep_source_branch_version(repo, state_file)
     if version:
-        prefix = _get_version_bump_prefix(version, grep_target_branch_version())
+        prefix = _get_version_bump_prefix(
+            version, grep_target_branch_version(repo, state_file)
+        )
         return "{}{}: {}".format(prefix, header_word, version)
     else:
         return header_word
 
 
-def _gen_backport_header(header_word):
+def _gen_backport_header(header_word, repo, state_file):
     """
     build a "<header_word> from: <version>" header, or plain
     ``header_word`` when no source version resolves
     """
-    version = grep_source_branch_version()
+    version = grep_source_branch_version(repo, state_file)
     if version:
         return "{} from: {}".format(header_word, version)
     else:
@@ -101,13 +110,12 @@ def _gen_backport_header(header_word):
 # generate header  =============================================================
 
 
-def _gen_version_release_header(repo):
-    version = grep_source_branch_version()
+def _gen_version_release_header(repo, state_file):
+    version = grep_source_branch_version(repo, state_file)
     if not version:
         return "Version Release"
 
-    pch_config = load_hupy_config(repo).pch
-    release_type = _get_release_type_word(version, pch_config)
+    release_type = _get_release_type_word(version, repo)
     if not release_type:
         return "Version Release: {}".format(version)
 
@@ -119,40 +127,40 @@ def _gen_version_release_header(repo):
         bump_prefix = ""
     else:
         bump_prefix = _get_version_bump_prefix(
-            version, grep_target_branch_version()
+            version, grep_target_branch_version(repo, state_file)
         )
 
     return "{}: {}".format((bump_prefix + release_type).rstrip(), version)
 
 
-def _gen_feature_landing_header(repo):
+def _gen_feature_landing_header(repo, state_file):
     branch_name = get_source_branch(repo)
     return "Feature Landing: {}".format(branch_name)
 
 
-def _gen_sync_backport_header(_):
-    return _gen_backport_header("Sync Backport")
+def _gen_sync_backport_header(repo, state_file):
+    return _gen_backport_header("Sync Backport", repo, state_file)
 
 
-def _gen_catch_up_header(repo):
+def _gen_catch_up_header(repo, state_file):
     branch_name = get_target_branch(repo)
     return "Catch Up: {}".format(branch_name)
 
 
-def _gen_hotfix_release_header(_):
-    return _gen_bumped_version_header("Hotfix Release")
+def _gen_hotfix_release_header(repo, state_file):
+    return _gen_bumped_version_header("Hotfix Release", repo, state_file)
 
 
-def _gen_hotfix_backport_header(_):
-    return _gen_backport_header("Hotfix Backport")
+def _gen_hotfix_backport_header(repo, state_file):
+    return _gen_backport_header("Hotfix Backport", repo, state_file)
 
 
-def _gen_release_cut_header(_):
-    return _gen_bumped_version_header("Release Cut")
+def _gen_release_cut_header(repo, state_file):
+    return _gen_bumped_version_header("Release Cut", repo, state_file)
 
 
-def _gen_release_backport_header(_):
-    return _gen_backport_header("Release Backport")
+def _gen_release_backport_header(repo, state_file):
+    return _gen_backport_header("Release Backport", repo, state_file)
 
 
 _HEADER_GENERATORS = {
@@ -168,14 +176,20 @@ _HEADER_GENERATORS = {
 
 
 # Public API  ##################################################################
-def prepend_commit_header(repo):
+def prepend_commit_header(repo, state_file):
     """
     prepend commit type header to the current commit message.
 
 
     :param repo: git repository object
     :type repo: git.Repo
+    :param state_file: the open HUPy state file, as yielded by
+            ``open_state_file``
+    :type state_file: HupyStateFile
     """
+    if not should_run_module(repo, state_file, "pch"):
+        return
+
     logger.enter("perform Prepend Commit Header")
 
     commit_type = get_current_commit_type(repo)
@@ -201,7 +215,7 @@ def prepend_commit_header(repo):
             )
             target.append(line)
 
-    header = _HEADER_GENERATORS[commit_type](repo)
+    header = _HEADER_GENERATORS[commit_type](repo, state_file)
 
     logger.debug("generated header:\n" + header)
 

@@ -28,18 +28,18 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test file naming: test layout mirrors source layout — packages nest (`hupy/cbm/branch_type.py` → `tests/cbm/cbm-branch_type_test.py`, `hupy/cbm/get_current_commit_type.py` → `tests/cbm/grct/cbm-grct-*_test.py`; `hupy/ver_grep/branch_version.py` → `tests/vg/vg-grep_*_branch_version_test.py`; `hupy/ttg/tt_gating.py` → `tests/ttg/ttg-tt_gating_*_test.py`; `hupy/bdc/ban_direct_commit.py` → `tests/bdc/bdc-ban_direct_commit_test.py`), split further by scenario group. Fixtures shared by every suite (the git bundle, the repo-scenario builder) live in `tests/fixtures/`, not colocated with any one package's tests; `tests/pch/` and `tests/ttg/` each `sys.path.insert` that directory in their `conftest.py` to import `prep_repo`.
+Test layout mirrors source layout: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py`, split further by scenario group (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate_tt_*_test.py`, `hupy/cbm/get_current_commit_type.py` → `tests/cbm/grct/cbm-grct-*_test.py`). A top-level module with no package (`hupy/should_run_module.py`) gets its own directory, dropping the `<pkg>-` prefix.
 
-The shared `repo_dir` pytest fixture (`tmp_path / "repo"`) lives in the root `tests/conftest.py` and applies to every suite. Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the shared git bundle (`tests/fixtures/default_repo.bundle`) and dynamically constructs branches/commits/merge state — reused across unit tests and the `examples/pch/` and `examples/ttg/` demo scripts, and runnable standalone as a CLI:
+Cross-suite fixtures live in `tests/fixtures/`, not colocated with any package. The root `tests/conftest.py` defines the shared `repo_dir` fixture (`tmp_path / "repo"`). Suites that need `prep_repo` or `config_fixture` `sys.path.insert(tests/fixtures)` in their own `conftest.py`. Build config via `config_fixture.load_config_fixture(overrides)` — deep-merges onto the shipped asset — never by constructing `HupyConfigFile` from partial kwargs (its fields carry no defaults).
+
+Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the git bundle (`tests/fixtures/default_repo.bundle`), constructs branches/commits/merge state, and copies the shipped `DEFAULT_CONFIG_ASSET` onto each repo as an untracked `.hupy.config.jsonc`, with `vg.version_file`/`version_line_pattern` pointed at the repo's `setup.cfg`. Also runnable standalone:
 
 ```bash
 python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/demo_repo
 python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/demo_repo
 ```
 
-`--scenario` covers TTG/PCH scenarios that unit tests also exercise; `--demo-bucket` covers CBM merge types PCH doesn't handle yet, used only by the `examples/pch/*-demo.py` skip demos. Bash demos in `examples/hooks/` (e.g. `pre-commit-demo.sh`, `prepare-commit-msg-demo.sh`) shell out to this same CLI rather than re-implementing repo setup in bash.
-
-`examples/pch/__init__.py`, `examples/ttg/__init__.py`, and `examples/bdc/__init__.py` hold the aux helpers shared across their sibling `*-demo.py` scripts (repo prep + running the library call), imported back with `from __init__ import ...` — each demo script's own directory lands on `sys.path` automatically since it's run standalone (`python3 examples/pch/<name>-demo.py`), so this resolves without extra `sys.path` wiring.
+`--scenario` covers TTG/PCH cases unit tests also exercise; `--demo-bucket` backs the `examples/pch/*-demo.py` scripts. The `examples/hooks/*.sh` bash demos shell out to this same CLI. `examples/{pch,ttg,bdc}/__init__.py` hold repo-prep + library-call helpers shared across their `*-demo.py` scripts, imported with `from __init__ import ...` (a run script's own directory is auto-added to `sys.path`).
 
 ## PR & Commit Instructions
 
