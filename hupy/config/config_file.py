@@ -136,8 +136,17 @@ class _HbCmd(BaseModel):
     """
 
     cmd: str
-    commit_types: list[str] = Field(default_factory=lambda: ["ALL"])
+    commit_types: list[str] = Field(default_factory=list)
     allow_failure: bool = False
+
+
+class _HbBracket(BaseModel):
+    """
+    lead/trail commands bracketing one HUPy git hook
+    """
+
+    lead: list[_HbCmd] = Field(default_factory=list)
+    trail: list[_HbCmd] = Field(default_factory=list)
 
 
 class _Hb(BaseModel):
@@ -146,8 +155,8 @@ class _Hb(BaseModel):
     """
 
     is_disabled: bool
-    pre_commit: list[_HbCmd]
-    prepare_commit_msg: list[_HbCmd]
+    pre_commit: _HbBracket
+    prepare_commit_msg: _HbBracket
 
 
 class HupyConfigFile(BaseModel):

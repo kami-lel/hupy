@@ -52,8 +52,15 @@
     "release_candidate_tag": "-rc" // suffix identifying a release candidate
   },
   "hb": { // ###################################################################
+    // *Hook Bracket*: run extra commands around HUPy's own hook logic
     "is_disabled": false,
-    "pre_commit": [],
-    "prepare_commit_msg": []
+    "pre_commit": {
+      "lead": [], // run before pre-commit's core checks
+      "trail": [] // run after pre-commit's core checks
+    },
+    "prepare_commit_msg": {
+      "lead": [], // run before prepare-commit-msg's core logic
+      "trail": [] // run after prepare-commit-msg's core logic
+    }
   }
 }
