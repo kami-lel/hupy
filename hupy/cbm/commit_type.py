@@ -13,7 +13,7 @@ from hupy.cbm.branch_type import BranchType
 __all__ = ("CommitType",)
 
 
-class CommitType(Flag):
+class CommitType(Flag):  #######################################################
     """
     represent the type of an in-progress git commit with two-level
     hierarchy: level 2 gives each merge subtype its own bit, level 1
@@ -25,6 +25,10 @@ class CommitType(Flag):
 
     # Member  ------------------------------------------------------------------
 
+    # non-merge commits
+    REGULAR_COMMIT = auto()
+    OTHER_COMMIT = auto()
+
     # merge subtypes
     FEATURE_LANDING = auto()
     VERSION_RELEASE = auto()
@@ -35,10 +39,6 @@ class CommitType(Flag):
     RELEASE_CUT = auto()
     RELEASE_BACKPORT = auto()
     OTHER_MERGE = auto()
-
-    # non-merge commits
-    REGULAR_COMMIT = auto()
-    OTHER_COMMIT = auto()
 
     # merge category
     MERGE = (

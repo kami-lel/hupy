@@ -12,7 +12,6 @@ skipped since the demo commit is a regular, non-merge commit
 import pathlib
 
 from hupy.kamilog import (
-    gen_comment_banner_centered,
     gen_comment_banner_zero,
 )
 from __init__ import prepare_demo_repo, run_hb
@@ -46,19 +45,20 @@ def main():
         "scenario:\tprepare-commit-msg, lead bracket w/ 2 configured "
         "commands, one restricted to RELEASE_CUT"
     )
-    print("expected:\tthe unrestricted command runs, the restricted one "
-          "is skipped")
+    print(
+        "expected:\tthe unrestricted command runs, the restricted one "
+        "is skipped"
+    )
     print()
 
-    print(gen_comment_banner_centered("print out", "#"))
     demo_repo_1 = _prepare_demo_repo()
     demo_repo_2 = _prepare_demo_repo()
 
-    print(gen_comment_banner_centered("HB", "="))
+    print(gen_comment_banner_zero(["HB"]))
     run_hb(demo_repo_1, "prepare-commit-msg", True)
     print()
 
-    print(gen_comment_banner_centered("HB w/ -vvv", "="))
+    print(gen_comment_banner_zero(["HB w/ -vvv"]))
     run_hb(demo_repo_2, "prepare-commit-msg", True, verbosity=4)
 
 
