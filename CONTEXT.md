@@ -153,7 +153,7 @@ Config schema, loading, and default-copying for `.hupy.config.jsonc`.
 
 ### `state`
 
-Local, untracked process state for `hupy-state.json` — the one deliberate exception to the *mostly stateless* design principle above (see Design Principles). Mirrors `config`'s shape (schema module + path-resolver module) but resolves inside the repo's `.git` directory rather than its working tree, since this file is never meant to be committed or shared across clones.
+Local, untracked process state for `hupy-state.json` — the one deliberate exception to the *mostly stateless* design principle above (see Design Principles). Mirrors `config_file`'s shape (schema module + path-resolver module) but resolves inside the repo's `.git` directory rather than its working tree, since this file is never meant to be committed or shared across clones.
 
 **Public API**: `STATE_LOGGER_NAME` (`hupy/state/__init__.py`) · `HupyStateFile` (`state_file.py`) · `STATE_FILENAME`, `get_state_file_path(repo)` (`state_file_path.py`) · `open_state_file(repo)` (`open_state.py`)
 
