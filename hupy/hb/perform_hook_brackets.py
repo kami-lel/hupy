@@ -81,7 +81,7 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
         return
 
     lead_trail = "Leading" if is_lead else "Trailing"
-    logger.enter("{} Hook Bracket for {}".format(lead_trail, hook_name))
+    logger.enter("{} Hook Bracket for: {}".format(lead_trail, hook_name))
 
     bracket = load_hupy_config(repo).hb.get_bracket(hook_name)
     if bracket is None:
@@ -92,9 +92,11 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead):
     # empty commands list
     if not cmds_list:
         logger.skip(
-            "no {} bracket commands for hook: {}".format(lead_trail, hook_name)
+            "no {} bracket commands for: {}".format(lead_trail, hook_name)
         )
         return
+
+    # BUG commit type filtering is wrong
 
     # HACK write better interactions
     for hb_cmd in cmds_list:

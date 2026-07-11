@@ -46,6 +46,8 @@ class CommitType(Flag):
     RELEASE_BACKPORT = MERGE | _RELEASE_BACKPORT
     OTHER_MERGE = MERGE | _OTHER_MERGE
 
+    # Public Method  -----------------------------------------------------------
+
     @classmethod
     def decide_commit_type(cls, source, target):
         """
@@ -58,6 +60,8 @@ class CommitType(Flag):
         :rtype: CommitType
         """
         return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
+
+    # TODO TODO parse one from list of names
 
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
