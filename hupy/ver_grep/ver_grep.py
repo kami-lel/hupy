@@ -85,8 +85,8 @@ def grep_version(repo, state_file, ref):
             return version
 
     logger.warning(
-        "no line matches pattern in {} on {}: {}".format(
-            version_file, ref, pattern
+        "version pattern line missing in file on {}: {}".format(
+            ref, version_file
         )
     )
 
