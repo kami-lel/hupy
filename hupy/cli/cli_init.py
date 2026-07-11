@@ -36,7 +36,7 @@ REPO_PATH_HELP = (
     "default=current working directory"
 )
 
-_HOOK_STUBS_DIR = (
+HOOK_STUBS_DIR = (
     pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
 )
 
@@ -54,7 +54,7 @@ performs:
 """
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _resolve_hooks_dir(repo):
@@ -71,14 +71,22 @@ def _resolve_hooks_dir(repo):
     return pathlib.Path(repo.git_dir) / "hooks"
 
 
-def _copy_hook_stubs(hooks_dir, force):
+def _copy_hook_stubs(hooks_dir, force=False):
     """
     copy the default HUPy hook stub scripts into ``hooks_dir``
+
+
+    :param hooks_dir: directory the hook stub scripts are copied into
+    :type hooks_dir: pathlib.Path
+    :param force: whether overwrite a hook stub already present in ``hooks_dir``
+    :type force: bool, optional
+    :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
+            ``force`` is ``False``
     """
     logger.enter("copy hook stubs")
     hooks_dir.mkdir(parents=True, exist_ok=True)
 
-    for stub_file in _HOOK_STUBS_DIR.iterdir():
+    for stub_file in HOOK_STUBS_DIR.iterdir():
         target_path = hooks_dir / stub_file.name
 
         if target_path.exists():
@@ -132,7 +140,7 @@ def _init_main(args):
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_namespace(args, logger=logger)
+    set_logging_level_by_namespace(args)
 
     repo_path = args.repo_path
     repo = load_git_repo(repo_path)

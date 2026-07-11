@@ -12,12 +12,12 @@ import sys
 import pytest
 
 from hupy.cli.cli_init import (
-    _HOOK_STUBS_DIR,
+    HOOK_STUBS_DIR,
     _PYTHON_PLACEHOLDER,
     _copy_hook_stubs,
 )
 
-_STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
+_STUB_NAMES = sorted(p.name for p in HOOK_STUBS_DIR.iterdir())
 
 
 # helpers  ######################################################################
@@ -31,7 +31,7 @@ def _expected_content(stub_file):
 
 
 def _assert_matches_templates(hooks_dir):
-    for stub_file in _HOOK_STUBS_DIR.iterdir():
+    for stub_file in HOOK_STUBS_DIR.iterdir():
         copied = hooks_dir / stub_file.name
         assert copied.read_text(encoding="utf-8") == _expected_content(
             stub_file
@@ -81,10 +81,8 @@ class TestCopyHookStubsInterpreterPath:
         assert os.path.isabs(sys.executable)
 
     def test_templates_still_carry_the_placeholder(self, tmp_path):
-        for stub_file in _HOOK_STUBS_DIR.iterdir():
-            assert _PYTHON_PLACEHOLDER in stub_file.read_text(
-                encoding="utf-8"
-            )
+        for stub_file in HOOK_STUBS_DIR.iterdir():
+            assert _PYTHON_PLACEHOLDER in stub_file.read_text(encoding="utf-8")
 
 
 class TestCopyHookStubsPreExistingDir:

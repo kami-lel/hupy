@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — demo/test repo builders now configure `vg` against `setup.cfg` instead of leaving it blank, and `pch`'s release-type tag classification only applies to semver-shaped versions. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — `verify-config-file` renamed to `verify` (alias `v`), which now also checks every packaged hook stub is installed via the newly public `HOOK_STUBS_DIR`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -16,7 +16,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 
 | Module | Responsibility |
 |---|---|
-| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the `hook` group nesting the `pre-commit`/`prepare-commit-msg`/`post-commit` stage runners (`hook/`); `verify-config-file` (`cli_verify.py`); `set-verbosity`/`sv` (`cli_set_verbosity.py`); `skip-once`/`so` (`cli_skip_once.py`) |
+| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the `hook` group nesting the `pre-commit`/`prepare-commit-msg`/`post-commit` stage runners (`hook/`); `verify` (`cli_verify.py`); `set-verbosity`/`sv` (`cli_set_verbosity.py`); `skip-once`/`so` (`cli_skip_once.py`) |
 | `cbm` | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` |
 | `config_file` | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc`, cached JSON5 loading resolved against an open `git.Repo`, and default-config copying |
 | `state` | `HupyStateFile` pydantic schema for `hupy-state.json` (verbosity, one-time skips), path resolution inside `repo.git_dir`, atomic thread-/process-safe load-and-save |
@@ -46,6 +46,7 @@ Key decisions:
 - **Dot-prefixed naming** by analogy to `.flake8`/`.pre-commit-config.yaml` (tracked, root-level tool config); `.jsonc` reflects JSON5 parsing so `//` comments can document fields.
 - **Hooks directory is resolved, not fixed.** `_resolve_hooks_dir(repo)` reads `core.hooksPath` (joined onto the work tree, absolute paths used as-is), else falls back to `.git/hooks`; `--hooks-dir` overrides. `init` never writes `core.hooksPath`.
 - **Per-file conflict checks.** `_copy_hook_stubs` checks each target filename, not the directory (which always exists after `git init`), so a fresh repo's first `init` needs no `-f`.
+- **`HOOK_STUBS_DIR` is public** so `verify` can reuse it (alongside `_resolve_hooks_dir`) to confirm every packaged stub filename is present in the resolved hooks dir; it only checks filenames, not file content.
 - **Interpreter path baked in at install time.** The stub template's `{{PYTHON}}` placeholder is substituted with `sys.executable`; a bare `python` on `PATH` is unreliable for hooks fired by an IDE that never sourced the venv. Consequence: re-run `hupy init --force` after moving the venv.
 - **`-f`/`--force` gates the stubs and the config file independently** — `init` is not atomic across the two artifacts.
 - **`post-commit`'s only config-driven feature is its `hb` bracket** — it otherwise exists to spend `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them. Both the lead and trail `hb` brackets run before `reset_for_next_commit()`, so their commands still see the round's `skip_once` state.
@@ -160,15 +161,15 @@ hupy init
 hupy hook pre-commit
 hupy hook prepare-commit-msg
 hupy hook post-commit
-hupy verify-config-file
+hupy verify
 hupy skip-once (alias: so)
 hupy set-verbosity (alias: sv)
 ```
 
 - **`cli_main.py`** — main parser (`prog="hupy"`) and dispatch; imports each subcommand module's `register_*_parser`.
 - **`init`** (`cli_init.py`) — onboards a repo via a `_INIT_STEPS` registry (`copy_hooks`, `create_config_file`); plain `hupy init` runs both, `--copy-hooks`/`--create-config-file` select one. Resolves `repo_root` from `repo.working_tree_dir` (so running from a subdir still anchors correctly). `_copy_hook_stubs` mkdir-p's the hooks dir, then per file: conflict without `-f` → `SystemExit(1)`, else substitute `{{PYTHON}}`→`sys.executable`, write, and `shutil.copymode` to preserve the executable bit.
-- **`verify-config-file`** (`cli_verify.py`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`; shares `load_git_repo`/`REPO_PATH_HELP` with `init` but takes no `-f`.
-- **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify-config-file`, and `load_hupy_config`.
+- **`verify`** (`cli_verify.py`, alias `v`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`, greps the current version via `grep_version`, then `_verify_hook_stubs(repo)` checks every `HOOK_STUBS_DIR` filename exists in the repo's resolved hooks dir (content not compared), raising `SystemExit(1)` after logging one `fail` line per missing stub; each step logs `pass` on success. Shares `load_git_repo`/`REPO_PATH_HELP` with `init` but takes no `-f`.
+- **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify`, and `load_hupy_config`.
 - **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare.
   - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then `ban_direct_commit` → `perform_triage_tags_gating`.
   - **`hook prepare-commit-msg`** — same pattern, then `prepend_commit_header`.
@@ -205,7 +206,7 @@ hupy/                             # installable package
   cli/                            # CLI package: parsing & dispatch
     cli_main.py                   # cli_parser/cli_subparser, registration
     cli_init.py                   # `init`; load_git_repo(repo_path)
-    cli_verify.py                 # `verify-config-file`
+    cli_verify.py                 # `verify` (alias `v`)
     cli_skip_once.py              # `skip-once`/`so`; SKIPPABLE_MODULE
     cli_set_verbosity.py          # `set-verbosity`/`sv`
     hook/                         # `hook` group: git hook stage runners

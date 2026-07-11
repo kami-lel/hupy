@@ -6,7 +6,7 @@
 
 ### Added
 
-- **`verify-config-file`** — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, reporting success or the validation error
+- **`verify`** (aliased `v`) — new `hupy` subcommand that loads and validates the repo's `.hupy.config.jsonc` against `HupyConfigFile`, greps the current `VerGrep` version, and checks every packaged hook stub script is installed in the repo's resolved hooks dir; each step logs a `pass` line, and a missing stub logs one `fail` line per file before `SystemExit(1)`
 - **config version-mismatch warning** — loading a config file whose `hupy_version` doesn't match the installed `HUPy` version now logs a warning
 - **`--copy-hooks`/`--create-config-file` flags on `hupy init`** — run either step alone, or both together (same as passing neither); a step registry in `cli_init.py` makes adding further steps/flags a one-line change
 - **per-module `is_disabled` config flag** — `vg`, `ttg`, `pch`, and `bdc` each gain an `is_disabled: bool` field in `.hupy.config.jsonc` (`vg`'s validator still returns early without the unconfigured-warning when disabled); consumed by the new centralized run-gating below — `hb` already carried the field from `dev` but has no implementation yet to wire it into
@@ -30,6 +30,7 @@
 - `default_logger_verbosity` removed from `HupyConfigFile`; verbosity now comes from `hupy-state.json`'s `hooks_logger_verbosity` field instead, read by each `hupy hook` stage through the new `open_state_file` context, and set via the new `set-verbosity`/`sv` CLI subcommand above
 - config field `ver_grep` renamed to **`vg`** (schema field, JSON key in `.hupy.config.jsonc`, and all references) — aligns with the `vg` abbreviation already used by `skip-once`
 - config path constants/helpers (`CONFIG_FILENAME`, `DEFAULT_CONFIG_ASSET`, `get_config_file_path`) extracted out of `load_config.py`/`write_config.py` into a new `hupy/config_file/config_file_path.py`
+- `cli_init.py`'s `_HOOK_STUBS_DIR` renamed to public `HOOK_STUBS_DIR` so `cli_verify.py` can reuse it (alongside `_resolve_hooks_dir`) to check installed hook stubs against the packaged set
 
 ### Deprecated
 
@@ -45,8 +46,21 @@
 - `hupy.pch`'s `_get_release_type_word` could match an `alpha_tag`/`beta_tag`/`release_candidate_tag` substring (eg `-rc`) against a non-semver version before the semver-shaped checks ran, misclassifying an unparsable version like `v2024.07-rc1` as a tagged release instead of falling back to the plain `Version Release` header; tag checks now only run once the version's `major.minor.patch` core has matched
 - `examples/pch/release-cut-demo.py` claimed PCH still skips `RELEASE_CUT` merges and named a mismatched source branch; corrected to match `pch`'s actual `Release Cut` header support
 - `hupy.state.open_state`'s logger (`HU.state`) now disables propagation like every other module logger, fixing state log lines printing twice
+- `cli_verify.py` configured its own `set_logging_level_by_namespace(args, logger=logger)`/`getLogger(...)` calls against `cli_init`'s `INIT_LOGGER_NAME`, so `verify`'s log lines were mislabeled under the init logger and its own `-v`/`-q` flags were misapplied; now uses its own `"HU.verify"` logger
 
 ### Security
+
+[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.3.0...dev
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -81,7 +95,6 @@
 
 - `examples/{pch,ttg}/*.bash` demo scripts rewritten as executable `.py` scripts; also fixes them actually running their hook (previously errored on a stray CLI argument, and the demo repos never had a `.hupy.config.json` for the hook to load)
 
-[unreleased]: https://github.com/kami-lel/hooks-utility-py/compare/v0.3.0...dev
 [0.3.0]: https://github.com/kami-lel/hooks-utility-py/compare/v0.2.0...v0.3.0
 
 

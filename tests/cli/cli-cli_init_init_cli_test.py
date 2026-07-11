@@ -9,15 +9,18 @@ writing, and error paths for non-git or nonexistent targets
 
 import pytest
 
-from hupy.config_file.config_file_path import CONFIG_FILENAME, DEFAULT_CONFIG_ASSET
-from hupy.cli.cli_init import _HOOK_STUBS_DIR
+from hupy.config_file.config_file_path import (
+    CONFIG_FILENAME,
+    DEFAULT_CONFIG_ASSET,
+)
+from hupy.cli.cli_init import HOOK_STUBS_DIR
 from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,
     set_configured_hooks_path,
 )
 
-_STUB_NAMES = sorted(p.name for p in _HOOK_STUBS_DIR.iterdir())
+_STUB_NAMES = sorted(p.name for p in HOOK_STUBS_DIR.iterdir())
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 
 
@@ -89,9 +92,7 @@ class TestInitCustomHooksDirFlag:
         for name in _STUB_NAMES:
             assert (custom_dir / name).exists()
         for name in _STUB_NAMES:
-            assert not (
-                (git_repo_dir / "configured-hooks") / name
-            ).exists()
+            assert not ((git_repo_dir / "configured-hooks") / name).exists()
 
 
 class TestInitWritesConfigFile:

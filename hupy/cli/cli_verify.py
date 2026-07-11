@@ -4,14 +4,17 @@ import argparse
 import os
 import pathlib
 
-from hupy.cli.cli_init import INIT_LOGGER_NAME, REPO_PATH_HELP, load_git_repo
+from hupy import PROJ_LOGGER_NAME
+from hupy.cli.cli_init import (
+    HOOK_STUBS_DIR,
+    REPO_PATH_HELP,
+    _resolve_hooks_dir,
+    load_git_repo,
+)
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
 from hupy.ver_grep.ver_grep import grep_version
 
-# Fixme rename as verify
-# Todo use pass to indicate success
-# Todo add assert stubs existed
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -22,7 +25,7 @@ from hupy.kamilog import (
 # logger  ######################################################################
 
 
-logger = getLogger(INIT_LOGGER_NAME)
+logger = getLogger(PROJ_LOGGER_NAME + ".verify")
 logger.propagate = False
 
 
@@ -35,18 +38,49 @@ validate the HUPy config file (.hupy.config.jsonc) at repository root
 """
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
+
+
+def _verify_hook_stubs(repo):
+    """
+    verify every HUPy hook stub is installed in ``repo``'s hooks dir
+    (content of each installed file is not checked)
+
+
+    :param repo: repository to verify
+    :type repo: git.Repo
+    :raises SystemExit: ``repo``'s hooks dir is missing one or more
+            hook stub scripts
+    :return: number of hook stub scripts verified
+    :rtype: int
+    """
+    hooks_dir = _resolve_hooks_dir(repo)
+
+    stub_names = {stub_file.name for stub_file in HOOK_STUBS_DIR.iterdir()}
+    installed_names = (
+        {installed_file.name for installed_file in hooks_dir.iterdir()}
+        if hooks_dir.is_dir()
+        else set()
+    )
+
+    missing_names = stub_names - installed_names
+    if missing_names:
+        for missing_name in sorted(missing_names):
+            logger.fail("missing hook stub: {}".format(missing_name))
+        raise SystemExit(1)
+
+    return len(stub_names)
 
 
 def _verify_main(args):
     """
-    dispatch for the ``verify-config-file`` subcommand.
+    dispatch for the ``verify`` subcommand.
 
 
     :param args: parsed arguments from argparse
     :type args: argparse.Namespace
     """
-    set_logging_level_by_namespace(args, logger=logger)
+    set_logging_level_by_namespace(args)
 
     repo_path = args.repo_path
 
@@ -54,24 +88,27 @@ def _verify_main(args):
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    logger.enter("HUPy config file verification for: {}".format(repo_root))
+    logger.enter("HUPy verify: {}".format(repo_root))
 
     with open_state_file(repo) as state_file:
         load_hupy_config(repo)
-        grep_version(repo, state_file, "HEAD")
+        logger.pass_("config file verified")
+        version = grep_version(repo, state_file, "HEAD")
+        logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-    logger.done("HUPy config file valid for: {}".format(repo_root))
+        cnt = _verify_hook_stubs(repo)
+        logger.pass_("hook stubs exist, count: {}".format(cnt))
+
+    logger.done("HUPy verification completed: {}".format(repo_root))
 
 
 # Public API  ##################################################################
-
-
 def register_cli_verify_parser(cli_subparser):
     """
-    register the ``verify-config-file`` subcommand parser.
+    register the ``verify`` subcommand parser.
     """
     verify_parser = cli_subparser.add_parser(
-        "verify-config-file",
+        "verify",
         aliases=["v"],
         help=__doc__,
         description=_DESCRIPTION,
