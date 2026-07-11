@@ -15,7 +15,7 @@ from hupy.kamilog import (
     gen_comment_banner_centered,
 )
 from hupy.cbm.get_current_commit_type import get_current_commit_type
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.should_run_module import should_run_module
 from . import HB_LOGGER_NAME
 

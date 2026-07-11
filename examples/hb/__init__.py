@@ -18,8 +18,8 @@ _REPO_ROOT = _PKG_DIR.parent.parent
 sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
 from config_fixture import load_config_fixture  # noqa: E402
-from hupy.config import CONFIG_LOGGER_NAME  # noqa: E402
-from hupy.config.config_file_path import get_config_file_path  # noqa: E402
+from hupy.config_file import CONFIG_LOGGER_NAME  # noqa: E402
+from hupy.config_file.config_file_path import get_config_file_path  # noqa: E402
 from hupy.hb import perform_hook_brackets  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402

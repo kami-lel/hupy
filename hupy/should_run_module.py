@@ -7,7 +7,7 @@ one-time ``skip_once`` set
 """
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config.load_config import load_hupy_config
+from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 
 __all__ = ("should_run_module",)

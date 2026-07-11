@@ -27,7 +27,7 @@ class BranchType(Enum):
         :param branch_name: name of the git branch to classify
         :type branch_name: str
         :param cbm_config: the loaded ``cbm`` config section
-        :type cbm_config: hupy.config.config_file._Cbm
+        :type cbm_config: hupy.config_file.config_file._Cbm
         :return: the branch type matching ``branch_name``
         :rtype: BranchType
         """
