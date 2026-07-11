@@ -5,8 +5,6 @@ define the ``skip-once`` CLI subcommand, letting a HUPy module be
 skipped for exactly one upcoming hook run
 """
 
-# BUG need unset
-
 import argparse
 import os
 
@@ -87,9 +85,14 @@ def _skip_once_main(args):
     ]
 
     with open_state_file(repo) as state_file:
-        state_file.skip_once.update(abbrs)
+        if args.unset:
+            state_file.skip_once.difference_update(abbrs)
 
-        logger.done("flagged for one-time skip: {}".format(", ".join(abbrs)))
+            logger.done("unset one-time skip: {}".format(", ".join(abbrs)))
+        else:
+            state_file.skip_once.update(abbrs)
+
+            logger.done("set one-time skip: {}".format(", ".join(abbrs)))
 
 
 # Public API  ##################################################################
@@ -112,6 +115,13 @@ def register_cli_skip_once_parser(cli_subparser):
         choices=tuple(_MODULE_ABBR_TO_NAME.keys())
         + tuple(_MODULE_NAME_TO_ABBR.keys()),
         help="module(s) to skip, v.s.",
+    )
+
+    skip_once_parser.add_argument(
+        "-u",
+        "--unset",
+        action="store_true",
+        help="unset one-time skip flag for module(s) instead",
     )
 
     add_verbose_arguments(skip_once_parser)
