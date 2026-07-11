@@ -10,7 +10,7 @@
 FIXME rewrite all components docs
 FIXME rewrite readme
 
-TODO pyproject.toml lacks requires-python, authors, license, classifiers, keywords, and [project.urls].
+TODO pyproject.toml lacks license.
 -->
 
 <!-- todo reimplement ensure file modified -->
