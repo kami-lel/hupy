@@ -49,17 +49,21 @@ def _get_version_bump_prefix(source_version, target_version):
 
 def _get_release_type_word(version, repo):
     """
-    map a version string to its release-type word
+    map a version string to its release-type word; check tagged
+    versions (alpha/beta/rc) before base patterns so that tagged
+    versions don't fall back to Stable Release classification
     """
     pch_config = load_hupy_config(repo).pch
-    tagged_words = (
-        (pch_config.alpha_tag, "Alpha Release "),
-        (pch_config.beta_tag, "Beta Release "),
-        (pch_config.release_candidate_tag, "Release Candidate "),
-    )
-    for tag, word in tagged_words:
-        if tag and tag in version:
-            return word
+
+    if re.match(r"^\d+\.\d+\.\d+", version):
+        tagged_words = (
+            (pch_config.alpha_tag, "Alpha Release "),
+            (pch_config.beta_tag, "Beta Release "),
+            (pch_config.release_candidate_tag, "Release Candidate "),
+        )
+        for tag, word in tagged_words:
+            if tag and tag in version:
+                return word
 
     if pch_config.enable_pre_alpha and re.match(r"^0\.9\.\d+", version):
         return "Pre-Alpha Release "
@@ -71,6 +75,7 @@ def _get_release_type_word(version, repo):
         return "Prototype Release "
     if re.match(r"^\d+\.\d+\.\d+", version):
         return "Stable Release "
+
     return ""
 
 
