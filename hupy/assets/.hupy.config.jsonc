@@ -37,13 +37,16 @@
     // additional branches' names to block
     "ban_commit_to_branches": []
   },
-  "ttg": { // Ban Direct Commit  ###############################################
-    // *Triage Tag Gating*: blocks commits that introduce disallowed TT
+  "ttg": { // Triage Tag Gating ################################################
+    // blocks merging gated Triage Tags into protected branches
+    //
+    // disable TTG
     "is_disabled": false,
-    // when true, match TT anywhere in the line instead of requiring
+    // whether match TT anywhere in the line instead of requiring
     // the comment leader for the file's extension (eg `//`, `#`, `<!--`)
     "disable_tt_detect_by_type": false,
-    "ignored_path_globs": [] // glob patterns excluded from TT scanning
+    // glob patterns excluded from TT scanning
+    "ignored_path_globs": []
   },
   "pch": { // Prepend Commit Header ############################################
     // adds a short header line to the top of the commit message
