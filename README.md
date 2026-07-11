@@ -5,20 +5,26 @@
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
-<!-- FIXME manual trimming -->
-
 <!-- todo reimplement ensure file modified -->
+
+
+
+
+
+
+
+
+
 
 
 
 
 ## ✨ Features
 
-- 🚫 **Ban Direct Commit** — block commits made directly on a protected branch (`main` by default), while still allowing that branch to receive commits through a merge
-- 🛡️ **Triage Tag Gating** — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
-- ✏️ **Prepend Commit Header** — auto-generate descriptive headers for merge commit types, stamping the project version on releases
-- 🔗 **Hook Bracket** — run your own lead/trail shell commands around each hook stage, no custom hook required
-- 🔍 **Commit/Branch/Merge detection** — classify branch types and in-progress commit types from git state, shared across the features above
+- 🚫 [**Ban Direct Commit**](docs/bdc_doc.md) — block commits made directly on a protected branch (`main` by default), while still allowing that branch to receive commits through a merge
+- 🛡️ [**Triage Tag Gating**](docs/ttg_doc.md) — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
+- ✏️ [**Prepend Commit Header**](docs/pch_doc.md) — auto-generate descriptive headers for merge commit types, stamping the project version on releases
+- 🔗 [**Hook Bracket**](docs/hb_doc.md) — run your own lead/trail shell commands around each hook stage, no custom hook required
 
 
 
