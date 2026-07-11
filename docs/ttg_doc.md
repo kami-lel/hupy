@@ -1,5 +1,7 @@
 # Triage Tag Gating (TTG) Documentation
 
+<!-- FIXME rewrite ttg doc -->
+
 **Triage Tag Gating** is *HUPy*'s `pre-commit` hook. It blocks a merge into a protected branch when the staged changes still contain **triage tags** — the `TODO` / `FIXME` / `HACK` / `BUG` markers that flag unfinished or provisional work — so half-done code doesn't slip into `dev` or `main`.
 
 ## Triage Tags

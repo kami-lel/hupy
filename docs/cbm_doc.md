@@ -1,5 +1,7 @@
 # Commit, Branch & Merge Documentation
 
+<!-- FIXME rewrite cbm doc -->
+
 ## Concepts
 
 ### Branch Type
