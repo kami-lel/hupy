@@ -58,7 +58,7 @@ def ban_direct_commit(repo, state_file):
 
     commit_type = get_current_commit_type(repo)
 
-    if CommitType.MERGE in commit_type:
+    if commit_type in CommitType.MERGE:
         logger.pass_("merging into protected branch")
         return
 

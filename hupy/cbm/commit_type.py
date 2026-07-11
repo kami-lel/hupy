@@ -16,37 +16,42 @@ __all__ = ("CommitType",)
 class CommitType(Flag):
     """
     represent the type of an in-progress git commit with two-level
-    hierarchy: level 1 distinguishes merges from other commits;
-    level 2 further categorizes merges by source and target branch.
+    hierarchy: level 2 gives each merge subtype its own bit, level 1
+    exposes ``MERGE`` as the union of every merge subtype so a single
+    bit test can categorize both a specific subtype and any merge.
 
     See `docs/cbm_doc.md` for detailed descriptions of each merge type.
     """
 
-    _FEATURE_LANDING = auto()
-    _VERSION_RELEASE = auto()
-    _SYNC_BACKPORT = auto()
-    _CATCH_UP = auto()
-    _HOTFIX_RELEASE = auto()
-    _HOTFIX_BACKPORT = auto()
-    _RELEASE_CUT = auto()
-    _RELEASE_BACKPORT = auto()
-    _OTHER_MERGE = auto()
+    # Member  ------------------------------------------------------------------
 
-    # Public Member  -----------------------------------------------------------
+    # merge subtypes
+    FEATURE_LANDING = auto()
+    VERSION_RELEASE = auto()
+    SYNC_BACKPORT = auto()
+    CATCH_UP = auto()
+    HOTFIX_RELEASE = auto()
+    HOTFIX_BACKPORT = auto()
+    RELEASE_CUT = auto()
+    RELEASE_BACKPORT = auto()
+    OTHER_MERGE = auto()
 
+    # non-merge commits
     REGULAR_COMMIT = auto()
-    MERGE = auto()
     OTHER_COMMIT = auto()
 
-    FEATURE_LANDING = MERGE | _FEATURE_LANDING
-    VERSION_RELEASE = MERGE | _VERSION_RELEASE
-    SYNC_BACKPORT = MERGE | _SYNC_BACKPORT
-    CATCH_UP = MERGE | _CATCH_UP
-    HOTFIX_RELEASE = MERGE | _HOTFIX_RELEASE
-    HOTFIX_BACKPORT = MERGE | _HOTFIX_BACKPORT
-    RELEASE_CUT = MERGE | _RELEASE_CUT
-    RELEASE_BACKPORT = MERGE | _RELEASE_BACKPORT
-    OTHER_MERGE = MERGE | _OTHER_MERGE
+    # merge category
+    MERGE = (
+        FEATURE_LANDING
+        | VERSION_RELEASE
+        | SYNC_BACKPORT
+        | CATCH_UP
+        | HOTFIX_RELEASE
+        | HOTFIX_BACKPORT
+        | RELEASE_CUT
+        | RELEASE_BACKPORT
+        | OTHER_MERGE
+    )
 
     # Public Method  -----------------------------------------------------------
 
@@ -67,46 +72,45 @@ class CommitType(Flag):
     def build_allow_filter(cls, filters):
         """
         merge the commit type members named in ``filters`` into a
-        single ``CommitType`` allow filter with ``|``
+        single ``CommitType`` allow list instance with ``|``; a name
+        of ``MERGE`` pulls in every merge subtype at once
 
 
         :param filters: names of commit type members to merge
         :type filters: list[str]
-        :return: the merged allow filter
+        :return: the merged allow list instance
         :rtype: CommitType
         :example:
         >>> CommitType.build_allow_filter(
         ...     ["FEATURE_LANDING", "VERSION_RELEASE"]
         ... )
-        <CommitType.FEATURE_LANDING|VERSION_RELEASE: 1027>
+        <CommitType.FEATURE_LANDING|VERSION_RELEASE: 3>
         """
         # FIXME work w/ illegal names
-        return reduce(or_, (cls[name] for name in filters))
+        return reduce(or_, (cls[name] for name in filters), cls(0))
 
     @classmethod
     def is_commit_type_allowed(cls, filters, commit_type):
         """
-        check whether ``commit_type`` shares a bit with the commit
-        types named in ``filters``, used to decide whether a hook
-        bracket is allowed to run for the current commit
+        decide whether ``commit_type`` falls inside the ``filters``
+        allow list instance; since ``MERGE`` unions every merge
+        subtype, a filter of ``MERGE`` admits any merge commit
 
 
-        :param filters: names of commit type members to merge into an
-                allow filter
-        :type filters: list[str]
+        :param filters: the allow list instance to test against
+        :type filters: CommitType
         :param commit_type: the commit type to test
         :type commit_type: CommitType
-        :return: True if commit_type matches any type named in filters
+        :return: True if commit_type shares a bit with filters
         :rtype: bool
         :example:
         >>> CommitType.is_commit_type_allowed(
-        ...     ["FEATURE_LANDING", "VERSION_RELEASE"],
+        ...     CommitType.MERGE,
         ...     CommitType.FEATURE_LANDING,
         ... )
         True
         """
-        merged_filter = cls.build_allow_filter(filters)
-        return bool(merged_filter & commit_type)
+        return bool(filters & commit_type)
 
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
