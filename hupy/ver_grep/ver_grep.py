@@ -37,7 +37,6 @@ def grep_version(repo, state_file, ref):
     :rtype: str
     """
 
-    # FIXME verify & update general logger printed out
     if not should_run_module(repo, state_file, "vg"):
         return ""
 
@@ -74,8 +73,8 @@ def grep_version(repo, state_file, ref):
             logger.debug("matched line on {}:\n{}".format(ref, line))
             if not match.groups():  # pattern lacks a capture group
                 logger.warning(
-                    "pattern has no capture group on {}: {}".format(
-                        ref, pattern
+                    "missing capture group in version pattern:\n{}".format(
+                        pattern
                     )
                 )
                 return ""
