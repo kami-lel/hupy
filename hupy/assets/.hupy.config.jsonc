@@ -25,14 +25,19 @@
     "release_branch_prefix": "release" // prefix (before `/`) marking release
   },
   "bdc": { // ##################################################################
-    // *Ban Direct Commit*: blocks direct commits to protected branches; merges
-    // (eg. `feature -> dev`) are unaffected
+    // block direct commits to protected branches,
+    // allowing only merging into these branches
+    //
+    // disable BDC
     "is_disabled": false,
+    // whether blocking direct commit to main branch
     "ban_commit_to_main": true,
+    // whether blocking direct commit to dev branch
     "ban_commit_to_dev": false,
-    "ban_commit_to_branches": [] // exact branch names, on top of the above
+    // additional branches' names to block
+    "ban_commit_to_branches": []
   },
-  "ttg": { // ##################################################################
+  "ttg": { // Ban Direct Commit  ###############################################
     // *Triage Tag Gating*: blocks commits that introduce disallowed TT
     "is_disabled": false,
     // when true, match TT anywhere in the line instead of requiring
