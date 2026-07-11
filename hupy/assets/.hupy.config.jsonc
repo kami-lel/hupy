@@ -61,6 +61,10 @@
     "prepare_commit_msg": {
       "lead": [], // run before prepare-commit-msg's core logic
       "trail": [] // run after prepare-commit-msg's core logic
+    },
+    "post_commit": {
+      "lead": [], // run before post-commit's core logic
+      "trail": [] // run after post-commit's core logic
     }
   }
 }
