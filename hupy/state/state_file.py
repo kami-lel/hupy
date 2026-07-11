@@ -18,7 +18,7 @@ class HupyStateFile(BaseModel):
     schema for the HUPy state file (``hupy-state.json``)
     """
 
-    logger_verbosity: int = 1
+    logger_verbosity: int = 1  # FIXME change better name
     skip_once: set[str] = Field(default_factory=set)
 
     def consume_skip_once(self, module_abbr):
