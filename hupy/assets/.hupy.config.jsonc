@@ -5,10 +5,9 @@
 // # commit it so every clone shares the same behavior
 // #############################################################################
 {
-  // hupy_version  -------------------------------------------------------------
-  // *HUPy* version that wrote the file; informational, no need to edit
+  // HUPy version, do not edit
   "hupy_version": "0.3.0",
-  "vg": { // ####################################################################
+  "vg": { // VerGrep  ##########################################################
     // reads the repo's version string for *Prepend Commit Header*; empty
     // fields disable it, so the header falls back to plain `Version Release`
     //
