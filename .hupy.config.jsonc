@@ -1,5 +1,5 @@
 {
-  "hupy_version": "0.3.0",
+  "hupy_version": "1.0.0",
   "vg": {
     "is_disabled": false,
     "version_file": "pyproject.toml",
