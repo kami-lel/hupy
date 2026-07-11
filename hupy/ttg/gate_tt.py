@@ -9,7 +9,8 @@ from hupy.kamilog import getLogger
 from hupy.config.load_config import load_hupy_config
 from hupy.should_run_module import should_run_module
 from ..ttg import TTG_LOGGER_NAME
-from ..cbm import CommitType, get_current_commit_type
+from ..cbm import CommitType
+from ..cbm.get_current_commit_type import get_current_commit_type
 from .triage_tag_type import TriageTagType
 from .detect_tt import detect_triage_tags_in_staged_file
 from .staged_files import get_staged_file_paths, is_path_ignored

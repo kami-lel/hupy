@@ -17,8 +17,8 @@ from hupy.ver_grep import (
     grep_target_branch_version,
 )
 from . import PCH_LOGGER_NAME
-from ..cbm import (
-    CommitType,
+from ..cbm import CommitType
+from ..cbm.get_current_commit_type import (
     get_current_commit_type,
     get_source_branch,
     get_target_branch,

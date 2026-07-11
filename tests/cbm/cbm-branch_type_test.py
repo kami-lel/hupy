@@ -4,8 +4,6 @@ cbm-branch_type_test.py
 tests for `BranchType.from_name` in `branch_type.py`
 """
 
-from unittest import mock
-
 from config_fixture import load_config_fixture
 
 from hupy.cbm.branch_type import BranchType
@@ -15,14 +13,11 @@ from hupy.cbm.branch_type import BranchType
 
 def _classify(branch_name, **cbm_overrides):
     """
-    classify ``branch_name`` against a stubbed config carrying
-    ``cbm_overrides``, bypassing disk/git config loading.
+    classify ``branch_name`` against a stubbed ``cbm`` config section
+    carrying ``cbm_overrides``, bypassing disk/git config loading.
     """
     config = load_config_fixture(overrides={"cbm": cbm_overrides})
-    with mock.patch(
-        "hupy.cbm.branch_type.load_hupy_config", return_value=config
-    ):
-        return BranchType.from_name(branch_name, mock.sentinel.repo)
+    return BranchType.from_name(branch_name, config.cbm)
 
 
 # tests  ########################################################################
@@ -138,13 +133,3 @@ class TestFromNamePrecedence:
             )
             == BranchType.HOTFIX
         )
-
-
-class TestFromNamePassesRepo:
-    def test_repo_forwarded_to_load_hupy_config(self):
-        config = load_config_fixture()
-        with mock.patch(
-            "hupy.cbm.branch_type.load_hupy_config", return_value=config
-        ) as mocked:
-            BranchType.from_name("dev", mock.sentinel.repo)
-        mocked.assert_called_once_with(mock.sentinel.repo)
