@@ -8,6 +8,4 @@ __all__ = ("HB_LOGGER_NAME",)
 
 
 # constants  ###################################################################
-
-
 HB_LOGGER_NAME = PROJ_LOGGER_NAME + ".HB"

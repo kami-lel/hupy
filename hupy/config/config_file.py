@@ -24,10 +24,10 @@ logger = getLogger(CONFIG_LOGGER_NAME)
 logger.propagate = False
 
 
-# data structure  ##############################################################
+# internal structures  #########################################################
 
 
-class _VerGrep(BaseModel):
+class _VerGrep(BaseModel):  # ==================================================
     """
     configuration for version grep hook
     """
@@ -84,7 +84,7 @@ class _VerGrep(BaseModel):
         return self
 
 
-class _Cbm(BaseModel):
+class _Cbm(BaseModel):  # ======================================================
     """
     configuration for the CBM module (commit, branch, and merge types)
     """
@@ -95,7 +95,7 @@ class _Cbm(BaseModel):
     release_branch_prefix: str = Field(min_length=1)
 
 
-class _Bdc(BaseModel):
+class _Bdc(BaseModel):  # ======================================================
     """
     configuration for the BDC module (ban direct commit)
     """
@@ -106,7 +106,7 @@ class _Bdc(BaseModel):
     ban_commit_to_branches: list[str]
 
 
-class _Ttg(BaseModel):
+class _Ttg(BaseModel):  # ======================================================
     """
     configuration for Triage Tag Gating
     """
@@ -116,7 +116,7 @@ class _Ttg(BaseModel):
     ignored_path_globs: list[str]
 
 
-class _Pch(BaseModel):
+class _Pch(BaseModel):  # ======================================================
     """
     configuration for the PCH module (pre-commit hook)
     """
@@ -130,6 +130,7 @@ class _Pch(BaseModel):
     release_candidate_tag: str
 
 
+# Hook Bracket  ================================================================
 class _HbCmd(BaseModel):
     """
     a single bracketed command run alongside a HUPy git hook
@@ -158,8 +159,20 @@ class _Hb(BaseModel):
     pre_commit: _HbBracket
     prepare_commit_msg: _HbBracket
 
+    def get_bracket(self, hook_name):
+        """
+        :param hook_name: hook name, eg ``"pre-commit"``
+        :type hook_name: str
+        :return: bracket for ``hook_name``, or ``None`` if unrecognized
+        :rtype: _HbBracket or None
+        """
+        return {
+            "pre-commit": self.pre_commit,
+            "prepare-commit-msg": self.prepare_commit_msg,
+        }.get(hook_name)
 
-class HupyConfigFile(BaseModel):
+
+class HupyConfigFile(BaseModel):  ##############################################
     """
     schema for the HUPy config file (``.hupy.config.json``)
     """
