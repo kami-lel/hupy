@@ -13,14 +13,14 @@ from hupy.config_file.config_file_path import (
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
-from hupy.cli.cli_init import HOOK_STUBS_DIR
+from hupy.stub.names_by_demand import get_hook_names_by_demand
 from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,
     set_configured_hooks_path,
 )
 
-_STUB_NAMES = sorted(p.name for p in HOOK_STUBS_DIR.iterdir())
+_STUB_NAMES = sorted(get_hook_names_by_demand())
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 
 

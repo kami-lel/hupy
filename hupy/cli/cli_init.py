@@ -3,8 +3,6 @@
 import argparse
 import os
 import pathlib
-import shutil
-import sys
 
 import git
 
@@ -36,13 +34,6 @@ REPO_PATH_HELP = (
     "git repository path (or any of its subdirectories;) "
     "default=current working directory"
 )
-
-HOOK_STUBS_DIR = (
-    pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
-)
-
-_PYTHON_PLACEHOLDER = "{{PYTHON}}"
-
 
 _DESCRIPTION = __doc__ + """
 

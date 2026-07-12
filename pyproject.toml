@@ -39,6 +39,5 @@ include = ["hupy*"]
 
 [tool.setuptools.package-data]
 hupy = [
-    "assets/hook-stubs/*",
     "assets/.hupy.config.jsonc",
 ]
