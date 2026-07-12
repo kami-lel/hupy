@@ -144,7 +144,7 @@
       // run after pre-commit's core logic
       "trail": []
     },
-    // TODO reorders
+    // FIXME reorders
     "pre_merge_commit": {
       // run before pre-merge-commit's core logic
       "lead": [],
