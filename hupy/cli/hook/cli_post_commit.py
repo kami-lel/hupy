@@ -8,7 +8,7 @@ import os
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_init import load_git_repo
-from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_START
+from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_START, HOOK_STAGE_NOOP
 from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
@@ -38,6 +38,8 @@ def _post_commit_main(args):  ##################################################
         perform_hook_brackets(
             repo, state_file, "post-commit", True, args.hook_args
         )
+
+        logger.debug(HOOK_STAGE_NOOP)
 
         perform_hook_brackets(
             repo, state_file, "post-commit", False, args.hook_args
