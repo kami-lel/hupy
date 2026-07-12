@@ -33,15 +33,19 @@ def _iter_hook_stage_modules():
             yield mod
 
 
-def _has_hb_commands(config, hook_name):
+def _is_hb_bracket_active(config, hook_name):
     """
-    :param config: loaded HUPy config
-    :type config: HupyConfigFile
+    :param config: loaded HUPy config, or ``None`` when unset
+    :type config: HupyConfigFile or None
     :param hook_name: hook name, eg ``"pre-commit"``
     :type hook_name: str
-    :return: whether the hook's HB bracket holds any command
+    :return: whether HB is enabled and the hook's bracket holds any
+            command
     :rtype: bool
     """
+    if config is None or config.hb.is_disabled:
+        return False
+
     bracket = config.hb.get_bracket(hook_name)
     return bracket is not None and bracket.should_install_hook_stub()
 
@@ -50,13 +54,13 @@ def _is_demanded(mod, config):
     """
     :param mod: hook stage module to check
     :type mod: module
-    :param config: loaded HUPy config
-    :type config: HupyConfigFile
+    :param config: loaded HUPy config, or ``None`` when unset
+    :type config: HupyConfigFile or None
     :return: whether ``mod``'s hook needs an installed stub
     :rtype: bool
     """
     return (
-        _has_hb_commands(config, mod.HOOK_NAME)
+        _is_hb_bracket_active(config, mod.HOOK_NAME)
         or hasattr(mod, "run_core")
         or hasattr(mod, "run_after")
     )
@@ -70,7 +74,7 @@ def get_hook_names_by_demand(repo):
     :return: hook names that should have an installed stub
     :rtype: list[str]
     """
-    config = load_hupy_config(repo)
+    config = load_hupy_config(repo, allows_file_not_found=True)
 
     names = [
         mod.HOOK_NAME
