@@ -33,7 +33,7 @@ _STUB_MODE = 0o755
 # auxiliaries  ##################################################################
 
 
-def _write_stub(target_path, hook_name):
+def _write_stub(target_path, hook_name, is_overwrite=False):
     """
     render and write the stub script for ``hook_name`` at ``target_path``,
     then mark it executable.
@@ -43,6 +43,11 @@ def _write_stub(target_path, hook_name):
         encoding="utf-8",
     )
     target_path.chmod(_STUB_MODE)
+
+    if is_overwrite:
+        logger.warning("overwrite existing hook stub: {}".format(target_path))
+    else:
+        logger.debug("hook stub installed: {}".format(target_path))
 
 
 def _is_managed_stub(target_path):
@@ -87,16 +92,18 @@ def create_init_hook_stubs(hooks_dir, force=False):
     :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
             ``force`` is ``False``
     """
-    # FIXME mpv logger
-    logger.enter("create hook stubs")
+    logger.enter("install hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     hooks_dir.mkdir(parents=True, exist_ok=True)
 
-    for hook_name in get_hook_names_by_demand():
+    names = get_hook_names_by_demand()
+
+    for hook_name in names:
         target_path = hooks_dir / hook_name
 
-        if target_path.exists():
+        file_exist = target_path.exists()
+        if file_exist:
             if not force:
                 logger.error(
                     "hook already exists (use --force to override): {}".format(
@@ -105,10 +112,7 @@ def create_init_hook_stubs(hooks_dir, force=False):
                 )
                 raise SystemExit(1)
 
-            logger.warning("overwrite existing hook: {}".format(target_path))
-
-        _write_stub(target_path, hook_name)
-        logger.debug("hook stub installed: {}".format(target_path))
+        _write_stub(target_path, hook_name, is_overwrite=file_exist)
 
 
 def verify_hook_stubs(hooks_dir, force=False, update=False):
