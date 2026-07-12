@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.cli.hook.cli_hook import register_cli_hook_parser
+from hupy.cli.cli_hook import register_cli_hook_parser
 from hupy.cli.cli_init import register_cli_init_parser
 from hupy.cli.cli_set_verbosity import register_cli_set_verbosity_parser
 from hupy.cli.cli_skip_once import register_cli_skip_once_parser
