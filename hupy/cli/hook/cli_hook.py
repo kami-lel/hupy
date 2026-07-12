@@ -6,9 +6,12 @@ define the generic git hook stage runner and
 ``hook``
 """
 
+# Fixme flow done message
+
 import os
 
-from hupy import PROJ_LOGGER_NAME, kamilog
+
+from hupy import kamilog
 from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.cli.hook import (
