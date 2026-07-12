@@ -49,27 +49,12 @@ performs:
 # auxiliaries  #################################################################
 
 
-def _resolve_hooks_dir(repo):
-    """
-    resolve ``repo``'s actual git hooks directory, honoring
-    ``core.hooksPath`` if configured.
-    """
-    with repo.config_reader() as reader:
-        configured = reader.get_value("core", "hooksPath", default="")
-
-    if configured:
-        return pathlib.Path(repo.working_tree_dir) / configured
-
-    return pathlib.Path(repo.git_dir) / "hooks"
-
-
 def _run_install_hook_stubs(args, repo):
     """
     step: write the demanded HUPy hook stub scripts into the repo's
     hooks dir.
     """
-    hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    install_hook_stubs(hooks_dir, args.force)
+    install_hook_stubs(repo, hooks_dir=args.hooks_dir, force=args.force)
 
 
 def _run_create_config_file(args, repo):

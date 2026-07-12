@@ -10,17 +10,13 @@ stubs
 
 import sys
 
-from hupy.stub.names_by_demand import get_hook_names_by_demand
 from hupy.stub.update_stubs import install_hook_stubs, verify_hook_stubs
-
-_STUB_NAMES = sorted(get_hook_names_by_demand())
-
 
 # helpers  ######################################################################
 
 
-def _assert_installed(hooks_dir):
-    for name in _STUB_NAMES:
+def _assert_installed(hooks_dir, stub_names):
+    for name in stub_names:
         content = (hooks_dir / name).read_text(encoding="utf-8")
         assert content.startswith("#!/usr/bin/env bash\n")
         assert sys.executable in content
@@ -41,27 +37,29 @@ def _write_unmanaged_stub(hooks_dir, hook_name):
 
 
 class TestVerifyHookStubsSyncNoOp:
-    def test_missing_and_unused_are_reported_but_untouched(self, tmp_path):
+    def test_missing_and_unused_are_reported_but_untouched(
+        self, tmp_path, repo, stub_names
+    ):
         hooks_dir = tmp_path / "hooks"
-        install_hook_stubs(hooks_dir, force=False)
-        missing_name = _STUB_NAMES[0]
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
+        missing_name = stub_names[0]
         (hooks_dir / missing_name).unlink()
         unused_path = _write_unmanaged_stub(hooks_dir, "unused-hook")
 
-        verify_hook_stubs(hooks_dir, force=False)
+        verify_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         assert not (hooks_dir / missing_name).exists()
         assert unused_path.exists()
-        for name in _STUB_NAMES[1:]:
+        for name in stub_names[1:]:
             assert (hooks_dir / name).exists()
 
-    def test_unrelated_dir_contents_are_ignored(self, tmp_path):
+    def test_unrelated_dir_contents_are_ignored(self, tmp_path, repo):
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
         sample = hooks_dir / "pre-commit.sample"
         sample.write_text("git's own sample hook")
 
-        verify_hook_stubs(hooks_dir, force=False)
+        verify_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         assert sample.read_text() == "git's own sample hook"
         assert sorted(p.name for p in hooks_dir.iterdir()) == [
@@ -70,35 +68,41 @@ class TestVerifyHookStubsSyncNoOp:
 
 
 class TestVerifyHookStubsUpdate:
-    def test_update_adds_missing_and_removes_unused(self, tmp_path):
+    def test_update_adds_missing_and_removes_unused(
+        self, tmp_path, repo, stub_names
+    ):
         hooks_dir = tmp_path / "hooks"
-        install_hook_stubs(hooks_dir, force=False)
-        missing_name = _STUB_NAMES[0]
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
+        missing_name = stub_names[0]
         (hooks_dir / missing_name).unlink()
         _write_unmanaged_stub(hooks_dir, "unused-hook")
 
-        verify_hook_stubs(hooks_dir, force=False, update=True)
+        verify_hook_stubs(repo, hooks_dir=hooks_dir, force=False, update=True)
 
-        assert sorted(p.name for p in hooks_dir.iterdir()) == _STUB_NAMES
-        _assert_installed(hooks_dir)
+        assert sorted(p.name for p in hooks_dir.iterdir()) == stub_names
+        _assert_installed(hooks_dir, stub_names)
 
-    def test_update_leaves_already_installed_stubs_untouched(self, tmp_path):
+    def test_update_leaves_already_installed_stubs_untouched(
+        self, tmp_path, repo, stub_names
+    ):
         hooks_dir = tmp_path / "hooks"
-        install_hook_stubs(hooks_dir, force=False)
-        target = hooks_dir / _STUB_NAMES[0]
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
+        target = hooks_dir / stub_names[0]
         target.write_text(target.read_text() + "stale marker\n")
 
-        verify_hook_stubs(hooks_dir, force=False, update=True)
+        verify_hook_stubs(repo, hooks_dir=hooks_dir, force=False, update=True)
 
         assert "stale marker" in target.read_text()
 
-    def test_update_with_force_also_replaces_installed_stubs(self, tmp_path):
+    def test_update_with_force_also_replaces_installed_stubs(
+        self, tmp_path, repo, stub_names
+    ):
         hooks_dir = tmp_path / "hooks"
-        install_hook_stubs(hooks_dir, force=False)
-        target = hooks_dir / _STUB_NAMES[0]
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
+        target = hooks_dir / stub_names[0]
         target.write_text(target.read_text() + "stale marker\n")
 
-        verify_hook_stubs(hooks_dir, force=True, update=True)
+        verify_hook_stubs(repo, hooks_dir=hooks_dir, force=True, update=True)
 
         assert "stale marker" not in target.read_text()
-        _assert_installed(hooks_dir)
+        _assert_installed(hooks_dir, stub_names)
