@@ -179,6 +179,9 @@ class _Hb(BaseModel):
     # fields  ------------------------------------------------------------------
 
     is_disabled: bool
+    applypatch_msg: _HbBracket = Field(default_factory=_HbBracket)
+    pre_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+    post_applypatch: _HbBracket = Field(default_factory=_HbBracket)
     pre_commit: _HbBracket = Field(default_factory=_HbBracket)
     pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
     prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)
@@ -196,6 +199,9 @@ class _Hb(BaseModel):
         :rtype: _HbBracket or None
         """
         return {
+            "applypatch-msg": self.applypatch_msg,
+            "pre-applypatch": self.pre_applypatch,
+            "post-applypatch": self.post_applypatch,
             "pre-commit": self.pre_commit,
             "pre-merge-commit": self.pre_merge_commit,
             "prepare-commit-msg": self.prepare_commit_msg,

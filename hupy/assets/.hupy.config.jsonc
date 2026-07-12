@@ -111,6 +111,24 @@
     //
     // disable HB
     "is_disabled": false,
+    "applypatch_msg": {
+      // run before applypatch-msg's core logic
+      "lead": [],
+      // run after applypatch-msg's core logic
+      "trail": []
+    },
+    "pre_applypatch": {
+      // run before pre-applypatch's core logic
+      "lead": [],
+      // run after pre-applypatch's core logic
+      "trail": []
+    },
+    "post_applypatch": {
+      // run before post-applypatch's core logic
+      "lead": [],
+      // run after post-applypatch's core logic
+      "trail": []
+    },
     "pre_commit": {
       // run before pre-commit's core logic
       "lead": [
