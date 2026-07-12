@@ -5,7 +5,7 @@ import pathlib
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
     REPO_PATH_HELP,
-    _resolve_hooks_dir,
+    resolve_hooks_dir,
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
@@ -69,7 +69,7 @@ def _verify_main(args):
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
         verify_hook_stubs(
-            _resolve_hooks_dir(repo),
+            resolve_hooks_dir(repo),
             repo,
             force=args.force,
             update=args.update_hook_stubs,
