@@ -116,10 +116,11 @@
       "lead": [
         // example entry:
         // {
-        //   "remark": "Pre-Feature Landing Unit Test"
+        //   "remark": "Pre-Feature Landing Unit Test",
         //   "cmd": "npm test",
         //   "allow_commit_types": ["FEATURE_LANDING"],
         //   "allow_failure": false,
+        //   "timeout": 600.0
         // }
       ],
       // run after pre-commit's core logic
