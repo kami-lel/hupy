@@ -5,7 +5,11 @@ define ``register_cli_pre_merge_commit_parser``, the pre-merge-commit
 hook subcommand
 """
 
+import os
+
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.cli_init import load_git_repo
+from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
 logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".pre-merge-commit")
@@ -19,9 +23,15 @@ def _pre_merge_commit_main(args):  #############################################
     """
     dispatch for the ``pre-merge-commit`` subcommand
     """
-    logger.enter("Start")
-    logger.debug("No Operation in this HUPy version")
-    logger.succ("Finished")
+    repo = load_git_repo(os.getcwd())
+
+    with open_state_file(repo) as state_file:
+        kamilog.set_logging_level_by_namespace(
+            args, verbosity=state_file.hooks_logger_verbosity
+        )
+        logger.enter("Start")
+        logger.debug("No Operation in this HUPy version")
+        logger.succ("Finished")
 
 
 # Public API  ##################################################################
