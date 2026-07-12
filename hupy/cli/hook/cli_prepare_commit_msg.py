@@ -30,9 +30,13 @@ def _prepare_commit_msg_main(args):  ###########################################
 
         logger.enter("start prepare-commit-msg stage")
 
-        perform_hook_brackets(repo, state_file, "prepare-commit-msg", True)
+        perform_hook_brackets(
+            repo, state_file, "prepare-commit-msg", True, args.hook_args
+        )
         prepend_commit_header(repo, state_file)
-        perform_hook_brackets(repo, state_file, "prepare-commit-msg", False)
+        perform_hook_brackets(
+            repo, state_file, "prepare-commit-msg", False, args.hook_args
+        )
 
         logger.succ("prepare-commit-msg stage finished")
 

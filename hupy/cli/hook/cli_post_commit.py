@@ -27,9 +27,13 @@ def _post_commit_main(args):  ##################################################
         )
         logger.enter("start post-commit stage")
 
-        perform_hook_brackets(repo, state_file, "post-commit", True)
+        perform_hook_brackets(
+            repo, state_file, "post-commit", True, args.hook_args
+        )
 
-        perform_hook_brackets(repo, state_file, "post-commit", False)
+        perform_hook_brackets(
+            repo, state_file, "post-commit", False, args.hook_args
+        )
 
         state_file.reset_for_next_commit()
 

@@ -30,10 +30,14 @@ def _pre_commit_main(args):  ###################################################
 
         logger.enter("start pre-commit stage")
 
-        perform_hook_brackets(repo, state_file, "pre-commit", True)
+        perform_hook_brackets(
+            repo, state_file, "pre-commit", True, args.hook_args
+        )
         ban_direct_commit(repo, state_file)
         perform_triage_tags_gating(repo, state_file)
-        perform_hook_brackets(repo, state_file, "pre-commit", False)
+        perform_hook_brackets(
+            repo, state_file, "pre-commit", False, args.hook_args
+        )
 
         logger.succ("pre-commit stage finished")
 
