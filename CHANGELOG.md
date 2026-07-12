@@ -10,7 +10,7 @@
 - **Hook argument passthrough** — every hook stub now forwards git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --install-hook-stubs --force` to pick up the updated stubs
 - **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets its own `hb` bracket config section, though only the original three stages run any *HUPy* feature beyond their Hook Bracket
 - **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hook` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_core`/`run_after`; by default that's still only `pre-commit`, `prepare-commit-msg`, and `post-commit`, but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
-- **Flow diagrams** — `docs/flow_doc.md` gained Mermaid diagrams for Commit Flow, Merge Flow, Rewrite Flow, and Patch Apply Flow, plus one per Standalone Hook, covering the full set of seventeen stages
+- **Chain diagrams** — `docs/chain_doc.md` gained Mermaid diagrams for the Regular Commit Chain, Merge Chain, Rewrite Chain, and Patch Apply Chain, plus one per Standalone Hook, covering the full set of seventeen stages
 
 ### Changed
 

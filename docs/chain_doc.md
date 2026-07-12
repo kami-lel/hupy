@@ -1,8 +1,6 @@
-# Hook Flow Documentation
+# Hook Chain Documentation
 
-Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after:
-
-
+Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. A **Chain** is the term for the ordered run of hook stages that one git operation triggers, start to finish:
 
 
 
@@ -35,9 +33,11 @@ Once `hupy init` has installed the stubs, the hooks are **fully automatic** — 
 
 
 
-## Commit Flow
 
-Triggered by `git commit` for a **non-merge commit** (a merge commit follows [Merge Flow](#merge-flow) instead):
+
+## Regular Commit Chain
+
+Triggered by `git commit` for a **non-merge commit** (a merge commit follows the [Merge Chain](#merge-chain) instead):
 
 ```mermaid
 flowchart TD
@@ -71,16 +71,20 @@ flowchart TD
 
     commit --> pre
     trail1 --> prep
-    trail2 --> cmsg
+    trail2 --> editmsg([editor opens for commit message])
+    editmsg --> cmsg
+    trail2 -. "-m/-F or --no-edit given" .-> cmsg
     trail2b --> created([commit created])
     created --> post
 ```
 
+Unless `-m`, `-F`, or `--no-edit` is given, `prepare-commit-msg` hands off to a user-editable editor for the commit message before `commit-msg` runs.
+
 See the per-feature docs for what each stage does: [Ban Direct Commit](bdc_doc.md), [Triage Tag Gating](ttg_doc.md), and [Prepend Commit Header](pch_doc.md). Both BDC and PCH decide their behavior from the branch and merge classification in [Commit, Branch & Merge](cbm_doc.md).
 
-## Merge Flow
+## Merge Chain
 
-Triggered by `git merge`. A non-fast-forward merge runs its own commit chain (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit`) and only fires `post-merge` once that finishes; a fast-forward merge creates no commit at all, so it skips straight to `post-merge`:
+Triggered by `git merge`. A non-fast-forward merge runs its own commit chain (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit`) and only fires `post-merge` once that finishes; a fast-forward merge creates no commit at all, so it skips straight to `post-merge`. `git merge --no-commit` stops before that chain even starts, leaving the merge staged in the index and working tree; a later `git commit` or `git merge --continue` finishes it, but that resumes through the Regular Commit Chain's `pre-commit` stage instead, so `post-merge` never fires for that merge:
 
 ```mermaid
 flowchart TD
@@ -119,9 +123,12 @@ flowchart TD
     end
 
     nonff --> pmc
+    nonff -. "--no-commit" .-> nocommit(["stop: merge staged, no commit made<br/>resume with git commit /<br/>git merge --continue<br/>-> re-enters Regular Commit Chain's pre-commit stage<br/>(post-merge will not fire)"])
     ff -. no commit created .-> pmg2
     trail1c --> prep2
-    trail2c --> cmsg2
+    trail2c --> editmsg2([editor opens for commit message])
+    editmsg2 --> cmsg2
+    trail2c -. "-m or --no-edit given" .-> cmsg2
     trail2d --> created2([merge commit created])
     created2 --> post2
     trail3c --> pmg2
@@ -159,9 +166,9 @@ flowchart TD
 
 
 
-## Rewrite Flow
+## Rewrite Chain
 
-Triggered by `git commit --amend` or `git rebase` — separate from, and does not follow, the commit flow above. `git rebase` also fires `pre-rebase` first, before it starts replaying commits:
+Triggered by `git commit --amend` or `git rebase` — separate from, and does not follow, the Chains above. `git rebase` also fires `pre-rebase` first, before it starts replaying commits:
 
 ```mermaid
 flowchart TD
@@ -218,9 +225,9 @@ flowchart TD
 
 
 
-## Patch Apply Flow
+## Patch Apply Chain
 
-Triggered by `git am` — separate from, and does not follow, the commit flow above:
+Triggered by `git am` — separate from, and does not follow, the Chains above:
 
 ```mermaid
 flowchart TD
@@ -285,7 +292,7 @@ flowchart TD
 
 ## Standalone Hooks
 
-Each of these fires on its own, unrelated trigger — none of them chain into the flows above, or into each other.
+Each of these fires on its own, unrelated trigger — none of them join the Chains above, and they don't chain into each other either.
 
 
 

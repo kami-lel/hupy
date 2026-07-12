@@ -107,7 +107,7 @@ hupy verify
 
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature.
 
-See [Hook Flow Documentation](docs/flow_doc.md) for the end-to-end diagram of how each stage runs.
+See [Hook Chain Documentation](docs/chain_doc.md) for the end-to-end diagram of how each stage runs.
 
 See the per-feature docs for detailed usage:
 
