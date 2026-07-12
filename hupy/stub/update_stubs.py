@@ -13,6 +13,9 @@ from hupy.kamilog import getLogger
 from hupy.stub import STUB_LOGGER_NAME
 from hupy.stub.names_by_demand import get_hook_names_by_demand
 
+# HACK split into 2 files
+
+
 # logger  ######################################################################
 
 logger = getLogger(STUB_LOGGER_NAME)
@@ -84,6 +87,7 @@ def create_init_hook_stubs(hooks_dir, force=False):
     :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
             ``force`` is ``False``
     """
+    # FIXME mpv logger
     logger.enter("create hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
@@ -126,15 +130,14 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     :param update: whether sync installed stubs to demand
     :type update: bool, optional
     """
+    # FIXME mpv logger
     logger.enter("verify hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     hooks_dir.mkdir(parents=True, exist_ok=True)
 
     demanded_set = set(get_hook_names_by_demand())
-    installed_set = {
-        p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)
-    }
+    installed_set = {p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)}
 
     missing_names = sorted(demanded_set - installed_set)
     unused_names = sorted(installed_set - demanded_set)
@@ -147,9 +150,7 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
 
         for hook_name in unused_names:
             logger.warning(
-                "hook stub no longer demanded: {}".format(
-                    hooks_dir / hook_name
-                )
+                "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
             )
 
         return
