@@ -12,14 +12,14 @@ from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_START, HOOK_STAGE_NOOP
 from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
+# constants  ###################################################################
+_HOOK_NAME = "post-commit"
+_POST_COMMIT_DOC = "run post-commit stage hooks"
+
 # logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".post-commit")
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
 logger.propagate = False
 proj_root_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
-
-
-# constants  ###################################################################
-_POST_COMMIT_DOC = "run post-commit stage hooks"
 
 
 def _post_commit_main(args):  ##################################################
@@ -36,13 +36,13 @@ def _post_commit_main(args):  ##################################################
         logger.enter(HOOK_STAGE_START)
 
         perform_hook_brackets(
-            repo, state_file, "post-commit", True, args.hook_args
+            repo, state_file, _HOOK_NAME, True, args.hook_args
         )
 
         logger.debug(HOOK_STAGE_NOOP)
 
         perform_hook_brackets(
-            repo, state_file, "post-commit", False, args.hook_args
+            repo, state_file, _HOOK_NAME, False, args.hook_args
         )
 
         state_file.reset_for_next_commit()
@@ -57,7 +57,7 @@ def register_cli_post_commit_parser(subparser):
     register the ``post-commit`` subcommand parser.
     """
     post_commit_parser = subparser.add_parser(
-        "post-commit",
+        _HOOK_NAME,
         help=_POST_COMMIT_DOC,
         description=_POST_COMMIT_DOC,
     )

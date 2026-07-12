@@ -11,12 +11,13 @@ from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.state.open_state import open_state_file
 
-# logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".commit-msg")
-logger.propagate = False
-
 # constants  ###################################################################
+_HOOK_NAME = "commit-msg"
 _COMMIT_MSG_DOC = "run commit-msg stage hooks"
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
+logger.propagate = False
 
 
 def _commit_msg_main(args):  ###################################################
@@ -40,7 +41,7 @@ def register_cli_commit_msg_parser(subparser):
     register the ``commit-msg`` subcommand parser.
     """
     commit_msg_parser = subparser.add_parser(
-        "commit-msg",
+        _HOOK_NAME,
         help=_COMMIT_MSG_DOC,
         description=_COMMIT_MSG_DOC,
     )

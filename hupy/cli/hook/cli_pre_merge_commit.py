@@ -12,12 +12,13 @@ from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.state.open_state import open_state_file
 
-# logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".pre-merge-commit")
-logger.propagate = False
-
 # constants  ###################################################################
+_HOOK_NAME = "pre-merge-commit"
 _PRE_MERGE_COMMIT_DOC = "run pre-merge-commit stage hooks"
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
+logger.propagate = False
 
 
 def _pre_merge_commit_main(args):  #############################################
@@ -41,7 +42,7 @@ def register_cli_pre_merge_commit_parser(subparser):
     register the ``pre-merge-commit`` subcommand parser.
     """
     pre_merge_commit_parser = subparser.add_parser(
-        "pre-merge-commit",
+        _HOOK_NAME,
         help=_PRE_MERGE_COMMIT_DOC,
         description=_PRE_MERGE_COMMIT_DOC,
     )

@@ -14,13 +14,13 @@ from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.state.open_state import open_state_file
 
-# logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".prepare-commit-msg")
-logger.propagate = False
-
 # constants  ###################################################################
-
+_HOOK_NAME = "prepare-commit-msg"
 _PREPARE_COMMIT_MSG_DOC = "run prepare-commit-msg stage hooks"
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
+logger.propagate = False
 
 
 def _prepare_commit_msg_main(args):  ###########################################
@@ -38,11 +38,11 @@ def _prepare_commit_msg_main(args):  ###########################################
         logger.enter(HOOK_STAGE_START)
 
         perform_hook_brackets(
-            repo, state_file, "prepare-commit-msg", True, args.hook_args
+            repo, state_file, _HOOK_NAME, True, args.hook_args
         )
         prepend_commit_header(repo, state_file)
         perform_hook_brackets(
-            repo, state_file, "prepare-commit-msg", False, args.hook_args
+            repo, state_file, _HOOK_NAME, False, args.hook_args
         )
 
         logger.succ(HOOK_STAGE_FINISHED)
@@ -54,7 +54,7 @@ def register_cli_prepare_commit_msg_parser(subparser):
     register the ``prepare-commit-msg`` subcommand parser.
     """
     prepare_commit_msg_parser = subparser.add_parser(
-        "prepare-commit-msg",
+        _HOOK_NAME,
         help=_PREPARE_COMMIT_MSG_DOC,
         description=_PREPARE_COMMIT_MSG_DOC,
     )

@@ -12,12 +12,13 @@ from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.state.open_state import open_state_file
 
-# logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".post-rewrite")
-logger.propagate = False
-
 # constants  ###################################################################
+_HOOK_NAME = "post-rewrite"
 _POST_REWRITE_DOC = "run post-rewrite stage hooks"
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
+logger.propagate = False
 
 
 def _post_rewrite_main(args):  #################################################
@@ -41,7 +42,7 @@ def register_cli_post_rewrite_parser(subparser):
     register the ``post-rewrite`` subcommand parser.
     """
     post_rewrite_parser = subparser.add_parser(
-        "post-rewrite",
+        _HOOK_NAME,
         help=_POST_REWRITE_DOC,
         description=_POST_REWRITE_DOC,
     )

@@ -14,12 +14,13 @@ from hupy.state.open_state import open_state_file
 from hupy.ttg.gate_tt import perform_triage_tags_gating
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 
-# logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".pre-commit")
-logger.propagate = False
-
 # constants  ###################################################################
+_HOOK_NAME = "pre-commit"
 _PRE_COMMIT_DOC = "run pre-commit stage hooks"
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + _HOOK_NAME)
+logger.propagate = False
 
 
 def _pre_commit_main(args):  ###################################################
@@ -37,12 +38,12 @@ def _pre_commit_main(args):  ###################################################
         logger.enter(HOOK_STAGE_START)
 
         perform_hook_brackets(
-            repo, state_file, "pre-commit", True, args.hook_args
+            repo, state_file, _HOOK_NAME, True, args.hook_args
         )
         ban_direct_commit(repo, state_file)
         perform_triage_tags_gating(repo, state_file)
         perform_hook_brackets(
-            repo, state_file, "pre-commit", False, args.hook_args
+            repo, state_file, _HOOK_NAME, False, args.hook_args
         )
 
         logger.succ(HOOK_STAGE_FINISHED)
@@ -54,7 +55,7 @@ def register_cli_pre_commit_parser(subparser):
     register the ``pre-commit`` subcommand parser.
     """
     pre_commit_parser = subparser.add_parser(
-        "pre-commit",
+        _HOOK_NAME,
         help=_PRE_COMMIT_DOC,
         description=_PRE_COMMIT_DOC,
     )
