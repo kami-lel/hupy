@@ -45,7 +45,7 @@ def _write_stub(target_path, hook_name, is_overwrite=False):
     target_path.chmod(_STUB_MODE)
 
     if is_overwrite:
-        logger.warning("overwrite existing hook stub: {}".format(target_path))
+        logger.warning("overwrite hook stub: {}".format(target_path))
     else:
         logger.debug("hook stub installed: {}".format(target_path))
 
@@ -134,7 +134,6 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     :param update: whether sync installed stubs to demand
     :type update: bool, optional
     """
-    # FIXME mpv logger
     logger.enter("verify hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
@@ -149,7 +148,7 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     if not update:
         for hook_name in missing_names:
             logger.warning(
-                "hook stub missing: {}".format(hooks_dir / hook_name)
+                "missing hook stub: {}".format(hooks_dir / hook_name)
             )
 
         for hook_name in unused_names:
@@ -167,12 +166,8 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     for hook_name in missing_names:
         target_path = hooks_dir / hook_name
         _write_stub(target_path, hook_name)
-        logger.debug("hook stub installed: {}".format(target_path))
 
     if force:
         for hook_name in sorted(demanded_set & installed_set):
             target_path = hooks_dir / hook_name
-            logger.warning(
-                "replacing existing hook stub: {}".format(target_path)
-            )
-            _write_stub(target_path, hook_name)
+            _write_stub(target_path, hook_name, is_overwrite=True)

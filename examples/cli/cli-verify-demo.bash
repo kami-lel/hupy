@@ -5,16 +5,16 @@
 # demo: `hupy verify` across four scenarios, each on its own freshly
 # prepared repo (prep_repo.py scenario, then `hupy init
 # --install-hook-stubs`):
-# 1. a fully synced repo — every check passes
-# 2. the config file replaced with `{}` (missing every required
+# 1. hook stubs drifted from demand (pre-commit removed, an unused
+#    pre-push stub added), but no -u — only warns, leaves them as is
+# 2. the config file with its `vg` field dropped (a missing required
 #    field) — the config-load check raises
-# 3. hook stubs drifted from demand (pre-commit removed, an unused
-#    pre-push stub added) — `-u` adds the missing one and removes the
-#    unused one
+# 3. the same drift as case 1 — `-u` adds the missing one and removes
+#    the unused one
 # 4. the same drift as case 3, plus a tainted already-installed
 #    post-commit stub — `-u -f` also refreshes it
-# expected result: 1 PASS, 2 FAIL (config), 3 syncs stubs, 4 syncs and
-# refreshes
+# expected result: 1 WARNS (stub drift, no sync), 2 FAIL (config),
+# 3 syncs stubs, 4 syncs and refreshes
 #
 # any -v/-q flags passed to this script are forwarded as-is to
 # `hupy verify`
@@ -53,27 +53,52 @@ _drift_hooks_dir() {
         > "$hooks_dir/pre-push"
 }
 
+_drop_config_field() {
+    local config_path="$1" field="$2"
+    python3 - "$config_path" "$field" <<'EOF'
+import json
+import sys
+
+import json5
+
+path, field = sys.argv[1], sys.argv[2]
+config = json5.loads(open(path).read())
+del config[field]
+open(path, "w").write(json.dumps(config, indent=2))
+EOF
+}
+
 
 # demo  ########################################################################
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
 printf "scenario:\tfour hupy verify runs, each on its own freshly prepared repo\n"
-printf "expected:\t1 PASS, 2 FAIL (config), 3 syncs stubs, 4 syncs and refreshes\n"
+printf "expected:\t1 WARNS (stub drift, no sync), 2 FAIL (config), 3 syncs stubs, 4 syncs and refreshes\n"
 echo
 
-printf '%s\n' "1. config valid, version greppable, stubs already synced"
+printf '%s\n' "1. pre-commit stub removed, unused pre-push stub added, no -u"
 printf '%s\n' "hupy verify" | python3 -m hupy.kamilog cb center "#"
 demo_repo_1="$(_prepare_demo_repo)"
+hooks_dir_1="$demo_repo_1/.git/hooks"
+_drift_hooks_dir "$hooks_dir_1"
+
+printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "="
+ls "$hooks_dir_1" | grep -v '\.sample$'
+echo
 
 printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
 _run_verify "$demo_repo_1"
 echo
 
-printf '%s\n' "2. config file replaced with {}, missing every required field"
+printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "="
+ls "$hooks_dir_1" | grep -v '\.sample$'
+echo
+
+printf '%s\n' "2. config file's vg field dropped, a missing required field"
 printf '%s\n' "hupy verify" | python3 -m hupy.kamilog cb center "#"
 demo_repo_2="$(_prepare_demo_repo)"
-printf '{}' > "$demo_repo_2/.hupy.config.jsonc"
+_drop_config_field "$demo_repo_2/.hupy.config.jsonc" vg
 
 printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
 _run_verify "$demo_repo_2"
@@ -85,7 +110,7 @@ demo_repo_3="$(_prepare_demo_repo)"
 hooks_dir_3="$demo_repo_3/.git/hooks"
 _drift_hooks_dir "$hooks_dir_3"
 
-printf '%s\n' "before" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "="
 ls "$hooks_dir_3" | grep -v '\.sample$'
 echo
 
@@ -93,7 +118,7 @@ printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
 _run_verify "$demo_repo_3" -u
 echo
 
-printf '%s\n' "after" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "="
 ls "$hooks_dir_3" | grep -v '\.sample$'
 echo
 
@@ -104,7 +129,7 @@ hooks_dir_4="$demo_repo_4/.git/hooks"
 _drift_hooks_dir "$hooks_dir_4"
 printf '\n# stale marker\n' >> "$hooks_dir_4/post-commit"
 
-printf '%s\n' "before" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "="
 cat "$hooks_dir_4/post-commit"
 echo
 
@@ -112,5 +137,5 @@ printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
 _run_verify "$demo_repo_4" -u -f
 echo
 
-printf '%s\n' "after" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "="
 cat "$hooks_dir_4/post-commit"
