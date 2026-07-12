@@ -115,7 +115,7 @@ def _run_copy_hooks(args, repo):
     hooks dir.
     """
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    update_hooks_stub(hooks_dir, args.force)
+    update_hooks_stub(hooks_dir, args.force, is_init=True)
 
 
 def _run_create_config_file(args, repo):
