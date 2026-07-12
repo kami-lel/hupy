@@ -48,5 +48,10 @@ def register_cli_pre_commit_parser(subparser):
         help=_PRE_COMMIT_DOC,
         description=_PRE_COMMIT_DOC,
     )
+    pre_commit_parser.add_argument(
+        "hook_args",
+        nargs="*",
+        help="raw arguments forwarded",
+    )
     kamilog.add_verbose_arguments(pre_commit_parser)
     pre_commit_parser.set_defaults(func=_pre_commit_main)

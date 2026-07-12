@@ -47,5 +47,10 @@ def register_cli_post_commit_parser(subparser):
         help=_POST_COMMIT_DOC,
         description=_POST_COMMIT_DOC,
     )
+    post_commit_parser.add_argument(
+        "hook_args",
+        nargs="*",
+        help="raw arguments forwarded",
+    )
     kamilog.add_verbose_arguments(post_commit_parser)
     post_commit_parser.set_defaults(func=_post_commit_main)

@@ -47,5 +47,11 @@ def register_cli_prepare_commit_msg_parser(subparser):
         help=_PREPARE_COMMIT_MSG_DOC,
         description=_PREPARE_COMMIT_MSG_DOC,
     )
+    prepare_commit_msg_parser.add_argument(
+        "hook_args",
+        metavar="ARG",
+        nargs="*",
+        help="raw arguments forwarded by the git hook invocation",
+    )
     kamilog.add_verbose_arguments(prepare_commit_msg_parser)
     prepare_commit_msg_parser.set_defaults(func=_prepare_commit_msg_main)
