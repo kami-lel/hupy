@@ -22,7 +22,9 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-_STUB_TEMPLATE = '#!/usr/bin/env bash\n"{python}" -m hupy hook {hook_name} "$@"\n'
+_STUB_TEMPLATE = """#!/usr/bin/env bash
+"{python}" -m hupy hook {hook_name} "$@"
+"""
 
 _STUB_MODE = 0o755
 
@@ -73,6 +75,7 @@ def update_hooks_stub(hooks_dir, force=False):
     """
     logger.enter("update hook stubs")
     hooks_dir.mkdir(parents=True, exist_ok=True)
+    # FIXME mpv interaction & logger print
 
     for hook_name in sorted(_iter_hook_names()):
         target_path = hooks_dir / hook_name
