@@ -109,5 +109,72 @@ flowchart TD
     applied --> postap
 ```
 
+
+
+
+### Standalone Hooks
+
+Each of these fires on its own, unrelated trigger — none of them chain into the flows above, or into each other:
+
+Triggered before automatic garbage collection:
+
+```mermaid
+flowchart TD
+    gc([automatic git gc])
+
+    %% pre-auto-gc stage
+    subgraph preautogc [pre-auto-gc stage]
+        pgc[/pre-auto-gc hook/] --> lead7[[Hook Bracket - lead]]
+        lead7 --> trail7[[Hook Bracket - trail]]
+    end
+
+    gc --> pgc
+```
+
+Triggered when the index is written and the working tree is unchanged:
+
+```mermaid
+flowchart TD
+    idx([index written, worktree unchanged])
+
+    %% post-index-change stage
+    subgraph postindexchange [post-index-change stage]
+        pic[/post-index-change hook/] --> lead8[[Hook Bracket - lead]]
+        lead8 --> trail8[[Hook Bracket - trail]]
+    end
+
+    idx --> pic
+```
+
+Triggered by `git send-email`, once per outgoing message:
+
+```mermaid
+flowchart TD
+    email([git send-email, per message])
+
+    %% sendemail-validate stage
+    subgraph sendemailvalidate [sendemail-validate stage]
+        sev[/sendemail-validate hook/] --> lead9[[Hook Bracket - lead]]
+        lead9 --> trail9[[Hook Bracket - trail]]
+    end
+
+    email --> sev
+```
+
+Triggered by `git status` and other commands querying the filesystem-monitor state:
+
+```mermaid
+flowchart TD
+    fsm([git status / fsmonitor query])
+
+    %% fsmonitor-watchman stage
+    subgraph fsmonitorwatchman [fsmonitor-watchman stage]
+        fsw[/fsmonitor-watchman hook/] --> lead10[[Hook Bracket - lead]]
+        lead10 --> trail10[[Hook Bracket - trail]]
+    end
+
+    fsm --> fsw
+```
+
 > [!NOTE]
-> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, and `post-rewrite` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, `post-rewrite`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, and `fsmonitor-watchman` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
