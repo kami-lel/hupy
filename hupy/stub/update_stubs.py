@@ -163,7 +163,7 @@ def update_hooks_stub(hooks_dir, force=False, is_init=False, update=False):
     :raises SystemExit: ``is_init`` is set, a hook stub already exists in
             ``hooks_dir``, and ``force`` is ``False``
     """
-    # FIXME keeps upd interaction
+    # FIXME FIXME simplify interactions & keeps upd interaction
     logger.enter("update hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
