@@ -20,6 +20,8 @@ from hupy.kamilog import (
     getLogger,
 )
 
+# FIXME last step is
+
 # logger  ######################################################################
 
 
@@ -129,6 +131,15 @@ def register_cli_verify_parser(cli_subparser):
         type=pathlib.Path,
         default=pathlib.Path(os.getcwd()),
         help=REPO_PATH_HELP,
+    )
+
+    verify_parser.add_argument(
+        "-u",
+        "--update-hook-stub",
+        dest="update_hook_stub",
+        action="store_true",
+        default=False,
+        help="add/remove hook stubs so only demanded stubs remain installed",
     )
 
     add_verbose_arguments(verify_parser)
