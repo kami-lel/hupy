@@ -13,14 +13,14 @@ from hupy.config_file.config_file_path import (
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
-from hupy.cli.cli_init import HOOK_STUBS_DIR
+from hupy.stub.names_by_demand import get_hook_names_by_demand
 from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,
     set_configured_hooks_path,
 )
 
-_STUB_NAMES = sorted(p.name for p in HOOK_STUBS_DIR.iterdir())
+_STUB_NAMES = sorted(get_hook_names_by_demand())
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 
 
@@ -104,8 +104,8 @@ class TestInitWritesConfigFile:
 
 
 class TestInitStepFlags:
-    def test_copy_hooks_flag_skips_config_file(self, git_repo_dir):
-        run_init_cli([str(git_repo_dir), "--copy-hooks"])
+    def test_install_hook_stubs_flag_skips_config_file(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir), "--install-hook-stubs"])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
         for name in _STUB_NAMES:
@@ -124,7 +124,7 @@ class TestInitStepFlags:
 
     def test_both_flags_together_create_hooks_and_config(self, git_repo_dir):
         run_init_cli(
-            [str(git_repo_dir), "--copy-hooks", "--create-config-file"]
+            [str(git_repo_dir), "--install-hook-stubs", "--create-config-file"]
         )
 
         hooks_dir = _default_hooks_dir(git_repo_dir)

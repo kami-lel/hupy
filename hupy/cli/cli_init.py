@@ -3,13 +3,12 @@
 import argparse
 import os
 import pathlib
-import shutil
-import sys
 
 import git
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config_file.write_config import create_default_config_file
+from hupy.stub.update_stubs import install_hook_stubs
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -36,18 +35,11 @@ REPO_PATH_HELP = (
     "default=current working directory"
 )
 
-HOOK_STUBS_DIR = (
-    pathlib.Path(__file__).resolve().parent.parent / "assets" / "hook-stubs"
-)
-
-_PYTHON_PLACEHOLDER = "{{PYTHON}}"
-
-
 _DESCRIPTION = __doc__ + """
 
 performs:
 
-- copy default HUPy hook stub scripts into the repo's hooks directory
+- install HUPy hook stub scripts into the repo's hooks directory
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
 - create a default HUPy config file (.hupy.config.jsonc) at repository root
@@ -71,50 +63,13 @@ def _resolve_hooks_dir(repo):
     return pathlib.Path(repo.git_dir) / "hooks"
 
 
-def _copy_hook_stubs(hooks_dir, force=False):
+def _run_install_hook_stubs(args, repo):
     """
-    copy the default HUPy hook stub scripts into ``hooks_dir``
-
-
-    :param hooks_dir: directory the hook stub scripts are copied into
-    :type hooks_dir: pathlib.Path
-    :param force: whether overwrite a hook stub already present in ``hooks_dir``
-    :type force: bool, optional
-    :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
-            ``force`` is ``False``
-    """
-    logger.enter("copy hook stubs")
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-
-    for stub_file in HOOK_STUBS_DIR.iterdir():
-        target_path = hooks_dir / stub_file.name
-
-        if target_path.exists():
-            if not force:
-                logger.error(
-                    "hook already exists (use --force to override): {}".format(
-                        target_path
-                    )
-                )
-                raise SystemExit(1)
-
-            logger.warning("overwrite existing hook: {}".format(target_path))
-
-        content = stub_file.read_text(encoding="utf-8")
-        content = content.replace(_PYTHON_PLACEHOLDER, sys.executable)
-        target_path.write_text(content, encoding="utf-8")
-        shutil.copymode(stub_file, target_path)
-
-        logger.debug("hook stub installed: {}".format(target_path))
-
-
-def _run_copy_hooks(args, repo):
-    """
-    step: copy default HUPy hook stub scripts into the repo's hooks dir.
+    step: write the demanded HUPy hook stub scripts into the repo's
+    hooks dir.
     """
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    logger.debug("hooks dir: {}".format(hooks_dir))
-    _copy_hook_stubs(hooks_dir, args.force)
+    install_hook_stubs(hooks_dir, args.force)
 
 
 def _run_create_config_file(args, repo):
@@ -127,7 +82,7 @@ def _run_create_config_file(args, repo):
 # registry mapping each init step to its arg dest and runner;  add a new
 # step by appending a (dest, runner) pair here
 _INIT_STEPS = [
-    ("copy_hooks", _run_copy_hooks),
+    ("install_hook_stubs", _run_install_hook_stubs),
     ("create_config_file", _run_create_config_file),
 ]
 
@@ -212,15 +167,15 @@ def register_cli_init_parser(cli_subparser):
         metavar="HOOKS_DIR",
         type=pathlib.Path,
         default=None,
-        help="override the folder the hook stub scripts are copied into",
+        help="override the folder the hook stub scripts are installed into",
     )
 
     init_parser.add_argument(
-        "--copy-hooks",
-        dest="copy_hooks",
+        "--install-hook-stubs",
+        dest="install_hook_stubs",
         action="store_true",
         default=False,
-        help="only copy the hook stub scripts",
+        help="only install the hook stub scripts",
     )
 
     init_parser.add_argument(
