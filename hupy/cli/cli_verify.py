@@ -139,7 +139,7 @@ def register_cli_verify_parser(cli_subparser):
         dest="update_hook_stub",
         action="store_true",
         default=False,
-        help="add/remove hook stubs so only demanded stubs remain installed",
+        help="sync installed hook stubs to demand",
     )
 
     add_verbose_arguments(verify_parser)
