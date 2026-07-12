@@ -66,12 +66,30 @@ def _is_managed_stub(target_path):
     return "-m hupy hook {}".format(target_path.name) in content
 
 
-def _init_hooks_stub(hooks_dir, demanded_names, force):
+# Public API  ##################################################################
+
+
+def create_init_hook_stubs(hooks_dir, force=False):
     """
-    ``is_init`` path: create every demanded stub, aborting on the first
-    one already present unless ``force`` is set.
+    create every hook stub demanded by ``get_hook_names_by_demand`` in
+    ``hooks_dir``, aborting on the first one already present unless
+    ``force`` is set.
+
+
+    :param hooks_dir: directory the hook stub scripts are created in
+    :type hooks_dir: pathlib.Path
+    :param force: whether overwrite a hook stub already present in
+            ``hooks_dir``
+    :type force: bool, optional
+    :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
+            ``force`` is ``False``
     """
-    for hook_name in demanded_names:
+    logger.enter("create hook stubs")
+    logger.debug("hooks dir: {}".format(hooks_dir))
+
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    for hook_name in get_hook_names_by_demand():
         target_path = hooks_dir / hook_name
 
         if target_path.exists():
@@ -89,14 +107,34 @@ def _init_hooks_stub(hooks_dir, demanded_names, force):
         logger.debug("hook stub installed: {}".format(target_path))
 
 
-def _sync_hooks_stub(hooks_dir, demanded_names, force, update):
+def verify_hook_stubs(hooks_dir, force=False, update=False):
     """
-    non-``is_init`` path: report sync status between ``hooks_dir`` and
-    ``demanded_names``, applying ``update``/``force`` per
-    :func:`update_hooks_stub`.
+    verify ``hooks_dir`` is synced with the hook stubs demanded by
+    ``get_hook_names_by_demand``.
+
+    by default, the two are only compared and reported; when
+    ``update`` is set, unused stubs are removed and missing ones are
+    added, and, if ``force`` is also set, every already-installed
+    demanded stub is regenerated.
+
+
+    :param hooks_dir: directory the hook stub scripts are verified in
+    :type hooks_dir: pathlib.Path
+    :param force: whether also replace already-installed demanded
+            stubs; requires ``update``
+    :type force: bool, optional
+    :param update: whether sync installed stubs to demand
+    :type update: bool, optional
     """
-    demanded_set = set(demanded_names)
-    installed_set = {p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)}
+    logger.enter("verify hook stubs")
+    logger.debug("hooks dir: {}".format(hooks_dir))
+
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    demanded_set = set(get_hook_names_by_demand())
+    installed_set = {
+        p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)
+    }
 
     missing_names = sorted(demanded_set - installed_set)
     unused_names = sorted(installed_set - demanded_set)
@@ -109,7 +147,9 @@ def _sync_hooks_stub(hooks_dir, demanded_names, force, update):
 
         for hook_name in unused_names:
             logger.warning(
-                "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
+                "hook stub no longer demanded: {}".format(
+                    hooks_dir / hook_name
+                )
             )
 
         return
@@ -131,47 +171,3 @@ def _sync_hooks_stub(hooks_dir, demanded_names, force, update):
                 "replacing existing hook stub: {}".format(target_path)
             )
             _write_stub(target_path, hook_name)
-
-
-# Public API  ##################################################################
-
-
-def update_hooks_stub(hooks_dir, force=False, is_init=False, update=False):
-    """
-    sync ``hooks_dir`` against the hook stubs demanded by
-    ``get_hook_names_by_demand``.
-
-    when ``is_init``, every demanded stub is created, aborting on the
-    first one already present unless ``force`` is set (``update`` is
-    ignored); otherwise, the two directories are only compared and
-    reported unless ``update`` is set, in which case unused stubs are
-    removed and missing ones are added, and, if ``force`` is also set,
-    every already-installed demanded stub is regenerated.
-
-
-    :param hooks_dir: directory the hook stub scripts are synced into
-    :type hooks_dir: pathlib.Path
-    :param force: when ``is_init``, whether overwrite a hook stub already
-            present in ``hooks_dir``; otherwise, whether also replace
-            already-installed demanded stubs (requires ``update``)
-    :type force: bool, optional
-    :param is_init: whether called from the ``init`` subcommand
-    :type is_init: bool, optional
-    :param update: whether sync installed stubs to demand;
-            ignored when ``is_init``
-    :type update: bool, optional
-    :raises SystemExit: ``is_init`` is set, a hook stub already exists in
-            ``hooks_dir``, and ``force`` is ``False``
-    """
-    # FIXME FIXME simplify interactions & keeps upd interaction
-    logger.enter("update hook stubs")
-    logger.debug("hooks dir: {}".format(hooks_dir))
-
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-
-    demanded_names = get_hook_names_by_demand()
-
-    if is_init:
-        _init_hooks_stub(hooks_dir, demanded_names, force)
-    else:
-        _sync_hooks_stub(hooks_dir, demanded_names, force, update)

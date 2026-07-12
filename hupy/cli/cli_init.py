@@ -8,7 +8,7 @@ import git
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config_file.write_config import create_default_config_file
-from hupy.stub.update_stubs import update_hooks_stub
+from hupy.stub.update_stubs import create_init_hook_stubs
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -69,7 +69,7 @@ def _run_copy_hooks(args, repo):
     hooks dir.
     """
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    update_hooks_stub(hooks_dir, args.force, is_init=True)
+    create_init_hook_stubs(hooks_dir, args.force)
 
 
 def _run_create_config_file(args, repo):

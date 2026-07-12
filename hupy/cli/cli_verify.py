@@ -10,7 +10,7 @@ from hupy.cli.cli_init import (
 )
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
-from hupy.stub.update_stubs import update_hooks_stub
+from hupy.stub.update_stubs import verify_hook_stubs
 from hupy.ver_grep.ver_grep import grep_version
 
 
@@ -71,7 +71,7 @@ def _verify_main(args):
         version = grep_version(repo, state_file, "HEAD")
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        update_hooks_stub(
+        verify_hook_stubs(
             _resolve_hooks_dir(repo),
             force=args.force,
             update=args.update_hook_stub,
