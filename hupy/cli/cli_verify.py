@@ -20,8 +20,6 @@ from hupy.kamilog import (
     getLogger,
 )
 
-# FIXME last step may update
-
 # logger  ######################################################################
 
 
@@ -42,6 +40,8 @@ check that HUPy is correctly set up, verifying:
 - version string can be grepped per the VerGrep config
 - every packaged hook stub is installed in the repo's hooks directory
 """
+
+# FIXME upd description
 
 
 # auxiliaries  #################################################################
@@ -71,13 +71,14 @@ def _verify_main(args):
         version = grep_version(repo, state_file, "HEAD")
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        update_hooks_stub(_resolve_hooks_dir(repo), force=True)
+        update_hooks_stub(
+            _resolve_hooks_dir(repo),
+            force=args.force,
+            update=args.update_hook_stub,
+        )
         logger.pass_("hook stubs verified/updated")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
-
-
-# TODO add / remove hook stub by demand
 
 
 # Public API  ##################################################################
@@ -109,6 +110,14 @@ def register_cli_verify_parser(cli_subparser):
         action="store_true",
         default=False,
         help="sync installed hook stubs to demand",
+    )
+
+    verify_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="override an existing hook stub",
     )
 
     add_verbose_arguments(verify_parser)
