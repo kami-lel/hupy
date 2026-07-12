@@ -78,7 +78,7 @@ def _run_hb_cmd(repo, heading, hb_cmd):
             env=os.environ.copy(),
             timeout=hb_cmd.timeout,
         )
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
         logger.debug(_END_LINE)
 
         if hb_cmd.allow_failure:
@@ -86,7 +86,7 @@ def _run_hb_cmd(repo, heading, hb_cmd):
             return
 
         logger.fail("HB timed out: {}".format(heading))
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
     logger.debug(_END_LINE)
 
