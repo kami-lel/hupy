@@ -1,8 +1,8 @@
 """
 post_commit.py
 
-define the post-commit stage's identity and ``run_after``, run
-by the generic hook stage runner in ``cli_hook.py``
+define the post-commit stage's identity, ``run_after``, and
+``run_done``, run by the generic hook stage runner in ``cli_hook.py``
 """
 
 from hupy import PROJ_LOGGER_NAME, kamilog
@@ -26,9 +26,8 @@ def run_after(repo, state_file):
     state_file.reset_for_next_commit()
 
 
-def run_on_finish(repo, state_file):
+def run_done(repo, state_file):
     """
     log that the full HUPy hook round has finished.
     """
-    # FIXME be flow aware
     proj_root_logger.done("all HUPy hooks finished")

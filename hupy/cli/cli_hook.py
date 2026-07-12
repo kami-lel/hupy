@@ -6,8 +6,6 @@ define the generic git hook stage runner and
 ``hook``
 """
 
-# FIXME flow done message
-
 import os
 
 
@@ -43,12 +41,12 @@ _HOOK_DOC = "run git hook stage commands"
 
 
 # generic stage runner  ########################################################
-def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
+def _run_hook_stage(hook_name, logger, args, *, core=None, after=None, on_done=None):
     """
     dispatch shared by every git hook stage subcommand: open
     repo/state, run the ``hb`` lead bracket, the stage's own ``core``
-    (or a noop log when it has none), the ``hb`` trail bracket, then
-    ``after``.
+    (or a noop log when it has none), the ``hb`` trail bracket, ``after``,
+    the succ log, then ``on_done``.
     """
     repo = load_git_repo(os.getcwd())
 
@@ -74,12 +72,15 @@ def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
 
         logger.succ(HOOK_STAGE_FINISHED)
 
+        if on_done is not None:
+            on_done(repo, state_file)
+
 
 def _register_hook_stage(hook_subparser, mod):
     """
     register one stage module's subparser, routed through
-    ``_run_hook_stage`` with that module's ``run_core``/``run_after``
-    (each optional).
+    ``_run_hook_stage`` with that module's ``run_core``/``run_after``/
+    ``run_done`` (each optional).
     """
     stage_parser = hook_subparser.add_parser(
         mod.HOOK_NAME, help=mod.DOC, description=mod.DOC
@@ -97,6 +98,7 @@ def _register_hook_stage(hook_subparser, mod):
             args,
             core=getattr(mod, "run_core", None),
             after=getattr(mod, "run_after", None),
+            on_done=getattr(mod, "run_done", None),
         )
     )
 
