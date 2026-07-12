@@ -39,7 +39,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 `hupy init` sets a repo up with two artifacts:
 
 1. **`.hupy.config.jsonc`** — a tracked, dot-prefixed JSON5/JSONC file at the repo root. The config surface: which features are enabled and in what order they run per stage. Copied verbatim from the packaged asset `hupy/assets/.hupy.config.jsonc`, whose `//` comments document each field (the schema itself carries no defaults).
-2. **Hook stubs** — thin `pre-commit`, `prepare-commit-msg`, and `post-commit` scripts copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub invokes its stage and forwards git's own hook arguments: `"<python>" -m hupy hook <stage> "$@"`.
+2. **Hook stubs** — thin scripts, one per git hook stage, copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub invokes its stage and forwards git's own hook arguments: `"<python>" -m hupy hook <stage> "$@"`.
 
 Key decisions:
 
@@ -200,7 +200,7 @@ hupy set-verbosity (alias: sv)
   - The other fourteen stages carry no logic of their own yet — each module is just `HOOK_NAME`/`DOC`/`logger`, run through the `hb` brackets only.
 - **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
 - **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
-- Packaged templates `hupy/assets/hook-stubs/{pre-commit,prepare-commit-msg,post-commit}` and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
+- Packaged templates `hupy/assets/hook-stubs/` (one per git hook stage) and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
 
 **Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `cli_skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
 
@@ -270,7 +270,7 @@ hupy/                             # installable package
   should_run_module.py            # should_run_module(repo, state_file, module_abbr)
   assets/                         # packaged data
     .hupy.config.jsonc            # default config, commented; copied verbatim
-    hook-stubs/{pre-commit,prepare-commit-msg,post-commit}  # `"{{PYTHON}}" -m hupy hook <stage> "$@"`
+    hook-stubs/                   # one stub per git hook stage (17): `"{{PYTHON}}" -m hupy hook <stage> "$@"`
   kamilog.py                      # vendored logging (v2.3.1)
   pch/prepend_commit_header.py    # rewrite COMMIT_EDITMSG; _HEADER_GENERATORS
   ttg/                            # Triage Tag Gating
@@ -287,6 +287,8 @@ hupy/                             # installable package
 docs/
   ttg_doc.md                      # TTG tiers & per-merge gating
   cbm_doc.md                      # CBM concepts + PCH headers + ver_grep API
+  flow_doc.md                     # Mermaid diagrams: Commit/Merge/Rewrite/Patch
+                                  # Apply Flow, plus one per Standalone Hook
                                   # (config field docs live in hupy/assets/.hupy.config.jsonc)
 examples/
   hooks/                          # bash demos driving the real `hupy hook <stage>` CLI:
