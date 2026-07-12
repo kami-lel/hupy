@@ -67,16 +67,27 @@ def _run_hb_cmd(repo, heading, hb_cmd):
     cmd = hb_cmd.cmd
     logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
 
-    # TODO add timeout option
     # Todo pass no hooks args
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        cwd=repo.working_tree_dir,
-        check=False,
-        executable="/bin/bash",
-        env=os.environ.copy(),
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            cwd=repo.working_tree_dir,
+            check=False,
+            executable="/bin/bash",
+            env=os.environ.copy(),
+            timeout=hb_cmd.timeout,
+        )
+    except subprocess.TimeoutExpired:
+        logger.debug(_END_LINE)
+
+        if hb_cmd.allow_failure:
+            logger.warning("HB timed out, but ignored: {}".format(heading))
+            return
+
+        logger.fail("HB timed out: {}".format(heading))
+        raise SystemExit(1)
+
     logger.debug(_END_LINE)
 
     if result.returncode == 0:
