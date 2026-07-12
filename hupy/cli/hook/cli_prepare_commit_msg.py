@@ -9,6 +9,7 @@ import os
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_init import load_git_repo
+from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_START
 from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.state.open_state import open_state_file
@@ -34,7 +35,7 @@ def _prepare_commit_msg_main(args):  ###########################################
             args, verbosity=state_file.hooks_logger_verbosity
         )
 
-        logger.enter("Start")
+        logger.enter(HOOK_STAGE_START)
 
         perform_hook_brackets(
             repo, state_file, "prepare-commit-msg", True, args.hook_args
@@ -44,7 +45,7 @@ def _prepare_commit_msg_main(args):  ###########################################
             repo, state_file, "prepare-commit-msg", False, args.hook_args
         )
 
-        logger.succ("Finished")
+        logger.succ(HOOK_STAGE_FINISHED)
 
 
 # Public API  ##################################################################

@@ -9,6 +9,7 @@ import os
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_init import load_git_repo
+from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
@@ -29,9 +30,9 @@ def _post_rewrite_main(args):  #################################################
         kamilog.set_logging_level_by_namespace(
             args, verbosity=state_file.hooks_logger_verbosity
         )
-        logger.enter("Start")
-        logger.debug("No Operation in this HUPy version")
-        logger.succ("Finished")
+        logger.enter(HOOK_STAGE_START)
+        logger.debug(HOOK_STAGE_NOOP)
+        logger.succ(HOOK_STAGE_FINISHED)
 
 
 # Public API  ##################################################################
