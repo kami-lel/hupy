@@ -39,7 +39,7 @@ _DESCRIPTION = __doc__ + """
 
 performs:
 
-- copy default HUPy hook stub scripts into the repo's hooks directory
+- install HUPy hook stub scripts into the repo's hooks directory
   (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
 - create a default HUPy config file (.hupy.config.jsonc) at repository root
@@ -63,7 +63,7 @@ def _resolve_hooks_dir(repo):
     return pathlib.Path(repo.git_dir) / "hooks"
 
 
-def _run_copy_hooks(args, repo):
+def _run_install_hook_stubs(args, repo):
     """
     step: write the demanded HUPy hook stub scripts into the repo's
     hooks dir.
@@ -82,7 +82,7 @@ def _run_create_config_file(args, repo):
 # registry mapping each init step to its arg dest and runner;  add a new
 # step by appending a (dest, runner) pair here
 _INIT_STEPS = [
-    ("copy_hooks", _run_copy_hooks),
+    ("install_hook_stubs", _run_install_hook_stubs),
     ("create_config_file", _run_create_config_file),
 ]
 
@@ -167,15 +167,15 @@ def register_cli_init_parser(cli_subparser):
         metavar="HOOKS_DIR",
         type=pathlib.Path,
         default=None,
-        help="override the folder the hook stub scripts are copied into",
+        help="override the folder the hook stub scripts are installed into",
     )
 
     init_parser.add_argument(
-        "--copy-hooks",
-        dest="copy_hooks",
+        "--install-hook-stubs",
+        dest="install_hook_stubs",
         action="store_true",
         default=False,
-        help="only copy the hook stub scripts",
+        help="only install the hook stub scripts",
     )
 
     init_parser.add_argument(
