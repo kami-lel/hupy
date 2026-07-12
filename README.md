@@ -6,7 +6,7 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 <!--
-todo reimplement ensure file modified
+Todo reimplement ensure file modified
 -->
 
 
