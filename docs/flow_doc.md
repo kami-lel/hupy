@@ -74,5 +74,40 @@ flowchart TD
     rewrite --> postrw
 ```
 
+
+
+
+### Patch Apply Flow
+
+Triggered by `git am` — separate from, and does not follow, the commit flow above:
+
+```mermaid
+flowchart TD
+    am([git am])
+
+    %% applypatch-msg stage
+    subgraph applypatchmsg [applypatch-msg stage]
+        amsg[/applypatch-msg hook/] --> lead4[[Hook Bracket - lead]]
+        lead4 --> trail4[[Hook Bracket - trail]]
+    end
+
+    %% pre-applypatch stage
+    subgraph preapplypatch [pre-applypatch stage]
+        preap[/pre-applypatch hook/] --> lead5[[Hook Bracket - lead]]
+        lead5 --> trail5[[Hook Bracket - trail]]
+    end
+
+    %% post-applypatch stage
+    subgraph postapplypatch [post-applypatch stage]
+        postap[/post-applypatch hook/] --> lead6[[Hook Bracket - lead]]
+        lead6 --> trail6[[Hook Bracket - trail]]
+    end
+
+    am --> amsg
+    trail4 --> preap
+    trail5 --> applied([patch applied])
+    applied --> postap
+```
+
 > [!NOTE]
-> `pre-merge-commit`, `commit-msg`, and `post-rewrite` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, and `post-rewrite` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
