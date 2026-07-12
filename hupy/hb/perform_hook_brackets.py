@@ -125,8 +125,8 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=()):
     if not should_run_module(repo, state_file, "hb"):
         return
 
-    lead_trail = "Leading" if is_lead else "Trailing"
-    logger.enter("{} Hook Bracket for: {}".format(lead_trail, hook_name))
+    lead_trail = "Lead" if is_lead else "Trail"
+    logger.enter("{} HB for: {}".format(lead_trail, hook_name))
 
     bracket = load_hupy_config(repo).hb.get_bracket(hook_name)
     if bracket is None:
@@ -136,9 +136,7 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=()):
 
     # empty commands list
     if not cmds_list:
-        logger.skip(
-            "no {} bracket commands for: {}".format(lead_trail, hook_name)
-        )
+        logger.skip("no {} HB".format(lead_trail))
         return
 
     commit_type = get_current_commit_type(repo)
