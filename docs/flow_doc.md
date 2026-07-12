@@ -444,35 +444,6 @@ flowchart TD
 
 
 
-### `post-merge`
-
-Triggered after `git merge` completes successfully:
-
-```mermaid
-flowchart TD
-    merge([git merge])
-
-    %% post-merge stage
-    subgraph postmerge [post-merge stage]
-        pmg[/post-merge hook/] --> lead12[[Hook Bracket - lead]]
-        lead12 --> trail12[[Hook Bracket - trail]]
-    end
-
-    merge --> pmg
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### `pre-push`
 
 Triggered before `git push` updates the remote's refs:

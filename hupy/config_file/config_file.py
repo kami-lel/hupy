@@ -178,25 +178,28 @@ class _Hb(BaseModel):
 
     # fields  ------------------------------------------------------------------
 
-    # FIXME reorder
-
     is_disabled: bool
-    applypatch_msg: _HbBracket = Field(default_factory=_HbBracket)
-    pre_applypatch: _HbBracket = Field(default_factory=_HbBracket)
-    post_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+
     pre_commit: _HbBracket = Field(default_factory=_HbBracket)
-    pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
     prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)
     commit_msg: _HbBracket = Field(default_factory=_HbBracket)
     post_commit: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
+    post_merge: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_rebase: _HbBracket = Field(default_factory=_HbBracket)
     post_rewrite: _HbBracket = Field(default_factory=_HbBracket)
+
+    applypatch_msg: _HbBracket = Field(default_factory=_HbBracket)
+    pre_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+    post_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+
     pre_auto_gc: _HbBracket = Field(default_factory=_HbBracket)
     post_index_change: _HbBracket = Field(default_factory=_HbBracket)
     sendemail_validate: _HbBracket = Field(default_factory=_HbBracket)
     fsmonitor_watchman: _HbBracket = Field(default_factory=_HbBracket)
-    pre_rebase: _HbBracket = Field(default_factory=_HbBracket)
     post_checkout: _HbBracket = Field(default_factory=_HbBracket)
-    post_merge: _HbBracket = Field(default_factory=_HbBracket)
     pre_push: _HbBracket = Field(default_factory=_HbBracket)
 
     # Public Method  -----------------------------------------------------------
