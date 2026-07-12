@@ -66,7 +66,7 @@ def _run_hb_cmd(repo, heading, hb_cmd):
     cmd = hb_cmd.cmd
     logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
 
-    # Todo add timeout option
+    # TODO add timeout option
     # Todo pass no hooks args
     result = subprocess.run(
         cmd, shell=True, cwd=repo.working_tree_dir, check=False
