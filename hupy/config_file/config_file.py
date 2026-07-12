@@ -168,6 +168,15 @@ class _HbBracket(BaseModel):
     lead: list[_HbCmd] = Field(default_factory=list)
     trail: list[_HbCmd] = Field(default_factory=list)
 
+    # Public Method  -----------------------------------------------------------
+
+    def should_install_hook_stub(self):
+        """
+        :return: ``True`` if ``lead`` or ``trail`` holds any command
+        :rtype: bool
+        """
+        return bool(self.lead or self.trail)
+
 
 class _Hb(BaseModel):
     """

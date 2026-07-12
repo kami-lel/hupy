@@ -4,13 +4,12 @@ import pathlib
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
-    HOOK_STUBS_DIR,
     REPO_PATH_HELP,
-    _resolve_hooks_dir,
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
+from hupy.stub.update_stubs import verify_hook_stubs
 from hupy.ver_grep.ver_grep import grep_version
 
 
@@ -35,45 +34,13 @@ _DESCRIPTION = _VERIFY_DOC + """
 
 check that HUPy is correctly set up, verifying:
 
-- config file (.hupy.config.jsonc) at repository root loads and
-  validates against the schema
+- config file (.hupy.config.jsonc) at repository root loads and validates against the schema
 - version string can be grepped per the VerGrep config
-- every packaged hook stub is installed in the repo's hooks directory
+- verify hook stubs installed in the repo's hooks directory match what's currently demanded
 """
 
 
 # auxiliaries  #################################################################
-
-
-def _verify_hook_stubs(repo):
-    """
-    verify every HUPy hook stub is installed in ``repo``'s hooks dir
-    (content of each installed file is not checked)
-
-
-    :param repo: repository to verify
-    :type repo: git.Repo
-    :raises SystemExit: ``repo``'s hooks dir is missing one or more
-            hook stub scripts
-    :return: number of hook stub scripts verified
-    :rtype: int
-    """
-    hooks_dir = _resolve_hooks_dir(repo)
-
-    stub_names = {stub_file.name for stub_file in HOOK_STUBS_DIR.iterdir()}
-    installed_names = (
-        {installed_file.name for installed_file in hooks_dir.iterdir()}
-        if hooks_dir.is_dir()
-        else set()
-    )
-
-    missing_names = stub_names - installed_names
-    if missing_names:
-        for missing_name in sorted(missing_names):
-            logger.fail("missing hook stub: {}".format(missing_name))
-        raise SystemExit(1)
-
-    return len(stub_names)
 
 
 def _verify_main(args):
@@ -100,8 +67,12 @@ def _verify_main(args):
         version = grep_version(repo, state_file, "HEAD")
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        cnt = _verify_hook_stubs(repo)
-        logger.pass_("hook stubs exist, count: {}".format(cnt))
+        verify_hook_stubs(
+            repo,
+            force=args.force,
+            update=args.update_hook_stubs,
+        )
+        logger.pass_("hook stubs verified/updated")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
@@ -126,6 +97,26 @@ def register_cli_verify_parser(cli_subparser):
         type=pathlib.Path,
         default=pathlib.Path(os.getcwd()),
         help=REPO_PATH_HELP,
+    )
+
+    verify_parser.add_argument(
+        "-u",
+        "--update-hook-stubs",
+        dest="update_hook_stubs",
+        action="store_true",
+        default=False,
+        help=(
+            "instead of just verify, perform hooks stub sync: "
+            "add missing hook stubs and remove ones no longer demanded"
+        ),
+    )
+
+    verify_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="with -u, also refresh already-installed hook stubs",
     )
 
     add_verbose_arguments(verify_parser)

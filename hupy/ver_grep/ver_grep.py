@@ -13,14 +13,13 @@ from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME
 
+# todo CLI expose Grep Ver
+
 # logger  ######################################################################
 
 logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 renderer = AnsiRenderer(sys.stdout)
-
-
-# Todo expose grep ver as CLI
 
 
 # Public API  ##################################################################

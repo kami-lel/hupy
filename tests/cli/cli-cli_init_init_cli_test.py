@@ -7,21 +7,37 @@ override, `-f`/`--force` re-runs, subdirectory resolution, config-file
 writing, and error paths for non-git or nonexistent targets
 """
 
+import git
 import pytest
 
 from hupy.config_file.config_file_path import (
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
-from hupy.cli.cli_init import HOOK_STUBS_DIR
+from hupy.stub.names_by_demand import get_hook_names_by_demand
 from cli_helpers import (
     get_configured_hooks_path,
     run_init_cli,
     set_configured_hooks_path,
 )
 
-_STUB_NAMES = sorted(p.name for p in HOOK_STUBS_DIR.iterdir())
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
+
+# a schema-valid but stale config: hook-demand checks now parse the
+# config file, so a pre-existing config must stay parseable even when
+# standing in for stale/outdated content
+_STALE_VALID_CONFIG_CONTENT = _DEFAULT_CONFIG_CONTENT.replace(
+    '"hupy_version": "1.0.0"', '"hupy_version": "0.0.1"'
+)
+
+
+# fixtures  #####################################################################
+
+
+@pytest.fixture
+def stub_names(git_repo_dir):
+    repo = git.Repo(str(git_repo_dir))
+    return sorted(get_hook_names_by_demand(repo))
 
 
 # helpers  ######################################################################
@@ -35,11 +51,11 @@ def _default_hooks_dir(git_repo_dir):
 
 
 class TestInitDefaultHooksDir:
-    def test_copies_stubs_into_dot_git_hooks(self, git_repo_dir):
+    def test_copies_stubs_into_dot_git_hooks(self, git_repo_dir, stub_names):
         run_init_cli([str(git_repo_dir)])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
 
     def test_does_not_set_core_hooks_path(self, git_repo_dir):
@@ -47,51 +63,57 @@ class TestInitDefaultHooksDir:
 
         assert get_configured_hooks_path(git_repo_dir) is None
 
-    def test_resolves_from_subdirectory_to_repo_root(self, git_repo_dir):
+    def test_resolves_from_subdirectory_to_repo_root(
+        self, git_repo_dir, stub_names
+    ):
         sub_dir = git_repo_dir / "sub" / "dir"
         sub_dir.mkdir(parents=True)
 
         run_init_cli([str(sub_dir)])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
         assert not (sub_dir / ".git").exists()
 
 
 class TestInitHonorsConfiguredHooksPath:
-    def test_copies_stubs_to_preconfigured_hooks_path(self, git_repo_dir):
+    def test_copies_stubs_to_preconfigured_hooks_path(
+        self, git_repo_dir, stub_names
+    ):
         custom_dir = git_repo_dir / "custom-hooks"
         set_configured_hooks_path(git_repo_dir, "custom-hooks")
 
         run_init_cli([str(git_repo_dir)])
 
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (custom_dir / name).exists()
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert not (_default_hooks_dir(git_repo_dir) / name).exists()
 
 
 class TestInitCustomHooksDirFlag:
-    def test_hooks_dir_flag_overrides_default(self, git_repo_dir):
+    def test_hooks_dir_flag_overrides_default(self, git_repo_dir, stub_names):
         custom_dir = git_repo_dir / "flag-hooks"
 
         run_init_cli([str(git_repo_dir), "--hooks-dir", str(custom_dir)])
 
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (custom_dir / name).exists()
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert not (_default_hooks_dir(git_repo_dir) / name).exists()
 
-    def test_hooks_dir_flag_overrides_configured_hooks_path(self, git_repo_dir):
+    def test_hooks_dir_flag_overrides_configured_hooks_path(
+        self, git_repo_dir, stub_names
+    ):
         set_configured_hooks_path(git_repo_dir, "configured-hooks")
         custom_dir = git_repo_dir / "flag-hooks"
 
         run_init_cli([str(git_repo_dir), "--hooks-dir", str(custom_dir)])
 
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (custom_dir / name).exists()
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert not ((git_repo_dir / "configured-hooks") / name).exists()
 
 
@@ -104,40 +126,48 @@ class TestInitWritesConfigFile:
 
 
 class TestInitStepFlags:
-    def test_copy_hooks_flag_skips_config_file(self, git_repo_dir):
-        run_init_cli([str(git_repo_dir), "--copy-hooks"])
+    def test_install_hook_stubs_flag_skips_config_file(
+        self, git_repo_dir, stub_names
+    ):
+        run_init_cli([str(git_repo_dir), "--install-hook-stubs"])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
         assert not (git_repo_dir / CONFIG_FILENAME).exists()
 
-    def test_create_config_file_flag_skips_hooks(self, git_repo_dir):
+    def test_create_config_file_flag_skips_hooks(
+        self, git_repo_dir, stub_names
+    ):
         run_init_cli([str(git_repo_dir), "--create-config-file"])
 
         config_path = git_repo_dir / CONFIG_FILENAME
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert not (hooks_dir / name).exists()
 
-    def test_both_flags_together_create_hooks_and_config(self, git_repo_dir):
+    def test_both_flags_together_create_hooks_and_config(
+        self, git_repo_dir, stub_names
+    ):
         run_init_cli(
-            [str(git_repo_dir), "--copy-hooks", "--create-config-file"]
+            [str(git_repo_dir), "--install-hook-stubs", "--create-config-file"]
         )
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
         config_path = git_repo_dir / CONFIG_FILENAME
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
-    def test_no_flags_create_both_hooks_and_config(self, git_repo_dir):
+    def test_no_flags_create_both_hooks_and_config(
+        self, git_repo_dir, stub_names
+    ):
         run_init_cli([str(git_repo_dir)])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
         config_path = git_repo_dir / CONFIG_FILENAME
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
@@ -153,32 +183,34 @@ class TestInitForceReRun:
         assert exc_info.value.code == 1
 
     def test_rerun_with_force_overrides_stale_hooks_and_config(
-        self, git_repo_dir
+        self, git_repo_dir, stub_names
     ):
         run_init_cli([str(git_repo_dir)])
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        (hooks_dir / _STUB_NAMES[0]).write_text("stale content")
+        (hooks_dir / stub_names[0]).write_text("stale content")
         config_path = git_repo_dir / CONFIG_FILENAME
-        config_path.write_text("stale content")
+        config_path.write_text(_STALE_VALID_CONFIG_CONTENT)
 
         run_init_cli([str(git_repo_dir), "-f"])
 
-        assert (hooks_dir / _STUB_NAMES[0]).read_text() != "stale content"
+        assert (hooks_dir / stub_names[0]).read_text() != "stale content"
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
     def test_config_conflict_alone_still_raises_after_hooks_succeed(
-        self, git_repo_dir
+        self, git_repo_dir, stub_names
     ):
-        (git_repo_dir / CONFIG_FILENAME).write_text("stale content")
+        (git_repo_dir / CONFIG_FILENAME).write_text(_STALE_VALID_CONFIG_CONTENT)
 
         with pytest.raises(SystemExit) as exc_info:
             run_init_cli([str(git_repo_dir)])
 
         assert exc_info.value.code == 1
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (hooks_dir / name).exists()
-        assert (git_repo_dir / CONFIG_FILENAME).read_text() == "stale content"
+        assert (
+            git_repo_dir / CONFIG_FILENAME
+        ).read_text() == _STALE_VALID_CONFIG_CONTENT
 
 
 class TestInitErrors:
@@ -202,14 +234,14 @@ class TestInitErrors:
 
 
 class TestInitVerbosity:
-    def test_verbose_flag_does_not_break_init(self, git_repo_dir):
+    def test_verbose_flag_does_not_break_init(self, git_repo_dir, stub_names):
         run_init_cli([str(git_repo_dir), "-v"])
 
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (_default_hooks_dir(git_repo_dir) / name).exists()
 
-    def test_quiet_flag_does_not_break_init(self, git_repo_dir):
+    def test_quiet_flag_does_not_break_init(self, git_repo_dir, stub_names):
         run_init_cli([str(git_repo_dir), "-q"])
 
-        for name in _STUB_NAMES:
+        for name in stub_names:
             assert (_default_hooks_dir(git_repo_dir) / name).exists()

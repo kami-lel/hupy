@@ -7,12 +7,17 @@
 # what git itself does before invoking the commit-msg hook), driven
 # through the actual `hupy hook prepare-commit-msg` CLI
 # expected result: header prepended to COMMIT_EDITMSG
+#
+# any -v/-q flags passed to this script are forwarded as-is to
+# `hupy hook prepare-commit-msg`
 
 set -euo pipefail
 
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
+
+_VERBOSITY_ARGS=("$@")
 
 
 # helpers  #####################################################################
@@ -29,7 +34,7 @@ _prepare_demo_repo() {
 _run_pch() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "$@")
+    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "${_VERBOSITY_ARGS[@]}" "$@")
 }
 
 
@@ -42,32 +47,22 @@ printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
 echo
 
 printf '%s\n' "print out" | python3 -m hupy.kamilog cb center "#"
-demo_repo_1="$(_prepare_demo_repo)"
-editmsg_1="$demo_repo_1/.git/COMMIT_EDITMSG"
-before_file_1="$demo_repo_1/.git/COMMIT_EDITMSG.before"
-cp "$demo_repo_1/.git/MERGE_MSG" "$editmsg_1"
-cp "$editmsg_1" "$before_file_1"
-
-demo_repo_2="$(_prepare_demo_repo)"
-editmsg_2="$demo_repo_2/.git/COMMIT_EDITMSG"
-before_file_2="$demo_repo_2/.git/COMMIT_EDITMSG.before"
-cp "$demo_repo_2/.git/MERGE_MSG" "$editmsg_2"
-cp "$editmsg_2" "$before_file_2"
+demo_repo="$(_prepare_demo_repo)"
+editmsg="$demo_repo/.git/COMMIT_EDITMSG"
+before_file="$demo_repo/.git/COMMIT_EDITMSG.before"
+cp "$demo_repo/.git/MERGE_MSG" "$editmsg"
+cp "$editmsg" "$before_file"
 
 printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "="
-_run_pch "$demo_repo_1"
-echo
-
-printf '%s\n' "prepare-commit-msg w/ -vvv" | python3 -m hupy.kamilog cb center "="
-_run_pch "$demo_repo_2" -vvv
+_run_pch "$demo_repo"
 echo
 
 printf '%s\n' "COMMIT_EDITMSG content" | python3 -m hupy.kamilog cb center "#"
 echo
 
 printf '%s\n' "before PCH" | python3 -m hupy.kamilog cb center "="
-cat "$before_file_2"
+cat "$before_file"
 echo
 
 printf '%s\n' "after PCH" | python3 -m hupy.kamilog cb center "="
-cat "$editmsg_2"
+cat "$editmsg"
