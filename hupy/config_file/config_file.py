@@ -178,7 +178,7 @@ class _Hb(BaseModel):
 
     # fields  ------------------------------------------------------------------
 
-    is_disabled: bool
+    is_disabled: bool = False
 
     pre_commit: _HbBracket = Field(default_factory=_HbBracket)
     prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)

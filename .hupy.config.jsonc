@@ -34,10 +34,7 @@
     "release_candidate_tag": "-rc"
   },
   "hb": {
-    "is_disabled": false,
-    // FIXME change HB to run
-    "pre_commit": {
-      "lead": [],
+    "pre_merge_commit": {
       "trail": [
         {
           "cmd": "pytest tests/",
@@ -48,14 +45,6 @@
           "remark": "Integration UTs"
         }
       ]
-    },
-    "prepare_commit_msg": {
-      "lead": [],
-      "trail": []
-    },
-    "post_commit": {
-      "lead": [],
-      "trail": []
     }
   }
 }
