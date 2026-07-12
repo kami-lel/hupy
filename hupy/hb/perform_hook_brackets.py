@@ -4,6 +4,7 @@ perform_hook_brackets.py
 run the bracketed commands configured around a HUPy git hook
 """
 
+import os
 import subprocess
 import sys
 
@@ -69,7 +70,12 @@ def _run_hb_cmd(repo, heading, hb_cmd):
     # TODO add timeout option
     # Todo pass no hooks args
     result = subprocess.run(
-        cmd, shell=True, cwd=repo.working_tree_dir, check=False
+        cmd,
+        shell=True,
+        cwd=repo.working_tree_dir,
+        check=False,
+        executable="/bin/bash",
+        env=os.environ.copy(),
     )
     logger.debug(_END_LINE)
 
