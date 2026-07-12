@@ -30,5 +30,5 @@ def run_on_finish(repo, state_file):
     """
     log that the full HUPy hook round has finished.
     """
-    # Fixme be flow aware
+    # FIXME be flow aware
     proj_root_logger.done("all HUPy hooks finished")

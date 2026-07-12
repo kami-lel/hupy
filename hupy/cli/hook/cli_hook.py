@@ -6,7 +6,7 @@ define the generic git hook stage runner and
 ``hook``
 """
 
-# Fixme flow done message
+# FIXME flow done message
 
 import os
 

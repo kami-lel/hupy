@@ -16,7 +16,7 @@ _REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 
 
-# Hack rm this file
+# HACK rm this file
 
 
 # auxiliaries  #################################################################
