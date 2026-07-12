@@ -23,6 +23,13 @@ from cli_helpers import (
 
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 
+# a schema-valid but stale config: hook-demand checks now parse the
+# config file, so a pre-existing config must stay parseable even when
+# standing in for stale/outdated content
+_STALE_VALID_CONFIG_CONTENT = _DEFAULT_CONFIG_CONTENT.replace(
+    '"hupy_version": "1.0.0"', '"hupy_version": "0.0.1"'
+)
+
 
 # fixtures  #####################################################################
 
@@ -182,7 +189,7 @@ class TestInitForceReRun:
         hooks_dir = _default_hooks_dir(git_repo_dir)
         (hooks_dir / stub_names[0]).write_text("stale content")
         config_path = git_repo_dir / CONFIG_FILENAME
-        config_path.write_text("stale content")
+        config_path.write_text(_STALE_VALID_CONFIG_CONTENT)
 
         run_init_cli([str(git_repo_dir), "-f"])
 
@@ -192,7 +199,7 @@ class TestInitForceReRun:
     def test_config_conflict_alone_still_raises_after_hooks_succeed(
         self, git_repo_dir, stub_names
     ):
-        (git_repo_dir / CONFIG_FILENAME).write_text("stale content")
+        (git_repo_dir / CONFIG_FILENAME).write_text(_STALE_VALID_CONFIG_CONTENT)
 
         with pytest.raises(SystemExit) as exc_info:
             run_init_cli([str(git_repo_dir)])
@@ -201,7 +208,9 @@ class TestInitForceReRun:
         hooks_dir = _default_hooks_dir(git_repo_dir)
         for name in stub_names:
             assert (hooks_dir / name).exists()
-        assert (git_repo_dir / CONFIG_FILENAME).read_text() == "stale content"
+        assert (
+            git_repo_dir / CONFIG_FILENAME
+        ).read_text() == _STALE_VALID_CONFIG_CONTENT
 
 
 class TestInitErrors:

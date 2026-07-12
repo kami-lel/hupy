@@ -6,7 +6,6 @@ validating it against :class:`HupyConfigFile`
 """
 
 import json5
-from pydantic import ValidationError
 
 from hupy.config_file import CONFIG_LOGGER_NAME
 from hupy.config_file.config_file import HupyConfigFile
@@ -69,6 +68,6 @@ def load_hupy_config(repo, allows_file_not_found=False):
 
         logger.error("config file not found: {}".format(config_path))
         raise SystemExit(1) from e
-    except ValidationError as e:
+    except ValueError as e:
         logger.error("config file is malformed: {}\n{}".format(config_path, e))
         raise SystemExit(1) from e
