@@ -35,13 +35,9 @@ _DESCRIPTION = _VERIFY_DOC + """
 
 check that HUPy is correctly set up, verifying:
 
-- config file (.hupy.config.jsonc) at repository root loads and
-  validates against the schema
+- config file (.hupy.config.jsonc) at repository root loads and validates against the schema
 - version string can be grepped per the VerGrep config
-- hook stubs installed in the repo's hooks directory match what's
-  currently demanded (warns on missing/unused stubs; pass
-  -u/--update-hook-stub to sync, add -f/--force to also refresh
-  already-installed stubs)
+- verify hook stubs installed in the repo's hooks directory match what's currently demanded
 """
 
 
@@ -110,7 +106,10 @@ def register_cli_verify_parser(cli_subparser):
         dest="update_hook_stubs",
         action="store_true",
         default=False,
-        help="add missing hook stubs and remove ones no longer demanded",
+        help=(
+            "instead of just verify, perform hooks stub sync: "
+            "add missing hook stubs and remove ones no longer demanded"
+        ),
     )
 
     verify_parser.add_argument(
