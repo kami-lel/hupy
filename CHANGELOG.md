@@ -6,7 +6,11 @@
 
 ### Added
 
+- **HB command `timeout`** — a bracketed command's config entry (`.hupy.config.jsonc`) accepts an optional `timeout` (float, seconds); exceeding it fails the command, honoring the entry's `allow_failure`
+
 ### Changed
+
+- HB bracket commands now run explicitly under `/bin/bash` (previously the platform's default shell) and receive a copy of the parent process's environment
 
 ### Deprecated
 

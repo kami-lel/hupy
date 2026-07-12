@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — first stable release `1.0.0`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — HB commands gained a `timeout` field. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -26,6 +26,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 | `ver_grep` | extract a branch's version string by regex over a configured version file at that branch's git tip; classify major/minor/patch bumps |
 | `ttg` | Triage Tag Gating — scan staged diffs for triage tags and abort commits that introduce them on protected branches |
 | `bdc` | Ban Direct Commit — block a commit made directly on a protected branch, while still allowing merges into it |
+| `hb` | Hook Bracket — run configured shell commands (`lead`/`trail`) around a hook stage, filtered by commit type |
 
 ### Design Principles
 
@@ -151,6 +152,15 @@ Triage Tag Gating — blocks commits that introduce annotation markers on protec
 Ban Direct Commit — blocks a commit made directly on a protected branch while still allowing merges into it.
 
 **Public API**: `ban_direct_commit(repo, state_file)` — wired into `hook pre-commit` ahead of `perform_triage_tags_gating`. Flow: early return if `should_run_module(..., "bdc")` is `False`; build `protected_branches` from `config.bdc.ban_commit_to_branches` plus `dev`/`main` per their `ban_commit_to_*` flags; `current_branch not in protected` → skip (covers detached HEAD); `MERGE in get_current_commit_type(repo)` → pass (any merge allowed); else `fail` + `SystemExit(1)`. Own logger `BDC_LOGGER_NAME` (`"HU.BDC"`).
+
+### `hb`
+
+Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stage in `.hupy.config.jsonc`.
+
+**Public API**: `perform_hook_brackets(repo, state_file, hook_name, is_lead)` (`perform_hook_brackets.py`) — early return if `should_run_module(..., "hb")` is `False`; resolves the `_HbBracket` for `hook_name` via `config.hb.get_bracket(hook_name)` (`SystemExit`-free `ValueError` on an unrecognized name, which cannot happen from the three wired hook stages); iterates `bracket.lead` or `bracket.trail`, skipping a `_HbCmd` whose `allow_commit_types` doesn't intersect the current `CommitType` (empty `allow_commit_types` always runs).
+- **`_HbCmd` fields** (`config_file.py`) — `cmd: str` (required); `remark: str = ""` (log heading, falls back to the underlined `cmd` when blank); `allow_commit_types: CommitType = CommitType(0)`; `allow_failure: bool = False`; `timeout: float | None = None` (seconds; `None` waits forever).
+- **execution** (`_run_hb_cmd`) — `subprocess.run(cmd, shell=True, executable="/bin/bash", cwd=repo.working_tree_dir, env=os.environ.copy(), check=False, timeout=hb_cmd.timeout)`. Forcing `/bin/bash` (rather than the platform-default shell `shell=True` would otherwise pick) keeps bash-only syntax in a configured `cmd` working consistently with the bash hook stubs that invoke HUPy. `subprocess.TimeoutExpired` and a non-zero `result.returncode` are handled the same way: `allow_failure` → `warning` and continue (or `return`, for a timeout); otherwise `fail` + `SystemExit`.
+- `# Todo pass no hooks args` marks a pending pass on suppressing recursive hook triggering when a bracketed `cmd` itself invokes git.
 
 ### `cli`
 
