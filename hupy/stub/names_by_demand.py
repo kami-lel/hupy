@@ -15,9 +15,16 @@ from hupy.stub import STUB_LOGGER_NAME
 logger = getLogger(STUB_LOGGER_NAME)
 logger.propagate = False
 
+
+# constants  ###################################################################
+_ALWAYS_INSTALL_HOOK_STUBS = [
+    "pre-commit",
+    "prepare-commit-msg",
+    "post-commit",
+]
+
+
 # Public API  ##################################################################
-
-
 def get_hook_names_by_demand(repo):
     """
     :param repo: repo to check hook demand for
