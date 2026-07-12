@@ -38,10 +38,11 @@ check that HUPy is correctly set up, verifying:
 - config file (.hupy.config.jsonc) at repository root loads and
   validates against the schema
 - version string can be grepped per the VerGrep config
-- every packaged hook stub is installed in the repo's hooks directory
+- hook stubs installed in the repo's hooks directory match what's
+  currently demanded (warns on missing/unused stubs; pass
+  -u/--update-hook-stub to sync, add -f/--force to also refresh
+  already-installed stubs)
 """
-
-# FIXME upd description
 
 
 # auxiliaries  #################################################################
@@ -109,7 +110,7 @@ def register_cli_verify_parser(cli_subparser):
         dest="update_hook_stub",
         action="store_true",
         default=False,
-        help="sync installed hook stubs to demand",
+        help="add missing hook stubs and remove ones no longer demanded",
     )
 
     verify_parser.add_argument(
@@ -117,7 +118,8 @@ def register_cli_verify_parser(cli_subparser):
         "--force",
         action="store_true",
         default=False,
-        help="override an existing hook stub",
+        help="with -u/--update-hook-stub, also refresh already-installed "
+        "hook stubs",
     )
 
     add_verbose_arguments(verify_parser)
