@@ -4,8 +4,6 @@ get_current_commit_type.py
 identify the type of an in-progress git commit
 """
 
-# Todo expose commit type in CLI
-
 import os
 
 from hupy.kamilog import getLogger
@@ -15,6 +13,9 @@ from hupy.cbm.commit_type import CommitType
 from hupy.config_file.load_config import load_hupy_config
 
 __all__ = ("get_current_commit_type", "get_source_branch", "get_target_branch")
+
+
+# todo CLI expose commit type
 
 # logger  ######################################################################
 
