@@ -13,9 +13,6 @@ from hupy.kamilog import getLogger
 from hupy.stub import STUB_LOGGER_NAME
 from hupy.stub.names_by_demand import get_hook_names_by_demand
 
-# HACK split into 2 files
-
-
 # logger  ######################################################################
 
 logger = getLogger(STUB_LOGGER_NAME)
@@ -30,7 +27,7 @@ _STUB_TEMPLATE = """#!/usr/bin/env bash
 _STUB_MODE = 0o755
 
 
-# auxiliaries  ##################################################################
+# auxiliaries  #################################################################
 
 
 def _write_stub(target_path, hook_name, is_overwrite=False):
@@ -74,10 +71,81 @@ def _is_managed_stub(target_path):
     return "-m hupy hook {}".format(target_path.name) in content
 
 
+def _begin_hooks_action(action_label, hooks_dir):
+    """
+    log entry into a ``hooks_dir``-scoped action and ensure the
+    directory exists
+    """
+    logger.enter(action_label)
+    logger.debug("hooks dir: {}".format(hooks_dir))
+
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+
+def _install_or_abort(hooks_dir, hook_name, force):
+    """
+    write the stub for ``hook_name`` in ``hooks_dir``, aborting if one
+    is already present unless ``force`` is set
+    """
+    target_path = hooks_dir / hook_name
+    is_file_exist = target_path.exists()
+
+    if is_file_exist and not force:
+        logger.error(
+            "hook already exists (use --force to override): {}".format(
+                target_path
+            )
+        )
+        raise SystemExit(1)
+
+    _write_stub(target_path, hook_name, is_overwrite=is_file_exist)
+
+
+def _report_hook_drift(hooks_dir, missing_names, unused_names):
+    """
+    warn about hook stubs demanded but not installed, and stubs
+    installed but no longer demanded, without touching the file system
+    """
+    for hook_name in missing_names:
+        logger.warning("missing hook stub: {}".format(hooks_dir / hook_name))
+
+    for hook_name in unused_names:
+        logger.warning(
+            "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
+        )
+
+
+def _remove_unused_stubs(hooks_dir, unused_names):
+    """
+    delete each no-longer-demanded stub in ``unused_names``
+    """
+    for hook_name in unused_names:
+        target_path = hooks_dir / hook_name
+        logger.warning("remove unused hook stub: {}".format(target_path))
+        target_path.unlink()
+
+
+def _add_missing_stubs(hooks_dir, missing_names):
+    """
+    write each demanded-but-missing stub in ``missing_names``
+    """
+    for hook_name in missing_names:
+        _write_stub(hooks_dir / hook_name, hook_name)
+
+
+def _refresh_installed_stubs(hooks_dir, names):
+    """
+    regenerate every already-installed stub in ``names``
+    """
+    for hook_name in sorted(names):
+        target_path = hooks_dir / hook_name
+        _write_stub(target_path, hook_name, is_overwrite=True)
+
+
 # Public API  ##################################################################
 
 
-def create_init_hook_stubs(hooks_dir, force=False):
+def install_hook_stubs(hooks_dir, force=False):
     """
     create every hook stub demanded by ``get_hook_names_by_demand`` in
     ``hooks_dir``, aborting on the first one already present unless
@@ -92,27 +160,10 @@ def create_init_hook_stubs(hooks_dir, force=False):
     :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
             ``force`` is ``False``
     """
-    logger.enter("install hook stubs")
-    logger.debug("hooks dir: {}".format(hooks_dir))
+    _begin_hooks_action("install hook stubs", hooks_dir)
 
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-
-    names = get_hook_names_by_demand()
-
-    for hook_name in names:
-        target_path = hooks_dir / hook_name
-
-        file_exist = target_path.exists()
-        if file_exist:
-            if not force:
-                logger.error(
-                    "hook already exists (use --force to override): {}".format(
-                        target_path
-                    )
-                )
-                raise SystemExit(1)
-
-        _write_stub(target_path, hook_name, is_overwrite=file_exist)
+    for hook_name in get_hook_names_by_demand():
+        _install_or_abort(hooks_dir, hook_name, force)
 
 
 def verify_hook_stubs(hooks_dir, force=False, update=False):
@@ -134,10 +185,7 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     :param update: whether sync installed stubs to demand
     :type update: bool, optional
     """
-    logger.enter("verify hook stubs")
-    logger.debug("hooks dir: {}".format(hooks_dir))
-
-    hooks_dir.mkdir(parents=True, exist_ok=True)
+    _begin_hooks_action("verify hook stubs", hooks_dir)
 
     demanded_set = set(get_hook_names_by_demand())
     installed_set = {p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)}
@@ -146,28 +194,11 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     unused_names = sorted(installed_set - demanded_set)
 
     if not update:
-        for hook_name in missing_names:
-            logger.warning(
-                "missing hook stub: {}".format(hooks_dir / hook_name)
-            )
-
-        for hook_name in unused_names:
-            logger.warning(
-                "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
-            )
-
+        _report_hook_drift(hooks_dir, missing_names, unused_names)
         return
 
-    for hook_name in unused_names:
-        target_path = hooks_dir / hook_name
-        logger.warning("remove unused hook stub: {}".format(target_path))
-        target_path.unlink()
-
-    for hook_name in missing_names:
-        target_path = hooks_dir / hook_name
-        _write_stub(target_path, hook_name)
+    _remove_unused_stubs(hooks_dir, unused_names)
+    _add_missing_stubs(hooks_dir, missing_names)
 
     if force:
-        for hook_name in sorted(demanded_set & installed_set):
-            target_path = hooks_dir / hook_name
-            _write_stub(target_path, hook_name, is_overwrite=True)
+        _refresh_installed_stubs(hooks_dir, demanded_set & installed_set)

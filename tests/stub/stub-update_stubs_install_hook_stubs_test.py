@@ -1,7 +1,7 @@
 """
-stub-update_stubs_create_init_hook_stubs_test.py
+stub-update_stubs_install_hook_stubs_test.py
 
-tests for `create_init_hook_stubs`: fresh dir, pre-existing but
+tests for `install_hook_stubs`: fresh dir, pre-existing but
 unrelated dir contents, per-file conflict abort without --force,
 override with --force, baking the interpreter path into installed
 stubs, only by-demand hook names get installed
@@ -13,7 +13,7 @@ import sys
 import pytest
 
 from hupy.stub.names_by_demand import get_hook_names_by_demand
-from hupy.stub.update_stubs import create_init_hook_stubs
+from hupy.stub.update_stubs import install_hook_stubs
 
 _STUB_NAMES = sorted(get_hook_names_by_demand())
 
@@ -32,11 +32,11 @@ def _assert_installed(hooks_dir):
 # tests  ########################################################################
 
 
-class TestCreateInitHookStubsFreshDir:
+class TestInstallHookStubsFreshDir:
     def test_creates_missing_dir_and_installs_demanded_stubs(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
 
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
 
         assert hooks_dir.is_dir()
         assert sorted(p.name for p in hooks_dir.iterdir()) == _STUB_NAMES
@@ -45,17 +45,17 @@ class TestCreateInitHookStubsFreshDir:
     def test_installed_stubs_are_executable(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
 
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
 
         for name in _STUB_NAMES:
             assert os.access(str(hooks_dir / name), os.X_OK)
 
 
-class TestCreateInitHookStubsInterpreterPath:
+class TestInstallHookStubsInterpreterPath:
     def test_baked_interpreter_is_an_absolute_path(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
 
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
 
         for name in _STUB_NAMES:
             content = (hooks_dir / name).read_text(encoding="utf-8")
@@ -63,20 +63,20 @@ class TestCreateInitHookStubsInterpreterPath:
         assert os.path.isabs(sys.executable)
 
 
-class TestCreateInitHookStubsPreExistingDir:
+class TestInstallHookStubsPreExistingDir:
     def test_unrelated_dir_contents_do_not_require_force(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
         sample = hooks_dir / "pre-commit.sample"
         sample.write_text("git's own sample hook")
 
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
 
         assert sample.read_text() == "git's own sample hook"
         _assert_installed(hooks_dir)
 
 
-class TestCreateInitHookStubsConflict:
+class TestInstallHookStubsConflict:
     def test_without_force_raises_and_leaves_stubs_untouched(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
@@ -84,7 +84,7 @@ class TestCreateInitHookStubsConflict:
             (hooks_dir / name).write_text("stale content")
 
         with pytest.raises(SystemExit) as exc_info:
-            create_init_hook_stubs(hooks_dir, force=False)
+            install_hook_stubs(hooks_dir, force=False)
 
         assert exc_info.value.code == 1
         for name in _STUB_NAMES:
@@ -96,6 +96,6 @@ class TestCreateInitHookStubsConflict:
         for name in _STUB_NAMES:
             (hooks_dir / name).write_text("stale content")
 
-        create_init_hook_stubs(hooks_dir, force=True)
+        install_hook_stubs(hooks_dir, force=True)
 
         _assert_installed(hooks_dir)

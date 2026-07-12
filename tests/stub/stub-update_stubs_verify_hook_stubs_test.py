@@ -11,7 +11,7 @@ stubs
 import sys
 
 from hupy.stub.names_by_demand import get_hook_names_by_demand
-from hupy.stub.update_stubs import create_init_hook_stubs, verify_hook_stubs
+from hupy.stub.update_stubs import install_hook_stubs, verify_hook_stubs
 
 _STUB_NAMES = sorted(get_hook_names_by_demand())
 
@@ -43,7 +43,7 @@ def _write_unmanaged_stub(hooks_dir, hook_name):
 class TestVerifyHookStubsSyncNoOp:
     def test_missing_and_unused_are_reported_but_untouched(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
         missing_name = _STUB_NAMES[0]
         (hooks_dir / missing_name).unlink()
         unused_path = _write_unmanaged_stub(hooks_dir, "unused-hook")
@@ -72,7 +72,7 @@ class TestVerifyHookStubsSyncNoOp:
 class TestVerifyHookStubsUpdate:
     def test_update_adds_missing_and_removes_unused(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
         missing_name = _STUB_NAMES[0]
         (hooks_dir / missing_name).unlink()
         _write_unmanaged_stub(hooks_dir, "unused-hook")
@@ -84,7 +84,7 @@ class TestVerifyHookStubsUpdate:
 
     def test_update_leaves_already_installed_stubs_untouched(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
         target = hooks_dir / _STUB_NAMES[0]
         target.write_text(target.read_text() + "stale marker\n")
 
@@ -94,7 +94,7 @@ class TestVerifyHookStubsUpdate:
 
     def test_update_with_force_also_replaces_installed_stubs(self, tmp_path):
         hooks_dir = tmp_path / "hooks"
-        create_init_hook_stubs(hooks_dir, force=False)
+        install_hook_stubs(hooks_dir, force=False)
         target = hooks_dir / _STUB_NAMES[0]
         target.write_text(target.read_text() + "stale marker\n")
 
