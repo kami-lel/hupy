@@ -14,6 +14,7 @@ def get_hook_names_by_demand():
     :return: hook names that should have an installed stub
     :rtype: list[str]
     """
+    # FIXME mpl names by demand
     return [
         "pre-commit",
         "prepare-commit-msg",

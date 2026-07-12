@@ -74,3 +74,6 @@ def update_hooks_stub(hooks_dir, force=False, is_init=False, update=False):
         target_path.chmod(_STUB_MODE)
 
         logger.debug("hook stub installed: {}".format(target_path))
+
+
+# TODO summary logger
