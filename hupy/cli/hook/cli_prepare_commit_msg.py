@@ -30,9 +30,13 @@ def _prepare_commit_msg_main(args):  ###########################################
 
         logger.enter("start prepare-commit-msg stage")
 
-        perform_hook_brackets(repo, state_file, "prepare-commit-msg", True)
+        perform_hook_brackets(
+            repo, state_file, "prepare-commit-msg", True, args.hook_args
+        )
         prepend_commit_header(repo, state_file)
-        perform_hook_brackets(repo, state_file, "prepare-commit-msg", False)
+        perform_hook_brackets(
+            repo, state_file, "prepare-commit-msg", False, args.hook_args
+        )
 
         logger.succ("prepare-commit-msg stage finished")
 
@@ -46,6 +50,12 @@ def register_cli_prepare_commit_msg_parser(subparser):
         "prepare-commit-msg",
         help=_PREPARE_COMMIT_MSG_DOC,
         description=_PREPARE_COMMIT_MSG_DOC,
+    )
+    prepare_commit_msg_parser.add_argument(
+        "hook_args",
+        metavar="ARG",
+        nargs="*",
+        help="raw arguments forwarded by the git hook invocation",
     )
     kamilog.add_verbose_arguments(prepare_commit_msg_parser)
     prepare_commit_msg_parser.set_defaults(func=_prepare_commit_msg_main)

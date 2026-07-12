@@ -27,9 +27,13 @@ def _post_commit_main(args):  ##################################################
         )
         logger.enter("start post-commit stage")
 
-        perform_hook_brackets(repo, state_file, "post-commit", True)
+        perform_hook_brackets(
+            repo, state_file, "post-commit", True, args.hook_args
+        )
 
-        perform_hook_brackets(repo, state_file, "post-commit", False)
+        perform_hook_brackets(
+            repo, state_file, "post-commit", False, args.hook_args
+        )
 
         state_file.reset_for_next_commit()
 
@@ -46,6 +50,11 @@ def register_cli_post_commit_parser(subparser):
         "post-commit",
         help=_POST_COMMIT_DOC,
         description=_POST_COMMIT_DOC,
+    )
+    post_commit_parser.add_argument(
+        "hook_args",
+        nargs="*",
+        help="raw arguments forwarded",
     )
     kamilog.add_verbose_arguments(post_commit_parser)
     post_commit_parser.set_defaults(func=_post_commit_main)

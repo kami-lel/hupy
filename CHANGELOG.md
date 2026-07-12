@@ -7,6 +7,7 @@
 ### Added
 
 - **HB command `timeout`** — a bracketed command's config entry (`.hupy.config.jsonc`) accepts an optional `timeout` (float, seconds); exceeding it fails the command, honoring the entry's `allow_failure`
+- **Hook argument passthrough** — the `pre-commit`, `prepare-commit-msg`, and `post-commit` hook stubs now forward git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --copy-hooks --force` to pick up the updated stubs
 
 ### Changed
 

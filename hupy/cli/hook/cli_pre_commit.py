@@ -30,10 +30,14 @@ def _pre_commit_main(args):  ###################################################
 
         logger.enter("start pre-commit stage")
 
-        perform_hook_brackets(repo, state_file, "pre-commit", True)
+        perform_hook_brackets(
+            repo, state_file, "pre-commit", True, args.hook_args
+        )
         ban_direct_commit(repo, state_file)
         perform_triage_tags_gating(repo, state_file)
-        perform_hook_brackets(repo, state_file, "pre-commit", False)
+        perform_hook_brackets(
+            repo, state_file, "pre-commit", False, args.hook_args
+        )
 
         logger.succ("pre-commit stage finished")
 
@@ -47,6 +51,11 @@ def register_cli_pre_commit_parser(subparser):
         "pre-commit",
         help=_PRE_COMMIT_DOC,
         description=_PRE_COMMIT_DOC,
+    )
+    pre_commit_parser.add_argument(
+        "hook_args",
+        nargs="*",
+        help="raw arguments forwarded",
     )
     kamilog.add_verbose_arguments(pre_commit_parser)
     pre_commit_parser.set_defaults(func=_pre_commit_main)
