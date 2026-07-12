@@ -168,6 +168,30 @@
     "post_rewrite": {
       "lead": [],
       "trail": []
+    },
+    "pre_auto_gc": {
+      // run before pre-auto-gc's core logic
+      "lead": [],
+      // run after pre-auto-gc's core logic
+      "trail": []
+    },
+    "post_index_change": {
+      // run before post-index-change's core logic
+      "lead": [],
+      // run after post-index-change's core logic
+      "trail": []
+    },
+    "sendemail_validate": {
+      // run before sendemail-validate's core logic
+      "lead": [],
+      // run after sendemail-validate's core logic
+      "trail": []
+    },
+    "fsmonitor_watchman": {
+      // run before fsmonitor-watchman's core logic
+      "lead": [],
+      // run after fsmonitor-watchman's core logic
+      "trail": []
     }
   }
 }
