@@ -31,7 +31,7 @@ _STUB_MODE = 0o755
 # auxiliaries  #################################################################
 
 
-def _write_stub(target_path, hook_name, is_overwrite=False):
+def _write_stub(target_path, hook_name, is_overwrite=False, is_update=False):
     """
     render and write the stub script for ``hook_name`` at ``target_path``,
     then mark it executable.
@@ -44,6 +44,8 @@ def _write_stub(target_path, hook_name, is_overwrite=False):
 
     if is_overwrite:
         logger.warning("overwrite hook stub: {}".format(target_path))
+    elif is_update:
+        logger.info("hook stub added: {}".format(target_path))
     else:
         logger.debug("hook stub installed: {}".format(target_path))
 
@@ -131,7 +133,7 @@ def _add_missing_stubs(hooks_dir, missing_names):
     write each demanded-but-missing stub in ``missing_names``
     """
     for hook_name in missing_names:
-        _write_stub(hooks_dir / hook_name, hook_name)
+        _write_stub(hooks_dir / hook_name, hook_name, is_update=True)
 
 
 def _refresh_installed_stubs(hooks_dir, names):
