@@ -42,6 +42,11 @@ Todo reimplement ensure file modified
 
 ## 📦 Installation
 
+<!--
+Fixme move to install doc
+Todo doc for using pyproject.toml & setup.cfg
+-->
+
 #### Install Python Package
 
 **Clone and install locally**

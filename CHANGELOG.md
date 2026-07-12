@@ -7,11 +7,15 @@
 ### Added
 
 - **HB command `timeout`** — a bracketed command's config entry (`.hupy.config.jsonc`) accepts an optional `timeout` (float, seconds); exceeding it fails the command, honoring the entry's `allow_failure`
-- **Hook argument passthrough** — the `pre-commit`, `prepare-commit-msg`, and `post-commit` hook stubs now forward git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --copy-hooks --force` to pick up the updated stubs
+- **Hook argument passthrough** — every hook stub now forwards git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --copy-hooks --force` to pick up the updated stubs
+- **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets a packaged stub and its own `hb` bracket config section, though only the original three stages run any *HUPy* feature beyond their Hook Bracket
+- **Flow diagrams** — `docs/flow_doc.md` gained Mermaid diagrams for Commit Flow, Merge Flow, Rewrite Flow, and Patch Apply Flow, plus one per Standalone Hook, covering the full set of seventeen stages
 
 ### Changed
 
 - HB bracket commands now run explicitly under `/bin/bash` (previously the platform's default shell) and receive a copy of the parent process's environment
+- Every `hb` config section (one per hook stage) is now optional and defaults to empty `lead`/`trail` lists; `is_disabled` defaults to `false`. Previously only `pre-commit`, `prepare-commit-msg`, and `post-commit` existed and all three had to be spelled out
+- `cli/hook/` restructured from one file per subcommand (`cli_pre_commit.py`, `cli_prepare_commit_msg.py`, `cli_post_commit.py`) into one file per git hook stage plus a shared generic runner in `cli_hook.py`, so a new stage needs only a stage module and a registration call
 
 ### Deprecated
 
