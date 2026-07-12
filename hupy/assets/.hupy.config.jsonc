@@ -126,16 +126,34 @@
       // run after pre-commit's core logic
       "trail": []
     },
+    "pre_merge_commit": {
+      // run before pre-merge-commit's core logic
+      "lead": [],
+      // run after pre-merge-commit's core logic
+      "trail": []
+    },
     "prepare_commit_msg": {
       // run before prepare-commit-msg's core logic
       "lead": [],
       // run after prepare-commit-msg's core logic
       "trail": []
     },
+    "commit_msg": {
+      // run before commit-msg's core logic
+      "lead": [],
+      // run after commit-msg's core logic
+      "trail": []
+    },
     "post_commit": {
       // run before post-commit's core logic
       "lead": [],
       // run after post-commit's core logic
+      "trail": []
+    },
+    "post_rewrite": {
+      // run before post-rewrite's core logic
+      "lead": [],
+      // run after post-rewrite's core logic
       "trail": []
     }
   }

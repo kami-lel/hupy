@@ -179,9 +179,12 @@ class _Hb(BaseModel):
     # fields  ------------------------------------------------------------------
 
     is_disabled: bool
-    pre_commit: _HbBracket
-    prepare_commit_msg: _HbBracket
-    post_commit: _HbBracket
+    pre_commit: _HbBracket = Field(default_factory=_HbBracket)
+    pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
+    prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    post_commit: _HbBracket = Field(default_factory=_HbBracket)
+    post_rewrite: _HbBracket = Field(default_factory=_HbBracket)
 
     # Public Method  -----------------------------------------------------------
 
@@ -194,8 +197,11 @@ class _Hb(BaseModel):
         """
         return {
             "pre-commit": self.pre_commit,
+            "pre-merge-commit": self.pre_merge_commit,
             "prepare-commit-msg": self.prepare_commit_msg,
+            "commit-msg": self.commit_msg,
             "post-commit": self.post_commit,
+            "post-rewrite": self.post_rewrite,
         }.get(hook_name)
 
 

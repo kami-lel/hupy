@@ -10,6 +10,7 @@ import os
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
+from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
 # constants  ###################################################################
@@ -32,7 +33,17 @@ def _pre_merge_commit_main(args):  #############################################
             args, verbosity=state_file.hooks_logger_verbosity
         )
         logger.enter(HOOK_STAGE_START)
+
+        perform_hook_brackets(
+            repo, state_file, _HOOK_NAME, True, args.hook_args
+        )
+
         logger.debug(HOOK_STAGE_NOOP)
+
+        perform_hook_brackets(
+            repo, state_file, _HOOK_NAME, False, args.hook_args
+        )
+
         logger.succ(HOOK_STAGE_FINISHED)
 
 
