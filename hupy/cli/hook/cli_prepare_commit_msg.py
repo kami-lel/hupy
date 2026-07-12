@@ -9,7 +9,8 @@ from hupy.pch.prepend_commit_header import prepend_commit_header
 from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".prepare-commit-msg")
+logger.propagate = False
 
 # constants  ###################################################################
 
@@ -28,7 +29,7 @@ def _prepare_commit_msg_main(args):  ###########################################
             args, verbosity=state_file.hooks_logger_verbosity
         )
 
-        logger.enter("start prepare-commit-msg stage")
+        logger.enter("Start")
 
         perform_hook_brackets(
             repo, state_file, "prepare-commit-msg", True, args.hook_args
@@ -38,7 +39,7 @@ def _prepare_commit_msg_main(args):  ###########################################
             repo, state_file, "prepare-commit-msg", False, args.hook_args
         )
 
-        logger.succ("prepare-commit-msg stage finished")
+        logger.succ("Finished")
 
 
 # Public API  ##################################################################

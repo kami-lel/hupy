@@ -10,7 +10,8 @@ from hupy.ttg.gate_tt import perform_triage_tags_gating
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 
 # logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".pre-commit")
+logger.propagate = False
 
 # constants  ###################################################################
 _PRE_COMMIT_DOC = "run pre-commit stage hooks"
@@ -28,7 +29,7 @@ def _pre_commit_main(args):  ###################################################
             args, verbosity=state_file.hooks_logger_verbosity
         )
 
-        logger.enter("start pre-commit stage")
+        logger.enter("Start")
 
         perform_hook_brackets(
             repo, state_file, "pre-commit", True, args.hook_args
@@ -39,7 +40,7 @@ def _pre_commit_main(args):  ###################################################
             repo, state_file, "pre-commit", False, args.hook_args
         )
 
-        logger.succ("pre-commit stage finished")
+        logger.succ("Finished")
 
 
 # Public API  ##################################################################

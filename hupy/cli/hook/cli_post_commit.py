@@ -8,7 +8,9 @@ from hupy.hb.perform_hook_brackets import perform_hook_brackets
 from hupy.state.open_state import open_state_file
 
 # logger  ######################################################################
-logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".post-commit")
+logger.propagate = False
+proj_root_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
 # constants  ###################################################################
 _POST_COMMIT_DOC = "run post-commit stage hooks"
@@ -25,7 +27,7 @@ def _post_commit_main(args):  ##################################################
         kamilog.set_logging_level_by_namespace(
             args, verbosity=state_file.hooks_logger_verbosity
         )
-        logger.enter("start post-commit stage")
+        logger.enter("Start")
 
         perform_hook_brackets(
             repo, state_file, "post-commit", True, args.hook_args
@@ -37,8 +39,8 @@ def _post_commit_main(args):  ##################################################
 
         state_file.reset_for_next_commit()
 
-        logger.succ("post-commit stage finished")
-        logger.done("all HUPy hooks finished")
+        logger.succ("Finished")
+        proj_root_logger.done("all HUPy hooks finished")
 
 
 # Public API  ##################################################################
