@@ -6,12 +6,17 @@
 # one-time skip via `hupy skip-once` beforehand, driven through the
 # actual `hupy hook post-commit` CLI
 # expected result: `skip_once` cleared from `hupy-state.json`
+#
+# any -v/-q flags passed to this script are forwarded as-is to
+# `hupy skip-once` and `hupy hook post-commit`
 
 set -euo pipefail
 
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
+
+_VERBOSITY_ARGS=("$@")
 
 
 # helpers  #####################################################################
@@ -28,13 +33,13 @@ _prepare_demo_repo() {
 _run_skip_once() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy skip-once "$@")
+    (cd "$repo_dir" && python3 -m hupy skip-once "$@" "${_VERBOSITY_ARGS[@]}")
 }
 
 _run_post_commit() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy hook post-commit "$@")
+    (cd "$repo_dir" && python3 -m hupy hook post-commit "${_VERBOSITY_ARGS[@]}" "$@")
 }
 
 
