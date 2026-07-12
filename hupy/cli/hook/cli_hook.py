@@ -6,7 +6,11 @@ define ``register_cli_hook_parser``, nesting git hook stage subcommands
 
 from hupy.cli.hook.cli_commit_msg import register_cli_commit_msg_parser
 from hupy.cli.hook.cli_post_commit import register_cli_post_commit_parser
+from hupy.cli.hook.cli_post_rewrite import register_cli_post_rewrite_parser
 from hupy.cli.hook.cli_pre_commit import register_cli_pre_commit_parser
+from hupy.cli.hook.cli_pre_merge_commit import (
+    register_cli_pre_merge_commit_parser,
+)
 from hupy.cli.hook.cli_prepare_commit_msg import (
     register_cli_prepare_commit_msg_parser,
 )
@@ -32,6 +36,8 @@ def register_cli_hook_parser(cli_subparser):
     hook_subparser = hook_parser.add_subparsers(title="hook stages")
 
     register_cli_pre_commit_parser(hook_subparser)
+    register_cli_pre_merge_commit_parser(hook_subparser)
     register_cli_prepare_commit_msg_parser(hook_subparser)
     register_cli_commit_msg_parser(hook_subparser)
     register_cli_post_commit_parser(hook_subparser)
+    register_cli_post_rewrite_parser(hook_subparser)
