@@ -4,13 +4,13 @@ import pathlib
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
-    HOOK_STUBS_DIR,
     REPO_PATH_HELP,
     _resolve_hooks_dir,
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.open_state import open_state_file
+from hupy.stub.update_stubs import update_hooks_stub
 from hupy.ver_grep.ver_grep import grep_version
 
 
@@ -47,37 +47,6 @@ check that HUPy is correctly set up, verifying:
 # auxiliaries  #################################################################
 
 
-def _verify_hook_stubs(repo):
-    """
-    verify every HUPy hook stub is installed in ``repo``'s hooks dir
-    (content of each installed file is not checked)
-
-
-    :param repo: repository to verify
-    :type repo: git.Repo
-    :raises SystemExit: ``repo``'s hooks dir is missing one or more
-            hook stub scripts
-    :return: number of hook stub scripts verified
-    :rtype: int
-    """
-    hooks_dir = _resolve_hooks_dir(repo)
-
-    stub_names = {stub_file.name for stub_file in HOOK_STUBS_DIR.iterdir()}
-    installed_names = (
-        {installed_file.name for installed_file in hooks_dir.iterdir()}
-        if hooks_dir.is_dir()
-        else set()
-    )
-
-    missing_names = stub_names - installed_names
-    if missing_names:
-        for missing_name in sorted(missing_names):
-            logger.fail("missing hook stub: {}".format(missing_name))
-        raise SystemExit(1)
-
-    return len(stub_names)
-
-
 def _verify_main(args):
     """
     dispatch for the ``verify`` subcommand.
@@ -102,8 +71,8 @@ def _verify_main(args):
         version = grep_version(repo, state_file, "HEAD")
         logger.pass_("VerGrep verified, grepped: {!r}".format(version))
 
-        cnt = _verify_hook_stubs(repo)
-        logger.pass_("hook stubs exist, count: {}".format(cnt))
+        update_hooks_stub(_resolve_hooks_dir(repo), force=True)
+        logger.pass_("hook stubs verified/updated")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
