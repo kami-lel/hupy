@@ -2,7 +2,40 @@
 
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after:
 
-### Commit Flow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Commit Flow
 
 Triggered by `git commit` (a merge commit takes the `pre-merge-commit` branch instead of `pre-commit`):
 
@@ -57,13 +90,49 @@ See the per-feature docs for what each stage does: [Ban Direct Commit](bdc_doc.m
 
 
 
-### Rewrite Flow
 
-Triggered by `git commit --amend` or `git rebase` — separate from, and does not follow, the commit flow above:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Rewrite Flow
+
+Triggered by `git commit --amend` or `git rebase` — separate from, and does not follow, the commit flow above. `git rebase` also fires `pre-rebase` first, before it starts replaying commits:
 
 ```mermaid
 flowchart TD
-    rewrite([git commit --amend / git rebase])
+    amend([git commit --amend])
+    rebase([git rebase])
+
+    %% pre-rebase stage
+    subgraph prerebase [pre-rebase stage]
+        prb[/pre-rebase hook/] --> lead0[[Hook Bracket - lead]]
+        lead0 --> trail0[[Hook Bracket - trail]]
+    end
 
     %% post-rewrite stage
     subgraph postrewrite [post-rewrite stage]
@@ -71,13 +140,45 @@ flowchart TD
         lead3b --> trail3b[[Hook Bracket - trail]]
     end
 
-    rewrite --> postrw
+    rebase --> prb
+    trail0 --> postrw
+    amend --> postrw
 ```
 
 
 
 
-### Patch Apply Flow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Patch Apply Flow
 
 Triggered by `git am` — separate from, and does not follow, the commit flow above:
 
@@ -112,9 +213,53 @@ flowchart TD
 
 
 
-### Standalone Hooks
 
-Each of these fires on its own, unrelated trigger — none of them chain into the flows above, or into each other:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Standalone Hooks
+
+Each of these fires on its own, unrelated trigger — none of them chain into the flows above, or into each other.
+
+
+
+
+
+
+
+
+
+
+
+
+
+### `pre-auto-gc`
 
 Triggered before automatic garbage collection:
 
@@ -131,6 +276,20 @@ flowchart TD
     gc --> pgc
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+### `post-index-change`
+
 Triggered when the index is written and the working tree is unchanged:
 
 ```mermaid
@@ -145,6 +304,20 @@ flowchart TD
 
     idx --> pic
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### `sendemail-validate`
 
 Triggered by `git send-email`, once per outgoing message:
 
@@ -161,6 +334,20 @@ flowchart TD
     email --> sev
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+### `fsmonitor-watchman`
+
 Triggered by `git status` and other commands querying the filesystem-monitor state:
 
 ```mermaid
@@ -176,5 +363,92 @@ flowchart TD
     fsm --> fsw
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+### `post-checkout`
+
+Triggered after `git checkout` or `git switch` updates the working tree:
+
+```mermaid
+flowchart TD
+    checkout([git checkout / git switch])
+
+    %% post-checkout stage
+    subgraph postcheckout [post-checkout stage]
+        pco[/post-checkout hook/] --> lead11[[Hook Bracket - lead]]
+        lead11 --> trail11[[Hook Bracket - trail]]
+    end
+
+    checkout --> pco
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### `post-merge`
+
+Triggered after `git merge` completes successfully:
+
+```mermaid
+flowchart TD
+    merge([git merge])
+
+    %% post-merge stage
+    subgraph postmerge [post-merge stage]
+        pmg[/post-merge hook/] --> lead12[[Hook Bracket - lead]]
+        lead12 --> trail12[[Hook Bracket - trail]]
+    end
+
+    merge --> pmg
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### `pre-push`
+
+Triggered before `git push` updates the remote's refs:
+
+```mermaid
+flowchart TD
+    push([git push])
+
+    %% pre-push stage
+    subgraph prepush [pre-push stage]
+        ppu[/pre-push hook/] --> lead13[[Hook Bracket - lead]]
+        lead13 --> trail13[[Hook Bracket - trail]]
+    end
+
+    push --> ppu
+```
+
 > [!NOTE]
-> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, `post-rewrite`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, and `fsmonitor-watchman` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, `post-rewrite`, `pre-rebase`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
