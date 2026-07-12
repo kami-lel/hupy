@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — HB commands gained a `timeout` field. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — hook stages forward git's own hook arguments through to HB bracket commands. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -39,7 +39,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 `hupy init` sets a repo up with two artifacts:
 
 1. **`.hupy.config.jsonc`** — a tracked, dot-prefixed JSON5/JSONC file at the repo root. The config surface: which features are enabled and in what order they run per stage. Copied verbatim from the packaged asset `hupy/assets/.hupy.config.jsonc`, whose `//` comments document each field (the schema itself carries no defaults).
-2. **Hook stubs** — thin `pre-commit`, `prepare-commit-msg`, and `post-commit` scripts copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub only invokes its stage: `"<python>" -m hupy hook <stage>`.
+2. **Hook stubs** — thin `pre-commit`, `prepare-commit-msg`, and `post-commit` scripts copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub invokes its stage and forwards git's own hook arguments: `"<python>" -m hupy hook <stage> "$@"`.
 
 Key decisions:
 
@@ -157,10 +157,9 @@ Ban Direct Commit — blocks a commit made directly on a protected branch while 
 
 Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stage in `.hupy.config.jsonc`.
 
-**Public API**: `perform_hook_brackets(repo, state_file, hook_name, is_lead)` (`perform_hook_brackets.py`) — early return if `should_run_module(..., "hb")` is `False`; resolves the `_HbBracket` for `hook_name` via `config.hb.get_bracket(hook_name)` (`SystemExit`-free `ValueError` on an unrecognized name, which cannot happen from the three wired hook stages); iterates `bracket.lead` or `bracket.trail`, skipping a `_HbCmd` whose `allow_commit_types` doesn't intersect the current `CommitType` (empty `allow_commit_types` always runs).
+**Public API**: `perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=())` (`perform_hook_brackets.py`) — early return if `should_run_module(..., "hb")` is `False`; resolves the `_HbBracket` for `hook_name` via `config.hb.get_bracket(hook_name)` (`SystemExit`-free `ValueError` on an unrecognized name, which cannot happen from the three wired hook stages); iterates `bracket.lead` or `bracket.trail`, skipping a `_HbCmd` whose `allow_commit_types` doesn't intersect the current `CommitType` (empty `allow_commit_types` always runs). `hooks_args` is the list of raw arguments git passed to the hook invocation (e.g. `prepare-commit-msg`'s commit-msg file path), forwarded from each `hook <stage>` CLI's `hook_args` positional.
 - **`_HbCmd` fields** (`config_file.py`) — `cmd: str` (required); `remark: str = ""` (log heading, falls back to the underlined `cmd` when blank); `allow_commit_types: CommitType = CommitType(0)`; `allow_failure: bool = False`; `timeout: float | None = None` (seconds; `None` waits forever).
-- **execution** (`_run_hb_cmd`) — `subprocess.run(cmd, shell=True, executable="/bin/bash", cwd=repo.working_tree_dir, env=os.environ.copy(), check=False, timeout=hb_cmd.timeout)`. Forcing `/bin/bash` (rather than the platform-default shell `shell=True` would otherwise pick) keeps bash-only syntax in a configured `cmd` working consistently with the bash hook stubs that invoke HUPy. `subprocess.TimeoutExpired` and a non-zero `result.returncode` are handled the same way: `allow_failure` → `warning` and continue (or `return`, for a timeout); otherwise `fail` + `SystemExit`.
-- `# Todo pass no hooks args` marks a pending pass on suppressing recursive hook triggering when a bracketed `cmd` itself invokes git.
+- **execution** (`_run_hb_cmd`) — builds `cmd` by joining `hb_cmd.cmd` with each `hooks_args` entry passed through `shlex.quote`, then `subprocess.run(cmd, shell=True, executable="/bin/bash", cwd=repo.working_tree_dir, env=os.environ.copy(), check=False, timeout=hb_cmd.timeout)`. Forcing `/bin/bash` (rather than the platform-default shell `shell=True` would otherwise pick) keeps bash-only syntax in a configured `cmd` working consistently with the bash hook stubs that invoke HUPy. `subprocess.TimeoutExpired` and a non-zero `result.returncode` are handled the same way: `allow_failure` → `warning` and continue (or `return`, for a timeout); otherwise `fail` + `SystemExit`.
 
 ### `cli`
 
@@ -180,9 +179,9 @@ hupy set-verbosity (alias: sv)
 - **`init`** (`cli_init.py`) — onboards a repo via a `_INIT_STEPS` registry (`copy_hooks`, `create_config_file`); plain `hupy init` runs both, `--copy-hooks`/`--create-config-file` select one. Resolves `repo_root` from `repo.working_tree_dir` (so running from a subdir still anchors correctly). `_copy_hook_stubs` mkdir-p's the hooks dir, then per file: conflict without `-f` → `SystemExit(1)`, else substitute `{{PYTHON}}`→`sys.executable`, write, and `shutil.copymode` to preserve the executable bit.
 - **`verify`** (`cli_verify.py`, alias `v`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`, greps the current version via `grep_version`, then `_verify_hook_stubs(repo)` checks every `HOOK_STUBS_DIR` filename exists in the repo's resolved hooks dir (content not compared), raising `SystemExit(1)` after logging one `fail` line per missing stub; each step logs `pass` on success. Shares `load_git_repo`/`REPO_PATH_HELP` with `init` but takes no `-f`.
 - **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify`, and `load_hupy_config`.
-- **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare.
-  - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then `ban_direct_commit` → `perform_triage_tags_gating`.
-  - **`hook prepare-commit-msg`** — same pattern, then `prepend_commit_header`.
+- **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare. Each stage parser takes a `hook_args` positional (`nargs="*"`) capturing whatever argv git itself passed to the hook script (forwarded by the hook stub's `"$@"`); it's threaded into both the lead and trail `perform_hook_brackets(..., hooks_args=args.hook_args)` calls.
+  - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then the `hb` lead bracket → `ban_direct_commit` → `perform_triage_tags_gating` → the `hb` trail bracket.
+  - **`hook prepare-commit-msg`** — same pattern, then the `hb` lead bracket → `prepend_commit_header` → the `hb` trail bracket.
   - **`hook post-commit`** — same pattern, then the `hb` lead bracket, the `hb` trail bracket, then `state_file.reset_for_next_commit()`.
 - **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
 - **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
@@ -242,7 +241,7 @@ hupy/                             # installable package
   should_run_module.py            # should_run_module(repo, state_file, module_abbr)
   assets/                         # packaged data
     .hupy.config.jsonc            # default config, commented; copied verbatim
-    hook-stubs/{pre-commit,prepare-commit-msg,post-commit}  # `"{{PYTHON}}" -m hupy hook <stage>`
+    hook-stubs/{pre-commit,prepare-commit-msg,post-commit}  # `"{{PYTHON}}" -m hupy hook <stage> "$@"`
   kamilog.py                      # vendored logging (v2.3.1)
   pch/prepend_commit_header.py    # rewrite COMMIT_EDITMSG; _HEADER_GENERATORS
   ttg/                            # Triage Tag Gating
