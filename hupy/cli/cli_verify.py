@@ -75,7 +75,7 @@ def _verify_main(args):
         verify_hook_stubs(
             _resolve_hooks_dir(repo),
             force=args.force,
-            update=args.update_hook_stub,
+            update=args.update_hook_stubs,
         )
         logger.pass_("hook stubs verified/updated")
 
@@ -106,8 +106,8 @@ def register_cli_verify_parser(cli_subparser):
 
     verify_parser.add_argument(
         "-u",
-        "--update-hook-stub",
-        dest="update_hook_stub",
+        "--update-hook-stubs",
+        dest="update_hook_stubs",
         action="store_true",
         default=False,
         help="add missing hook stubs and remove ones no longer demanded",
@@ -118,8 +118,7 @@ def register_cli_verify_parser(cli_subparser):
         "--force",
         action="store_true",
         default=False,
-        help="with -u/--update-hook-stub, also refresh already-installed "
-        "hook stubs",
+        help="with -u, also refresh already-installed hook stubs",
     )
 
     add_verbose_arguments(verify_parser)
