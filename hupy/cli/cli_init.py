@@ -10,6 +10,7 @@ import git
 
 from hupy import PROJ_LOGGER_NAME
 from hupy.config_file.write_config import create_default_config_file
+from hupy.stub.update_stubs import update_hooks_stub
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -110,12 +111,11 @@ def _copy_hook_stubs(hooks_dir, force=False):
 
 def _run_copy_hooks(args, repo):
     """
-    step: copy default HUPy hook stub scripts into the repo's hooks dir.
+    step: write the demanded HUPy hook stub scripts into the repo's
+    hooks dir.
     """
-    # TODO copy stubs by demand
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    logger.debug("hooks dir: {}".format(hooks_dir))
-    _copy_hook_stubs(hooks_dir, args.force)
+    update_hooks_stub(hooks_dir, args.force)
 
 
 def _run_create_config_file(args, repo):
