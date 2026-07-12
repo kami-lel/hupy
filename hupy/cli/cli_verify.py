@@ -106,6 +106,9 @@ def _verify_main(args):
     logger.done("HUPy verification completed: {}".format(repo_root))
 
 
+# Todo add / remove hook stub by demand
+
+
 # Public API  ##################################################################
 def register_cli_verify_parser(cli_subparser):
     """
