@@ -7,6 +7,7 @@ hook stage's ``HOOK_NAME``, no on-disk template files or placeholder
 substitution involved
 """
 
+import pathlib
 import sys
 
 from hupy.kamilog import getLogger
@@ -145,33 +146,55 @@ def _refresh_installed_stubs(hooks_dir, names):
 # Public API  ##################################################################
 
 
-def install_hook_stubs(hooks_dir, repo, force=False):
+def resolve_hooks_dir(repo):
+    """
+    resolve ``repo``'s actual git hooks directory, honoring
+    ``core.hooksPath`` if configured.
+
+
+    :param repo: repo to resolve the hooks directory for
+    :type repo: git.Repo
+    :return: the repo's actual hooks directory
+    :rtype: pathlib.Path
+    """
+    with repo.config_reader() as reader:
+        configured = reader.get_value("core", "hooksPath", default="")
+
+    if configured:
+        return pathlib.Path(repo.working_tree_dir) / configured
+
+    return pathlib.Path(repo.git_dir) / "hooks"
+
+
+def install_hook_stubs(repo, hooks_dir=None, force=False):
     """
     create every hook stub demanded by ``get_hook_names_by_demand`` in
-    ``hooks_dir``, aborting on the first one already present unless
-    ``force`` is set.
+    ``repo``'s hooks dir, aborting on the first one already present
+    unless ``force`` is set.
 
 
-    :param hooks_dir: directory the hook stub scripts are created in
-    :type hooks_dir: pathlib.Path
-    :param repo: repo to check hook demand for
+    :param repo: repo to check hook demand for and install stubs into
     :type repo: git.Repo
+    :param hooks_dir: directory the hook stub scripts are created in;
+            defaults to ``resolve_hooks_dir(repo)``
+    :type hooks_dir: pathlib.Path, optional
     :param force: whether overwrite a hook stub already present in
             ``hooks_dir``
     :type force: bool, optional
     :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
             ``force`` is ``False``
     """
+    hooks_dir = hooks_dir or resolve_hooks_dir(repo)
     _begin_hooks_action("install hook stubs", hooks_dir)
 
     for hook_name in get_hook_names_by_demand(repo):
         _install_or_abort(hooks_dir, hook_name, force)
 
 
-def verify_hook_stubs(hooks_dir, repo, force=False, update=False):
+def verify_hook_stubs(repo, hooks_dir=None, force=False, update=False):
     """
-    verify ``hooks_dir`` is synced with the hook stubs demanded by
-    ``get_hook_names_by_demand``.
+    verify ``repo``'s hooks dir is synced with the hook stubs demanded
+    by ``get_hook_names_by_demand``.
 
     by default, the two are only compared and reported; when
     ``update`` is set, unused stubs are removed and missing ones are
@@ -179,16 +202,18 @@ def verify_hook_stubs(hooks_dir, repo, force=False, update=False):
     demanded stub is regenerated.
 
 
-    :param hooks_dir: directory the hook stub scripts are verified in
-    :type hooks_dir: pathlib.Path
-    :param repo: repo to check hook demand for
+    :param repo: repo to check hook demand for and verify stubs of
     :type repo: git.Repo
+    :param hooks_dir: directory the hook stub scripts are verified in;
+            defaults to ``resolve_hooks_dir(repo)``
+    :type hooks_dir: pathlib.Path, optional
     :param force: whether also replace already-installed demanded
             stubs; requires ``update``
     :type force: bool, optional
     :param update: whether sync installed stubs to demand
     :type update: bool, optional
     """
+    hooks_dir = hooks_dir or resolve_hooks_dir(repo)
     _begin_hooks_action("verify hook stubs", hooks_dir)
 
     demanded_set = set(get_hook_names_by_demand(repo))

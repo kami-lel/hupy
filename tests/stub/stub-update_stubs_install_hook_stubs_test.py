@@ -34,7 +34,7 @@ class TestInstallHookStubsFreshDir:
     ):
         hooks_dir = tmp_path / "hooks"
 
-        install_hook_stubs(hooks_dir, repo, force=False)
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         assert hooks_dir.is_dir()
         assert sorted(p.name for p in hooks_dir.iterdir()) == stub_names
@@ -43,7 +43,7 @@ class TestInstallHookStubsFreshDir:
     def test_installed_stubs_are_executable(self, tmp_path, repo, stub_names):
         hooks_dir = tmp_path / "hooks"
 
-        install_hook_stubs(hooks_dir, repo, force=False)
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         for name in stub_names:
             assert os.access(str(hooks_dir / name), os.X_OK)
@@ -55,7 +55,7 @@ class TestInstallHookStubsInterpreterPath:
     ):
         hooks_dir = tmp_path / "hooks"
 
-        install_hook_stubs(hooks_dir, repo, force=False)
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         for name in stub_names:
             content = (hooks_dir / name).read_text(encoding="utf-8")
@@ -72,7 +72,7 @@ class TestInstallHookStubsPreExistingDir:
         sample = hooks_dir / "pre-commit.sample"
         sample.write_text("git's own sample hook")
 
-        install_hook_stubs(hooks_dir, repo, force=False)
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         assert sample.read_text() == "git's own sample hook"
         _assert_installed(hooks_dir, stub_names)
@@ -88,7 +88,7 @@ class TestInstallHookStubsConflict:
             (hooks_dir / name).write_text("stale content")
 
         with pytest.raises(SystemExit) as exc_info:
-            install_hook_stubs(hooks_dir, repo, force=False)
+            install_hook_stubs(repo, hooks_dir=hooks_dir, force=False)
 
         assert exc_info.value.code == 1
         for name in stub_names:
@@ -102,6 +102,6 @@ class TestInstallHookStubsConflict:
         for name in stub_names:
             (hooks_dir / name).write_text("stale content")
 
-        install_hook_stubs(hooks_dir, repo, force=True)
+        install_hook_stubs(repo, hooks_dir=hooks_dir, force=True)
 
         _assert_installed(hooks_dir, stub_names)

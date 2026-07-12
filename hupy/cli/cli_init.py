@@ -54,8 +54,7 @@ def _run_install_hook_stubs(args, repo):
     step: write the demanded HUPy hook stub scripts into the repo's
     hooks dir.
     """
-    hooks_dir = args.hooks_dir or resolve_hooks_dir(repo)
-    install_hook_stubs(hooks_dir, repo, args.force)
+    install_hook_stubs(repo, hooks_dir=args.hooks_dir, force=args.force)
 
 
 def _run_create_config_file(args, repo):
@@ -106,26 +105,6 @@ def _init_main(args):
 
 
 # Public API  ##################################################################
-
-
-def resolve_hooks_dir(repo):
-    """
-    resolve ``repo``'s actual git hooks directory, honoring
-    ``core.hooksPath`` if configured.
-
-
-    :param repo: repo to resolve the hooks directory for
-    :type repo: git.Repo
-    :return: the repo's actual hooks directory
-    :rtype: pathlib.Path
-    """
-    with repo.config_reader() as reader:
-        configured = reader.get_value("core", "hooksPath", default="")
-
-    if configured:
-        return pathlib.Path(repo.working_tree_dir) / configured
-
-    return pathlib.Path(repo.git_dir) / "hooks"
 
 
 def load_git_repo(repo_path):
