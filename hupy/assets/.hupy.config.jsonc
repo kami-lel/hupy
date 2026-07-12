@@ -192,6 +192,30 @@
       "lead": [],
       // run after fsmonitor-watchman's core logic
       "trail": []
+    },
+    "pre_rebase": {
+      // run before pre-rebase's core logic
+      "lead": [],
+      // run after pre-rebase's core logic
+      "trail": []
+    },
+    "post_checkout": {
+      // run before post-checkout's core logic
+      "lead": [],
+      // run after post-checkout's core logic
+      "trail": []
+    },
+    "post_merge": {
+      // run before post-merge's core logic
+      "lead": [],
+      // run after post-merge's core logic
+      "trail": []
+    },
+    "pre_push": {
+      // run before pre-push's core logic
+      "lead": [],
+      // run after pre-push's core logic
+      "trail": []
     }
   }
 }

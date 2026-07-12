@@ -194,6 +194,10 @@ class _Hb(BaseModel):
     post_index_change: _HbBracket = Field(default_factory=_HbBracket)
     sendemail_validate: _HbBracket = Field(default_factory=_HbBracket)
     fsmonitor_watchman: _HbBracket = Field(default_factory=_HbBracket)
+    pre_rebase: _HbBracket = Field(default_factory=_HbBracket)
+    post_checkout: _HbBracket = Field(default_factory=_HbBracket)
+    post_merge: _HbBracket = Field(default_factory=_HbBracket)
+    pre_push: _HbBracket = Field(default_factory=_HbBracket)
 
     # Public Method  -----------------------------------------------------------
 
@@ -218,6 +222,10 @@ class _Hb(BaseModel):
             "post-index-change": self.post_index_change,
             "sendemail-validate": self.sendemail_validate,
             "fsmonitor-watchman": self.fsmonitor_watchman,
+            "pre-rebase": self.pre_rebase,
+            "post-checkout": self.post_checkout,
+            "post-merge": self.post_merge,
+            "pre-push": self.pre_push,
         }.get(hook_name)
 
 
