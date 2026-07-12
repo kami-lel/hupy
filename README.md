@@ -6,9 +6,7 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 <!--
-Todo add more hooks
-Fixme move TTG location
-todo reimplement ensure file modified
+Todo reimplement ensure file modified
 -->
 
 
@@ -43,6 +41,11 @@ todo reimplement ensure file modified
 
 
 ## 📦 Installation
+
+<!--
+Fixme move to install doc
+Todo doc for using pyproject.toml & setup.cfg
+-->
 
 #### Install Python Package
 

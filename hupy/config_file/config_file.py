@@ -178,10 +178,29 @@ class _Hb(BaseModel):
 
     # fields  ------------------------------------------------------------------
 
-    is_disabled: bool
-    pre_commit: _HbBracket
-    prepare_commit_msg: _HbBracket
-    post_commit: _HbBracket
+    is_disabled: bool = False
+
+    pre_commit: _HbBracket = Field(default_factory=_HbBracket)
+    prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    post_commit: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
+    post_merge: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_rebase: _HbBracket = Field(default_factory=_HbBracket)
+    post_rewrite: _HbBracket = Field(default_factory=_HbBracket)
+
+    applypatch_msg: _HbBracket = Field(default_factory=_HbBracket)
+    pre_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+    post_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_auto_gc: _HbBracket = Field(default_factory=_HbBracket)
+    post_index_change: _HbBracket = Field(default_factory=_HbBracket)
+    sendemail_validate: _HbBracket = Field(default_factory=_HbBracket)
+    fsmonitor_watchman: _HbBracket = Field(default_factory=_HbBracket)
+    post_checkout: _HbBracket = Field(default_factory=_HbBracket)
+    pre_push: _HbBracket = Field(default_factory=_HbBracket)
 
     # Public Method  -----------------------------------------------------------
 
@@ -193,9 +212,23 @@ class _Hb(BaseModel):
         :rtype: _HbBracket or None
         """
         return {
+            "applypatch-msg": self.applypatch_msg,
+            "pre-applypatch": self.pre_applypatch,
+            "post-applypatch": self.post_applypatch,
             "pre-commit": self.pre_commit,
+            "pre-merge-commit": self.pre_merge_commit,
             "prepare-commit-msg": self.prepare_commit_msg,
+            "commit-msg": self.commit_msg,
             "post-commit": self.post_commit,
+            "post-rewrite": self.post_rewrite,
+            "pre-auto-gc": self.pre_auto_gc,
+            "post-index-change": self.post_index_change,
+            "sendemail-validate": self.sendemail_validate,
+            "fsmonitor-watchman": self.fsmonitor_watchman,
+            "pre-rebase": self.pre_rebase,
+            "post-checkout": self.post_checkout,
+            "post-merge": self.post_merge,
+            "pre-push": self.pre_push,
         }.get(hook_name)
 
 

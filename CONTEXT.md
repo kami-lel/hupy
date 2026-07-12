@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-12 — hook stages forward git's own hook arguments through to HB bracket commands. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-12 — `cli/hook/` split into one file per git hook stage plus a shared generic runner in `cli_hook.py`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -39,7 +39,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 `hupy init` sets a repo up with two artifacts:
 
 1. **`.hupy.config.jsonc`** — a tracked, dot-prefixed JSON5/JSONC file at the repo root. The config surface: which features are enabled and in what order they run per stage. Copied verbatim from the packaged asset `hupy/assets/.hupy.config.jsonc`, whose `//` comments document each field (the schema itself carries no defaults).
-2. **Hook stubs** — thin `pre-commit`, `prepare-commit-msg`, and `post-commit` scripts copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub invokes its stage and forwards git's own hook arguments: `"<python>" -m hupy hook <stage> "$@"`.
+2. **Hook stubs** — thin scripts, one per git hook stage, copied from `hupy/assets/hook-stubs/` into the repo's hooks directory. Each stub invokes its stage and forwards git's own hook arguments: `"<python>" -m hupy hook <stage> "$@"`.
 
 Key decisions:
 
@@ -163,13 +163,27 @@ Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stag
 
 ### `cli`
 
-Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. Five top-level subcommands, the three git hook stages nested under `hook`:
+Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. Five top-level subcommands, seventeen git hook stages nested under `hook`:
 
 ```
 hupy init
 hupy hook pre-commit
 hupy hook prepare-commit-msg
+hupy hook commit-msg
 hupy hook post-commit
+hupy hook pre-merge-commit
+hupy hook post-merge
+hupy hook pre-rebase
+hupy hook post-rewrite
+hupy hook applypatch-msg
+hupy hook pre-applypatch
+hupy hook post-applypatch
+hupy hook pre-auto-gc
+hupy hook post-index-change
+hupy hook sendemail-validate
+hupy hook fsmonitor-watchman
+hupy hook post-checkout
+hupy hook pre-push
 hupy verify
 hupy skip-once (alias: so)
 hupy set-verbosity (alias: sv)
@@ -179,13 +193,14 @@ hupy set-verbosity (alias: sv)
 - **`init`** (`cli_init.py`) — onboards a repo via a `_INIT_STEPS` registry (`copy_hooks`, `create_config_file`); plain `hupy init` runs both, `--copy-hooks`/`--create-config-file` select one. Resolves `repo_root` from `repo.working_tree_dir` (so running from a subdir still anchors correctly). `_copy_hook_stubs` mkdir-p's the hooks dir, then per file: conflict without `-f` → `SystemExit(1)`, else substitute `{{PYTHON}}`→`sys.executable`, write, and `shutil.copymode` to preserve the executable bit.
 - **`verify`** (`cli_verify.py`, alias `v`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`, greps the current version via `grep_version`, then `_verify_hook_stubs(repo)` checks every `HOOK_STUBS_DIR` filename exists in the repo's resolved hooks dir (content not compared), raising `SystemExit(1)` after logging one `fail` line per missing stub; each step logs `pass` on success. Shares `load_git_repo`/`REPO_PATH_HELP` with `init` but takes no `-f`.
 - **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify`, and `load_hupy_config`.
-- **`hook`** (`hook/cli_hook.py`) — content-free group nesting the three stages; prints help when called bare. Each stage parser takes a `hook_args` positional (`nargs="*"`) capturing whatever argv git itself passed to the hook script (forwarded by the hook stub's `"$@"`); it's threaded into both the lead and trail `perform_hook_brackets(..., hooks_args=args.hook_args)` calls.
-  - **`hook pre-commit`** — builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then the `hb` lead bracket → `ban_direct_commit` → `perform_triage_tags_gating` → the `hb` trail bracket.
-  - **`hook prepare-commit-msg`** — same pattern, then the `hb` lead bracket → `prepend_commit_header` → the `hb` trail bracket.
-  - **`hook post-commit`** — same pattern, then the `hb` lead bracket, the `hb` trail bracket, then `state_file.reset_for_next_commit()`.
+- **`hook`** (`hook/`) — one file per git hook stage (seventeen: `pre-commit`, `prepare-commit-msg`, `commit-msg`, `post-commit`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `pre-push`), dispatched through one generic runner in `cli_hook.py`. Each stage module exposes `HOOK_NAME`/`DOC` and its own module-level `logger` (`kamilog.getLogger(PROJ_LOGGER_NAME + "." + HOOK_NAME)`, `propagate = False`), plus up to three optional hooks: `run_core(repo, state_file)` (real per-stage logic, run between the `hb` lead/trail brackets — a `HOOK_STAGE_NOOP` debug log substitutes when absent), `run_after(repo, state_file)` (after the trail bracket, before the finish log), `run_on_finish(repo, state_file)` (after the finish log). `cli_hook.py`'s private `_run_hook_stage(hook_name, logger, args, *, core=None, after=None, on_finish=None)` is the single dispatch shared by every stage: builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, then `hb` lead bracket → `core` (or noop log) → `hb` trail bracket → `after` → finish log → `on_finish`; `hooks_args=args.hook_args` (a `hook_args` positional, `nargs="*"`, capturing whatever argv git itself passed to the hook script via the hook stub's `"$@"`) threads into both bracket calls. Private `_register_hook_stage(hook_subparser, mod)` builds one stage's subparser and wires it to `_run_hook_stage` via the module's optional attributes, looked up with `getattr(mod, "run_core"/"run_after"/"run_on_finish", None)`; only `register_cli_hook_parser` (calling `_register_hook_stage` once per stage module, in the same grouping as the list above) is exported.
+  - **`hook pre-commit`** (`pre_commit.py`) — `run_core`: `ban_direct_commit` → `perform_triage_tags_gating`.
+  - **`hook prepare-commit-msg`** (`prepare_commit_msg.py`) — `run_core`: `prepend_commit_header`.
+  - **`hook post-commit`** (`post_commit.py`) — no `run_core` (noop-logged); `run_after`: `state_file.reset_for_next_commit()`; `run_on_finish`: logs `"all HUPy hooks finished"` on the shared `PROJ_LOGGER_NAME` root logger.
+  - The other fourteen stages carry no logic of their own yet — each module is just `HOOK_NAME`/`DOC`/`logger`, run through the `hb` brackets only.
 - **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
 - **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
-- Packaged templates `hupy/assets/hook-stubs/{pre-commit,prepare-commit-msg,post-commit}` and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
+- Packaged templates `hupy/assets/hook-stubs/` (one per git hook stage) and `hupy/assets/.hupy.config.jsonc` are bundled via `[tool.setuptools.package-data]`.
 
 **Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `cli_skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
 
@@ -219,10 +234,24 @@ hupy/                             # installable package
     cli_skip_once.py              # `skip-once`/`so`; SKIPPABLE_MODULE
     cli_set_verbosity.py          # `set-verbosity`/`sv`
     hook/                         # `hook` group: git hook stage runners
-      cli_hook.py                 # nests the three stages below
-      cli_pre_commit.py           # `hook pre-commit`
-      cli_prepare_commit_msg.py   # `hook prepare-commit-msg`
-      cli_post_commit.py          # `hook post-commit`: hb brackets + reset_for_next_commit()
+      cli_hook.py                 # generic _run_hook_stage/_register_hook_stage + register_cli_hook_parser
+      pre_commit.py                    # run_core: ban_direct_commit + perform_triage_tags_gating
+      prepare_commit_msg.py            # run_core: prepend_commit_header
+      commit_msg.py                    # HOOK_NAME/DOC/logger only (hb brackets)
+      post_commit.py                   # run_after: reset_for_next_commit; run_on_finish: done log
+      pre_merge_commit.py              # HOOK_NAME/DOC/logger only (hb brackets)
+      post_merge.py                    # HOOK_NAME/DOC/logger only (hb brackets)
+      pre_rebase.py                    # HOOK_NAME/DOC/logger only (hb brackets)
+      post_rewrite.py                  # HOOK_NAME/DOC/logger only (hb brackets)
+      applypatch_msg.py                # HOOK_NAME/DOC/logger only (hb brackets)
+      pre_applypatch.py                # HOOK_NAME/DOC/logger only (hb brackets)
+      post_applypatch.py               # HOOK_NAME/DOC/logger only (hb brackets)
+      pre_auto_gc.py                   # HOOK_NAME/DOC/logger only (hb brackets)
+      post_index_change.py             # HOOK_NAME/DOC/logger only (hb brackets)
+      sendemail_validate.py            # HOOK_NAME/DOC/logger only (hb brackets)
+      fsmonitor_watchman.py            # HOOK_NAME/DOC/logger only (hb brackets)
+      post_checkout.py                 # HOOK_NAME/DOC/logger only (hb brackets)
+      pre_push.py                      # HOOK_NAME/DOC/logger only (hb brackets)
   cbm/                            # Commit/Branch/Merge
     branch_type.py                # BranchType + from_name(branch_name, repo)
     commit_type.py                # CommitType + decide_commit_type(source, target)
@@ -241,7 +270,7 @@ hupy/                             # installable package
   should_run_module.py            # should_run_module(repo, state_file, module_abbr)
   assets/                         # packaged data
     .hupy.config.jsonc            # default config, commented; copied verbatim
-    hook-stubs/{pre-commit,prepare-commit-msg,post-commit}  # `"{{PYTHON}}" -m hupy hook <stage> "$@"`
+    hook-stubs/                   # one stub per git hook stage (17): `"{{PYTHON}}" -m hupy hook <stage> "$@"`
   kamilog.py                      # vendored logging (v2.3.1)
   pch/prepend_commit_header.py    # rewrite COMMIT_EDITMSG; _HEADER_GENERATORS
   ttg/                            # Triage Tag Gating
@@ -258,6 +287,8 @@ hupy/                             # installable package
 docs/
   ttg_doc.md                      # TTG tiers & per-merge gating
   cbm_doc.md                      # CBM concepts + PCH headers + ver_grep API
+  flow_doc.md                     # Mermaid diagrams: Commit/Merge/Rewrite/Patch
+                                  # Apply Flow, plus one per Standalone Hook
                                   # (config field docs live in hupy/assets/.hupy.config.jsonc)
 examples/
   hooks/                          # bash demos driving the real `hupy hook <stage>` CLI:

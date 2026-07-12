@@ -127,15 +127,73 @@
       "trail": []
     },
     "prepare_commit_msg": {
-      // run before prepare-commit-msg's core logic
+      // run before pre-merge-commit's core logic
       "lead": [],
-      // run after prepare-commit-msg's core logic
+      // run after pre-merge-commit's core logic
+      "trail": []
+    },
+    "commit_msg": {
+      // run before commit-msg's core logic
+      "lead": [],
+      // run after commit-msg's core logic
       "trail": []
     },
     "post_commit": {
       // run before post-commit's core logic
       "lead": [],
       // run after post-commit's core logic
+      "trail": []
+    },
+    "pre_merge_commit": {
+      "lead": [],
+      "trail": []
+    },
+    "post_merge": {
+      "lead": [],
+      "trail": []
+    },
+    "pre_rebase": {
+      "lead": [],
+      "trail": []
+    },
+    "post_rewrite": {
+      "lead": [],
+      "trail": []
+    },
+    "applypatch_msg": {
+      "lead": [],
+      "trail": []
+    },
+    "pre_applypatch": {
+      "lead": [],
+      "trail": []
+    },
+    "post_applypatch": {
+      "lead": [],
+      "trail": []
+    },
+    "pre_auto_gc": {
+      "lead": [],
+      "trail": []
+    },
+    "post_index_change": {
+      "lead": [],
+      "trail": []
+    },
+    "sendemail_validate": {
+      "lead": [],
+      "trail": []
+    },
+    "fsmonitor_watchman": {
+      "lead": [],
+      "trail": []
+    },
+    "post_checkout": {
+      "lead": [],
+      "trail": []
+    },
+    "pre_push": {
+      "lead": [],
       "trail": []
     }
   }

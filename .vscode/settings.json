@@ -1,10 +1,13 @@
 {
   "cSpell.words": [
+    "applypatch",
     "editmsg",
     "FIXMES",
+    "fsmonitor",
     "hexsha",
     "hupy",
     "LOUDS",
+    "sendemail",
     "STEADYS"
   ],
   "better-todo-tree.filtering.excludeGlobs": [
