@@ -121,10 +121,11 @@ class _HbCmd(BaseModel):
 
     # fields  ------------------------------------------------------------------
 
+    remark: str = ""
     cmd: str
     allow_commit_types: CommitType = CommitType(0)
     allow_failure: bool = False
-    remark: str = ""
+    timeout: float | None = None
 
     # validators  --------------------------------------------------------------
 

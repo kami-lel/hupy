@@ -79,12 +79,13 @@
     //
     // a single HB command entry include fields:
     //
+    // - "remark" (optional, string): description/name of entry,
+    //   strictly used in logger
     // - "cmd": shell command to be ran (at repository root)
     // - "allow_commit_types" (optional, list of string): v.i.
     // - "allow_failure" (optional, boolean):
     //   allowing failed command proceeded with committing
-    // - "remark" (optional, string): description/name of entry,
-    //   strictly used in logger
+    // - "timeout" (optional, float): max seconds to let command run
     //
     // "allow_commit_types" include all commit types which
     // this command should be ran, possible values:
@@ -115,10 +116,11 @@
       "lead": [
         // example entry:
         // {
+        //   "remark": "Pre-Feature Landing Unit Test",
         //   "cmd": "npm test",
         //   "allow_commit_types": ["FEATURE_LANDING"],
-        //   "allow_failure": true,
-        //   "remark": "Pre-Feature Landing Unit Test"
+        //   "allow_failure": false,
+        //   "timeout": 600.0
         // }
       ],
       // run after pre-commit's core logic
