@@ -106,7 +106,7 @@ def _verify_main(args):
     logger.done("HUPy verification completed: {}".format(repo_root))
 
 
-# Todo add / remove hook stub by demand
+# TODO add / remove hook stub by demand
 
 
 # Public API  ##################################################################

@@ -112,6 +112,7 @@ def _run_copy_hooks(args, repo):
     """
     step: copy default HUPy hook stub scripts into the repo's hooks dir.
     """
+    # TODO copy stubs by demand
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
     logger.debug("hooks dir: {}".format(hooks_dir))
     _copy_hook_stubs(hooks_dir, args.force)
