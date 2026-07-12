@@ -69,7 +69,7 @@ def _run_install_hook_stubs(args, repo):
     hooks dir.
     """
     hooks_dir = args.hooks_dir or _resolve_hooks_dir(repo)
-    install_hook_stubs(hooks_dir, args.force)
+    install_hook_stubs(hooks_dir, repo, args.force)
 
 
 def _run_create_config_file(args, repo):

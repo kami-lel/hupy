@@ -145,7 +145,7 @@ def _refresh_installed_stubs(hooks_dir, names):
 # Public API  ##################################################################
 
 
-def install_hook_stubs(hooks_dir, force=False):
+def install_hook_stubs(hooks_dir, repo, force=False):
     """
     create every hook stub demanded by ``get_hook_names_by_demand`` in
     ``hooks_dir``, aborting on the first one already present unless
@@ -154,6 +154,8 @@ def install_hook_stubs(hooks_dir, force=False):
 
     :param hooks_dir: directory the hook stub scripts are created in
     :type hooks_dir: pathlib.Path
+    :param repo: repo to check hook demand for
+    :type repo: git.Repo
     :param force: whether overwrite a hook stub already present in
             ``hooks_dir``
     :type force: bool, optional
@@ -162,11 +164,11 @@ def install_hook_stubs(hooks_dir, force=False):
     """
     _begin_hooks_action("install hook stubs", hooks_dir)
 
-    for hook_name in get_hook_names_by_demand():
+    for hook_name in get_hook_names_by_demand(repo):
         _install_or_abort(hooks_dir, hook_name, force)
 
 
-def verify_hook_stubs(hooks_dir, force=False, update=False):
+def verify_hook_stubs(hooks_dir, repo, force=False, update=False):
     """
     verify ``hooks_dir`` is synced with the hook stubs demanded by
     ``get_hook_names_by_demand``.
@@ -179,6 +181,8 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
 
     :param hooks_dir: directory the hook stub scripts are verified in
     :type hooks_dir: pathlib.Path
+    :param repo: repo to check hook demand for
+    :type repo: git.Repo
     :param force: whether also replace already-installed demanded
             stubs; requires ``update``
     :type force: bool, optional
@@ -187,7 +191,7 @@ def verify_hook_stubs(hooks_dir, force=False, update=False):
     """
     _begin_hooks_action("verify hook stubs", hooks_dir)
 
-    demanded_set = set(get_hook_names_by_demand())
+    demanded_set = set(get_hook_names_by_demand(repo))
     installed_set = {p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)}
 
     missing_names = sorted(demanded_set - installed_set)

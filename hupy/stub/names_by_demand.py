@@ -18,8 +18,10 @@ logger.propagate = False
 # Public API  ##################################################################
 
 
-def get_hook_names_by_demand():
+def get_hook_names_by_demand(repo):
     """
+    :param repo: repo to check hook demand for
+    :type repo: git.Repo
     :return: hook names that should have an installed stub
     :rtype: list[str]
     """

@@ -70,6 +70,7 @@ def _verify_main(args):
 
         verify_hook_stubs(
             _resolve_hooks_dir(repo),
+            repo,
             force=args.force,
             update=args.update_hook_stubs,
         )
