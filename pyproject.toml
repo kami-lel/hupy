@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "HUPy"
-version = "1.0.0"
+version = "1.0.1-alpha"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
 requires-python = ">=3.10"
