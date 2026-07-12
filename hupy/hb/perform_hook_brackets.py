@@ -67,7 +67,7 @@ def _run_hb_cmd(repo, heading, hb_cmd):
     cmd = hb_cmd.cmd
     logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
 
-    # Todo pass no hooks args
+    # TODO pass no hooks args
     try:
         result = subprocess.run(
             cmd,
