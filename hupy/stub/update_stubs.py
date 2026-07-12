@@ -109,9 +109,7 @@ def _sync_hooks_stub(hooks_dir, demanded_names, force, update):
 
         for hook_name in unused_names:
             logger.warning(
-                "hook stub no longer demanded: {}".format(
-                    hooks_dir / hook_name
-                )
+                "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
             )
 
         return
@@ -165,6 +163,7 @@ def update_hooks_stub(hooks_dir, force=False, is_init=False, update=False):
     :raises SystemExit: ``is_init`` is set, a hook stub already exists in
             ``hooks_dir``, and ``force`` is ``False``
     """
+    # FIXME keeps upd interaction
     logger.enter("update hook stubs")
     logger.debug("hooks dir: {}".format(hooks_dir))
 
