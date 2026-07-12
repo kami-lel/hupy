@@ -30,7 +30,7 @@ _STUB_MODE = 0o755
 # Public API  ##################################################################
 
 
-def update_hooks_stub(hooks_dir, force=False, is_init=False):
+def update_hooks_stub(hooks_dir, force=False, is_init=False, update=False):
     """
     dynamically generate and write every hook stub demanded by
     ``get_hook_names_by_demand`` into ``hooks_dir``.
@@ -42,6 +42,8 @@ def update_hooks_stub(hooks_dir, force=False, is_init=False):
     :type force: bool, optional
     :param is_init: whether called from the ``init`` subcommand
     :type is_init: bool, optional
+    :param update: whether called to update stubs already installed
+    :type update: bool, optional
     :raises SystemExit: a hook stub already exists in ``hooks_dir`` and
             ``force`` is ``False``
     """
