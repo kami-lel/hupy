@@ -54,21 +54,24 @@ def register_cli_hook_parser(cli_subparser):
     hook_parser.set_defaults(func=lambda _: hook_parser.print_help())
     hook_subparser = hook_parser.add_subparsers(title="hook stages")
 
-    # FIXME reorder
-    register_cli_applypatch_msg_parser(hook_subparser)
-    register_cli_pre_applypatch_parser(hook_subparser)
-    register_cli_post_applypatch_parser(hook_subparser)
     register_cli_pre_commit_parser(hook_subparser)
-    register_cli_pre_merge_commit_parser(hook_subparser)
     register_cli_prepare_commit_msg_parser(hook_subparser)
     register_cli_commit_msg_parser(hook_subparser)
     register_cli_post_commit_parser(hook_subparser)
+
+    register_cli_pre_merge_commit_parser(hook_subparser)
+    register_cli_post_merge_parser(hook_subparser)
+
+    register_cli_pre_rebase_parser(hook_subparser)
     register_cli_post_rewrite_parser(hook_subparser)
+
+    register_cli_applypatch_msg_parser(hook_subparser)
+    register_cli_pre_applypatch_parser(hook_subparser)
+    register_cli_post_applypatch_parser(hook_subparser)
+
     register_cli_pre_auto_gc_parser(hook_subparser)
     register_cli_post_index_change_parser(hook_subparser)
     register_cli_sendemail_validate_parser(hook_subparser)
     register_cli_fsmonitor_watchman_parser(hook_subparser)
-    register_cli_pre_rebase_parser(hook_subparser)
     register_cli_post_checkout_parser(hook_subparser)
-    register_cli_post_merge_parser(hook_subparser)
     register_cli_pre_push_parser(hook_subparser)

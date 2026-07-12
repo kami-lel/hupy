@@ -6,7 +6,6 @@
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
 <!--
-TODO add more hooks
 FIXME move TTG location
 todo reimplement ensure file modified
 -->
