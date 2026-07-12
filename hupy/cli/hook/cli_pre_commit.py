@@ -1,4 +1,8 @@
-"""pre-commit stage hook runner for HUPy"""
+"""
+cli_pre_commit.py
+
+define ``register_cli_pre_commit_parser``, the pre-commit hook subcommand
+"""
 
 import os
 

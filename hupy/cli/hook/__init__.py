@@ -1,5 +1,5 @@
 """
-hook package
+__init__.py
 
-git hook stage subcommands for HUPy (``pre-commit``, ``prepare-commit-msg``)
+hook package: git hook stage subcommands for HUPy
 """

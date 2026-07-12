@@ -1,4 +1,9 @@
-"""prepare-commit-msg stage hook runner for HUPy"""
+"""
+cli_prepare_commit_msg.py
+
+define ``register_cli_prepare_commit_msg_parser``, the prepare-commit-msg
+hook subcommand
+"""
 
 import os
 

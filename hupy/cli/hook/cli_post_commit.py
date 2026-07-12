@@ -1,4 +1,8 @@
-"""post-commit stage hook runner for HUPy"""
+"""
+cli_post_commit.py
+
+define ``register_cli_post_commit_parser``, the post-commit hook subcommand
+"""
 
 import os
 
@@ -11,6 +15,7 @@ from hupy.state.open_state import open_state_file
 logger = kamilog.getLogger(PROJ_LOGGER_NAME + ".post-commit")
 logger.propagate = False
 proj_root_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+
 
 # constants  ###################################################################
 _POST_COMMIT_DOC = "run post-commit stage hooks"
