@@ -37,23 +37,17 @@ Once `hupy init` has installed the stubs, the hooks are **fully automatic** — 
 
 ## Commit Flow
 
-Triggered by `git commit` (a merge commit takes the `pre-merge-commit` branch instead of `pre-commit`):
+Triggered by `git commit` for a **non-merge commit** (a merge commit follows [Merge Flow](#merge-flow) instead):
 
 ```mermaid
 flowchart TD
-    commit([git commit])
+    commit([git commit - non-merge])
 
     %% pre-commit stage
     subgraph precommit [pre-commit stage]
         pre[/pre-commit hook/] --> lead1[[Hook Bracket - lead]]
         lead1 --> bdc(Ban Direct Commit) --> ttg(Triage Tag Gating)
         ttg --> trail1[[Hook Bracket - trail]]
-    end
-
-    %% pre-merge-commit stage
-    subgraph premergecommit [pre-merge-commit stage]
-        premerge[/pre-merge-commit hook/] --> lead1b[[Hook Bracket - lead]]
-        lead1b --> trail1b[[Hook Bracket - trail]]
     end
 
     %% prepare-commit-msg stage
@@ -76,9 +70,7 @@ flowchart TD
     end
 
     commit --> pre
-    commit -. merge commit .-> premerge
     trail1 --> prep
-    trail1b --> prep
     trail2 --> cmsg
     trail2b --> created([commit created])
     created --> post
@@ -86,6 +78,54 @@ flowchart TD
 
 See the per-feature docs for what each stage does: [Ban Direct Commit](bdc_doc.md), [Triage Tag Gating](ttg_doc.md), and [Prepend Commit Header](pch_doc.md). Both BDC and PCH decide their behavior from the branch and merge classification in [Commit, Branch & Merge](cbm_doc.md).
 
+## Merge Flow
+
+Triggered by `git merge`. A non-fast-forward merge runs its own commit chain (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit`) and only fires `post-merge` once that finishes; a fast-forward merge creates no commit at all, so it skips straight to `post-merge`:
+
+```mermaid
+flowchart TD
+    nonff([git merge - non-fast-forward])
+    ff([git merge - fast-forward])
+
+    %% pre-merge-commit stage
+    subgraph premergecommit2 [pre-merge-commit stage]
+        pmc[/pre-merge-commit hook/] --> lead1c[[Hook Bracket - lead]]
+        lead1c --> trail1c[[Hook Bracket - trail]]
+    end
+
+    %% prepare-commit-msg stage
+    subgraph preparemsg2 [prepare-commit-msg stage]
+        prep2[/prepare-commit-msg hook/] --> lead2c[[Hook Bracket - lead]]
+        lead2c --> pch2(Prepend Commit Header)
+        pch2 --> trail2c[[Hook Bracket - trail]]
+    end
+
+    %% commit-msg stage
+    subgraph commitmsg2 [commit-msg stage]
+        cmsg2[/commit-msg hook/] --> lead2d[[Hook Bracket - lead]]
+        lead2d --> trail2d[[Hook Bracket - trail]]
+    end
+
+    %% post-commit stage
+    subgraph postcommit2 [post-commit stage]
+        post2[/post-commit hook/] --> lead3c[[Hook Bracket - lead]]
+        lead3c --> trail3c[[Hook Bracket - trail]]
+    end
+
+    %% post-merge stage
+    subgraph postmerge2 [post-merge stage]
+        pmg2[/post-merge hook/] --> lead12b[[Hook Bracket - lead]]
+        lead12b --> trail12b[[Hook Bracket - trail]]
+    end
+
+    nonff --> pmc
+    ff -. no commit created .-> pmg2
+    trail1c --> prep2
+    trail2c --> cmsg2
+    trail2d --> created2([merge commit created])
+    created2 --> post2
+    trail3c --> pmg2
+```
 
 
 
