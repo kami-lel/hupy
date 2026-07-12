@@ -1,1 +1,3 @@
-# FIXME dynamic stub
+from hupy import PROJ_LOGGER_NAME
+
+STUB_LOGGER_NAME = PROJ_LOGGER_NAME + ".stub"
