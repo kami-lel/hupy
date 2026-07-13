@@ -38,6 +38,10 @@ from hupy.state.open_state import open_state_file
 
 __all__ = ("register_cli_hook_parser",)
 
+
+# Fixme dynamically create doc message
+# Fixme dynamically create logger during run time
+
 # constants  ###################################################################
 _HOOK_DOC = "run git hook stage commands"
 
