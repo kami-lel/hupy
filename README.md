@@ -60,6 +60,8 @@ See [Installation Documentation](docs/install_doc.md) for cloning, package insta
 
 ## 🚀 Usage
 
+<!-- FIXME FIXME upd readme usage -->
+
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature.
 
 See [Hook Chain Documentation](docs/chain_doc.md) for the end-to-end diagram of how each stage runs, and [Hook Stub Documentation](docs/stub_doc.md) for how `hupy init`/`hupy verify` determine and manage which stubs get installed.
