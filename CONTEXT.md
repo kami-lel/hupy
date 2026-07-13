@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-13 — hook-stub demand is now computed dynamically per-repo: `get_hook_names_by_demand(repo)` auto-discovers every stage module under `hupy.cli.hook` and demands a stub when its `hb` bracket is enabled with a `lead`/`trail` command or its module defines `run_core`/`run_after`, replacing the old hardcoded three-name list; `install_hook_stubs`/`verify_hook_stubs` take `repo` directly and resolve the hooks dir internally via the relocated, now-public `resolve_hooks_dir(repo)`; `load_hupy_config` gained `allows_file_not_found`; `cli_hook.py` moved out of `hook/` to `hupy/cli/cli_hook.py`; post-commit's `run_after`/`run_on_finish` merged into one `run_after`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
+*Last updated: 2026-07-13 — `skip-once`/`so` and `set-verbosity`/`sv` are no longer standalone subcommands: they're now accessor keys (`hupy/cli/accessors/skip_once.py`, `hupy/cli/accessors/verbosity.py`) registered under a generic `get`/`set`/`unset`/`info` command group (`hupy/cli/cli_accessors.py`), alongside a new read-only `hupy-version` key (`hupy/cli/accessors/hupy_ver.py`); `cli_skip_once.py`/`cli_set_verbosity.py` are removed. Top-level `hupy --version` also prints the installed package version directly. Earlier: hook-stub demand is computed dynamically per-repo: `get_hook_names_by_demand(repo)` auto-discovers every stage module under `hupy.cli.hook` and demands a stub when its `hb` bracket is enabled with a `lead`/`trail` command or its module defines `run_core`/`run_after`, replacing the old hardcoded three-name list; `install_hook_stubs`/`verify_hook_stubs` take `repo` directly and resolve the hooks dir internally via the relocated, now-public `resolve_hooks_dir(repo)`; `load_hupy_config` gained `allows_file_not_found`; `cli_hook.py` moved out of `hook/` to `hupy/cli/cli_hook.py`; post-commit's `run_after`/`run_on_finish` merged into one `run_after`. For the full change history see `CHANGELOG.md`; this file describes the current architecture, not its evolution.*
 
 ## Project Overview
 
@@ -16,7 +16,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 
 | Module | Responsibility |
 |---|---|
-| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hook/`); `verify` (`cli_verify.py`); `set-verbosity`/`sv` (`cli_set_verbosity.py`); `skip-once`/`so` (`cli_skip_once.py`) |
+| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hook/`); `verify` (`cli_verify.py`); the generic `get`/`set`/`unset`/`info` accessor runner (`cli_accessors.py`) dispatching each key module under `accessors/` (`hupy-version`, `verbosity`, `skip-once`) |
 | `cbm` | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` |
 | `config_file` | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc`, cached JSON5 loading resolved against an open `git.Repo`, and default-config copying |
 | `state` | `HupyStateFile` pydantic schema for `hupy-state.json` (verbosity, one-time skips), path resolution inside `repo.git_dir`, atomic thread-/process-safe load-and-save |
@@ -126,7 +126,7 @@ Top-level module (`hupy/should_run_module.py`) centralizing the run/skip decisio
 
 **Public API**: `should_run_module(repo, state_file, module_abbr)` — returns `True` only if neither skip source fires: (1) `getattr(config, module_abbr).is_disabled` (checked first, cheap cached read); (2) `module_abbr in state_file.skip_once` (membership, not consumed). Config-disabled ordering means a disabled module never masks a pending `skip_once` flag — it stays queued for a round where the module is enabled. Both branches log via `logger.skip(...)` using a local `_MODULE_ABBR_TO_NAME` display map.
 
-**Known gap**: only `bdc`/`ttg`/`pch`/`hb` call this. `vg` is skippable and mapped, so `hupy skip-once vg` writes the flag without error, but nothing consults it (`vg` has no standalone entry point — it's only invoked internally by `pch`).
+**Known gap**: only `bdc`/`ttg`/`pch`/`hb` call this. `vg` is skippable and mapped, so `hupy set skip-once vg` writes the flag without error, but nothing consults it (`vg` has no standalone entry point — it's only invoked internally by `pch`).
 
 ### `stub`
 
@@ -178,7 +178,7 @@ Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stag
 
 ### `cli`
 
-Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. Five top-level subcommands, seventeen git hook stages nested under `hook`:
+Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. `--version` prints the installed package version directly. Six top-level subcommands, seventeen git hook stages nested under `hook`, three accessor keys nested under each of `get`/`set`/`unset`/`info`:
 
 ```
 hupy init
@@ -200,8 +200,10 @@ hupy hook fsmonitor-watchman
 hupy hook post-checkout
 hupy hook pre-push
 hupy verify
-hupy skip-once (alias: so)
-hupy set-verbosity (alias: sv)
+hupy get {hupy-version,verbosity,skip-once}
+hupy set {verbosity,skip-once}
+hupy unset {skip-once}
+hupy info {hupy-version,verbosity,skip-once}
 ```
 
 - **`cli_main.py`** — main parser (`prog="hupy"`) and dispatch; imports each subcommand module's `register_*_parser`.
@@ -213,11 +215,13 @@ hupy set-verbosity (alias: sv)
   - **`hook prepare-commit-msg`** (`prepare_commit_msg.py`) — `run_core`: `prepend_commit_header`.
   - **`hook post-commit`** (`post_commit.py`) — no `run_core` (noop-logged); `run_after`: `state_file.reset_for_next_commit()`, then logs `"all HUPy hooks finished"` on the shared `PROJ_LOGGER_NAME` root logger.
   - The other fourteen stages carry no logic of their own yet — each module is just `HOOK_NAME`/`DOC`/`logger`, run through the `hb` brackets only.
-- **`set-verbosity`** (`sv`) — sets `state_file.hooks_logger_verbosity` from a positional `VERBOSITY` int (default `1`) as the baseline for later `hook`/`skip-once` runs.
-- **`skip-once`** (`so`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; the `modules` positional accepts abbr or kebab-case full name, normalized then `skip_once.update(...)` (or `.difference_update(...)` with `-u`/`--unset`).
+- **`get`/`set`/`unset`/`info`** (`cli_accessors.py`) — a generic accessor layer over `hupy-state.json` keys. `register_cli_accessors_parser` builds the four verb parsers, then for each key module in `_ACCESSORS = (hupy_ver, verbosity, skip_once)` nests a subparser named `mod.KEY` under every verb the module implements (`_register_accessor_op` checks `getattr(mod, "run_" + op_name, None)`); `set`/`unset` subparsers take a `VALUE` positional (`nargs="*"`). Dispatch (`_run_accessor`) opens the repo and state file, applies verbosity, and calls the module's `run_{get,set,unset,info}(repo, state_file, logger, args)`.
+  - **`hupy-version`** (`accessors/hupy_ver.py`) — read-only; `run_get` prints `importlib.metadata.version("HUPy")`. No `run_set`/`run_unset`, so `set`/`unset` don't get a `hupy-version` subcommand.
+  - **`verbosity`** (`accessors/verbosity.py`) — `run_get` prints `state_file.hooks_logger_verbosity`; `run_set` sets it from `VALUE[0]` (int), or resets to the `HupyStateFile` schema default (`1`) with no `VALUE`.
+  - **`skip-once`** (`accessors/skip_once.py`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")`; `run_set`/`run_unset` accept abbr or kebab-case full name via `_resolve_abbrs`, then `skip_once.update(...)`/`.difference_update(...)`; `run_set` with no `VALUE` clears the set instead of erroring, `run_unset` with no `VALUE` errors.
 - The packaged default config `hupy/assets/.hupy.config.jsonc` is bundled via `[tool.setuptools.package-data]`; hook stubs carry no bundled asset — they are rendered in-process by `hupy.stub.update_stubs` (see the `stub` module details above).
 
-**Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `cli_skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
+**Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `accessors/skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
 
 ### `kamilog`
 
@@ -246,8 +250,11 @@ hupy/                             # installable package
     cli_main.py                   # cli_parser/cli_subparser, registration
     cli_init.py                   # `init`; load_git_repo(repo_path)
     cli_verify.py                 # `verify` (alias `v`)
-    cli_skip_once.py              # `skip-once`/`so`; SKIPPABLE_MODULE
-    cli_set_verbosity.py          # `set-verbosity`/`sv`
+    cli_accessors.py              # generic get/set/unset/info runner + register_cli_accessors_parser
+    accessors/                    # one module per accessor KEY
+      hupy_ver.py                     # `hupy-version` (get/info only)
+      verbosity.py                    # `verbosity` (get/set/info)
+      skip_once.py                    # `skip-once` (get/set/unset/info); SKIPPABLE_MODULE
     cli_hook.py                   # generic _run_hook_stage/_register_hook_stage + register_cli_hook_parser
     hook/                         # `hook` group: one module per git hook stage
       pre_commit.py                    # run_core: ban_direct_commit + perform_triage_tags_gating
