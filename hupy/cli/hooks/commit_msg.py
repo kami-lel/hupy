@@ -7,5 +7,4 @@ runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "commit-msg"
-DOC = "run commit-msg stage hooks"
 

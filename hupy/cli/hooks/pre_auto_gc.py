@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "pre-auto-gc"
-DOC = "run pre-auto-gc stage hooks"
 

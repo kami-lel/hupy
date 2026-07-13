@@ -10,7 +10,6 @@ from hupy.ttg.gate_tt import perform_triage_tags_gating
 
 # constants  ###################################################################
 HOOK_NAME = "pre-commit"
-DOC = "run pre-commit stage hooks"
 
 
 # Public API  ##################################################################

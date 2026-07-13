@@ -7,5 +7,4 @@ hook stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "post-index-change"
-DOC = "run post-index-change stage hooks"
 

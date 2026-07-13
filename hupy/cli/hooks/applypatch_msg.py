@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "applypatch-msg"
-DOC = "run applypatch-msg stage hooks"
 

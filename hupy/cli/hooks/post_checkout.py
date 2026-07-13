@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "post-checkout"
-DOC = "run post-checkout stage hooks"
 

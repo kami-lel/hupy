@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "pre-merge-commit"
-DOC = "run pre-merge-commit stage hooks"
 

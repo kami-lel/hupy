@@ -7,5 +7,4 @@ hook stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "sendemail-validate"
-DOC = "run sendemail-validate stage hooks"
 

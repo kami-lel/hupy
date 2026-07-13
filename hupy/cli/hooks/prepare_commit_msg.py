@@ -9,7 +9,6 @@ from hupy.pch.prepend_commit_header import prepend_commit_header
 
 # constants  ###################################################################
 HOOK_NAME = "prepare-commit-msg"
-DOC = "run prepare-commit-msg stage hooks"
 
 
 # Public API  ##################################################################

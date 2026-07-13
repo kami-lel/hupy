@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "post-rewrite"
-DOC = "run post-rewrite stage hooks"
 

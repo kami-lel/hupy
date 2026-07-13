@@ -7,7 +7,6 @@ by the generic hook stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "post-commit"
-DOC = "run post-commit stage hooks"
 
 
 # Public API  ##################################################################

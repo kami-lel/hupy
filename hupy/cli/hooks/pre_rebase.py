@@ -7,5 +7,4 @@ runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "pre-rebase"
-DOC = "run pre-rebase stage hooks"
 

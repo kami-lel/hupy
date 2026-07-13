@@ -7,5 +7,4 @@ stage runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "pre-applypatch"
-DOC = "run pre-applypatch stage hooks"
 

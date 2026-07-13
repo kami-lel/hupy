@@ -7,5 +7,4 @@ runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "pre-push"
-DOC = "run pre-push stage hooks"
 

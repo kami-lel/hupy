@@ -7,5 +7,4 @@ runner in ``cli_hook.py``
 
 # constants  ###################################################################
 HOOK_NAME = "post-merge"
-DOC = "run post-merge stage hooks"
 
