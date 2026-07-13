@@ -1,5 +1,5 @@
 """
-cbm-grct-get_target_branch_test.py
+cbm-grct-get-target-branch_test.py
 
 tests for `get_target_branch` in `get_current_commit_type.py`
 """

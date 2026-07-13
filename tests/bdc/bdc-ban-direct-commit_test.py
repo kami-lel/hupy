@@ -1,5 +1,5 @@
 """
-bdc-ban_direct_commit_test.py
+bdc-ban-direct-commit_test.py
 
 tests for `ban_direct_commit` in `ban_direct_commit.py`
 """

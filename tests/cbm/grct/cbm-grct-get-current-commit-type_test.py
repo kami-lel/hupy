@@ -1,5 +1,5 @@
 """
-cbm-grct-get_current_commit_type_test.py
+cbm-grct-get-current-commit-type_test.py
 
 tests for `get_current_commit_type` in `get_current_commit_type.py`
 """

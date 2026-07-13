@@ -1,5 +1,5 @@
 """
-cbm-commit_type_test.py
+cbm-commit-type_test.py
 
 tests for `CommitType.decide_commit_type` in `commit_type.py`
 """

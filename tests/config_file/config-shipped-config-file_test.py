@@ -1,5 +1,5 @@
 """
-config-shipped_config_file_test.py
+config-shipped-config-file_test.py
 
 quality tests for the shipped default HUPy config asset
 (``hupy/assets/.hupy.config.jsonc``)

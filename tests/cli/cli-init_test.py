@@ -1,5 +1,5 @@
 """
-cli-cli_init_init_cli_test.py
+cli-init_test.py
 
 end-to-end tests for the `init` CLI subcommand: default (.git/hooks)
 target, honoring a pre-configured `core.hooksPath`, `--hooks-dir`

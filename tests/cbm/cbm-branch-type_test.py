@@ -1,5 +1,5 @@
 """
-cbm-branch_type_test.py
+cbm-branch-type_test.py
 
 tests for `BranchType.from_name` in `branch_type.py`
 """

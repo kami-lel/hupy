@@ -1,5 +1,5 @@
 """
-hb-perform_hook_brackets_test.py
+hb-perform-hook-brackets_test.py
 
 tests for `perform_hook_brackets` in `perform_hook_brackets.py`
 """
