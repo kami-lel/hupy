@@ -38,9 +38,6 @@ from hupy.state.open_state import open_state_file
 __all__ = ("register_cli_hook_parser",)
 
 
-# FIXME dynamically create doc message
-
-
 # logger  ######################################################################
 proj_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
