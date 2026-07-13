@@ -2,6 +2,8 @@
 
 ## Hooks & `hupy`
 
+<!-- FIXME FIXME more concept explain -->
+
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. See the [Hook Chain Documentation](chain_doc.md) for the end-to-end, stage-by-stage diagram of how each git operation runs.
 
 ### Hook Stub Auto-Determination
