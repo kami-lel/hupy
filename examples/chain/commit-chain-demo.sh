@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# all-hooks-demo.sh
+# commit-chain-demo.sh
 #
 # run every demo in examples/hooks/ in sequence, on the same repo:
 # Feature Landing merge (add-user-authentication into develop) through
@@ -16,7 +16,9 @@ _REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 
 
-# HACK rm this file
+# FIXME rewrite & improve commit chain demo
+# TODO write all chain demos
+
 
 
 # auxiliaries  #################################################################
