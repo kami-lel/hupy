@@ -1,7 +1,5 @@
 # Hook Stub Documentation
 
-<!-- FIXME FIXME rewrite -->
-
 ## Hooks & `hupy`
 
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. See the [Hook Chain Documentation](chain_doc.md) for the end-to-end, stage-by-stage diagram of how each git operation runs.
@@ -20,17 +18,8 @@ Each installed stub is a thin generated shell script — no on-disk template, no
 
 ### Managing Stubs: `hupy init` & `hupy verify`
 
-`hupy init` performs first-time setup for a repository:
+`hupy init` performs first-time setup for a repository — installing every demanded hook stub and creating a default `.hupy.config.jsonc`. Run `hupy init -h` for the full flag reference (eg `--hooks-dir`, `--install-hook-stubs`, `--create-config-file`, `-f`/`--force`).
 
-- installs every demanded hook stub into the repo's hooks directory (`core.hooksPath` if configured, else `.git/hooks/`; override with `--hooks-dir`)
-- creates a default `.hupy.config.jsonc` config file at the repository root
-- aborts if a demanded stub or the config file already exists, unless `-f`/`--force` overwrites it
-- can be narrowed to just one step with `--install-hook-stubs` or `--create-config-file`
-
-`hupy verify` re-checks an already-initialized repository, including whether its stubs are still in sync with current demand — demand can drift after editing `.hupy.config.jsonc` (eg toggling a Hook Bracket) or upgrading `hupy` itself:
-
-- by default, `verify` only reports drift: a **missing hook stub** warning for a demanded hook with no installed stub, and a **hook stub no longer demanded** warning for an installed stub whose hook is no longer demanded
-- `-u`/`--update-hook-stubs` turns reporting into action, removing no-longer-demanded stubs and adding missing ones
-- `-f`/`--force`, combined with `-u`, additionally regenerates every stub that's both demanded and already installed, eg to pick up a newer stub template after a `hupy` upgrade
+`hupy verify` re-checks an already-initialized repository, including whether its installed stubs are still in sync with current demand — demand can drift after editing `.hupy.config.jsonc` (eg toggling a Hook Bracket) or upgrading `hupy` itself. By default it only reports drift (**missing hook stub** / **hook stub no longer demanded** warnings); run `hupy verify -h` for the full flag reference (eg `-u`/`--update-hook-stubs`, `-f`/`--force`) to turn reporting into action.
 
 `verify` also confirms the config file loads and validates against its schema, and that a version string can be grepped per the VerGrep config, before reporting on hook stub sync.
