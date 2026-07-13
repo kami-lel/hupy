@@ -17,6 +17,9 @@ from hupy.kamilog import (
 )
 from hupy.state.open_state import open_state_file
 
+# FIXME use accessor
+
+
 # logger  ######################################################################
 
 logger = getLogger(PROJ_LOGGER_NAME)

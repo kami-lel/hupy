@@ -5,6 +5,8 @@ define the ``set-verbosity`` CLI subcommand, setting the base logging
 verbosity used during hook runs
 """
 
+# FIXME use accessor
+
 import os
 
 from hupy import PROJ_LOGGER_NAME
