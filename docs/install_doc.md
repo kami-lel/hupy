@@ -1,12 +1,8 @@
 # Installation Documentation
 
-<!--
-TODO doc for using pyproject.toml & setup.cfg
--->
+## Install Python Package
 
-### Install Python Package
-
-**Clone and install locally**
+#### Clone and Install Locally
 
 ```bash
 git clone https://github.com/kami-lel/hupy.git
@@ -14,15 +10,44 @@ cd hupy
 pip install .
 ```
 
-Or install **directly from GitHub**
+#### Install Directly from GitHub
 
 ```bash
 pip install git+https://github.com/kami-lel/hupy.git
 ```
 
+#### Add as a Project Dependency
+
+To pull `hupy` in automatically whenever your project's dependencies are installed, declare it in `pyproject.toml`:
+
+```toml pyproject.toml
+[project]
+dependencies = [
+    "hupy @ git+https://github.com/kami-lel/hupy.git",
+]
+```
+
+Or, for projects still using `setup.cfg`:
+
+```cfg setup.cfg
+[options]
+install_requires =
+    hupy @ git+https://github.com/kami-lel/hupy.git
+```
 
 
-### Set Up for Repository
+
+
+
+
+
+
+
+
+
+
+
+## Set Up for Repository
 
 Initialize `hupy` inside the git repository to protect:
 
