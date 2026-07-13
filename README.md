@@ -7,8 +7,8 @@
 
 <!--
 Todo reimplement ensure file modified
-Fixme linguo: flow -> chain
-Fixme linguo: hook vs a core logic etc?
+FIXME linguo: flow -> chain
+FIXME linguo: hook vs a core logic etc?
 Fixme linguo: HB what are HB "commands"
 -->
 
