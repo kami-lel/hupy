@@ -27,9 +27,12 @@ _UNSET_DOC = "unset a HUPy state key's value"
 def _run_accessor(op_name, mod, args):
     """
     dispatch shared by every accessor key subcommand: open
-    repo/state, run the key module's ``run_{op_name}``.
+    repo/state, build the key's logger, run the key module's
+    ``run_{op_name}(repo, state_file, logger, args)``.
     """
     repo = load_git_repo(os.getcwd())
+    logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + mod.KEY)
+    logger.propagate = False
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(
@@ -37,7 +40,7 @@ def _run_accessor(op_name, mod, args):
         )
 
         run = getattr(mod, "run_" + op_name)
-        run(args, repo, state_file)
+        run(repo, state_file, logger, args)
 
 
 def _dispatch_accessor(op_name, mod, args, key_parser):
@@ -48,9 +51,8 @@ def _dispatch_accessor(op_name, mod, args, key_parser):
     ``_run_accessor``.
     """
     if args.help:
-        run_help = getattr(mod, "run_help", None)
-        if run_help is not None:
-            run_help(args)
+        if getattr(mod, "run_help", None) is not None:
+            _run_accessor("help", mod, args)
         else:
             key_parser.print_help()
         return
