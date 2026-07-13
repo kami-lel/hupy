@@ -11,7 +11,7 @@ define the generic git hook stage runner and
 import os
 
 
-from hupy import kamilog
+from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hooks import (
     applypatch_msg,
@@ -39,7 +39,6 @@ __all__ = ("register_cli_hook_parser",)
 
 
 # FIXME dynamically create doc message
-# FIXME dynamically create logger during run time
 
 # constants  ###################################################################
 _HOOK_DOC = "run git hook stage commands"
@@ -48,9 +47,12 @@ HOOK_STAGE_START = "Start"
 HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
 HOOK_STAGE_FINISHED = "Finished"
 
+# logger  ######################################################################
+proj_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+
 
 # generic stage runner  ########################################################
-def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
+def _run_hook_stage(hook_name, args, *, core=None, after=None):
     """
     dispatch shared by every git hook stage subcommand: open
     repo/state, run the ``hb`` lead bracket, the stage's own ``core``
@@ -58,6 +60,8 @@ def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
     ``after``.
     """
     repo = load_git_repo(os.getcwd())
+    logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + hook_name)
+    logger.propagate = False
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(
@@ -68,7 +72,7 @@ def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
         perform_hook_brackets(repo, state_file, hook_name, True, args.hook_args)
 
         if core is not None:
-            core(repo, state_file)
+            core(repo, state_file, proj_logger, logger)
         else:
             logger.debug(HOOK_STAGE_NOOP)
 
@@ -77,7 +81,7 @@ def _run_hook_stage(hook_name, logger, args, *, core=None, after=None):
         )
 
         if after is not None:
-            after(repo, state_file)
+            after(repo, state_file, proj_logger, logger)
 
         logger.succ(HOOK_STAGE_FINISHED)
 
@@ -100,7 +104,6 @@ def _register_hook_stage(hook_subparser, mod):
     stage_parser.set_defaults(
         func=lambda args, mod=mod: _run_hook_stage(
             mod.HOOK_NAME,
-            mod.logger,
             args,
             core=getattr(mod, "run_core", None),
             after=getattr(mod, "run_after", None),
