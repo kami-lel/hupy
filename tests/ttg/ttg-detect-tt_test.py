@@ -99,7 +99,7 @@ class TestDetectTriageTagsInStagedFile:
 
             assert exc_info.value.code == 1
 
-    def test_ignores_deleted_lines(self, repo_dir):
+    def test_only_flags_lines_added_by_this_diff(self, repo_dir):
         repo = git.Repo(str(repo_dir))
         _stage_fixture(repo_dir, "test.py", "tt_loud_only.py")
         repo.index.commit("initial")
@@ -108,7 +108,6 @@ class TestDetectTriageTagsInStagedFile:
 
         results = detect_triage_tags_in_staged_file("test.py", repo)
 
-        # Should detect only the newly added steady tag (loud was already there)
         assert len(results) == 1
         assert results[0][0] == TriageTagType.STEADY_TODO
 

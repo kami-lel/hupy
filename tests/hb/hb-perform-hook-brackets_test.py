@@ -275,7 +275,6 @@ class TestPerformHookBracketsCommitTypeFilter:
         ]
 
     def test_specific_merge_filter_skips_other_merge_subtype(self):
-        # rgs one merge subtype filter must not admit another
         _, calls, _ = _run(
             "pre-commit",
             True,
