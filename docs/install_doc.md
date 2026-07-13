@@ -4,7 +4,7 @@
 TODO doc for using pyproject.toml & setup.cfg
 -->
 
-#### Install Python Package
+### Install Python Package
 
 **Clone and install locally**
 
@@ -22,7 +22,7 @@ pip install git+https://github.com/kami-lel/hupy.git
 
 
 
-#### Set Up for Repository
+### Set Up for Repository
 
 Initialize `hupy` inside the git repository to protect:
 
