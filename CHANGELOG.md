@@ -10,7 +10,7 @@
 - **Hook argument passthrough** — every hook stub now forwards git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --install-hook-stubs --force` to pick up the updated stubs
 - **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets its own `hb` bracket config section, though only the original three stages run any *HUPy* feature beyond their Hook Bracket
 - **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hooks` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_core`/`run_after`; by default that's still only `pre-commit`, `prepare-commit-msg`, and `post-commit`, but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
-- **Flow diagrams** — `docs/flow_doc.md` gained Mermaid diagrams for Commit Flow, Merge Flow, Rewrite Flow, and Patch Apply Flow, plus one per Standalone Hook, covering the full set of seventeen stages
+- **Chain diagrams** — `docs/chain_doc.md` gained Mermaid diagrams for the Regular Commit Chain, Merge Chain, Rewrite Chain, and Patch Apply Chain, plus one per Standalone Hook, covering the full set of seventeen stages
 - **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic state-key accessor layer replaces the standalone `skip-once`/`set-verbosity` subcommands; each key (`hupy-version`, `verbosity`, `skip-once`) is its own module under `hupy/cli/accessors/` exposing `KEY`/`DOC` plus whichever of `run_get`/`run_set`/`run_unset`/`run_info` it supports, auto-nested as a subcommand under the matching top-level verb by the generic `hupy/cli/cli_accessors.py` runner
 - **`hupy-version` accessor key** (`hupy get hupy-version`, `hupy info hupy-version`) — prints the installed *HUPy* package version
 - **`--version`** flag on the top-level `hupy` command — prints the installed package version directly
@@ -26,7 +26,7 @@
 - `hupy verify` gains **`-u`/`--update-hook-stubs`** (sync installed hook stubs to demand: add missing, remove no-longer-demanded) and **`-f`/`--force`** (with `-u`, also regenerate already-installed demanded stubs); previously it only checked that every packaged stub existed
 - `hupy.stub.update_stubs`'s `install_hook_stubs`/`verify_hook_stubs` now take a `repo` directly and resolve its hooks directory internally via a new public `resolve_hooks_dir(repo)`, rather than requiring the caller to resolve it first; `get_hook_names_by_demand` likewise now takes a `repo`
 - `load_hupy_config` gains an `allows_file_not_found` flag, returning `None` instead of exiting when the config file is missing; any malformed content, not just a schema-validation failure, still exits
-- post-commit's `run_after` and `run_on_finish` merged into a single `run_after`; the generic hook-stage runner dropped its `on_finish` callback
+- post-commit's `run_on_finish` renamed to `run_done`, running after `run_after` and the succ log via a new `on_done` callback on the generic hook-stage runner
 
 ### Deprecated
 

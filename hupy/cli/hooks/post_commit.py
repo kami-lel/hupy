@@ -1,8 +1,8 @@
 """
 post_commit.py
 
-define the post-commit stage's identity and ``run_after``, run
-by the generic hook stage runner in ``cli_hook.py``
+define the post-commit stage's identity, ``run_after``, and
+``run_done``, run by the generic hook stage runner in ``cli_hook.py``
 """
 
 # constants  ###################################################################
@@ -16,5 +16,10 @@ def run_after(repo, state_file, proj_logger, logger):
     full HUPy hook round has finished.
     """
     state_file.reset_for_next_commit()
-    # Fixme be flow aware
+
+
+def run_done(repo, state_file, proj_logger, logger):
+    """
+    log that the full HUPy hook round has finished.
+    """
     proj_logger.done("all HUPy hooks finished")
