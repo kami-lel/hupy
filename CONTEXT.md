@@ -312,8 +312,10 @@ hupy/                             # installable package
 docs/
   ttg_doc.md                      # TTG tiers & per-merge gating
   cbm_doc.md                      # CBM concepts + PCH headers + ver_grep API
-  hook_chain_doc.md                    # Mermaid diagrams: Regular Commit/Merge/Rewrite/Patch
+  chain_doc.md                    # Mermaid diagrams: Regular Commit/Merge/Rewrite/Patch
                                   # Apply Chains, plus one per Standalone Hook
+  stub_doc.md                     # hook stub auto-determination + `hupy init`/
+                                  # `hupy verify` stub management
                                   # (config field docs live in hupy/assets/.hupy.config.jsonc)
 examples/
   hooks/                          # bash demos driving the real `hupy hook <stage>` CLI:
