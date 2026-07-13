@@ -28,7 +28,7 @@ Full suite (pre-merge only):
 pytest tests/
 ```
 
-Test layout mirrors source layout: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py`, dashes throughout except the literal `_test.py` suffix, split further by scenario group (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-gate-tt-*_test.py`, `hupy/cbm/get_current_commit_type.py` → `tests/cbm/grct/cbm-grct-*_test.py`). A top-level module with no package (`hupy/should_run_module.py`) gets its own directory, dropping the `<pkg>-` prefix (`should-run-module_test.py`).
+Test layout mirrors source layout: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py`, dashes throughout except the literal `_test.py` suffix, split further by scenario group (e.g. `hupy/ttg/gate_tt.py` → `tests/ttg/ttg-*_test.py`, `hupy/pch/prepend_commit_header.py` → `tests/pch/pch-*_test.py`, `hupy/cbm/get_current_commit_type.py` → `tests/cbm/grct/cbm-grct-*_test.py`) — the sole module's name is dropped from scenario files since the package prefix already identifies it. A top-level module with no package (`hupy/should_run_module.py`) gets its own directory, dropping the `<pkg>-` prefix (`should-run-module_test.py`).
 
 Cross-suite fixtures live in `tests/fixtures/`, not colocated with any package. The root `tests/conftest.py` defines the shared `repo_dir` fixture (`tmp_path / "repo"`). Suites that need `prep_repo` or `config_fixture` `sys.path.insert(tests/fixtures)` in their own `conftest.py`. Build config via `config_fixture.load_config_fixture(overrides)` — deep-merges onto the shipped asset — never by constructing `HupyConfigFile` from partial kwargs (its fields carry no defaults).
 

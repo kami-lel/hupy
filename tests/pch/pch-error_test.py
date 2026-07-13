@@ -1,5 +1,5 @@
 """
-pch-prepend-commit-header-error_test.py
+pch-error_test.py
 
 tests for error handling in `prepend_commit_header`: bad repo paths,
 a missing COMMIT_EDITMSG, and a failed atomic write

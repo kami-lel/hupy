@@ -1,5 +1,5 @@
 """
-ttg-gate-tt-ignored-globs_test.py
+ttg-ignored-globs_test.py
 
 tests for `perform_triage_tags_gating` respecting the
 `ttg.ignored_path_globs` config: staged files matching a configured
