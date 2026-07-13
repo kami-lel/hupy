@@ -40,15 +40,16 @@ __all__ = ("register_cli_hook_parser",)
 
 # FIXME dynamically create doc message
 
+
+# logger  ######################################################################
+proj_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+
 # constants  ###################################################################
 _HOOK_DOC = "run git hook stage commands"
 
 HOOK_STAGE_START = "Start"
 HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
 HOOK_STAGE_FINISHED = "Finished"
-
-# logger  ######################################################################
-proj_logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
 
 # generic stage runner  ########################################################
@@ -92,8 +93,9 @@ def _register_hook_stage(hook_subparser, mod):
     ``_run_hook_stage`` with that module's ``run_core``/``run_after``
     (each optional).
     """
+    doc = "run {} stage hooks".format(mod.HOOK_NAME)
     stage_parser = hook_subparser.add_parser(
-        mod.HOOK_NAME, help=mod.DOC, description=mod.DOC
+        mod.HOOK_NAME, help=doc, description=doc
     )
     stage_parser.add_argument(
         "hook_args",
