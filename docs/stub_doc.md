@@ -1,22 +1,14 @@
 # Hook Stub Documentation
 
-<!-- FIXME FIXME manually upd -->
+A HUPy **hook stub** is a hook file in Git's hook folder (`core.hooksPath` if configured, otherwise `.git/hooks/`). It's a `bash` script that calls the HUPy CLI (`python3 -m hupy hook ...`). It carries no HUPy logic of its own — it just invokes the CLI. Each Git hook may have one corresponding stub file.
 
-A stub lives exactly where git already looks for hooks — `core.hooksPath` if configured, otherwise `.git/hooks/`. `hupy` doesn't register with git through any side channel; it just drops an ordinary hook file there, named after the git hook it handles (eg `pre-commit`).
+Once `hupy init` installs the stubs, the hooks run **fully automatically**. Relevant `git` commands fire them in git's own order, and git hands each stage to the matching *HUPy* feature. Q.v. [Hook Chain Documentation](chain_doc.md) for the full stage-by-stage diagram.
 
-The stub carries **no *HUPy* logic itself** — it's a two-line executable script that shells out to `python -m hupy hook <hook-name> "$@"`, forwarding argv untouched.
+### stub by demand
 
-git fires it exactly as it would any hand-written hook: on a matching operation (`git commit`, `git push`, ...), git finds the file, confirms it's executable, and runs it with that stage's usual args/stdin. From there, the shell-out dispatches into the `hook` subcommand's stage runner ([`cli_hook.py`](../hupy/cli/cli_hook.py)), which runs the [Hook Bracket](hb_doc.md) *lead* → the stage's `run_core` (the actual *HUPy* feature, if any) → the Hook Bracket *trail* → `run_after` → `run_done`. All real behavior lives in that dispatch — the stub itself is inert plumbing.
+`hupy` doesn't install a stub for every git hook name that exists. It only installs one for hooks it actually needs. A hook stub is **demanded** when the hook either owns a dedicated *HUPy* feature, or has an active [Hook Bracket](hb_doc.md) configured for it.
 
-Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. See the [Hook Chain Documentation](chain_doc.md) for the end-to-end, stage-by-stage diagram of how each git operation runs.
-
-`hupy` doesn't install a stub for every git hook name that exists — it only installs one for hooks it actually needs. On each `init`/`verify` run, it walks every hook stage module under [`hupy/cli/hooks/`](../hupy/cli/hooks/) (`pre_commit.py`, `prepare_commit_msg.py`, `commit_msg.py`, and so on), each of which declares its git hook name via a `HOOK_NAME` constant (eg `HOOK_NAME = "pre-commit"`). A hook name is **demanded** — and so gets a stub — when at least one of the following holds:
-
-- the module defines `run_core`, meaning it owns a dedicated *HUPy* feature (eg `pre_commit.py` wires up Ban Direct Commit and Triage Tag Gating)
-- the module defines `run_after`
-- its [Hook Bracket](hb_doc.md) is active — HB isn't disabled in `.hupy.config.jsonc`, and that hook's bracket has at least one configured *lead* or *trail* command
-
-A module satisfying none of these is skipped, and no stub is installed for it. This is why the [Standalone Hooks](chain_doc.md#standalone-hooks) — like `pre-auto-gc` or `pre-push` — only get a stub once the user configures a Hook Bracket for them; per the note at the bottom of the [Hook Chain Documentation](chain_doc.md), they don't carry a dedicated *HUPy* feature yet.
+A hook meeting neither condition is skipped — no stub gets installed for it. This is why [Standalone Hooks](chain_doc.md#standalone-hooks) like `pre-auto-gc` or `pre-push` only get a stub once the user sets up a Hook Bracket for them.
 
 
 
@@ -55,10 +47,28 @@ A module satisfying none of these is skipped, and no stub is installed for it. T
 
 ### `hupy init`
 
+`hupy init` writes a hook stub for every demanded hook into the repository's hook folder, filling in whichever ones are missing. It also creates a default `.hupy.config.jsonc` alongside them.
+
+Use it the **first time** HUPy is adopted in a repository (eg right after cloning one that uses HUPy).
+
+Q.v. `hupy init -h` for the full flag reference and exactly how it behaves.
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### `hupy verify`
 
-`hupy init` performs first-time setup for a repository — installing every demanded hook stub and creating a default `.hupy.config.jsonc`. Run `hupy init -h` for the full flag reference (eg `--hooks-dir`, `--install-hook-stubs`, `--create-config-file`, `-f`/`--force`).
+`hupy verify` **compares the stubs** in the repository's hook folder against current demand. It flags any demanded hook still missing its stub, and any installed stub that's no longer needed. Use it whenever demand may have drifted — for example after editing `.hupy.config.jsonc` (e.g. toggling a Hook Bracket) or upgrading `hupy`.
 
-`hupy verify` re-checks an already-initialized repository, including whether its installed stubs are still in sync with current demand — demand can drift after editing `.hupy.config.jsonc` (eg toggling a Hook Bracket) or upgrading `hupy` itself. By default it only reports drift (**missing hook stub** / **hook stub no longer demanded** warnings); run `hupy verify -h` for the full flag reference (eg `-u`/`--update-hook-stubs`, `-f`/`--force`) to turn reporting into action.
+By default it only reports this drift (**missing hook stub** / **hook stub no longer demanded** warnings). Pass `-u` to have it perform the update instead.
 
-`verify` also confirms the config file loads and validates against its schema, and that a version string can be grepped per the VerGrep config, before reporting on hook stub sync.
+Q.v. `hupy verify -h` for the full flag reference and exactly how it behaves.
