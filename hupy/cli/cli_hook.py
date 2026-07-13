@@ -13,7 +13,7 @@ import os
 
 from hupy import kamilog
 from hupy.cli.cli_init import load_git_repo
-from hupy.cli.hook import (
+from hupy.cli.hooks import (
     applypatch_msg,
     commit_msg,
     fsmonitor_watchman,
