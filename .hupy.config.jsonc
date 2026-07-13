@@ -34,7 +34,7 @@
     "release_candidate_tag": "-rc"
   },
   "hb": {
-    "pre_merge_commit": {
+    "pre_commit": {
       "trail": [
         {
           "cmd": "pytest tests/",
