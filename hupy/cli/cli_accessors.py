@@ -9,19 +9,24 @@ subcommand beneath ``get``/``set``/``unset``/``info``
 import os
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.cli.accessors import hupy_ver, verbosity
+from hupy.cli.accessors import hupy_ver, skip_once, verbosity
 from hupy.cli.cli_init import load_git_repo
 from hupy.state.open_state import open_state_file
 
 __all__ = ("register_cli_accessors_parser",)
 
 # constants  ###################################################################
-_ACCESSORS = (hupy_ver, verbosity)
+_ACCESSORS = (hupy_ver, verbosity, skip_once)
 
 _GET_DOC = "get HUPy config/state/behavior VALUE by KEY"
 _SET_DOC = "set HUPy config/state/behavior by KEY"
 _UNSET_DOC = "unset HUPy config/state/behavior by KEY"
 _INFO_DOC = "show extended info for KEY"
+
+
+# logger  ######################################################################
+logger = kamilog.getLogger(PROJ_LOGGER_NAME)
+logger.propagate = False
 
 
 # generic key runner  ##########################################################
@@ -32,8 +37,6 @@ def _run_accessor(op_name, mod, args):
     ``run_{op_name}(repo, state_file, logger, args)``.
     """
     repo = load_git_repo(os.getcwd())
-    logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + mod.KEY)
-    logger.propagate = False
 
     with open_state_file(repo) as state_file:
         kamilog.set_logging_level_by_namespace(
