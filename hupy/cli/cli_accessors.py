@@ -18,9 +18,9 @@ __all__ = ("register_cli_accessors_parser",)
 # constants  ###################################################################
 _ACCESSORS = (hupy_ver,)
 
-_GET_DOC = "get a HUPy state key's current value"
-_SET_DOC = "set a HUPy state key's value"
-_UNSET_DOC = "unset a HUPy state key's value"
+_GET_DOC = "get HUPy config/state/behavior VALUE by KEY"
+_SET_DOC = "set HUPy config/state/behavior by KEY"
+_UNSET_DOC = "unset HUPy config/state/behavior by KEY"
 
 
 # generic key runner  ##########################################################
@@ -77,7 +77,7 @@ def _register_accessor_op(op_subparser, op_name, mod, *, needs_value):
         "-h",
         "--help",
         action="store_true",
-        help="show this help message and exit",  # TODO mpv
+        help="show KEY's own help and exit",
     )
     if needs_value:
         key_parser.add_argument(
@@ -104,19 +104,19 @@ def register_cli_accessors_parser(cli_subparser):
         "get", help=_GET_DOC, description=_GET_DOC
     )
     get_parser.set_defaults(func=lambda _: get_parser.print_help())
-    get_subparser = get_parser.add_subparsers(title="keys")
+    get_subparser = get_parser.add_subparsers(title="KEYs")
 
     set_parser = cli_subparser.add_parser(
         "set", help=_SET_DOC, description=_SET_DOC
     )
     set_parser.set_defaults(func=lambda _: set_parser.print_help())
-    set_subparser = set_parser.add_subparsers(title="keys")
+    set_subparser = set_parser.add_subparsers(title="KEYs")
 
     unset_parser = cli_subparser.add_parser(
         "unset", help=_UNSET_DOC, description=_UNSET_DOC
     )
     unset_parser.set_defaults(func=lambda _: unset_parser.print_help())
-    unset_subparser = unset_parser.add_subparsers(title="keys")
+    unset_subparser = unset_parser.add_subparsers(title="KEYs")
 
     for mod in _ACCESSORS:
         _register_accessor_op(get_subparser, "get", mod, needs_value=False)
