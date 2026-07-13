@@ -4,11 +4,11 @@ __init__.py
 hook package: git hook stage subcommands for HUPy
 """
 
-# Fixme rename to hooks
+# FIXME rename to hooks
 
 # constants  ###################################################################
 
-# Hack mv to cli_hook.py
+# HACK mv to cli_hook.py
 HOOK_STAGE_START = "Start"
 HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
 HOOK_STAGE_FINISHED = "Finished"
