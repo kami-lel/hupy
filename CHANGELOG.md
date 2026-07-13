@@ -9,25 +9,31 @@
 - **HB command `timeout`** — a bracketed command's config entry (`.hupy.config.jsonc`) accepts an optional `timeout` (float, seconds); exceeding it fails the command, honoring the entry's `allow_failure`
 - **Hook argument passthrough** — every hook stub now forwards git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`; re-run `hupy init --install-hook-stubs --force` to pick up the updated stubs
 - **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets its own `hb` bracket config section, though only the original three stages run any *HUPy* feature beyond their Hook Bracket
-- **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hook` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_core`/`run_after`; by default that's still only `pre-commit`, `prepare-commit-msg`, and `post-commit`, but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
+- **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hooks` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_core`/`run_after`; by default that's still only `pre-commit`, `prepare-commit-msg`, and `post-commit`, but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
 - **Chain diagrams** — `docs/chain_doc.md` gained Mermaid diagrams for the Regular Commit Chain, Merge Chain, Rewrite Chain, and Patch Apply Chain, plus one per Standalone Hook, covering the full set of seventeen stages
+- **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic state-key accessor layer replaces the standalone `skip-once`/`set-verbosity` subcommands; each key (`hupy-version`, `verbosity`, `skip-once`) is its own module under `hupy/cli/accessors/` exposing `KEY`/`DOC` plus whichever of `run_get`/`run_set`/`run_unset`/`run_info` it supports, auto-nested as a subcommand under the matching top-level verb by the generic `hupy/cli/cli_accessors.py` runner
+- **`hupy-version` accessor key** (`hupy get hupy-version`, `hupy info hupy-version`) — prints the installed *HUPy* package version
+- **`--version`** flag on the top-level `hupy` command — prints the installed package version directly
 
 ### Changed
 
+- **`hupy skip-once`/`so` → `hupy set skip-once` / `hupy get skip-once` / `hupy unset skip-once`**; **`hupy set-verbosity`/`sv` → `hupy set verbosity` / `hupy get verbosity`** — folded into the new accessor key layer, each gaining a matching `hupy info <key>` subcommand
+
 - HB bracket commands now run explicitly under `/bin/bash` (previously the platform's default shell) and receive a copy of the parent process's environment
 - Every `hb` config section (one per hook stage) is now optional and defaults to empty `lead`/`trail` lists; `is_disabled` defaults to `false`. Previously only `pre-commit`, `prepare-commit-msg`, and `post-commit` existed and all three had to be spelled out
-- `cli/hook/` restructured from one file per subcommand (`cli_pre_commit.py`, `cli_prepare_commit_msg.py`, `cli_post_commit.py`) into one file per git hook stage plus a shared generic runner, `hupy/cli/cli_hook.py`, so a new stage needs only a stage module and a registration call
+- `cli/hook/` restructured from one file per subcommand (`cli_pre_commit.py`, `cli_prepare_commit_msg.py`, `cli_post_commit.py`) into one file per git hook stage (package renamed `hook/` → `hooks/`) plus a shared generic runner, `hupy/cli/cli_hook.py`, so a new stage needs only a stage module declaring `HOOK_NAME` (and, optionally, `run_core`/`run_after`) and a registration call — the runner builds the subcommand's help text from `HOOK_NAME` and creates/passes a shared project logger and a per-stage logger into `run_core`/`run_after` as `(repo, state_file, proj_logger, logger)`, so stage modules no longer declare their own `DOC` or logger
 - `hupy init`'s hook-stub install step now renders each stub in-process from the demanded hook names (`hupy.stub.names_by_demand.get_hook_names_by_demand`) rather than copying bundled `hupy/assets/hook-stubs/` template files; its flag renamed **`--copy-hooks` → `--install-hook-stubs`**
 - `hupy verify` gains **`-u`/`--update-hook-stubs`** (sync installed hook stubs to demand: add missing, remove no-longer-demanded) and **`-f`/`--force`** (with `-u`, also regenerate already-installed demanded stubs); previously it only checked that every packaged stub existed
 - `hupy.stub.update_stubs`'s `install_hook_stubs`/`verify_hook_stubs` now take a `repo` directly and resolve its hooks directory internally via a new public `resolve_hooks_dir(repo)`, rather than requiring the caller to resolve it first; `get_hook_names_by_demand` likewise now takes a `repo`
 - `load_hupy_config` gains an `allows_file_not_found` flag, returning `None` instead of exiting when the config file is missing; any malformed content, not just a schema-validation failure, still exits
-- post-commit's `run_after` and `run_on_finish` merged into a single `run_after`; the generic hook-stage runner dropped its `on_finish` callback
+- post-commit's `run_on_finish` renamed to `run_done`, running after `run_after` and the succ log via a new `on_done` callback on the generic hook-stage runner
 
 ### Deprecated
 
 ### Removed
 
 - bundled `hupy/assets/hook-stubs/*` template files — hook stub content is now rendered in-process rather than copied from disk
+- `hupy/cli/cli_skip_once.py`, `hupy/cli/cli_set_verbosity.py` — superseded by `hupy/cli/accessors/skip_once.py`, `hupy/cli/accessors/verbosity.py`, and the generic `hupy/cli/cli_accessors.py` runner
 
 ### Fixed
 

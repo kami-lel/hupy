@@ -7,7 +7,7 @@ decide which git hook names actually need an installed stub
 import importlib
 import pkgutil
 
-import hupy.cli.hook as _hook_pkg
+import hupy.cli.hooks as _hook_pkg
 from hupy.config_file.load_config import load_hupy_config
 from hupy.kamilog import getLogger
 from hupy.stub import STUB_LOGGER_NAME
@@ -24,11 +24,11 @@ logger.propagate = False
 # auxiliaries  #################################################################
 def _iter_hook_stage_modules():
     """
-    :return: every hook stage module living under ``hupy.cli.hook``
+    :return: every hook stage module living under ``hupy.cli.hooks``
     :rtype: collections.abc.Iterator[module]
     """
     for info in pkgutil.iter_modules(_hook_pkg.__path__):
-        mod = importlib.import_module("hupy.cli.hook.{}".format(info.name))
+        mod = importlib.import_module("hupy.cli.hooks.{}".format(info.name))
         if hasattr(mod, "HOOK_NAME"):
             yield mod
 
