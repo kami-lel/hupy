@@ -11,8 +11,13 @@
 - **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets its own `hb` bracket config section, though only the original three stages run any *HUPy* feature beyond their Hook Bracket
 - **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hook` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_core`/`run_after`; by default that's still only `pre-commit`, `prepare-commit-msg`, and `post-commit`, but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
 - **Flow diagrams** — `docs/flow_doc.md` gained Mermaid diagrams for Commit Flow, Merge Flow, Rewrite Flow, and Patch Apply Flow, plus one per Standalone Hook, covering the full set of seventeen stages
+- **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic state-key accessor layer replaces the standalone `skip-once`/`set-verbosity` subcommands; each key (`hupy-version`, `verbosity`, `skip-once`) is its own module under `hupy/cli/accessors/` exposing `KEY`/`DOC` plus whichever of `run_get`/`run_set`/`run_unset`/`run_info` it supports, auto-nested as a subcommand under the matching top-level verb by the generic `hupy/cli/cli_accessors.py` runner
+- **`hupy-version` accessor key** (`hupy get hupy-version`, `hupy info hupy-version`) — prints the installed *HUPy* package version
+- **`--version`** flag on the top-level `hupy` command — prints the installed package version directly
 
 ### Changed
+
+- **`hupy skip-once`/`so` → `hupy set skip-once` / `hupy get skip-once` / `hupy unset skip-once`**; **`hupy set-verbosity`/`sv` → `hupy set verbosity` / `hupy get verbosity`** — folded into the new accessor key layer, each gaining a matching `hupy info <key>` subcommand
 
 - HB bracket commands now run explicitly under `/bin/bash` (previously the platform's default shell) and receive a copy of the parent process's environment
 - Every `hb` config section (one per hook stage) is now optional and defaults to empty `lead`/`trail` lists; `is_disabled` defaults to `false`. Previously only `pre-commit`, `prepare-commit-msg`, and `post-commit` existed and all three had to be spelled out
@@ -28,6 +33,7 @@
 ### Removed
 
 - bundled `hupy/assets/hook-stubs/*` template files — hook stub content is now rendered in-process rather than copied from disk
+- `hupy/cli/cli_skip_once.py`, `hupy/cli/cli_set_verbosity.py` — superseded by `hupy/cli/accessors/skip_once.py`, `hupy/cli/accessors/verbosity.py`, and the generic `hupy/cli/cli_accessors.py` runner
 
 ### Fixed
 
