@@ -2,7 +2,7 @@
 
 Every `git commit` (and other git operations) fires its hooks in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. A **Chain** is the term for the ordered run of hook stages that one git operation triggers, start to finish. See the [Hook Stub Documentation](stub_doc.md) for how `hupy` determines which hooks need a stub, and how `hupy init`/`hupy verify` manage them:
 
-<!-- Fixme FIXME clean up chain doc -->
+<!-- FIXME FIXME clean up chain doc -->
 
 
 

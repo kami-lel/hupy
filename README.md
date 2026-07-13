@@ -7,7 +7,7 @@
 
 <!--
 Todo reimplement ensure file modified
-FIXME linguo: hook vs a core logic etc?
+Fixme linguo: hook vs a core logic etc?
 Fixme linguo: HB what are HB "commands"
 -->
 
