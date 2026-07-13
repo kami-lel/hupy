@@ -13,7 +13,6 @@ import os
 
 from hupy import kamilog
 from hupy.cli.cli_init import load_git_repo
-from hupy.cli.hook import HOOK_STAGE_FINISHED, HOOK_STAGE_NOOP, HOOK_STAGE_START
 from hupy.cli.hook import (
     applypatch_msg,
     commit_msg,
@@ -44,6 +43,10 @@ __all__ = ("register_cli_hook_parser",)
 
 # constants  ###################################################################
 _HOOK_DOC = "run git hook stage commands"
+
+HOOK_STAGE_START = "Start"
+HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
+HOOK_STAGE_FINISHED = "Finished"
 
 
 # generic stage runner  ########################################################
