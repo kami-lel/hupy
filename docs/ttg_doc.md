@@ -26,4 +26,4 @@ TTG only acts on the two protected merges, and the release gate is stricter:
 
 Quiet tags are never blocked, so low-priority notes can travel with the code.
 
-TTG runs in the pre-commit stage, right after [Ban Direct Commit](bdc_doc.md) — see the [Hook Chain](chain_doc.md) for where it fits. **Feature Landing** and **Version Release** are merge types defined in [Commit, Branch & Merge](cbm_doc.md).
+TTG runs in the pre-commit stage, right after [Ban Direct Commit](bdc_doc.md) — see the [Hook Chain](hook_chain_doc.md) for where it fits. **Feature Landing** and **Version Release** are merge types defined in [Commit, Branch & Merge](cbm_doc.md).

@@ -312,7 +312,7 @@ hupy/                             # installable package
 docs/
   ttg_doc.md                      # TTG tiers & per-merge gating
   cbm_doc.md                      # CBM concepts + PCH headers + ver_grep API
-  chain_doc.md                    # Mermaid diagrams: Regular Commit/Merge/Rewrite/Patch
+  hook_chain_doc.md                    # Mermaid diagrams: Regular Commit/Merge/Rewrite/Patch
                                   # Apply Chains, plus one per Standalone Hook
                                   # (config field docs live in hupy/assets/.hupy.config.jsonc)
 examples/
