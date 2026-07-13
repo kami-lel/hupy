@@ -9,14 +9,14 @@ subcommand beneath ``get``/``set``/``unset``/``info``
 import os
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.cli.accessors import hupy_ver
+from hupy.cli.accessors import hupy_ver, verbosity
 from hupy.cli.cli_init import load_git_repo
 from hupy.state.open_state import open_state_file
 
 __all__ = ("register_cli_accessors_parser",)
 
 # constants  ###################################################################
-_ACCESSORS = (hupy_ver,)
+_ACCESSORS = (hupy_ver, verbosity)
 
 _GET_DOC = "get HUPy config/state/behavior VALUE by KEY"
 _SET_DOC = "set HUPy config/state/behavior by KEY"
