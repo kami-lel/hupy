@@ -1,10 +1,18 @@
 # Hook Stub Documentation
 
+<!-- FIXME FIXME manually upd -->
+
 ## Hooks & `hupy`
 
-<!-- FIXME FIXME more concept explain -->
-
 Once `hupy init` has installed the stubs, the hooks are **fully automatic** — every `git commit` fires them in git's own order, and git hands each stage to the matching *HUPy* feature. Each stage's own logic is wrapped by a [Hook Bracket](hb_doc.md) — configured *lead* commands run before it, *trail* commands after. See the [Hook Chain Documentation](chain_doc.md) for the end-to-end, stage-by-stage diagram of how each git operation runs.
+
+### `git` and Hook Stubs
+
+A stub lives exactly where git already looks for hooks — `core.hooksPath` if configured, otherwise `.git/hooks/`. `hupy` doesn't register with git through any side channel; it just drops an ordinary hook file there, named after the git hook it handles (eg `pre-commit`).
+
+The stub carries **no *HUPy* logic itself** — it's a two-line executable script that shells out to `python -m hupy hook <hook-name> "$@"`, forwarding argv untouched.
+
+git fires it exactly as it would any hand-written hook: on a matching operation (`git commit`, `git push`, ...), git finds the file, confirms it's executable, and runs it with that stage's usual args/stdin. From there, the shell-out dispatches into the `hook` subcommand's stage runner ([`cli_hook.py`](../hupy/cli/cli_hook.py)), which runs the [Hook Bracket](hb_doc.md) *lead* → the stage's `run_core` (the actual *HUPy* feature, if any) → the Hook Bracket *trail* → `run_after` → `run_done`. All real behavior lives in that dispatch — the stub itself is inert plumbing.
 
 ### Hook Stub Auto-Determination
 
@@ -15,8 +23,6 @@ Once `hupy init` has installed the stubs, the hooks are **fully automatic** — 
 - its [Hook Bracket](hb_doc.md) is active — HB isn't disabled in `.hupy.config.jsonc`, and that hook's bracket has at least one configured *lead* or *trail* command
 
 A module satisfying none of these is skipped, and no stub is installed for it. This is why the [Standalone Hooks](chain_doc.md#standalone-hooks) — like `pre-auto-gc` or `pre-push` — only get a stub once the user configures a Hook Bracket for them; per the note at the bottom of the [Hook Chain Documentation](chain_doc.md), they don't carry a dedicated *HUPy* feature yet.
-
-Each installed stub is a thin generated shell script — no on-disk template, no placeholder substitution — that just shells out to `python -m hupy hook <hook-name> "$@"`. That `hook` subcommand is what actually runs the Hook Bracket *lead* → the stage's `run_core` → the Hook Bracket *trail* → `run_after`, for that hook name.
 
 ### Managing Stubs: `hupy init` & `hupy verify`
 
