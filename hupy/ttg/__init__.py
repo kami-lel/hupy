@@ -13,4 +13,4 @@ from .gate_tt import perform_triage_tags_gating
 __all__ = ("perform_triage_tags_gating",)
 
 
-# HACK consider move TTG to pre-merge
+# Hack consider move TTG to pre-merge

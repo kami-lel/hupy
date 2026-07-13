@@ -20,7 +20,6 @@ _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 # TODO write all chain demos
 
 
-
 # auxiliaries  #################################################################
 
 _prepare_demo_repo() {

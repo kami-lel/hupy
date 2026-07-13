@@ -336,7 +336,7 @@ _DEMO_BUCKET_SETUP_FUNCS = {
 # legacy scenario -> (bucket, default files) presets, kept so the
 # ``examples/ttg`` bash demos and the CLI below keep working unchanged.
 # each preset mirrors the most file-and-tag-heavy unit test case for
-# its bucket (see tests/ttg/ttg-gate_tt_*_test.py)
+# its bucket (see tests/ttg/ttg-*_test.py)
 _LEGACY_SCENARIO_PRESETS = {
     "non_merge_commit": (
         "non_merge_commit",
