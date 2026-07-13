@@ -5,15 +5,37 @@ define the ``skip-once`` accessor key's ``run_get``, ``run_set``,
 ``run_unset``, and ``run_info``
 """
 
-from hupy.cli.cli_skip_once import (
-    SKIPPABLE_MODULE,
-    _MODULE_NAME_TO_ABBR,
-    _format_modules,
-)
-
 # constants  ###################################################################
 KEY = "skip-once"
 DOC = "temporary skip module(s) in next hook run"
+# Fixme upd skip once doc after chain concept
+
+SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")
+
+_MODULE_ABBR_TO_NAME = dict(
+    zip(
+        SKIPPABLE_MODULE,
+        # ordered to line up with SKIPPABLE_MODULE
+        (
+            "ver-grep",
+            "triage-tag-gating",
+            "prepend-commit-header",
+            "ban-direct-commit",
+            "hook-bracket",
+        ),
+    )
+)
+
+_MODULE_NAME_TO_ABBR = {
+    name: abbr for abbr, name in _MODULE_ABBR_TO_NAME.items()
+}
+
+
+def _format_modules():
+    return ",\n".join(
+        "  {},\t{}".format(abbr, name)
+        for abbr, name in _MODULE_ABBR_TO_NAME.items()
+    )
 
 
 # auxiliary  ###################################################################
