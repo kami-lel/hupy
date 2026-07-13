@@ -7,19 +7,13 @@ override, `-f`/`--force` re-runs, subdirectory resolution, config-file
 writing, and error paths for non-git or nonexistent targets
 """
 
-import git
 import pytest
 
 from hupy.config_file.config_file_path import (
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
-from hupy.stub.names_by_demand import get_hook_names_by_demand
-from cli_helpers import (
-    get_configured_hooks_path,
-    run_init_cli,
-    set_configured_hooks_path,
-)
+from . import get_configured_hooks_path, run_init_cli, set_configured_hooks_path
 
 _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 
@@ -29,15 +23,6 @@ _DEFAULT_CONFIG_CONTENT = DEFAULT_CONFIG_ASSET.read_text()
 _STALE_VALID_CONFIG_CONTENT = _DEFAULT_CONFIG_CONTENT.replace(
     '"hupy_version": "1.0.0"', '"hupy_version": "0.0.1"'
 )
-
-
-# fixtures  #####################################################################
-
-
-@pytest.fixture
-def stub_names(git_repo_dir):
-    repo = git.Repo(str(git_repo_dir))
-    return sorted(get_hook_names_by_demand(repo))
 
 
 # helpers  ######################################################################

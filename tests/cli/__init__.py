@@ -1,5 +1,5 @@
 """
-cli_helpers.py
+__init__.py
 
 helpers for invoking the `init` CLI subcommand in isolation, and for
 inspecting/seeding the resulting git config

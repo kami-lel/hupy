@@ -1,7 +1,8 @@
 """
-pch_helpers.py
+__init__.py
 
-helpers for seeding and inspecting COMMIT_EDITMSG in PCH test scenarios
+shared helpers for PCH (prepend commit header) tests: seeding and
+inspecting COMMIT_EDITMSG in scenario repos
 """
 
 import shutil

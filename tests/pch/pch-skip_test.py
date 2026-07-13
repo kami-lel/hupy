@@ -10,7 +10,7 @@ import git
 
 from hupy.pch import prepend_commit_header
 from hupy.state.state_file import HupyStateFile
-from pch_helpers import read_commit_editmsg, write_commit_editmsg
+from . import read_commit_editmsg, write_commit_editmsg
 from prep_repo import prepare_repo_with_files
 
 _STATE_FILE = HupyStateFile()
