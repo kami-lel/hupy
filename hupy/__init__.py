@@ -5,6 +5,3 @@ define the ``hupy`` package entry point
 """
 
 PROJ_LOGGER_NAME = "HU"
-
-
-# TODO HUPy version

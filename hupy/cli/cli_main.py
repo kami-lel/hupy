@@ -1,6 +1,7 @@
 """CLI of HUPy (Hooks Utility Python): git hook utilities for commit quality enforcement"""
 
 from argparse import ArgumentParser
+from importlib.metadata import version as get_hupy_version
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_accessors import register_cli_accessors_parser
@@ -25,6 +26,11 @@ cli_parser = ArgumentParser(
     description=__doc__,
 )
 cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
+cli_parser.add_argument(
+    "--version",
+    action="version",
+    version=get_hupy_version("HUPy"),
+)
 cli_subparser = cli_parser.add_subparsers(title="subcommands")
 
 

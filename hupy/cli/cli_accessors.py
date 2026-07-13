@@ -77,7 +77,7 @@ def _register_accessor_op(op_subparser, op_name, mod, *, needs_value):
         "-h",
         "--help",
         action="store_true",
-        help="show this help message and exit",
+        help="show this help message and exit",  # TODO mpv
     )
     if needs_value:
         key_parser.add_argument(
