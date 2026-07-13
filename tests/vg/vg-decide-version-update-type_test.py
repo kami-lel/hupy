@@ -1,5 +1,5 @@
 """
-vg-decide_version_update_type_test.py
+vg-decide-version-update-type_test.py
 
 tests for `decide_version_update_type` in `version_bump.py`
 """

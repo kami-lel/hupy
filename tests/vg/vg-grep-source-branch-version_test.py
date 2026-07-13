@@ -1,5 +1,5 @@
 """
-vg-grep_source_branch_version_test.py
+vg-grep-source-branch-version_test.py
 
 tests for `grep_source_branch_version` in `branch_version.py`
 """

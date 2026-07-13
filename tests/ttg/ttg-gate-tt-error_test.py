@@ -1,5 +1,5 @@
 """
-ttg-gate_tt_error_test.py
+ttg-gate-tt-error_test.py
 
 tests for error handling in `perform_triage_tags_gating` in `gate_tt.py`
 """

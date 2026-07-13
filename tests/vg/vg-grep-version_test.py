@@ -1,5 +1,5 @@
 """
-vg-grep_version_test.py
+vg-grep-version_test.py
 
 tests for `grep_version` in `ver_grep.py`
 """

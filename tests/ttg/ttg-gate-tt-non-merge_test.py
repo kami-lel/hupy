@@ -1,5 +1,5 @@
 """
-ttg-gate_tt_non_merge_test.py
+ttg-gate-tt-non-merge_test.py
 
 tests for `perform_triage_tags_gating` on regular, non-merge commits
 """

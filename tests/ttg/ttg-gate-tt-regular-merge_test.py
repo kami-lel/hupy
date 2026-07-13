@@ -1,5 +1,5 @@
 """
-ttg-gate_tt_regular_merge_test.py
+ttg-gate-tt-regular-merge_test.py
 
 tests for `perform_triage_tags_gating` on merges between unrelated,
 non-protected branches
