@@ -1,5 +1,5 @@
 """
-pch-prepend_commit_header_feature_landing_test.py
+pch-prepend-commit-header-feature-landing_test.py
 
 tests for `prepend_commit_header` on Feature Landing merges, covering
 the header content and the COMMIT_EDITMSG rewrite behavior in detail

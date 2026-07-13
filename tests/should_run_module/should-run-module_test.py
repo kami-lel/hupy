@@ -1,5 +1,5 @@
 """
-should_run_module_test.py
+should-run-module_test.py
 
 tests for `should_run_module`, combining a module's config
 ``is_disabled`` flag with the state file's one-time ``skip_once`` set

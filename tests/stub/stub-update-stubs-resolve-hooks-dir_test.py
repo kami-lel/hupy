@@ -1,5 +1,5 @@
 """
-stub-update_stubs_resolve_hooks_dir_test.py
+stub-update-stubs-resolve-hooks-dir_test.py
 
 tests for `resolve_hooks_dir`: defaults to .git/hooks when
 core.hooksPath is unset, and honors core.hooksPath (relative and

@@ -1,5 +1,5 @@
 """
-pch-prepend_commit_header_version_release_test.py
+pch-prepend-commit-header-version-release_test.py
 
 tests for `prepend_commit_header` on Version Release merges; message
 formatting internals are already exercised in detail by the Feature

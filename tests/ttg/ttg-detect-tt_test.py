@@ -1,5 +1,5 @@
 """
-ttg-detect_tt_test.py
+ttg-detect-tt_test.py
 
 tests for triage tag detection in `detect_tt.py`
 """

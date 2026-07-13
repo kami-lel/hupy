@@ -1,5 +1,5 @@
 """
-stub-update_stubs_install_hook_stubs_test.py
+stub-update-stubs-install-hook-stubs_test.py
 
 tests for `install_hook_stubs`: fresh dir, pre-existing but
 unrelated dir contents, per-file conflict abort without --force,

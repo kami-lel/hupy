@@ -1,5 +1,5 @@
 """
-ttg-comment_style_test.py
+ttg-comment-style_test.py
 
 tests for extension-to-comment-prefix lookup in `comment_style.py`
 """

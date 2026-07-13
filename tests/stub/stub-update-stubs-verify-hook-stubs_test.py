@@ -1,5 +1,5 @@
 """
-stub-update_stubs_verify_hook_stubs_test.py
+stub-update-stubs-verify-hook-stubs_test.py
 
 tests for `verify_hook_stubs`: no-op sync check (warns on
 missing/unused, unrelated dir contents ignored), --update adds

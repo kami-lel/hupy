@@ -1,5 +1,5 @@
 """
-state-reset_for_next_commit_test.py
+state-reset-for-next-commit_test.py
 
 tests for `HupyStateFile.reset_for_next_commit` in `state_file.py`
 """
