@@ -1,10 +1,8 @@
 # Hook Chain Documentation
 
-A git command can fire a sequence of hooks, and *HUPy* runs matching features at each one according to your settings. This project calls that ordered run of hook stages, from start to finish for one git operation, a **Chain**.
+Running a single `git` command can trigger a sequence of hooks, with *HUPy* running its matching features at each one according to your settings. This project's term for that full sequence — every hook stage a given git operation triggers, start to finish — is a **chain**.
 
-Each hook **stage** always starts with a *Leading Hook Bracket* and ends with a *Trailing Hook Bracket* — see [Hook Bracket](hb_doc.md).
-
-<!-- FIXME FIXME clean up chain doc -->
+Within each hook **stage**, execution always opens with *Leading Hook Bracket* and closes with *Trailing Hook Bracket*; q.v. [Hook Bracket](hb_doc.md) for details.
 
 
 
@@ -70,6 +68,9 @@ Each hook **stage** always starts with a *Leading Hook Bracket* and ends with a 
 
 
 ## Commit Chain
+
+
+<!-- FIXME FIXME clean up chain doc -->
 
 Triggered by `git commit` for a **non-merge commit** (a merge commit follows the [Merge Chain](#merge-chain) instead):
 
