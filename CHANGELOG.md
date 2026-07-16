@@ -30,7 +30,7 @@
 - `hupy verify` gains **`-u`/`--update-hook-stubs`** (sync installed hook stubs to demand: add missing, remove no-longer-demanded) and **`-f`/`--force`** (with `-u`, also regenerate already-installed demanded stubs); previously it only checked that every packaged stub existed
 - `hupy.stub.update_stubs`'s `install_hook_stubs`/`verify_hook_stubs` now take a `repo` directly and resolve its hooks directory internally via a new public `resolve_hooks_dir(repo)`, rather than requiring the caller to resolve it first; `get_hook_names_by_demand` likewise now takes a `repo`
 - `load_hupy_config` gains an `allows_file_not_found` flag, returning `None` instead of exiting when the config file is missing; any malformed content, not just a schema-validation failure, still exits
-- post-commit's `run_on_finish` renamed to `run_done`, running after `run_after` and the succ log via a new `on_done` callback on the generic hook-stage runner
+- each hook stage's finish log now reads `"{stage} stage Finished"` at the `done` level (previously a plain `"Finished"` succ log); the `on_done` callback and post-commit's `run_done` hook it briefly grew are gone again — a stage's own finish log covers that role
 
 ### Deprecated
 
