@@ -12,6 +12,9 @@ from hupy.config_file.config_file import HupyConfigFile
 # tests  ########################################################################
 
 
+# Fixme upd to use this only during release
+
+
 class TestShippedConfigFile:
     def test_validates_without_exception(self, shipped_config):
         HupyConfigFile.model_validate(shipped_config)
