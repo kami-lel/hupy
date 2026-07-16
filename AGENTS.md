@@ -49,6 +49,11 @@ python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/de
 - keep commits atomic and scoped to a single utility or change
 - update `CHANGELOG.md` under `[Unreleased]` for every user-visible change
 
+## Terminology
+
+- say **HUPy features**, or just **features** — never *core logic* — for a stage's own work (e.g. `run_core` → `run_features`)
+- say **HB commands**, or just **command** — never *HB entry*/*entries* — for a configured `hb` bracket item
+
 ## Documentation Maintenance
 
 - update `AGENTS.md` when commands, conventions, or constraints change
