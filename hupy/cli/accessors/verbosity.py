@@ -28,6 +28,7 @@ def run_set(repo, state_file, logger, args):
     """
     set the base logging verbosity; no VALUE resets to the default.
     """
+    # TODO TODO allow use -v/-q
     verbosity = int(args.value[0]) if args.value else _DEFAULT_VERBOSITY
 
     state_file.hooks_logger_verbosity = verbosity
