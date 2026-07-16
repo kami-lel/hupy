@@ -33,6 +33,12 @@ hupy = "hupy.__main__:main"
 [project.optional-dependencies]
 dev = ["pytest"]
 
+[tool.pytest.ini_options]
+addopts = "-m 'not release'"
+markers = [
+    "release: tests that only run during a release",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["hupy*"]
