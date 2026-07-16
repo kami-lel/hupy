@@ -44,7 +44,7 @@ _HOOK_DOC = "run git hook stage commands"
 
 HOOK_STAGE_START = "Start"
 HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
-HOOK_STAGE_FINISHED = "Finished"
+HOOK_STAGE_DONE = "{} stage Finished"
 
 
 # generic stage runner  ########################################################
@@ -79,7 +79,7 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None):
         if after is not None:
             after(repo, state_file, proj_logger, logger)
 
-        logger.succ(HOOK_STAGE_FINISHED)
+        logger.done(HOOK_STAGE_DONE.format(hook_name))
 
 
 def _register_hook_stage(hook_subparser, mod):
