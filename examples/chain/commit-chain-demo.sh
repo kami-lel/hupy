@@ -6,9 +6,11 @@
 # Feature Landing merge (add-user-authentication into develop) through
 # `hupy hook pre-commit`, then through `hupy hook prepare-commit-msg`,
 # then through `hupy hook commit-msg`, then through
-# `hupy hook post-commit` (mirroring git's own hook order), at
-# default and `-vvv` verbosity
+# `hupy hook post-commit` (mirroring git's own hook order)
 # expected result: all four PASS
+#
+# any -v/-q flags passed to this script are forwarded to
+# `hupy set verbosity` to configure the repo once up front
 
 set -euo pipefail
 
@@ -16,9 +18,10 @@ _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _REPO_ROOT="$(dirname "$(dirname "$_SCRIPT_DIR")")"
 _PREP_REPO_PY="$_REPO_ROOT/tests/fixtures/prep_repo.py"
 
+_VERBOSITY_ARGS=("$@")
+
 
 # TODO write all chain demos
-# FIXME FIXME upd to use the -v method
 
 
 # auxiliaries  #################################################################
@@ -32,28 +35,29 @@ _prepare_demo_repo() {
     echo "$dest"
 }
 
+_set_verbosity() {
+    local repo_dir="$1"
+    (cd "$repo_dir" && python3 -m hupy set verbosity "${_VERBOSITY_ARGS[@]}")
+}
+
 _run_pre_commit() {
     local repo_dir="$1"
-    shift
-    (cd "$repo_dir" && python3 -m hupy hook pre-commit "$@")
+    (cd "$repo_dir" && python3 -m hupy hook pre-commit)
 }
 
 _run_prepare_commit_msg() {
     local repo_dir="$1"
-    shift
-    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg "$@")
+    (cd "$repo_dir" && python3 -m hupy hook prepare-commit-msg)
 }
 
 _run_commit_msg() {
     local repo_dir="$1"
-    shift
-    (cd "$repo_dir" && python3 -m hupy hook commit-msg "$@")
+    (cd "$repo_dir" && python3 -m hupy hook commit-msg)
 }
 
 _run_post_commit() {
     local repo_dir="$1"
-    shift
-    (cd "$repo_dir" && python3 -m hupy hook post-commit "$@")
+    (cd "$repo_dir" && python3 -m hupy hook post-commit)
 }
 
 
@@ -65,33 +69,17 @@ printf "scenario:\tFeature Landing merge (add-user-authentication into develop)\
 printf "expected:\tPASS\n"
 echo
 
-printf '%s\n' "default" | python3 -m hupy.kamilog cb center "#"
-demo_repo_1="$(_prepare_demo_repo)"
+demo_repo="$(_prepare_demo_repo)"
+_set_verbosity "$demo_repo"
 
 printf '%s\n' "pre-commit" | python3 -m hupy.kamilog cb center "-"
-_run_pre_commit "$demo_repo_1"
+_run_pre_commit "$demo_repo"
 
 printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "-"
-_run_prepare_commit_msg "$demo_repo_1"
+_run_prepare_commit_msg "$demo_repo"
 
 printf '%s\n' "commit-msg" | python3 -m hupy.kamilog cb center "-"
-_run_commit_msg "$demo_repo_1"
+_run_commit_msg "$demo_repo"
 
 printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "-"
-_run_post_commit "$demo_repo_1"
-echo
-
-printf '%s\n' "w/ -vvv" | python3 -m hupy.kamilog cb center "#"
-demo_repo_2="$(_prepare_demo_repo)"
-
-printf '%s\n' "pre-commit" | python3 -m hupy.kamilog cb center "-"
-_run_pre_commit "$demo_repo_2" -vvv
-
-printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "-"
-_run_prepare_commit_msg "$demo_repo_2" -vvv
-
-printf '%s\n' "commit-msg" | python3 -m hupy.kamilog cb center "-"
-_run_commit_msg "$demo_repo_2" -vvv
-
-printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "-"
-_run_post_commit "$demo_repo_2" -vvv
+_run_post_commit "$demo_repo"
