@@ -8,7 +8,7 @@ define the ``skip-once`` accessor key's ``run_get``, ``run_set``,
 # constants  ###################################################################
 KEY = "skip-once"
 DOC = "temporary skip module(s) in next hook run"
-# FIXME upd skip once doc after chain concept
+# Fixme upd skip once doc after chain concept
 
 SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")
 

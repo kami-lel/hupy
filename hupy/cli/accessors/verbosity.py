@@ -7,6 +7,9 @@ and ``run_info``
 
 from hupy.state.state_file import HupyStateFile
 
+# Fixme consider upd kamilog w/ exposed verbosity
+
+
 # constants  ###################################################################
 KEY = "verbosity"
 DOC = "logger's verbosity used during hook runs"
