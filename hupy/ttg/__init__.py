@@ -11,6 +11,3 @@ TTG_LOGGER_NAME = PROJ_LOGGER_NAME + ".TTG"
 from .gate_tt import perform_triage_tags_gating
 
 __all__ = ("perform_triage_tags_gating",)
-
-
-# Hack consider move TTG to pre-merge

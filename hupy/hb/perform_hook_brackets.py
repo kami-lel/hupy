@@ -1,7 +1,7 @@
 """
 perform_hook_brackets.py
 
-run the bracketed commands configured around a HUPy git hook
+run the HB commands configured around a HUPy git hook
 """
 
 import os
@@ -61,7 +61,7 @@ def _run_hb_cmd(repo, heading, hb_cmd, hooks_args):
     """
     :param repo: git repository object
     :type repo: git.Repo
-    :param hb_cmd: a single bracketed command
+    :param hb_cmd: a single HB command
     :type hb_cmd: _HbCmd
     :param hooks_args: raw arguments forwarded by the git hook invocation
     :type hooks_args: list[str]
@@ -106,7 +106,7 @@ def _run_hb_cmd(repo, heading, hb_cmd, hooks_args):
 # Public API  ##################################################################
 def perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=()):
     """
-    run the lead or trail bracketed commands configured for
+    run the lead or trail HB commands configured for
     ``hook_name``.
 
     :param repo: git repository object
@@ -145,7 +145,7 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=()):
         heading = hb_cmd.remark or _renderer.color(
             hb_cmd.cmd, AnsiStyle.UNDERLINE
         )
-        logger.enter("HB subroutine: " + heading)
+        logger.enter("HB command: " + heading)
 
         if not _is_hb_cmd_applicable(hb_cmd, commit_type):
             logger.skip("due to commit type filtered: {}".format(heading))

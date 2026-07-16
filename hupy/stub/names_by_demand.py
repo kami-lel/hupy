@@ -61,7 +61,7 @@ def _is_demanded(mod, config):
     """
     return (
         _is_hb_bracket_active(config, mod.HOOK_NAME)
-        or hasattr(mod, "run_core")
+        or hasattr(mod, "run_features")
         or hasattr(mod, "run_after")
     )
 

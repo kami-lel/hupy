@@ -9,8 +9,6 @@ expected result: fail (Feature Landing gates the Loud tier; both
 a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
 """
 
-# Todo add a pre-commit-demo
-
 import pathlib
 
 from hupy.kamilog import (

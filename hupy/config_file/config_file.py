@@ -114,7 +114,7 @@ class _Pch(BaseModel):  # ======================================================
 # Hook Bracket  ================================================================
 class _HbCmd(BaseModel):
     """
-    a single bracketed command run alongside a HUPy git hook
+    a single HB command run alongside a HUPy git hook
     """
 
     model_config = ConfigDict(extra="forbid")
