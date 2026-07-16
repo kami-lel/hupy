@@ -26,10 +26,11 @@ def run_get(repo, state_file, logger, args):
 
 def run_set(repo, state_file, logger, args):
     """
-    set the base logging verbosity; no VALUE resets to the default.
+    set the base logging verbosity; no VALUE resets to the default;
+    -v/-q offset the resulting value.
     """
-    # TODO TODO allow use -v/-q
-    verbosity = int(args.value[0]) if args.value else _DEFAULT_VERBOSITY
+    base = int(args.value[0]) if args.value else _DEFAULT_VERBOSITY
+    verbosity = base + args.verbose - args.quiet
 
     state_file.hooks_logger_verbosity = verbosity
 
@@ -53,4 +54,6 @@ value: integer, higher = more verbose
 
 usage:
   $ hupy set verbosity VALUE
+  $ hupy set verbosity VALUE -v/-q
+  $ hupy set verbosity -v/-q
   $ hupy get verbosity""".format(DOC))
