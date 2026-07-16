@@ -165,9 +165,7 @@ flowchart TD
 
 ## Merge Chain
 
-<!-- FIXME FIXME clean up chain doc -->
-
-Triggered by `git merge`. A non-fast-forward merge runs its own commit chain (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit`) and only fires `post-merge` once that finishes; a fast-forward merge creates no commit at all, so it skips straight to `post-merge`. `git merge --no-commit` stops before that chain even starts, leaving the merge staged in the index and working tree; a later `git commit` or `git merge --continue` finishes it, but that resumes through the Regular Commit Chain's `pre-commit` stage instead, so `post-merge` never fires for that merge:
+Triggered by `git merge`, or by `git pull` (which runs a merge under the hood):
 
 ```mermaid
 flowchart TD
@@ -225,7 +223,7 @@ flowchart TD
     PM2 --> Z4([End])
 ```
 
-
+See [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
 
 
 
@@ -290,7 +288,7 @@ flowchart TD
 
 ## Patch Apply Chain
 
-Triggered by `git am` — separate from, and does not follow, the Chains above:
+Triggered by `git am`.
 
 ```mermaid
 flowchart TD
@@ -383,6 +381,8 @@ flowchart TD
 
 ## Standalone Hooks
 
+<!-- FIXME FIXME clean up chain doc -->
+
 Each of these fires on its own, unrelated trigger — none of them join the Chains above, and they don't chain into each other either.
 
 - `pre-auto-gc`
@@ -391,6 +391,8 @@ Each of these fires on its own, unrelated trigger — none of them join the Chai
 - `fsmonitor-watchman`
 - `post-checkout`
 - `pre-push`
+
+----
 
 > [!NOTE]
 > `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, `post-rewrite`, `pre-rebase`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
