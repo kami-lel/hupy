@@ -180,7 +180,8 @@ flowchart TD
 
     subgraph premerge [pre-merge-commit stage]
         C[[pre-merge-commit hook]] --> C1{{Leading Hook Bracket}}
-        C1 --> C2{{Trailing Hook Bracket}}
+        C1 --> Cttg[Triage Tag Gating]
+        Cttg --> C2{{Trailing Hook Bracket}}
     end
     G -->|F| C
 
@@ -216,7 +217,7 @@ flowchart TD
     PM2 --> Z4([End])
 ```
 
-See [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
+See [Triage Tag Gating](ttg_doc.md) for its merge-gating behavior, and [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
 
 
 
@@ -386,4 +387,4 @@ Each hook below fires on its own trigger, independent of the Chains above — it
 ----
 
 > [!NOTE]
-> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-merge-commit`, `commit-msg`, `post-rewrite`, `pre-rebase`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `commit-msg`, `post-rewrite`, `pre-rebase`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
