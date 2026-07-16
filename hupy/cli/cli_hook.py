@@ -48,12 +48,12 @@ HOOK_STAGE_FINISHED = "Finished"
 
 
 # generic stage runner  ########################################################
-def _run_hook_stage(hook_name, args, *, features=None, after=None, on_done=None):
+def _run_hook_stage(hook_name, args, *, features=None, after=None):
     """
     dispatch shared by every git hook stage subcommand: open
     repo/state, run the ``hb`` lead bracket, the stage's own
     ``features`` (or a noop log when it has none), the ``hb`` trail
-    bracket, ``after``, the succ log, then ``on_done``.
+    bracket, ``after``, then the succ log.
     """
     repo = load_git_repo(os.getcwd())
     logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + hook_name)
@@ -81,15 +81,12 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None, on_done=None)
 
         logger.succ(HOOK_STAGE_FINISHED)
 
-        if on_done is not None:
-            on_done(repo, state_file, proj_logger, logger)
-
 
 def _register_hook_stage(hook_subparser, mod):
     """
     register one stage module's subparser, routed through
     ``_run_hook_stage`` with that module's ``run_features``/
-    ``run_after``/``run_done`` (each optional).
+    ``run_after`` (each optional).
     """
     doc = "run {} stage hooks".format(mod.HOOK_NAME)
     stage_parser = hook_subparser.add_parser(
@@ -107,7 +104,6 @@ def _register_hook_stage(hook_subparser, mod):
             args,
             features=getattr(mod, "run_features", None),
             after=getattr(mod, "run_after", None),
-            on_done=getattr(mod, "run_done", None),
         )
     )
 
