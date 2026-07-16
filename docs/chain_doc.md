@@ -381,9 +381,7 @@ flowchart TD
 
 ## Standalone Hooks
 
-<!-- FIXME FIXME clean up chain doc -->
-
-Each of these fires on its own, unrelated trigger — none of them join the Chains above, and they don't chain into each other either.
+Each hook below fires on its own trigger, independent of the Chains above — it never joins one of those Chains, nor chains with any other hook in this list.
 
 - `pre-auto-gc`
 - `post-index-change`
