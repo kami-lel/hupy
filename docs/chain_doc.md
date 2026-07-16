@@ -94,7 +94,8 @@ flowchart TD
     B -->|T| F
     C2 --> F
 
-    F2 --> H{<pre><code>--no-verify</code></pre>?}
+    F2 --> EditStep[/user edits commit message/]
+    EditStep --> H{<pre><code>--no-verify</code></pre>?}
 
     subgraph commitmsg [commit-msg stage]
         I[[commit-msg hook]] --> I1{{Leading Hook Bracket}}
@@ -172,17 +173,10 @@ flowchart TD
     A1([<pre><code>git merge</code></pre>])
     A2([<pre><code>git pull</code></pre>])
 
-    B{fast-forward? or <pre><code>--squash</code></pre>?}
+    G{<pre><code>--no-verify</code></pre>?}
 
-    A1 --> B
-    A2 --> B
-
-    B -->|F| CF{merge
-            conflicts?}
-
-    CF -->|T| Z4
-
-    CF -->|F| G{<pre><code>--no-verify</code></pre>?}
+    A1 --> G
+    A2 --> G
 
     subgraph premerge [pre-merge-commit stage]
         C[[pre-merge-commit hook]] --> C1{{Leading Hook Bracket}}
@@ -219,7 +213,6 @@ flowchart TD
         PM1 --> PM2{{Trailing Hook Bracket}}
     end
     L2 --> PM3
-    B -->|T| PM3
     PM2 --> Z4([End])
 ```
 
