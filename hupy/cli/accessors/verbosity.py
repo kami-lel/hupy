@@ -5,9 +5,8 @@ define the ``verbosity`` accessor key's ``run_get``, ``run_set``,
 and ``run_info``
 """
 
+from hupy import kamilog
 from hupy.state.state_file import HupyStateFile
-
-# Fixme consider upd kamilog w/ exposed verbosity
 
 
 # constants  ###################################################################
@@ -33,7 +32,7 @@ def run_set(repo, state_file, logger, args):
     -v/-q offset the resulting value.
     """
     base = int(args.value[0]) if args.value else _DEFAULT_VERBOSITY
-    verbosity = base + args.verbose - args.quiet
+    verbosity = kamilog.calc_verbosity(args, verbosity=base)
 
     state_file.hooks_logger_verbosity = verbosity
 
