@@ -79,6 +79,7 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None):
         if after is not None:
             after(repo, state_file, proj_logger, logger)
 
+        # FIXME done message per chain
         logger.done(HOOK_STAGE_DONE.format(hook_name))
 
 
