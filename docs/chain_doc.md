@@ -69,10 +69,7 @@ Within each hook **stage**, execution always opens with *Leading Hook Bracket* a
 
 ## Commit Chain
 
-
-<!-- FIXME FIXME clean up chain doc -->
-
-Triggered by `git commit` for a **non-merge commit** (a merge commit follows the [Merge Chain](#merge-chain) instead):
+Triggered by a **non-merge** `git commit` (a merge commit follows the [Merge Chain](#merge-chain) instead), or by `git rebase`:
 
 ```mermaid
 flowchart TD
@@ -131,9 +128,7 @@ flowchart TD
     O2 --> P
 ```
 
-Unless `-m`, `-F`, or `--no-edit` is given, `prepare-commit-msg` hands off to a user-editable editor for the commit message before `commit-msg` runs.
-
-See the per-feature docs for what each stage does: [Ban Direct Commit](bdc_doc.md), [Triage Tag Gating](ttg_doc.md), and [Prepend Commit Header](pch_doc.md). Both BDC and PCH decide their behavior from the branch and merge classification in [Commit, Branch & Merge](cbm_doc.md).
+[Ban Direct Commit](bdc_doc.md) blocks direct commits to protected branches, [Triage Tag Gating](ttg_doc.md) blocks merges that still carry unresolved triage tags, and [Prepend Commit Header](pch_doc.md) adds a header line to merge commit messages — see each doc for the full behavior.
 
 
 
@@ -169,6 +164,8 @@ See the per-feature docs for what each stage does: [Ban Direct Commit](bdc_doc.m
 
 
 ## Merge Chain
+
+<!-- FIXME FIXME clean up chain doc -->
 
 Triggered by `git merge`. A non-fast-forward merge runs its own commit chain (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit`) and only fires `post-merge` once that finishes; a fast-forward merge creates no commit at all, so it skips straight to `post-merge`. `git merge --no-commit` stops before that chain even starts, leaving the merge staged in the index and working tree; a later `git commit` or `git merge --continue` finishes it, but that resumes through the Regular Commit Chain's `pre-commit` stage instead, so `post-merge` never fires for that merge:
 
