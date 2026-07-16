@@ -37,12 +37,20 @@
     "pre_commit": {
       "trail": [
         {
-          "cmd": "pytest tests/",
+          "cmd": "pytest tests/ -m \"not release\"",
           "allow_commit_types": [
             "INTEGRATION"
           ],
           "allow_failure": false,
           "remark": "Integration UTs"
+        },
+        {
+          "cmd": "pytest tests/ -m release",
+          "allow_commit_types": [
+            "RELEASE"
+          ],
+          "allow_failure": false,
+          "remark": "release test"
         }
       ]
     }
