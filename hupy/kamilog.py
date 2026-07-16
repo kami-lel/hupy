@@ -10,16 +10,19 @@ Q.v. https://github.com/kami-lel/kamilog/tree/main/docs for Documentation
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging
+import os
 import sys
 import time
 from collections import deque
 from enum import Flag, IntEnum, auto
-from logging import Formatter, StreamHandler
+from logging import FileHandler, Formatter, StreamHandler
 
 __all__ = (
     "getLogger",
     "KamiLogger",
     "add_verbose_arguments",
+    "calc_verbosity",
+    "calc_logging_level",
     "set_logging_level_by_namespace",
     "set_logging_level_by_verbosity",
     # ANSI style
@@ -57,7 +60,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.7.0"
+__version__ = "2.8.0"
 __author__ = "kamiLeL"
 
 
@@ -1007,6 +1010,22 @@ class _DiffOnlyMsgFilter(logging.Filter):  # ***********************************
 # Logger Public API  ===========================================================
 
 
+def _build_log_formatter(
+    stream=None, *, datefmt=None, relative_to=None, disable_color=False
+):
+    """
+    build a :class:`_LogFormatter` from shared formatting options;
+    auxiliary for :func:`getLogger`, collapsing the repeated formatter
+    construction shared by the filter, console, and file handlers
+    """
+    return _LogFormatter(
+        stream,
+        datefmt=datefmt,
+        relative_to=relative_to,
+        disable_color=disable_color,
+    )
+
+
 # pylint: disable-next=invalid-name
 def getLogger(
     name=None,
@@ -1015,6 +1034,9 @@ def getLogger(
     relative_to=None,
     disable_color=False,
     disable_diff_only_compression=False,
+    filename=None,
+    file_mode="a",
+    disable_console=False,
 ):
     """
     return a configured :class:`KamiLogger` for ``name``, creating it if needed.
@@ -1036,6 +1058,16 @@ def getLogger(
     :param disable_diff_only_compression: whether turn off diff-ony compression
             and pass records through untouched
     :type disable_diff_only_compression: bool, optional
+    :param filename: path to a log file; when set, a file handler using the
+            kamilog format is attached, with color always disabled;
+            ``None`` attaches no file handler
+    :type filename: str or None, optional
+    :param file_mode: open mode for the log file, forwarded to
+            ``logging.FileHandler``; default=``"a"`` (append)
+    :type file_mode: str, optional
+    :param disable_console: when ``True``, skip the stdout/stderr handlers,
+            yielding a file-only logger; default=``False``
+    :type disable_console: bool, optional
     :return: a logger with the `name`, create if non-existence;
             root logger if `name` is `None`
     :rtype: KamiLogger
@@ -1048,7 +1080,7 @@ def getLogger(
     if not any(isinstance(f, _DiffOnlyMsgFilter) for f in logger.filters):
         logger.addFilter(
             _DiffOnlyMsgFilter(
-                _LogFormatter(
+                _build_log_formatter(
                     sys.stdout,
                     datefmt=datefmt,
                     relative_to=relative_to,
@@ -1058,10 +1090,14 @@ def getLogger(
             )
         )
 
-    if not logger.handlers:
+    has_console = any(
+        isinstance(h, StreamHandler) and not isinstance(h, FileHandler)
+        for h in logger.handlers
+    )
+    if not disable_console and not has_console:
         stdout_handler = StreamHandler(sys.stdout)
         stdout_handler.setFormatter(
-            _LogFormatter(
+            _build_log_formatter(
                 sys.stdout,
                 datefmt=datefmt,
                 relative_to=relative_to,
@@ -1072,7 +1108,7 @@ def getLogger(
 
         stderr_handler = StreamHandler(sys.stderr)
         stderr_handler.setFormatter(
-            _LogFormatter(
+            _build_log_formatter(
                 sys.stderr,
                 datefmt=datefmt,
                 relative_to=relative_to,
@@ -1084,127 +1120,26 @@ def getLogger(
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
+    if filename is not None:  # attach File handler, color always off
+        target = os.path.abspath(filename)  # normalize for dedup
+        has_file = any(
+            isinstance(h, FileHandler) and h.baseFilename == target
+            for h in logger.handlers
+        )
+        if not has_file:
+            file_handler = FileHandler(
+                filename, mode=file_mode, encoding="utf-8"
+            )
+            file_handler.setFormatter(
+                _build_log_formatter(
+                    datefmt=datefmt,
+                    relative_to=relative_to,
+                    disable_color=True,
+                )
+            )
+            logger.addHandler(file_handler)  # no level split, all Levels
+
     return logger
-
-
-# Verbosity  ###################################################################
-
-# verbosity helpers  ===========================================================
-
-
-def _calc_logging_level_from_verbosity(verbosity):
-    """
-    map a verbosity integer to a logging level
-    """
-    if verbosity >= 3:
-        return logging.DEBUG
-    elif verbosity == 2:
-        return ENTER
-    elif verbosity == 1:
-        return logging.INFO
-    elif verbosity == 0:
-        return DONE
-    elif verbosity == -1:
-        return logging.WARNING
-    elif verbosity == -2:
-        return logging.ERROR
-    else:  # verbosity <= -3
-        return logging.CRITICAL
-
-
-def _calc_logging_level_from_verbosity_namespace(namespace, verbosity=0):
-    """
-    apply namespace's verbose/quiet counts as an offset to ``verbosity``,
-    then return the logging level
-    """
-    if hasattr(namespace, "verbose"):
-        verbosity += namespace.verbose
-    if hasattr(namespace, "quiet"):
-        verbosity -= namespace.quiet
-    return _calc_logging_level_from_verbosity(verbosity)
-
-
-def _set_logger_level(level, *, logger=None, logger_name=None):
-    """
-    set ``level`` on ``logger``, falling back to ``logger_name``
-    """
-    if logger is None:
-        logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-
-
-# Verbosity Public API  ========================================================
-
-
-def add_verbose_arguments(parser):
-    """
-    add ``-v``/``--verbose`` and ``-q``/``--quiet`` options to ``parser``.
-
-
-    :param parser: argument parser to extend
-    :type parser: argparse.ArgumentParser
-    """
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="make verbose, each -v/--verbose increase verbosity by 1",
-    )
-    parser.add_argument(
-        "-q",
-        "--quiet",
-        action="count",
-        default=0,
-        help="make quiet, each -q/--quiet decrease verbosity by 1",
-    )
-
-
-def set_logging_level_by_namespace(
-    namespace, *, verbosity=0, logger=None, logger_name=None
-):
-    """
-    set the logging level of a logger based on verbosity flags.
-
-
-    :param namespace: parsed namespace containing ``--verbose`` and/or ``--quiet`` counts
-    :type namespace: argparse.Namespace
-    :param verbosity: base verbosity that namespace's ``--verbose``/``--quiet``
-            counts are added to/subtracted from
-    :type verbosity: int
-    :param logger: logger instance to configure
-    :type logger: logging.Logger, optional
-    :param logger_name: name of logger to configure;
-            ``None`` targets the root logger;
-            ignored when ``logger`` is provided
-    :type logger_name: str, optional
-    """
-    _set_logger_level(
-        _calc_logging_level_from_verbosity_namespace(namespace, verbosity),
-        logger=logger,
-        logger_name=logger_name,
-    )
-
-
-def set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None):
-    """
-    set the logging level of a logger based on a verbosity integer.
-
-
-    :param verbosity:
-    :type verbosity: int
-    :param logger: logger instance to configure
-    :type logger: logging.Logger, optional
-    :param logger_name: name of logger to configure;
-            ``None`` targets the root logger;
-            ignored when ``logger`` is provided
-    :type logger_name: str, optional
-    """
-    _set_logger_level(
-        _calc_logging_level_from_verbosity(verbosity),
-        logger=logger,
-        logger_name=logger_name,
-    )
 
 
 # logger CLI  ==================================================================
@@ -1317,6 +1252,263 @@ def _register_logger_parser(cli_subparser):
     )
 
     logger_parser.set_defaults(func=_logger_parser_main)
+
+
+# Verbosity  ###################################################################
+
+# auxiliaries  =================================================================
+
+
+def _set_logger_level(level, *, logger=None, logger_name=None):
+    """
+    set ``level`` on ``logger``, falling back to ``logger_name``
+    """
+    if logger is None:
+        logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+
+
+# Verbosity Public API  ========================================================
+
+_VERBOSE_FLAG_CHOICES = ("vq", "VQ", "")
+_EXTREME_VERBOSITY = 1_000_000
+
+_STEP_VERBOSE_HELP = "make verbose, each {opt} increase verbosity by 1"
+_STEP_QUIET_HELP = "make quiet, each {opt} decrease verbosity by 1"
+_EXTREMITY_VERBOSE_HELP = "make maximally verbose, via {opt}"
+_EXTREMITY_QUIET_HELP = "make maximally quiet, via {opt}"
+
+
+def _flag_option_strings(short_flag, long_flag):
+    """
+    build the option-string list for ``parser.add_argument``.
+
+
+    :param short_flag: single letter for the short flag;
+            falsy skips the short flag entirely
+    :type short_flag: str
+    :param long_flag: long flag, eg ``"--verbose"``; always included
+    :type long_flag: str
+    :return: ``[long_flag]``, or ``["-{short_flag}", long_flag]`` when
+            ``short_flag`` is truthy
+    :rtype: list[str]
+    """
+    if short_flag:
+        return ["-{}".format(short_flag), long_flag]
+    return [long_flag]
+
+
+def add_verbose_arguments(
+    parser,
+    *,
+    step_flags="vq",
+    extremity_flags="VQ",
+):
+    """
+    add verbosity options to ``parser``, in two behaviors:
+
+    - **step** — ``--verbose``/``--quiet``, each occurrence shifts
+      verbosity up/down by one
+    - **extremity** — ``--max-verbose``/``--max-quiet``, jumps
+      straight to the maximum/minimum verbosity
+
+    those four long options are always added. ``step_flags`` and
+    ``extremity_flags`` only choose which single-letter short flag, if
+    any, is bound alongside each behavior; each takes one of three
+    values:
+
+    - ``"vq"`` — bind ``-v`` and ``-q`` as the pair's short flags
+    - ``"VQ"`` — bind ``-V`` and ``-Q`` as the pair's short flags
+    - ``""`` — bind no short flag; the behavior stays reachable only
+      through its long options
+
+    eg the default ``step_flags="vq"``, ``extremity_flags="VQ"`` binds:
+
+    - ``-v``/``-q`` alongside ``--verbose``/``--quiet``
+    - ``-V``/``-Q`` alongside ``--max-verbose``/``--max-quiet``
+
+    whereas ``step_flags="VQ"``, ``extremity_flags=""`` binds:
+
+    - ``-V``/``-Q`` alongside ``--verbose``/``--quiet``
+    - no short flag alongside ``--max-verbose``/``--max-quiet``
+
+
+    :param parser: argument parser to extend
+    :type parser: argparse.ArgumentParser
+    :param step_flags: short-flag pair bound to the step behavior;
+            one of ``"vq"``, ``"VQ"``, ``""``; default=``"vq"``
+    :type step_flags: str, optional
+    :param extremity_flags: short-flag pair bound to the extremity
+            behavior; one of ``"vq"``, ``"VQ"``, ``""``;
+            default=``"VQ"``
+    :type extremity_flags: str, optional
+    :raises ValueError: step_flags is not one of ``"vq"``, ``"VQ"``, ``""``
+    :raises ValueError: extremity_flags is not one of ``"vq"``, ``"VQ"``,
+            ``""``
+    :raises ValueError: step_flags and extremity_flags are the same
+            non-empty pair, which would bind one flag letter twice
+    """
+    if step_flags not in _VERBOSE_FLAG_CHOICES:
+        raise ValueError(
+            "param step_flags {!r} must be one of {!r}".format(
+                step_flags, _VERBOSE_FLAG_CHOICES
+            )
+        )
+    if extremity_flags not in _VERBOSE_FLAG_CHOICES:
+        raise ValueError(
+            "param extremity_flags {!r} must be one of {!r}".format(
+                extremity_flags, _VERBOSE_FLAG_CHOICES
+            )
+        )
+    if step_flags and step_flags == extremity_flags:
+        raise ValueError(
+            "param step_flags and extremity_flags conflict: "
+            "both are {!r}".format(step_flags)
+        )
+
+    v_flag, q_flag = step_flags if step_flags else ("", "")
+    ev_flag, eq_flag = extremity_flags if extremity_flags else ("", "")
+
+    # step flag  -----------------------------------------------------------
+    verbose_opts = _flag_option_strings(v_flag, "--verbose")
+    quiet_opts = _flag_option_strings(q_flag, "--quiet")
+    parser.add_argument(
+        *verbose_opts,
+        action="count",
+        default=0,
+        help=_STEP_VERBOSE_HELP.format(opt="/".join(verbose_opts)),
+    )
+    parser.add_argument(
+        *quiet_opts,
+        action="count",
+        default=0,
+        help=_STEP_QUIET_HELP.format(opt="/".join(quiet_opts)),
+    )
+
+    # extremity flag  --------------------------------------------------------
+    max_verbose_opts = _flag_option_strings(ev_flag, "--max-verbose")
+    max_quiet_opts = _flag_option_strings(eq_flag, "--max-quiet")
+    parser.add_argument(
+        *max_verbose_opts,
+        dest="verbose",
+        action="store_const",
+        const=_EXTREME_VERBOSITY,
+        default=0,
+        help=_EXTREMITY_VERBOSE_HELP.format(opt="/".join(max_verbose_opts)),
+    )
+    parser.add_argument(
+        *max_quiet_opts,
+        dest="quiet",
+        action="store_const",
+        const=_EXTREME_VERBOSITY,
+        default=0,
+        help=_EXTREMITY_QUIET_HELP.format(opt="/".join(max_quiet_opts)),
+    )
+
+
+def calc_verbosity(namespace, *, verbosity=0):
+    """
+    apply namespace's verbose/quiet counts as an offset to verbosity
+
+
+    :param namespace: parsed namespace containing ``--verbose`` and/or
+            ``--quiet`` counts
+    :type namespace: argparse.Namespace
+    :param verbosity: base verbosity that namespace's ``--verbose``/``--quiet``
+            counts are added to/subtracted from; default=0
+    :type verbosity: int, optional
+    :return: resulting verbosity after applying namespace's offset
+    :rtype: int
+    """
+    if hasattr(namespace, "verbose"):
+        verbosity += namespace.verbose
+    if hasattr(namespace, "quiet"):
+        verbosity -= namespace.quiet
+    return verbosity
+
+
+def calc_logging_level(verbosity, *, namespace=None):
+    """
+    map a verbosity integer to a logging level, optionally offset by
+    namespace's verbose/quiet counts
+
+
+    :param verbosity: base verbosity integer; higher is more verbose
+    :type verbosity: int
+    :param namespace: parsed namespace containing ``--verbose`` and/or
+            ``--quiet`` counts, applied via :func:`calc_verbosity` to
+            offset ``verbosity`` before mapping; default=None
+    :type namespace: argparse.Namespace, optional
+    :return: logging level corresponding to the resulting verbosity
+    :rtype: int
+    """
+    if namespace is not None:
+        verbosity = calc_verbosity(namespace, verbosity=verbosity)
+
+    if verbosity >= 3:
+        return logging.DEBUG
+    elif verbosity == 2:
+        return ENTER
+    elif verbosity == 1:
+        return logging.INFO
+    elif verbosity == 0:
+        return DONE
+    elif verbosity == -1:
+        return logging.WARNING
+    elif verbosity == -2:
+        return logging.ERROR
+    else:  # verbosity <= -3
+        return logging.CRITICAL
+
+
+# set logger level  ------------------------------------------------------------
+
+
+def set_logging_level_by_namespace(
+    namespace, *, verbosity=0, logger=None, logger_name=None
+):
+    """
+    set the logging level of a logger based on verbosity flags.
+
+
+    :param namespace: parsed namespace containing ``--verbose`` and/or ``--quiet`` counts
+    :type namespace: argparse.Namespace
+    :param verbosity: base verbosity that namespace's ``--verbose``/``--quiet``
+            counts are added to/subtracted from
+    :type verbosity: int
+    :param logger: logger instance to configure
+    :type logger: logging.Logger, optional
+    :param logger_name: name of logger to configure;
+            ``None`` targets the root logger;
+            ignored when ``logger`` is provided
+    :type logger_name: str, optional
+    """
+    _set_logger_level(
+        calc_logging_level(verbosity, namespace=namespace),
+        logger=logger,
+        logger_name=logger_name,
+    )
+
+
+def set_logging_level_by_verbosity(verbosity, *, logger=None, logger_name=None):
+    """
+    set the logging level of a logger based on a verbosity integer.
+
+
+    :param verbosity:
+    :type verbosity: int
+    :param logger: logger instance to configure
+    :type logger: logging.Logger, optional
+    :param logger_name: name of logger to configure;
+            ``None`` targets the root logger;
+            ignored when ``logger`` is provided
+    :type logger_name: str, optional
+    """
+    _set_logger_level(
+        calc_logging_level(verbosity),
+        logger=logger,
+        logger_name=logger_name,
+    )
 
 
 # Comment Banner  ##############################################################

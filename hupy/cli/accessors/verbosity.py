@@ -7,7 +7,7 @@ and ``run_info``
 
 from hupy.state.state_file import HupyStateFile
 
-# Fixme consider upd kamilog w/ exposed verbosity
+# FIXME consider upd kamilog w/ exposed verbosity
 
 
 # constants  ###################################################################
