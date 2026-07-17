@@ -10,6 +10,12 @@ import os
 
 
 from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy.cli.chain_policy import (
+    adopt_session,
+    detect_amend,
+    get_chain_label,
+    is_chain_terminal,
+)
 from hupy.cli.cli_init import load_git_repo
 from hupy.cli.hooks import (
     applypatch_msg,
@@ -45,6 +51,7 @@ _HOOK_DOC = "run git hook stage commands"
 HOOK_STAGE_START = "Start"
 HOOK_STAGE_NOOP = "No Operation in this HUPy version, except HB"
 HOOK_STAGE_DONE = "{} stage Finished"
+CHAIN_DONE = "{} Finished"
 
 
 # generic stage runner  ########################################################
@@ -63,7 +70,15 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None):
         kamilog.set_logging_level_by_namespace(
             args, verbosity=state_file.hooks_logger_verbosity
         )
+        adopt_session(state_file.chain_session, os.getppid())
         logger.enter(HOOK_STAGE_START)
+
+        if hook_name == "prepare-commit-msg":
+            # amend signal precedes post-commit, so it must land before
+            # post-commit decides whether to yield to post-rewrite
+            state_file.chain_session.expect_post_rewrite = detect_amend(
+                args.hook_args
+            )
 
         perform_hook_brackets(repo, state_file, hook_name, True, args.hook_args)
 
@@ -79,7 +94,11 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None):
         if after is not None:
             after(repo, state_file, proj_logger, logger)
 
-        logger.done(HOOK_STAGE_DONE.format(hook_name))
+        logger.debug(HOOK_STAGE_DONE.format(hook_name))
+
+        if is_chain_terminal(hook_name, state_file.chain_session):
+            proj_logger.done(CHAIN_DONE.format(get_chain_label(hook_name)))
+            state_file.reset_for_next_chain()
 
 
 def _register_hook_stage(hook_subparser, mod):

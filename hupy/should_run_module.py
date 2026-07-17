@@ -35,8 +35,8 @@ def should_run_module(repo, state_file, module_abbr):
     invocation: ``False`` when the module is disabled in the config
     file, or its abbreviation is present in ``state_file``'s one-time
     ``skip_once`` set. the ``skip_once`` check is membership only, not
-    consumed here — the set is spent later by ``reset_for_next_commit``
-    in the ``post-commit`` stage.
+    consumed here — the set is spent later by ``reset_for_next_chain``
+    at the chain's closing stage.
 
 
     :param repo: git repository object
@@ -56,7 +56,6 @@ def should_run_module(repo, state_file, module_abbr):
         logger.skip("{} disabled in config file".format(module_name))
         return False
 
-    # Fixme fix skip once logic
     if module_abbr in state_file.skip_once:
         logger.skip("{} skipped once".format(module_name))
         return False

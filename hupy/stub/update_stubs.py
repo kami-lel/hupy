@@ -22,7 +22,7 @@ logger.propagate = False
 # constants  ###################################################################
 
 _STUB_TEMPLATE = """#!/usr/bin/env bash
-"{python}" -m hupy hook {hook_name} "$@"
+exec "{python}" -m hupy hook {hook_name} "$@"
 """
 
 _STUB_MODE = 0o755

@@ -1,18 +1,11 @@
 """
 post_commit.py
 
-define the post-commit stage's identity and ``run_after``, run by
-the generic hook stage runner in ``cli_hook.py``
+define the post-commit stage's identity, run by the generic hook
+stage runner in ``cli_hook.py``; the chain-close reset now lives in
+``cli_hook.py``, since ``post-commit`` yields to ``post-rewrite`` on
+an amend
 """
 
 # constants  ###################################################################
 HOOK_NAME = "post-commit"
-
-
-# Public API  ##################################################################
-def run_after(repo, state_file, proj_logger, logger):
-    """
-    reset one-time state for the next commit, then log that the
-    full HUPy hook round has finished.
-    """
-    state_file.reset_for_next_commit()

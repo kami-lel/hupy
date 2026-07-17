@@ -30,7 +30,10 @@
 - `hupy verify` gains **`-u`/`--update-hook-stubs`** (sync installed hook stubs to demand: add missing, remove no-longer-demanded) and **`-f`/`--force`** (with `-u`, also regenerate already-installed demanded stubs); previously it only checked that every packaged stub existed
 - `hupy.stub.update_stubs`'s `install_hook_stubs`/`verify_hook_stubs` now take a `repo` directly and resolve its hooks directory internally via a new public `resolve_hooks_dir(repo)`, rather than requiring the caller to resolve it first; `get_hook_names_by_demand` likewise now takes a `repo`
 - `load_hupy_config` gains an `allows_file_not_found` flag, returning `None` instead of exiting when the config file is missing; any malformed content, not just a schema-validation failure, still exits
-- each hook stage's finish log now reads `"{stage} stage Finished"` at the `done` level (previously a plain `"Finished"` succ log); the `on_done` callback and post-commit's `run_done` hook it briefly grew are gone again — a stage's own finish log covers that role
+- each hook stage's finish log now reads `"{stage} stage Finished"` at the `debug` level, previously `done` — a stage finishing is no longer, on its own, a signal worth surfacing; the `on_done` callback and post-commit's `run_done` hook it briefly grew are gone again
+- **chain-end detection** — a single `done`-level message now prints once per **chain** (the full stage sequence one git command triggers, e.g. `pre-commit` through `post-commit`) instead of once per stage: new `hupy/cli/chain_policy.py` decides, per stage, whether it's the one closing its chain (`is_chain_terminal`) and names the chain in the message (`get_chain_label`, e.g. `"Commit Chain Finished"`, `"Merge Chain Finished"`); a new `ChainSession` (nested on `HupyStateFile`, keyed by `os.getppid()`) tracks which git process owns the currently-running chain across its separate stage processes, and whether `prepare-commit-msg` detected an amend (`detect_amend`), so that `post-commit` correctly yields the close to a trailing `post-rewrite` rather than closing early
+- hook stubs now `exec` into `python` (`exec "{python}" -m hupy hook {hook_name} "$@"`) instead of forking it from bash, so `python`'s parent process is git itself rather than a throwaway per-stage shell — the stability the new chain-session tracking depends on; re-run `hupy init --install-hook-stubs --force` (or `hupy verify -u -f`) on an already-installed repo to pick this up
+- `hupy set skip-once`'s help text now describes its scope as "the current/next chain" rather than "next hook run", matching the fix below
 
 ### Deprecated
 
@@ -40,6 +43,8 @@
 - `hupy/cli/cli_skip_once.py`, `hupy/cli/cli_set_verbosity.py` — superseded by `hupy/cli/accessors/skip_once.py`, `hupy/cli/accessors/verbosity.py`, and the generic `hupy/cli/cli_accessors.py` runner
 
 ### Fixed
+
+- `hupy set skip-once` flags could leak past a chain that never runs `post-commit`: the reset was hardcoded to `post-commit`'s `run_after`, so a rebase-only (`pre-rebase` → `post-rewrite`), merge-only (`post-merge`), or patch-apply-only (`post-applypatch`) chain never spent the flags, silently skipping a module on some later, unrelated chain. The reset now fires at whichever stage actually closes the chain (see **chain-end detection** above), covering every chain type
 
 ### Security
 
