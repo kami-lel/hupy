@@ -1,5 +1,5 @@
 """
-chain-policy_test.py
+cli-chain-policy_test.py
 
 tests for the chain-session policy helpers in `cli/chain_policy.py`:
 terminal detection, session adoption, amend detection, and chain
