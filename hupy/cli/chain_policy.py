@@ -10,6 +10,7 @@ __all__ = (
     "TERMINAL_ALWAYS",
     "adopt_session",
     "detect_amend",
+    "get_chain_label",
     "is_chain_terminal",
 )
 
@@ -17,28 +18,31 @@ __all__ = (
 # constants  ###################################################################
 
 # multi-stage chains whose named stage is always the last to run
-_CHAIN_TERMINALS = frozenset(
-    {
-        "post-merge",  # merge / pull chain tail
-        "post-applypatch",  # patch-apply chain tail
-        "post-rewrite",  # amend / rebase chain tail
-    }
-)
+_CHAIN_TERMINALS = frozenset({
+    "post-merge",  # merge / pull chain tail
+    "post-applypatch",  # patch-apply chain tail
+    "post-rewrite",  # amend / rebase chain tail
+})
 
 # one-stage chains: each fires alone, so each is its own tail
-_STANDALONE_HOOKS = frozenset(
-    {
-        "pre-auto-gc",
-        "post-index-change",
-        "sendemail-validate",
-        "fsmonitor-watchman",
-        "post-checkout",
-        "pre-push",
-    }
-)
+_STANDALONE_HOOKS = frozenset({
+    "pre-auto-gc",
+    "post-index-change",
+    "sendemail-validate",
+    "fsmonitor-watchman",
+    "post-checkout",
+    "pre-push",
+})
 
 # every stage that closes its chain unconditionally
 TERMINAL_ALWAYS = _CHAIN_TERMINALS | _STANDALONE_HOOKS
+
+_CHAIN_NAME_BY_TERMINAL = {
+    "post-commit": "Commit Chain",
+    "post-rewrite": "Commit Chain",
+    "post-merge": "Merge Chain",
+    "post-applypatch": "Patch Apply Chain",
+}
 
 
 # Public API  ##################################################################
@@ -87,6 +91,21 @@ def is_chain_terminal(hook_name, session):
         return not session.expect_post_rewrite
 
     return False
+
+
+def get_chain_label(hook_name):
+    """
+    resolve the human-facing chain name a terminal ``hook_name`` closes,
+    for the per-chain DONE message
+
+
+    :param hook_name: the terminal stage's ``HOOK_NAME``
+    :type hook_name: str
+    :return: the chain's doc name, or ``hook_name`` itself for a
+            standalone hook
+    :rtype: str
+    """
+    return _CHAIN_NAME_BY_TERMINAL.get(hook_name, hook_name)
 
 
 def detect_amend(hook_args):

@@ -2,7 +2,8 @@
 chain-policy_test.py
 
 tests for the chain-session policy helpers in `cli/chain_policy.py`:
-terminal detection, session adoption, and amend detection
+terminal detection, session adoption, amend detection, and chain
+labeling
 """
 
 import pytest
@@ -11,6 +12,7 @@ from hupy.cli.chain_policy import (
     TERMINAL_ALWAYS,
     adopt_session,
     detect_amend,
+    get_chain_label,
     is_chain_terminal,
 )
 from hupy.state.state_file import ChainSession
@@ -77,3 +79,20 @@ class TestDetectAmend:
 
     def test_empty_args_are_not_amend(self):
         assert detect_amend([]) is False
+
+
+class TestGetChainLabel:
+    @pytest.mark.parametrize(
+        "hook_name,label",
+        [
+            ("post-commit", "Commit Chain"),
+            ("post-rewrite", "Commit Chain"),
+            ("post-merge", "Merge Chain"),
+            ("post-applypatch", "Patch Apply Chain"),
+        ],
+    )
+    def test_multi_stage_chains_resolve_to_their_doc_name(self, hook_name, label):
+        assert get_chain_label(hook_name) == label
+
+    def test_standalone_hook_labels_itself(self):
+        assert get_chain_label("post-checkout") == "post-checkout"
