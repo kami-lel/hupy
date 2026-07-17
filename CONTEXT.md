@@ -224,6 +224,8 @@ hupy info {hupy-version,verbosity,skip-once}
 
 **Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `accessors/skip_once.py` and `should_run_module.py` (different casing, same five abbrs), not yet factored out.
 
+`hupy/cli/chain_policy.py`'s `detect_amend(hook_args)` reads `prepare-commit-msg`'s `<msg_file> <source> [<sha>]`: `source == "commit"` is git's signal for **three** distinct flags (`--amend`, `-c <commit>`, `-C <commit>`), only the first of which actually triggers a trailing `post-rewrite`; the heuristic over-predicts on the other two, so `post-commit` silently yields and no `Commit Chain Finished` ever prints for that chain (self-corrects on the *next* chain's `adopt_session`, so it's cosmetic, not a correctness bug — currently marked `# fixme` in-code, Quiet tier). Planned fix (pattern **A**, not yet implemented): add `hupy/cli/proc_argv.py` with `read_process_argv(pid) -> list[str] | None` (`/proc/<pid>/cmdline`, NUL-split; open question whether to add a `ps -o args= -p <pid>` fallback for non-Linux, or accept Linux-only and let non-Linux silently keep today's heuristic) and widen `detect_amend(hook_args, ppid=None)` to check `"--amend" in read_process_argv(ppid)` when available, falling back to the `hook_args` heuristic only when `ppid` is omitted or the read fails. `cli_hook.py` already computes `os.getppid()` once at session-adopt time (Step 3 of the plan reuses that value rather than calling it twice).
+
 ### `kamilog`
 
 Customized logging vendored from [github.com/kami-lel/kamilog](https://github.com/kami-lel/kamilog) (v2.3.1).

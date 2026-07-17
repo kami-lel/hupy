@@ -120,6 +120,6 @@ def detect_amend(hook_args):
     :return: whether a trailing post-rewrite is expected
     :rtype: bool
     """
-    # FIXME `-c`/`-C` without `--amend` also gives source `commit` yet
+    # fixme `-c`/`-C` without `--amend` also gives source `commit` yet
     # spawns no post-rewrite, so this over-predicts for that rare case
     return len(hook_args) >= 2 and hook_args[1] == "commit"
