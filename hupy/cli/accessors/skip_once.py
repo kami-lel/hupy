@@ -7,8 +7,7 @@ define the ``skip-once`` accessor key's ``run_get``, ``run_set``,
 
 # constants  ###################################################################
 KEY = "skip-once"
-DOC = "temporary skip module(s) in next hook run"
-# FIXME upd skip once doc after chain concept
+DOC = "temporary skip module(s) for the current/next chain"
 
 SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")
 
@@ -67,8 +66,8 @@ def run_get(repo, state_file, logger, args):
 
 def run_set(repo, state_file, logger, args):
     """
-    schedule module(s) to be skipped in the next hook run; no VALUE
-    resets to the default (empty).
+    schedule module(s) to be skipped for the rest of the current (or
+    next) chain; no VALUE resets to the default (empty).
     """
     if not args.value:
         state_file.skip_once.clear()
@@ -99,7 +98,9 @@ def run_info(repo, state_file, logger, args):
     """
     print("""{}
 
-each given module is skipped exactly once
+each given module is skipped exactly once, for the rest of the
+current chain (or the next one, if none is running); q.v.
+docs/chain_doc.md for the chain concept
 
 MODULEs:
 {}
