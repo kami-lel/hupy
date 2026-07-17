@@ -101,7 +101,7 @@ class TestShouldRunModuleSkipOnce:
             "hupy.should_run_module.load_hupy_config", return_value=config
         ):
             first = should_run_module(_REPO, state_file, "pch")
-            state_file.reset_for_next_commit()
+            state_file.reset_for_next_chain()
             second = should_run_module(_REPO, state_file, "pch")
         assert first is False
         assert second is True

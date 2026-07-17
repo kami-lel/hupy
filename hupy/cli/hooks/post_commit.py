@@ -15,4 +15,4 @@ def run_after(repo, state_file, proj_logger, logger):
     reset one-time state for the next commit, then log that the
     full HUPy hook round has finished.
     """
-    state_file.reset_for_next_commit()
+    state_file.reset_for_next_chain()
