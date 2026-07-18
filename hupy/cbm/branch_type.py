@@ -9,9 +9,6 @@ from enum import Enum, auto
 __all__ = ("BranchType",)
 
 
-# TODO CLI expose branch type
-
-
 class BranchType(Enum):
     """
     represent the type of a git branch by its naming convention
