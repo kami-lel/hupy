@@ -20,7 +20,7 @@ __all__ = ("CONFIG_FIXTURE_PATH", "load_config_fixture")
 CONFIG_FIXTURE_PATH = DEFAULT_CONFIG_ASSET
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _deep_merge(base, overrides):

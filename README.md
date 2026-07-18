@@ -5,8 +5,6 @@
 > [!NOTE]
 > Python reimplementation of the original bash [hooks-utility](https://github.com/kami-lel/hooks-utility).
 
-<!-- todo reimplement ensure file modified -->
-
 
 
 
@@ -21,10 +19,11 @@
 
 ## ✨ Features
 
-- 🚫 [**Ban Direct Commit**](docs/bdc_doc.md) — block commits made directly on a protected branch (`main` by default), while still allowing that branch to receive commits through a merge
-- 🛡️ [**Triage Tag Gating**](docs/ttg_doc.md) — block *annotation markers* (`TODO`, `FIXME`, `HACK`, `BUG`) by severity tier on protected branches
-- ✏️ [**Prepend Commit Header**](docs/pch_doc.md) — auto-generate descriptive headers for merge commit types, stamping the project version on releases
-- 🔗 [**Hook Bracket**](docs/hb_doc.md) — run your own lead/trail shell commands around each hook stage, no custom hook required
+- 🚫 **Ban Direct Commit** — tired of teammates pushing straight to `main`? block direct commits on protected branches while merges still sail through
+- 🛡️ **Triage Tag Gating** — stop a stray `TODO`/`FIXME`/`HACK`/`BUG` from sneaking onto a protected branch, gated by severity tier
+- 📝 **Paper Trail** — require a changelog entry, migration, or other companion file to actually change alongside the commit it belongs with
+- ✏️ **Prepend Commit Header** — merge commits that write their own descriptive headers and stamp the version on every release, no manual typing
+- 🔗 **Hook Bracket** — wrap any git hook stage with your own lead/trail shell commands, without hand-rolling a custom hook script
 
 
 
@@ -40,46 +39,7 @@
 
 ## 📦 Installation
 
-#### Install Python Package
-
-**Clone and install locally**
-
-```bash
-git clone https://github.com/kami-lel/hupy.git
-cd hupy
-pip install .
-```
-
-Or install **directly from GitHub**
-
-```bash
-pip install git+https://github.com/kami-lel/hupy.git
-```
-
-
-
-#### Set Up for Repository
-
-Initialize `hupy` inside the git repository to protect:
-
-```bash
-hupy init
-```
-
-- copies the default hook stub scripts into the repo's hooks directory
-- writes a default `.hupy.config.jsonc` at the repository root — commit it, so every clone shares the same behavior; each section is commented in place with what it controls
-
-Verify the HUPy setup at any time:
-
-```bash
-hupy verify
-```
-
-`verify` checks that:
-
-- the config file (`.hupy.config.jsonc`) loads and validates against the schema
-- the version string can be grepped
-- every packaged hook stub is installed in the repo's hooks directory
+See [Installation Documentation](docs/install_doc.md) for cloning, package install, and repository setup steps.
 
 
 
@@ -95,44 +55,17 @@ hupy verify
 
 ## 🚀 Usage
 
-Once `hupy init` has installed the stubs, the hooks are **fully automatic** — there is nothing extra to run. From then on every `git commit` fires them, and git hands each one to the matching *HUPy* feature.
+Clone the repo and install the package per [Installation](docs/install_doc.md), then run `hupy init` inside your repository to drop in the hook stubs. From there the hooks are **fully automatic** — every `git commit` fires them, and git hands each one to the matching *HUPy* feature:
 
-See [Hook Flow Documentation](docs/flow_doc.md) for the end-to-end diagram of how each stage runs.
+- [Hook Chain](docs/chain_doc.md) — the diagram of how each stage runs and hands off to the next
+- [Hook Stub](docs/stub_doc.md) — how `hupy init`/`hupy verify` decide which stubs to install, and how a repeat `hupy verify` keeps them, the config, and the version grep in sync afterward
 
-See the per-feature docs for detailed usage:
+Every feature reasons about commits the same way, via the shared [Commit, Branch & Merge (CBM)](docs/cbm_doc.md) classification of branches and merge types, then layers its own behavior on top:
 
-- [Commit, Branch & Merge (CBM)](docs/cbm_doc.md) — shared branch and merge type classification
-- [Ban Direct Commit (BDC)](docs/bdc_doc.md)
-- [Triage Tag Gating (TTG)](docs/ttg_doc.md)
-- [Prepend Commit Header (PCH)](docs/pch_doc.md)
-- [Hook Bracket (HB)](docs/hb_doc.md)
+- [Ban Direct Commit (BDC)](docs/bdc_doc.md) — keeps commits off protected branches unless they arrive through a merge
+- [Triage Tag Gating (TTG)](docs/ttg_doc.md) — gates `TODO`/`FIXME`/`HACK`/`BUG` markers by severity tier
+- [Paper Trail (PT)](docs/pt_doc.md) — requires configured files to have changed alongside the commit
+- [Prepend Commit Header (PCH)](docs/pch_doc.md) — writes merge headers and stamps release versions
+- [Hook Bracket (HB)](docs/hb_doc.md) — wraps any hook stage with your own lead/trail shell commands
 
-
-
-
-
-
-### `skip-once` command
-
-Need to get a single commit through without loosening the config — a hotfix under time pressure, a false positive from TTG, a merge PCH mis-classifies? Rather than editing `.hupy.config.jsonc` and remembering to revert it, skip the offending module(s) (`vg`, `ttg`, `pch`, `bdc`, `hb`) for just the next hook run:
-
-```bash
-hupy skip-once MODULE [MODULE ...]
-```
-
-The skip is consumed automatically by the next `pre-commit`/`prepare-commit-msg` run, so behavior snaps back to normal right after. Change your mind first? Pass `-u`/`--unset` to clear a pending skip.
-
-
-
-
-
-
-### `set-verbosity` command
-
-Turn up logging when a hook's behavior looks wrong and you need to see what *HUPy* is actually deciding, or turn it down to keep commits quiet day-to-day:
-
-```bash
-hupy set-verbosity [VERBOSITY]
-```
-
-Unlike `skip-once`, this setting persists across hook runs until changed again; defaults to `1` when `VERBOSITY` is omitted.
+Each doc above covers its own config in full. Beyond the hooks themselves, `hupy` keeps a small amount of its own config/state — a one-time module skip, the hook logger's verbosity — behind a shared `get`/`set`/`unset`/`info` command group. Run `hupy -h`, or `-h` on any subcommand, to see exactly what's there; the help text stays current, so it beats reading it here secondhand.

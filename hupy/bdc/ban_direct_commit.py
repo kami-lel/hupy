@@ -19,7 +19,7 @@ logger = getLogger(BDC_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _get_protected_branches(repo):

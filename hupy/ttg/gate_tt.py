@@ -21,7 +21,7 @@ logger = getLogger(TTG_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _collect_gated_tags(

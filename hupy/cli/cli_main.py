@@ -1,12 +1,13 @@
 """CLI of HUPy (Hooks Utility Python): git hook utilities for commit quality enforcement"""
 
 from argparse import ArgumentParser
+from importlib.metadata import version as get_hupy_version
 
 from hupy import PROJ_LOGGER_NAME, kamilog
-from hupy.cli.hook.cli_hook import register_cli_hook_parser
+from hupy.cli.cli_accessors import register_cli_accessors_parser
+from hupy.cli.cli_hook import register_cli_hook_parser
 from hupy.cli.cli_init import register_cli_init_parser
-from hupy.cli.cli_set_verbosity import register_cli_set_verbosity_parser
-from hupy.cli.cli_skip_once import register_cli_skip_once_parser
+from hupy.cli.cli_uninstall import register_cli_uninstall_parser
 from hupy.cli.cli_verify import register_cli_verify_parser
 
 __all__ = ("cli_parser", "cli_subparser")
@@ -24,15 +25,20 @@ cli_parser = ArgumentParser(
     description=__doc__,
 )
 cli_parser.set_defaults(func=lambda _: cli_parser.print_help())
+cli_parser.add_argument(
+    "--version",
+    action="version",
+    version=get_hupy_version("HUPy"),
+)
 cli_subparser = cli_parser.add_subparsers(title="subcommands")
 
 
 # register subparsers  #########################################################
 
 register_cli_init_parser(cli_subparser)
+register_cli_uninstall_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
-register_cli_skip_once_parser(cli_subparser)
-register_cli_set_verbosity_parser(cli_subparser)
+register_cli_accessors_parser(cli_subparser)
 register_cli_hook_parser(cli_subparser)
 
 

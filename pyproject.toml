@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "HUPy"
-version = "1.0.0"
+version = "2.0.0"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -39,6 +39,11 @@ include = ["hupy*"]
 
 [tool.setuptools.package-data]
 hupy = [
-    "assets/hook-stubs/*",
     "assets/.hupy.config.jsonc",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "release: requires an installed build matching the working tree version",
 ]

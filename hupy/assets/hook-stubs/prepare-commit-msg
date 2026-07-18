@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-"{{PYTHON}}" -m hupy hook prepare-commit-msg

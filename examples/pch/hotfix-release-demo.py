@@ -20,7 +20,7 @@ from __init__ import prepare_demo_repo_by_bucket, run_pch
 _DEMO_BUCKET = "hotfix_release"
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

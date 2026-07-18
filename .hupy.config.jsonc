@@ -1,5 +1,5 @@
 {
-  "hupy_version": "1.0.0",
+  "hupy_version": "2.0.0",
   "vg": {
     "is_disabled": false,
     "version_file": "pyproject.toml",
@@ -25,6 +25,10 @@
       "tests/**/fixtures/**"
     ]
   },
+  "pt": {
+    "is_disabled": false,
+    "trails": []
+  },
   "pch": {
     "is_disabled": false,
     "enable_vertical_slice": false,
@@ -34,27 +38,25 @@
     "release_candidate_tag": "-rc"
   },
   "hb": {
-    "is_disabled": false,
     "pre_commit": {
-      "lead": [],
       "trail": [
         {
-          "cmd": "pytest tests/",
+          "cmd": "pytest tests/ -m \"not release\"",
           "allow_commit_types": [
             "INTEGRATION"
           ],
           "allow_failure": false,
-          "remark": "Pytest Unit Tests"
+          "remark": "Integration UTs"
+        },
+        {
+          "cmd": "pytest tests/ -m release",
+          "allow_commit_types": [
+            "RELEASE"
+          ],
+          "allow_failure": false,
+          "remark": "release test"
         }
       ]
-    },
-    "prepare_commit_msg": {
-      "lead": [],
-      "trail": []
-    },
-    "post_commit": {
-      "lead": [],
-      "trail": []
     }
   }
 }

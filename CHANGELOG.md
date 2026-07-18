@@ -16,7 +16,53 @@
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v1.0.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v2.0.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [2.0.0] - 2026-07-18
+
+### Added
+
+- **`hupy uninstall`** — reverses `hupy init`, removing managed hook stubs and `.hupy.config.jsonc`; dry-run by default, `-f`/`--force` to delete
+- **All seventeen git hook stages** now run under `hupy hook <stage>` (14 new), each with its own `hb` bracket section; Triage Tag Gating and Paper Trail also gate `pre-merge-commit`, since a conflict-free merge skips `pre-commit`
+- **Paper Trail (PT)** — require at least one file matching a configured glob to change alongside a commit, aborting it otherwise; runs in `pre-commit`, `pre-merge-commit`, and `pre-rebase`; see `docs/pt_doc.md`
+- **Demand-driven hook stubs** — a stage only gets a stub once its Hook Bracket is configured or it defines real hook logic; see `docs/stub_doc.md`
+- **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic key-based layer over `hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, and `current-commit-type`
+- **`--version`** flag on the top-level `hupy` command; `hupy set verbosity` now also accepts `-v`/`-q` offsets
+- **HB command `timeout`** — an HB command can specify a `timeout` (seconds), failing the command on expiry per its `allow_failure`
+- **Hook argument passthrough** — hook stubs forward git's own arguments into `hupy hook <stage>` and onward into HB bracket commands and each stage's own logic
+- **Chain diagrams and demos** — `docs/chain_doc.md` gained Mermaid diagrams for every chain, and `examples/chain/` gained matching end-to-end demo scripts
+
+### Changed
+
+- **`hupy skip-once`/`so` → `hupy set skip-once`; `hupy set-verbosity`/`sv` → `hupy set verbosity`** — folded into the new accessor layer, each gaining a matching `hupy info <key>`
+- `hupy init`'s hook-stub install now renders stubs in-process instead of copying bundled templates; flag renamed **`--copy-hooks` → `--install-hook-stubs`**
+- `hupy verify` gains **`-u`/`--update-hook-stubs`** and **`-f`/`--force`** to sync stub drift, not just report it
+- hook stubs now `exec` into `python` instead of forking it, keeping git as the direct parent process for reliable per-chain state tracking — re-run `hupy init --install-hook-stubs --force` (or `hupy verify -u -f`) on an already-installed repo
+- HB bracket commands now run explicitly under `/bin/bash`, and every `hb` config section is optional, defaulting to empty
+- logging: per-stage finish messages moved to `debug`; a single `done`-level message now prints once per chain instead of once per stage
+
+### Removed
+
+- bundled `hupy/assets/hook-stubs/*` template files — stubs are now rendered in-process
+- `hupy skip-once`/`hupy set-verbosity` standalone subcommands — superseded by the accessor layer
+
+### Fixed
+
+- `hupy set skip-once` flags could leak past a chain that never runs `post-commit` (rebase-only, merge-only, or patch-apply-only chains); the reset now fires at whichever stage actually closes the chain
+
+[2.0.0]: https://github.com/kami-lel/hupy/compare/v1.0.0...v2.0.0
 
 
 

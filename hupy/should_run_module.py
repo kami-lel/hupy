@@ -22,6 +22,7 @@ logger.propagate = False
 _MODULE_ABBR_TO_NAME = {
     "vg": "VerGrep",
     "ttg": "Triage Tag Gating",
+    "pt": "Paper Trail",
     "pch": "Prepend Commit Header",
     "bdc": "Ban Direct Commit",
     "hb": "Hook Bracket",
@@ -35,8 +36,8 @@ def should_run_module(repo, state_file, module_abbr):
     invocation: ``False`` when the module is disabled in the config
     file, or its abbreviation is present in ``state_file``'s one-time
     ``skip_once`` set. the ``skip_once`` check is membership only, not
-    consumed here — the set is spent later by ``reset_for_next_commit``
-    in the ``post-commit`` stage.
+    consumed here — the set is spent later by ``reset_for_next_chain``
+    at the chain's closing stage.
 
 
     :param repo: git repository object

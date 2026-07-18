@@ -31,6 +31,31 @@ logger = getLogger(CONFIG_LOGGER_NAME)
 logger.propagate = False
 
 
+# auxiliaries  #################################################################
+
+
+def _merge_commit_type_names(names):
+    """
+    merge a list of ``CommitType`` member names into a single allow
+    list instance, warning and skipping any illegal name; shared by
+    every ``allow_commit_types`` validator (``_HbCmd``, ``_PaperTrail``)
+
+
+    :param names: commit type member names
+    :type names: list[str]
+    :return: the merged allow list instance
+    :rtype: CommitType
+    """
+    result = CommitType(0)
+    for name in names:
+        try:
+            result |= CommitType[name]
+        except KeyError:
+            logger.warning("illegal commit type name: {}".format(name))
+
+    return result
+
+
 # internal structures  #########################################################
 
 
@@ -93,37 +118,18 @@ class _Ttg(BaseModel):  # ======================================================
     ignored_path_globs: list[str]
 
 
-class _Pch(BaseModel):  # ======================================================
+# Paper Trail  =================================================================
+class _PaperTrail(BaseModel):
     """
-    configuration for the PCH module (pre-commit hook)
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    # fields  ------------------------------------------------------------------
-
-    is_disabled: bool
-
-    enable_vertical_slice: bool
-    enable_pre_alpha: bool
-    alpha_tag: str
-    beta_tag: str
-    release_candidate_tag: str
-
-
-# Hook Bracket  ================================================================
-class _HbCmd(BaseModel):
-    """
-    a single bracketed command run alongside a HUPy git hook
+    a single PT entry: assert ``glob`` was changed by this commit
     """
 
     model_config = ConfigDict(extra="forbid")
 
     # fields  ------------------------------------------------------------------
 
-    cmd: str
+    glob: str
     allow_commit_types: CommitType = CommitType(0)
-    allow_failure: bool = False
     remark: str = ""
 
     # validators  --------------------------------------------------------------
@@ -145,14 +151,76 @@ class _HbCmd(BaseModel):
         if not isinstance(filters, list):
             return filters
 
-        result = CommitType(0)
-        for name in filters:
-            try:
-                result |= CommitType[name]
-            except KeyError:
-                logger.warning("illegal commit type name: {}".format(name))
+        return _merge_commit_type_names(filters)
 
-        return result
+
+class _Pt(BaseModel):
+    """
+    configuration for the PT module (paper trail)
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    is_disabled: bool = False
+    trails: list[_PaperTrail] = Field(default_factory=list)
+
+
+class _Pch(BaseModel):  # ======================================================
+    """
+    configuration for the PCH module (pre-commit hook)
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    is_disabled: bool
+
+    enable_vertical_slice: bool
+    enable_pre_alpha: bool
+    alpha_tag: str
+    beta_tag: str
+    release_candidate_tag: str
+
+
+# Hook Bracket  ================================================================
+class _HbCmd(BaseModel):
+    """
+    a single HB command run alongside a HUPy git hook
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    remark: str = ""
+    cmd: str
+    allow_commit_types: CommitType = CommitType(0)
+    allow_failure: bool = False
+    timeout: float | None = None
+
+    # validators  --------------------------------------------------------------
+
+    @field_validator("allow_commit_types", mode="before")
+    @classmethod
+    def _parse_allow_commit_types(cls, filters):
+        """
+        merge the config list of member names into a single
+        ``CommitType`` allow list instance; a non-list value (eg an
+        already-parsed instance) passes through to pydantic
+
+
+        :param filters: commit type member names, or a ready value
+        :type filters: list[str] or CommitType or int
+        :return: the merged allow list instance, or ``filters`` as-is
+        :rtype: CommitType or object
+        """
+        if not isinstance(filters, list):
+            return filters
+
+        return _merge_commit_type_names(filters)
 
 
 class _HbBracket(BaseModel):
@@ -167,6 +235,15 @@ class _HbBracket(BaseModel):
     lead: list[_HbCmd] = Field(default_factory=list)
     trail: list[_HbCmd] = Field(default_factory=list)
 
+    # Public Method  -----------------------------------------------------------
+
+    def should_install_hook_stub(self):
+        """
+        :return: ``True`` if ``lead`` or ``trail`` holds any command
+        :rtype: bool
+        """
+        return bool(self.lead or self.trail)
+
 
 class _Hb(BaseModel):
     """
@@ -177,10 +254,29 @@ class _Hb(BaseModel):
 
     # fields  ------------------------------------------------------------------
 
-    is_disabled: bool
-    pre_commit: _HbBracket
-    prepare_commit_msg: _HbBracket
-    post_commit: _HbBracket
+    is_disabled: bool = False
+
+    pre_commit: _HbBracket = Field(default_factory=_HbBracket)
+    prepare_commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    commit_msg: _HbBracket = Field(default_factory=_HbBracket)
+    post_commit: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_merge_commit: _HbBracket = Field(default_factory=_HbBracket)
+    post_merge: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_rebase: _HbBracket = Field(default_factory=_HbBracket)
+    post_rewrite: _HbBracket = Field(default_factory=_HbBracket)
+
+    applypatch_msg: _HbBracket = Field(default_factory=_HbBracket)
+    pre_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+    post_applypatch: _HbBracket = Field(default_factory=_HbBracket)
+
+    pre_auto_gc: _HbBracket = Field(default_factory=_HbBracket)
+    post_index_change: _HbBracket = Field(default_factory=_HbBracket)
+    sendemail_validate: _HbBracket = Field(default_factory=_HbBracket)
+    fsmonitor_watchman: _HbBracket = Field(default_factory=_HbBracket)
+    post_checkout: _HbBracket = Field(default_factory=_HbBracket)
+    pre_push: _HbBracket = Field(default_factory=_HbBracket)
 
     # Public Method  -----------------------------------------------------------
 
@@ -192,9 +288,23 @@ class _Hb(BaseModel):
         :rtype: _HbBracket or None
         """
         return {
+            "applypatch-msg": self.applypatch_msg,
+            "pre-applypatch": self.pre_applypatch,
+            "post-applypatch": self.post_applypatch,
             "pre-commit": self.pre_commit,
+            "pre-merge-commit": self.pre_merge_commit,
             "prepare-commit-msg": self.prepare_commit_msg,
+            "commit-msg": self.commit_msg,
             "post-commit": self.post_commit,
+            "post-rewrite": self.post_rewrite,
+            "pre-auto-gc": self.pre_auto_gc,
+            "post-index-change": self.post_index_change,
+            "sendemail-validate": self.sendemail_validate,
+            "fsmonitor-watchman": self.fsmonitor_watchman,
+            "pre-rebase": self.pre_rebase,
+            "post-checkout": self.post_checkout,
+            "post-merge": self.post_merge,
+            "pre-push": self.pre_push,
         }.get(hook_name)
 
 
@@ -212,6 +322,7 @@ class HupyConfigFile(BaseModel):  ##############################################
     cbm: _Cbm
     bdc: _Bdc
     ttg: _Ttg
+    pt: _Pt
     pch: _Pch
     hb: _Hb
 

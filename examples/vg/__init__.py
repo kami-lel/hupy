@@ -32,7 +32,7 @@ from hupy.ver_grep.ver_grep import grep_version  # noqa: E402
 _STATE_FILE = HupyStateFile()
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _write_config_file(dest_dir, version_file, version_line_pattern):
