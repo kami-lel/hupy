@@ -42,29 +42,6 @@ what would be removed
 # auxiliaries  #################################################################
 
 
-def _run_uninstall_hook_stubs(args, repo):
-    """
-    step: remove HUPy-managed hook stub scripts from the repo's hooks
-    dir.
-    """
-    uninstall_hook_stubs(repo, force=args.force)
-
-
-def _run_remove_config_file(args, repo):
-    """
-    step: remove the HUPy config file from repository root.
-    """
-    remove_config_file(repo, args.force)
-
-
-# registry mapping each uninstall step to its arg dest and runner;  add
-# a new step by appending a (dest, runner) pair here
-_UNINSTALL_STEPS = [
-    ("uninstall_hook_stubs", _run_uninstall_hook_stubs),
-    ("remove_config_file", _run_remove_config_file),
-]
-
-
 def _uninstall_main(args):
     """
     dispatch for the ``uninstall`` subcommand.
@@ -79,23 +56,19 @@ def _uninstall_main(args):
     repo = load_git_repo(repo_path)
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    selected_steps = [
-        (dest, run_step)
-        for dest, run_step in _UNINSTALL_STEPS
-        if getattr(args, dest)
-    ]
-    # no step flag given: run every step (dft behavior)
-    if not selected_steps:
-        selected_steps = _UNINSTALL_STEPS
+    # no step flag given: run both steps (dft behavior)
+    run_both = not (args.uninstall_hook_stubs or args.remove_config_file)
 
     logger.enter("HUPy Uninstallation for: {}".format(repo_root))
 
     if not args.force:
         logger.note("dry run: use --force to actually remove listed files")
 
-    for dest, run_step in selected_steps:
-        logger.debug("running uninstall step: {}".format(dest))
-        run_step(args, repo)
+    if run_both or args.uninstall_hook_stubs:
+        uninstall_hook_stubs(repo, force=args.force)
+
+    if run_both or args.remove_config_file:
+        remove_config_file(repo, args.force)
 
     if args.force:
         logger.done("HUPy Uninstalled for: {}".format(repo_root))
