@@ -64,7 +64,7 @@ def _check_trail(heading, trail, changed_paths):
 
 
 # Public API  ##################################################################
-def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
+def perform_paper_trail(repo, state_file, hook_name):
     """
     run every paper trail configured for ``hook_name``, aborting the
     commit if an applicable paper trail's glob matches no file
@@ -78,8 +78,6 @@ def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
     :type state_file: HupyStateFile
     :param hook_name: hook name, eg ``"pre-commit"``
     :type hook_name: str
-    :param hooks_args: raw arguments forwarded by the git hook invocation
-    :type hooks_args: list[str], optional
     """
     if not should_run_module(repo, state_file, "pt"):
         return
@@ -92,7 +90,7 @@ def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
         logger.skip("no Paper Trail entries configured")
         return
 
-    changed_paths = get_changed_file_paths(repo, hook_name, hooks_args)
+    changed_paths = get_changed_file_paths(repo)
     commit_type = get_current_commit_type(repo)
 
     for trail in trails:

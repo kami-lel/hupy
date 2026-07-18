@@ -18,4 +18,4 @@ def run_features(repo, state_file, proj_logger, logger, hooks_args):
     execute direct-commit ban and paper trail.
     """
     ban_direct_commit(repo, state_file)
-    perform_paper_trail(repo, state_file, HOOK_NAME, hooks_args)
+    perform_paper_trail(repo, state_file, HOOK_NAME)

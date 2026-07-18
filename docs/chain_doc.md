@@ -116,8 +116,7 @@ flowchart TD
     subgraph prerebase [pre-rebase stage]
         prb[[pre-rebase hook]] --> lead0{{Leading Hook Bracket}}
         lead0 --> bdc0[Ban Direct Commit]
-        bdc0 --> pt0[Paper Trail]
-        pt0 --> trail0{{Trailing Hook Bracket}}
+        bdc0 --> trail0{{Trailing Hook Bracket}}
     end
     R --> prb
 

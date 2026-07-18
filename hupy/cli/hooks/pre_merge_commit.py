@@ -18,5 +18,5 @@ def run_features(repo, state_file, proj_logger, logger, hooks_args):
     execute triage tag gating and paper trail.
     """
     perform_triage_tags_gating(repo, state_file)
-    perform_paper_trail(repo, state_file, HOOK_NAME, hooks_args)
+    perform_paper_trail(repo, state_file, HOOK_NAME)
 
