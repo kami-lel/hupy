@@ -34,7 +34,7 @@ performs:
   only files identified as HUPy-managed stubs are removed)
 - remove the HUPy config file (.hupy.config.jsonc) from repository root
 
-without --force, nothing is deleted: a dry run reports (via warnings)
+without --force, nothing is deleted: a dry run reports (via info logs)
 what would be removed
 """
 
