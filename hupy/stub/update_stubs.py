@@ -136,6 +136,18 @@ def _add_missing_stubs(hooks_dir, missing_names):
         _write_stub(hooks_dir / hook_name, hook_name, is_update=True)
 
 
+def _uninstall_managed_stub(target_path, force):
+    """
+    delete ``target_path`` if ``force`` is set; otherwise only warn
+    that it would be removed (dry run).
+    """
+    if force:
+        logger.warning("remove hook stub: {}".format(target_path))
+        target_path.unlink()
+    else:
+        logger.warning("would remove hook stub: {}".format(target_path))
+
+
 def _refresh_installed_stubs(hooks_dir, names):
     """
     regenerate every already-installed stub in ``names``
@@ -191,6 +203,40 @@ def install_hook_stubs(repo, hooks_dir=None, force=False):
 
     for hook_name in get_hook_names_by_demand(repo):
         _install_or_abort(hooks_dir, hook_name, force)
+
+
+def uninstall_hook_stubs(repo, hooks_dir=None, force=False):
+    """
+    remove every HUPy-managed hook stub found in ``repo``'s hooks dir.
+
+    a file only qualifies via ``_is_managed_stub``, so unrelated files
+    sharing the hooks dir (eg git's own ``*.sample`` hooks, or
+    hand-written hooks) are left untouched; nothing outside these
+    matched files is ever removed.
+
+    when ``force`` is not set, no file is deleted: each matching stub
+    is only reported via a warning (dry run).
+
+
+    :param repo: repo to uninstall hook stubs from
+    :type repo: git.Repo
+    :param hooks_dir: directory the hook stub scripts are searched in;
+            defaults to ``resolve_hooks_dir(repo)``
+    :type hooks_dir: pathlib.Path, optional
+    :param force: whether actually delete matching stubs, rather than
+            only reporting them
+    :type force: bool, optional
+    """
+    hooks_dir = hooks_dir or resolve_hooks_dir(repo)
+    logger.enter("uninstall hook stubs")
+    logger.debug("hooks dir: {}".format(hooks_dir))
+
+    if not hooks_dir.is_dir():
+        return
+
+    for target_path in sorted(hooks_dir.iterdir()):
+        if _is_managed_stub(target_path):
+            _uninstall_managed_stub(target_path, force)
 
 
 def verify_hook_stubs(repo, hooks_dir=None, force=False, update=False):
