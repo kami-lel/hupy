@@ -25,6 +25,10 @@
       "tests/**/fixtures/**"
     ]
   },
+  "pt": {
+    "is_disabled": false,
+    "trails": []
+  },
   "pch": {
     "is_disabled": false,
     "enable_vertical_slice": false,
