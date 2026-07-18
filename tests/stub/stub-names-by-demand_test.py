@@ -3,8 +3,8 @@ stub-names-by-demand_test.py
 
 tests for `get_hook_names_by_demand`: with no config file, exactly
 the hook stages carrying their own `run_features`/`run_after` are
-demanded — notably `pre-rebase`, demanded solely for Paper Trail
-since it carries no other feature
+demanded — including `pre-rebase`, which carries Ban Direct Commit
+and Paper Trail
 """
 
 from hupy.stub.names_by_demand import get_hook_names_by_demand
