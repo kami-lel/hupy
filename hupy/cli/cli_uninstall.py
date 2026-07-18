@@ -15,7 +15,6 @@ from hupy.kamilog import (
     getLogger,
 )
 
-
 # logger  ######################################################################
 
 UNINSTALL_LOGGER_NAME = PROJ_LOGGER_NAME + ".uninstall"
@@ -98,7 +97,10 @@ def _uninstall_main(args):
         logger.debug("running uninstall step: {}".format(dest))
         run_step(args, repo)
 
-    logger.done("HUPy Uninstalled for: {}".format(repo_root))
+    if args.force:
+        logger.done("HUPy Uninstalled for: {}".format(repo_root))
+    else:
+        logger.done("dry run in: {}".format(repo_root))
 
 
 # Public API  ##################################################################

@@ -64,5 +64,5 @@ def remove_config_file(repo, force):
         config_path.unlink()
     else:
         logger.warning(
-            "would remove HUPy config file: {}".format(config_path)
+            "attempt remove config file: {}".format(config_path)
         )

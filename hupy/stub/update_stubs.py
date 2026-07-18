@@ -145,7 +145,7 @@ def _uninstall_managed_stub(target_path, force):
         logger.warning("remove hook stub: {}".format(target_path))
         target_path.unlink()
     else:
-        logger.warning("would remove hook stub: {}".format(target_path))
+        logger.warning("attempt remove stub: {}".format(target_path))
 
 
 def _refresh_installed_stubs(hooks_dir, names):
