@@ -22,6 +22,7 @@ class TestGetHookNamesByDemandNoConfig:
                 "prepare-commit-msg",
                 "pre-merge-commit",
                 "pre-rebase",
+                "pre-applypatch",
             ]
         )
 
