@@ -13,7 +13,7 @@ from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME
 
-# Todo CLI expose Grep Ver
+# TODO CLI expose Grep Ver
 
 # logger  ######################################################################
 

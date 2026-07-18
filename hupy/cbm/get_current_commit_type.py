@@ -15,7 +15,7 @@ from hupy.config_file.load_config import load_hupy_config
 __all__ = ("get_current_commit_type", "get_source_branch", "get_target_branch")
 
 
-# Todo CLI expose commit type
+# TODO CLI expose commit type
 
 # logger  ######################################################################
 

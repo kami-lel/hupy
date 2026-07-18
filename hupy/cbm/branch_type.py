@@ -9,7 +9,7 @@ from enum import Enum, auto
 __all__ = ("BranchType",)
 
 
-# Todo CLI expose branch type
+# TODO CLI expose branch type
 
 
 class BranchType(Enum):
