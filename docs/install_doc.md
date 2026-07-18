@@ -55,7 +55,7 @@ Initialize `hupy` inside the git repository to protect:
 hupy init
 ```
 
-- copies the default hook stub scripts into the repo's hooks directory
+- renders the demanded hook stub scripts into the repo's hooks directory
 - writes a default `.hupy.config.jsonc` at the repository root — commit it, so every clone shares the same behavior; each section is commented in place with what it controls
 
 Verify the HUPy setup at any time:
@@ -68,4 +68,13 @@ hupy verify
 
 - the config file (`.hupy.config.jsonc`) loads and validates against the schema
 - the version string can be grepped
-- every packaged hook stub is installed in the repo's hooks directory
+- every demanded hook stub is installed in the repo's hooks directory
+
+To remove `hupy` from a repository, reversing `hupy init`:
+
+```bash
+hupy uninstall --force
+```
+
+> [!IMPORTANT]
+> Without `--force` it's a dry run, reporting what would be removed.

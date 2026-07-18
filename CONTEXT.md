@@ -8,7 +8,7 @@
 
 Package `HUPy` (import name `hupy`) · build `setuptools` · Python `>=3.10` · install `pip install -e ".[dev]"` · dependencies `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`.
 
-Implemented: `cbm`, `bdc`, `ttg`, `pt`, `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`), `kamilog`. Not started: `ensure_file_edited` (a bash-era utility still to be ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py`).
+Implemented: `cbm`, `bdc`, `ttg`, `pt` (the bash-era `ensure_file_edited` utility, ported and renamed to Paper Trail), `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`, `uninstall`), `kamilog`.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 
 | Module | Responsibility |
 |---|---|
-| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hooks/`); `verify` (`cli_verify.py`); the generic `get`/`set`/`unset`/`info` accessor runner (`cli_accessors.py`) dispatching each key module under `accessors/` (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) |
+| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); `uninstall` (`cli_uninstall.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hooks/`); `verify` (`cli_verify.py`); the generic `get`/`set`/`unset`/`info` accessor runner (`cli_accessors.py`) dispatching each key module under `accessors/` (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) |
 | `cbm` | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` |
 | `config_file` | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc`, cached JSON5 loading resolved against an open `git.Repo`, and default-config copying |
 | `state` | `HupyStateFile` pydantic schema for `hupy-state.json` (verbosity, one-time skips), path resolution inside `repo.git_dir`, atomic thread-/process-safe load-and-save |
@@ -53,7 +53,7 @@ Key decisions:
 - **`verify`'s stub check is a two-way diff, not existence-only.** `verify_hook_stubs` compares `get_hook_names_by_demand(repo)` against every file in the hooks dir that `_is_managed_stub` identifies as HUPy-managed (matched by its rendered `-m hupy hook <name>` line, so unrelated files like git's own `*.sample` hooks are ignored); by default it only warns on missing/unused, `-u`/`--update-hook-stubs` additionally adds/removes them, and `-u -f`/`--force` also regenerates every already-installed demanded stub.
 - **Interpreter path baked in at install time.** Each stub is rendered from `_STUB_TEMPLATE` with `sys.executable` filled in directly — no on-disk template file or placeholder substitution; a bare `python` on `PATH` is unreliable for hooks fired by an IDE that never sourced the venv. Consequence: re-run `hupy init --force` (or `hupy verify -u -f`) after moving the venv.
 - **`-f`/`--force` gates the stubs and the config file independently** — `init` is not atomic across the two artifacts.
-- **`post-commit`'s only config-driven feature is its `hb` bracket** — it otherwise exists to spend `skip_once` (`state_file.reset_for_next_commit()`) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them. Both the lead and trail `hb` brackets run before `reset_for_next_commit()`, so their commands still see the round's `skip_once` state.
+- **`post-commit`'s only config-driven feature is its `hb` bracket** — it otherwise exists to spend `skip_once` (`state_file.reset_for_next_chain()`, called from `cli_hook.py`'s generic runner) once the round has fully landed; clearing earlier (e.g. in `prepare-commit-msg`) would drop skips before `commit-msg`-adjacent tooling could observe them. Both the lead and trail `hb` brackets run before `reset_for_next_chain()`, so their commands still see the round's `skip_once` state.
 - **Enforcement caveat**: git hooks are client-side and opt-in (`--no-verify` bypasses them). Guaranteed enforcement needs a server-side mechanism, out of scope here.
 
 ## Module Details
@@ -65,8 +65,8 @@ Commit/Branch/Merge — classifies branch names and in-progress commits from git
 **Public API** (`hupy/cbm/__init__.py`): `BranchType`, `CommitType`, `get_current_commit_type(repo)`, `get_source_branch(repo)`, `get_target_branch(repo)` — all take an open `git.Repo`.
 
 - **`BranchType(Enum)`** — `FEATURE`/`DEV`/`MAIN`/`HOTFIX`/`RELEASE`/`USER`. `from_name(branch_name, repo)` classifies against the `cbm` config section in order: `dev_branch_name`→`DEV`, `main_branch_name`→`MAIN`, `hotfix_branch_prefix/`→`HOTFIX`, `release_branch_prefix/`→`RELEASE`, any other `/`→`USER`, else `FEATURE`.
-- **`CommitType(Flag)`** — level 1 `MERGE`/`OTHER_COMMIT`; level 2 (under `MERGE`) the eight merge types plus `OTHER_MERGE`. `decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE,DEV)`→`FEATURE_LANDING`, `(DEV,MAIN)`→`VERSION_RELEASE`, `(MAIN,DEV)`→`SYNC_BACKPORT`, `(DEV,FEATURE)`→`CATCH_UP`, `(HOTFIX,MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX,DEV)`→`HOTFIX_BACKPORT`, `(RELEASE,MAIN)`→`RELEASE_CUT`, `(RELEASE,DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full tables and Mermaid graphs. `__str__` returns the member's bare name without the `CommitType.` class prefix (`.name`, e.g. `"VERSION_RELEASE"`), or, for a non-canonical composite (`.name` is `None`), Python's own pipe-joined name (e.g. `"VERSION_RELEASE|RELEASE_CUT"`); `repr()` is untouched, still class-qualified.
-- **`get_current_commit_type(repo)`** in order: no `MERGE_HEAD`→`OTHER_COMMIT`; multi-line `MERGE_HEAD` (octopus)→`OTHER_MERGE`; SHA matching a remote tracking ref of the target (pull merge)→`OTHER_MERGE`; else classify source/target branches and `decide_commit_type`. Detached HEAD → `get_target_branch` returns `None`, handled without error.
+- **`CommitType(Flag)`** — level 1 `MERGE`/`REGULAR_COMMIT`/`OTHER_COMMIT`; level 2 (under `MERGE`) the eight merge types plus `OTHER_MERGE`. `decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE,DEV)`→`FEATURE_LANDING`, `(DEV,MAIN)`→`VERSION_RELEASE`, `(MAIN,DEV)`→`SYNC_BACKPORT`, `(DEV,FEATURE)`→`CATCH_UP`, `(HOTFIX,MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX,DEV)`→`HOTFIX_BACKPORT`, `(RELEASE,MAIN)`→`RELEASE_CUT`, `(RELEASE,DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full tables and Mermaid graphs. `__str__` returns the member's bare name without the `CommitType.` class prefix (`.name`, e.g. `"VERSION_RELEASE"`), or, for a non-canonical composite (`.name` is `None`), Python's own pipe-joined name (e.g. `"VERSION_RELEASE|RELEASE_CUT"`); `repr()` is untouched, still class-qualified.
+- **`get_current_commit_type(repo)`** in order: no `MERGE_HEAD`→`REGULAR_COMMIT`; multi-line `MERGE_HEAD` (octopus)→`OTHER_MERGE`; SHA matching a remote tracking ref of the target (pull merge)→`OTHER_MERGE`; else classify source/target branches and `decide_commit_type`. Detached HEAD → `get_target_branch` returns `None`, handled without error.
 
 The three lookup functions cache per `repo.git_dir`, so repeated calls (e.g. from both `pch` and `ttg`) hit git once. Repo construction/error handling is the caller's job. Exposed via `hupy get current-commit-type` (`accessors/commit_type.py`, see the `cli` module details below).
 
@@ -89,7 +89,7 @@ Prepend Commit Header — rewrites in-progress merge commit messages to prepend 
 
 `<bump>` (`Major `/`Minor `/`Patch `/`""`) comes from `ver_grep.decide_version_update_type` comparing source vs target versions. `VERSION_RELEASE`'s `<release-type>` comes from `_get_release_type_word(version, pch_config)`, checked in order: only when the version's `major.minor.patch` core matches (a raw `re.match(r"^\d+\.\d+\.\d+", version)`, not the pattern in `_get_version_bump_prefix`) is `alpha_tag`/`beta_tag`/`release_candidate_tag` checked as a substring → Alpha/Beta/Release Candidate (each skipped if its tag is empty); else `enable_pre_alpha` + `0.9.z` → Pre-Alpha; else `enable_vertical_slice` + `0.5.z`–`0.9.z` → Vertical Slice; else any `0.x.z` → Prototype; else `>=1.0.0` → Stable; else `""` (triggers the plain fallback). Gating the tag check behind the semver-core match keeps an unparsable version (eg `v2024.07-rc1`) from matching a tag substring by coincidence and instead falling through to plain `Version Release: <version>`. `<bump>` is forced empty for Alpha/Beta/RC.
 
-`OTHER_COMMIT`/`OTHER_MERGE` → file untouched. The rewrite moves `#` comment lines after the content block and writes atomically via `os.replace()`, leaving the original intact on failure.
+`REGULAR_COMMIT`/`OTHER_MERGE` → file untouched. The rewrite moves `#` comment lines after the content block and writes atomically via `os.replace()`, leaving the original intact on failure.
 
 ### `config_file`
 
@@ -167,7 +167,7 @@ Triage Tag Gating — blocks commits that introduce annotation markers on protec
 
 ### `pt`
 
-Paper Trail — requires that at least one file matching a configured glob was staged alongside the current commit; runs right after `ttg` in `pre-commit`/`pre-merge-commit`, and after `bdc` in `pre-applypatch`. Deliberately **not** wired into `pre-rebase`: a rebase replays existing commits rather than introducing new content, so a range-level check there would be redundant with the per-commit gate each replayed commit already passed, and would silently drop precision (a rebase carries no `MERGE_HEAD`, so `get_current_commit_type` reports `OTHER_COMMIT`, filtering out every merge-scoped trail and leaving only blunt, always-on trails able to fire — see the removed `_get_rebase_range_file_paths` in git history for the prior attempt).
+Paper Trail — requires that at least one file matching a configured glob was staged alongside the current commit; runs right after `ttg` in `pre-commit`/`pre-merge-commit`, and after `bdc` in `pre-applypatch`. Deliberately **not** wired into `pre-rebase`: a rebase replays existing commits rather than introducing new content, so a range-level check there would be redundant with the per-commit gate each replayed commit already passed, and would silently drop precision (a rebase carries no `MERGE_HEAD`, so `get_current_commit_type` reports `REGULAR_COMMIT`, filtering out every merge-scoped trail and leaving only blunt, always-on trails able to fire — see the removed `_get_rebase_range_file_paths` in git history for the prior attempt).
 
 **Public API** (`hupy/pt/__init__.py`): `PT_LOGGER_NAME` · `perform_paper_trail(repo, state_file, hook_name)`.
 
@@ -192,10 +192,11 @@ Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stag
 
 ### `cli`
 
-Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. `--version` prints the installed package version directly. Six top-level subcommands, seventeen git hook stages nested under `hook`, six accessor keys nested under `get`/`info`, and (only for the keys that support them) `set`/`unset`:
+Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. `--version` prints the installed package version directly. Eight top-level subcommands, seventeen git hook stages nested under `hook`, six accessor keys nested under `get`/`info`, and (only for the keys that support them) `set`/`unset`:
 
 ```
 hupy init
+hupy uninstall
 hupy hook pre-commit
 hupy hook prepare-commit-msg
 hupy hook commit-msg
@@ -222,6 +223,7 @@ hupy info {hupy-version,verbosity,skip-once,branch-type,grep-ver,current-commit-
 
 - **`cli_main.py`** — main parser (`prog="hupy"`) and dispatch; imports each subcommand module's `register_*_parser`.
 - **`init`** (`cli_init.py`) — onboards a repo via a `_INIT_STEPS` registry (`install_hook_stubs`, `create_config_file`); plain `hupy init` runs both, `--install-hook-stubs`/`--create-config-file` select one. Resolves `repo_root` from `repo.working_tree_dir` (so running from a subdir still anchors correctly). Hook-stub install delegates to `hupy.stub.update_stubs.install_hook_stubs(repo, hooks_dir=args.hooks_dir, force=args.force)`, which resolves the hooks dir itself when `hooks_dir` is `None`; config-file creation still delegates to `create_default_config_file`.
+- **`uninstall`** (`cli_uninstall.py`) — reverses `init`: `--uninstall-hook-stubs`/`--remove-config-file` each run one step alone, plain `hupy uninstall` runs both, delegating to `hupy.stub.update_stubs.uninstall_hook_stubs(repo, force=args.force)` and `hupy.config_file.write_config.remove_config_file(repo, force)`. Without `-f`/`--force` it's a dry run: nothing is deleted, and info logs report what would be removed.
 - **`verify`** (`cli_verify.py`, alias `v`) — loads/validates `.hupy.config.jsonc` via `load_hupy_config`, greps the current version via `grep_version`, then delegates to `hupy.stub.update_stubs.verify_hook_stubs(repo, force=args.force, update=args.update_hook_stubs)` to check the resolved hooks dir against `get_hook_names_by_demand(repo)`; plain `verify` only reports drift, `-u`/`--update-hook-stubs` syncs it (add missing, remove unused), `-u -f`/`--force` also regenerates already-installed demanded stubs. Shares `load_git_repo`/`REPO_PATH_HELP` with `init`; hooks-dir resolution now lives in `hupy.stub.update_stubs.resolve_hooks_dir`, not `cli_init.py`.
 - **`load_git_repo(repo_path)`** — `git.Repo(..., search_parent_directories=True)`; on invalid repo, `SystemExit(1)` before any writes. Used by `init`, `verify`, and `load_hupy_config`.
 - **`hook`** (`hooks/`) — one file per git hook stage (seventeen: `pre-commit`, `prepare-commit-msg`, `commit-msg`, `post-commit`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `pre-push`), dispatched through one generic runner in `cli_hook.py` (`hupy/cli/cli_hook.py` — a sibling of `hooks/`, not inside it, so `hupy.stub.names_by_demand`'s auto-discovery over `hooks/`'s submodules doesn't pick up the runner itself). Each stage module exposes only `HOOK_NAME`, plus up to two optional hooks: `run_features(repo, state_file, proj_logger, logger, hooks_args)` (real per-stage logic, run between the `hb` lead/trail brackets — a `HOOK_STAGE_NOOP` debug log substitutes when absent), `run_after(repo, state_file, proj_logger, logger)` (after the trail bracket, before the finish log). Neither the stage's help text nor its loggers are declared in the module: `cli_hook.py`'s private `_run_hook_stage(hook_name, args, *, features=None, after=None)` builds `logger = kamilog.getLogger(PROJ_LOGGER_NAME + "." + hook_name)` (`propagate = False`) per call and passes it, alongside the module-level `proj_logger = kamilog.getLogger(PROJ_LOGGER_NAME)`, into `features`/`after`; it is the single dispatch shared by every stage: builds the repo, opens `hupy-state.json`, applies verbosity atop `state_file.hooks_logger_verbosity`, adopts the chain session (`chain_policy.adopt_session(state_file.chain_session, os.getppid())` — a differing or absent PID reclaims the session as a fresh chain, reusing whatever `skip_once`/`expect_post_rewrite` state was left otherwise), and, only when `hook_name == "prepare-commit-msg"`, sets `chain_session.expect_post_rewrite = chain_policy.detect_amend(args.hook_args)` before the lead bracket (so it lands ahead of `post-commit`'s own decision later in the chain); then `hb` lead bracket → `features` (or noop log) → `hb` trail bracket → `after` → a per-stage `debug`-level finish log (`"{stage} stage Finished"`, downgraded from `done` — no longer chain-signal-worthy on its own); `hooks_args=args.hook_args` (a `hook_args` positional, `nargs="*"`, capturing whatever argv git itself passed to the hook script via the hook stub's `"$@"`) threads into both bracket calls and into `features` itself, kept in `run_features`'s fixed signature for any stage that needs the hook's raw args even though no current feature consumes it there (`pt`, `bdc` no longer take `hooks_args` since the rebase-range path was removed; today only `hb`'s own bracket calls actually use it). Finally, `chain_policy.is_chain_terminal(hook_name, state_file.chain_session)` decides whether *this* stage is the one closing its chain — unconditionally for `post-merge`/`post-applypatch`/`post-rewrite` and every standalone hook, conditionally for `post-commit` (closes unless `expect_post_rewrite` is set, in which case the trailing `post-rewrite` closes instead), never for any other stage — and if so, logs the single per-chain `proj_logger.done("{} Finished".format(chain_policy.get_chain_label(hook_name)))` (e.g. `"Commit Chain Finished"`) and calls `state_file.reset_for_next_chain()`. Private `_register_hook_stage(hook_subparser, mod)` builds a `doc = "run {HOOK_NAME} stage hooks"` string, uses it as the subparser's `help`/`description`, and wires the subparser to `_run_hook_stage` via the module's optional attributes, looked up with `getattr(mod, "run_features"/"run_after", None)`; only `register_cli_hook_parser` (calling `_register_hook_stage` once per stage module, in the same grouping as the list above) is exported. Whether a stage module defines `run_features`/`run_after` also feeds `hupy.stub.names_by_demand.get_hook_names_by_demand`'s stub-demand check.
@@ -272,6 +274,7 @@ hupy/                             # installable package
   cli/                            # CLI package: parsing & dispatch
     cli_main.py                   # cli_parser/cli_subparser, registration
     cli_init.py                   # `init`; load_git_repo(repo_path)
+    cli_uninstall.py              # `uninstall`: reverses `init`
     cli_verify.py                 # `verify` (alias `v`)
     cli_accessors.py              # generic get/set/unset/info runner + register_cli_accessors_parser
     accessors/                    # one module per accessor KEY
@@ -286,7 +289,7 @@ hupy/                             # installable package
       pre_commit.py                    # run_features: ban_direct_commit + perform_triage_tags_gating + perform_paper_trail
       prepare_commit_msg.py            # run_features: prepend_commit_header
       commit_msg.py                    # HOOK_NAME only (hb brackets)
-      post_commit.py                   # run_after: reset_for_next_commit
+      post_commit.py                   # HOOK_NAME only (chain-close reset lives in cli_hook.py)
       pre_merge_commit.py              # run_features: perform_triage_tags_gating + perform_paper_trail
       post_merge.py                    # HOOK_NAME only (hb brackets)
       pre_rebase.py                    # run_features: ban_direct_commit
@@ -312,7 +315,7 @@ hupy/                             # installable package
     load_config.py                # load_hupy_config(repo): read JSON5 + validate, cache
     write_config.py               # create_default_config_file(repo, force)
   state/                          # hupy-state.json schema and I/O
-    state_file.py                 # HupyStateFile: hooks_logger_verbosity, skip_once; reset_for_next_commit()
+    state_file.py                 # HupyStateFile: hooks_logger_verbosity, skip_once; reset_for_next_chain()
     state_file_path.py            # STATE_FILENAME; get_state_file_path (inside .git)
     open_state.py                 # open_state_file(repo): atomic, locked load+save
   should_run_module.py            # should_run_module(repo, state_file, module_abbr)

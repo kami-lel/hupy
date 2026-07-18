@@ -6,54 +6,63 @@
 
 ### Added
 
-- **HB command `timeout`** — an HB command's config entry (`.hupy.config.jsonc`) accepts an optional `timeout` (float, seconds); exceeding it fails the command, honoring the entry's `allow_failure`
-- **Hook argument passthrough** — every hook stub now forwards git's own hook arguments (`"$@"`) into `hupy hook <stage>`, which threads them (shell-quoted) onto every HB bracket command's `cmd`, and into each stage's own `run_features(repo, state_file, proj_logger, logger, hooks_args)` — Paper Trail's `pre-rebase` check is the first feature to consume them directly; re-run `hupy init --install-hook-stubs --force` to pick up the updated stubs
-- **14 new git hook stages** — `commit-msg`, `pre-merge-commit`, `post-merge`, `pre-rebase`, `post-rewrite`, `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, and `pre-push` join `pre-commit`, `prepare-commit-msg`, and `post-commit`, bringing every git client-side hook under `hupy hook <stage>`; each gets its own `hb` bracket config section, though only five stages run any *HUPy* feature beyond their Hook Bracket (see **Triage Tag Gating in `pre-merge-commit`** and **Paper Trail (PT)** below)
-- **Triage Tag Gating in `pre-merge-commit`** — a conflict-free merge never visits `pre-commit`, so TTG now also gates `pre-merge-commit`, the other stage where a merge commit can actually be created; **Feature Landing** and **Version Release** are gated there exactly as they already were in `pre-commit`
-- **Demand-driven hook stubs** — `get_hook_names_by_demand` now auto-discovers every stage module under `hupy.cli.hooks` and installs a stub only when demanded: its `hb` bracket is enabled with a `lead`/`trail` command configured (`_HbBracket.should_install_hook_stub()`), or its module defines `run_features`/`run_after`; by default that's now `pre-commit`, `prepare-commit-msg`, `post-commit`, `pre-merge-commit`, and `pre-rebase` (via Paper Trail), but any of the 17 stages now gets a stub automatically once its Hook Bracket is configured
-- **Chain diagrams** — `docs/chain_doc.md` gained Mermaid diagrams for the Commit Chain (covering both `git commit` and `git rebase`) and the Merge Chain, plus the Patch Apply Chain and a Standalone Hooks list, covering the full set of seventeen stages
-- **`docs/stub_doc.md`** — hook-stub auto-determination and `hupy init`/`hupy verify` stub management, split out into its own doc and linked from the README rather than described ad hoc
-- **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic state-key accessor layer replaces the standalone `skip-once`/`set-verbosity` subcommands; each key (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) is its own module under `hupy/cli/accessors/` exposing `KEY`/`DOC` plus whichever of `run_get`/`run_set`/`run_unset`/`run_info` it supports, auto-nested as a subcommand under the matching top-level verb by the generic `hupy/cli/cli_accessors.py` runner
-- **`hupy-version` accessor key** (`hupy get hupy-version`, `hupy info hupy-version`) — prints the installed *HUPy* package version
-- **`branch-type` accessor key** (`hupy get branch-type`, `hupy info branch-type`) — prints the current branch's `BranchType` name, classified via `BranchType.from_name` against the `cbm` config section; errors on detached HEAD
-- **`grep-ver` accessor key** (`hupy get grep-ver`, `hupy info grep-ver`) — prints the version string grepped from `HEAD` via `ver_grep.grep_version`, empty when unconfigured, missing, or unmatched
-- **`current-commit-type` accessor key** (`hupy get current-commit-type`, `hupy info current-commit-type`) — prints the current in-progress commit's `CommitType`, via the new `CommitType.__str__`
-- **`CommitType.__str__`** — prints the flag's bare member name (e.g. `VERSION_RELEASE`), without the `CommitType.` class prefix, or Python's own pipe-joined composite name (e.g. `VERSION_RELEASE|RELEASE_CUT`) for non-canonical combinations; backs the new `current-commit-type` accessor, since `.name` is `None` for those composites
-- **`--version`** flag on the top-level `hupy` command — prints the installed package version directly
-- **`hupy set verbosity` offsets via `-v`/`-q`** — every accessor subcommand already accepted `-v`/`-q` to adjust its own invocation's logging; `set verbosity` now folds that same count into the value it persists (`VALUE + verbose - quiet`, `VALUE` defaulting to the schema default when omitted), so e.g. `hupy set verbosity -vv` bumps the stored base by two without having to know its current value
-- **Paper Trail (PT)** — assert that at least one file matching a configured glob actually changed, aborting the commit/rebase otherwise; configured as a list of paper trails (`glob`, optional `allow_commit_types`, optional `remark`) under a new `pt` config section, alongside `vg`/`cbm`/`bdc`/`ttg`/`pch`/`hb`; runs in `pre-commit` and `pre-merge-commit` right after Triage Tag Gating, and is the sole feature wired into `pre-rebase`, where it matches the range about to be replayed (`upstream...branch`) instead of the staged diff used by the other two stages; skippable via `hupy set skip-once pt` alongside the other modules; see `docs/pt_doc.md`
-- **Chain demo scripts** — `examples/chain/` gained `rebase-chain-demo.sh` (`pre-rebase` → `post-rewrite`), `merge-chain-demo.sh` (`pre-merge-commit` → `prepare-commit-msg` → `commit-msg` → `post-commit` → `post-merge`), and `patch-apply-chain-demo.sh` (`applypatch-msg` → `pre-applypatch` → `post-applypatch`), each driving `hupy hook <stage>` end-to-end against a fixture repo; `commit-chain-demo.sh` gained its previously-missing `commit-msg` stage and now runs its chain once, forwarding any `-v`/`-q` flags into a single `hupy set verbosity` call up front rather than passing them to every hook invocation
-
 ### Changed
-
-- **`hupy skip-once`/`so` → `hupy set skip-once` / `hupy get skip-once` / `hupy unset skip-once`**; **`hupy set-verbosity`/`sv` → `hupy set verbosity` / `hupy get verbosity`** — folded into the new accessor key layer, each gaining a matching `hupy info <key>` subcommand
-
-- HB bracket commands now run explicitly under `/bin/bash` (previously the platform's default shell) and receive a copy of the parent process's environment
-- Every `hb` config section (one per hook stage) is now optional and defaults to empty `lead`/`trail` lists; `is_disabled` defaults to `false`. Previously only `pre-commit`, `prepare-commit-msg`, and `post-commit` existed and all three had to be spelled out
-- `cli/hook/` restructured from one file per subcommand (`cli_pre_commit.py`, `cli_prepare_commit_msg.py`, `cli_post_commit.py`) into one file per git hook stage (package renamed `hook/` → `hooks/`) plus a shared generic runner, `hupy/cli/cli_hook.py`, so a new stage needs only a stage module declaring `HOOK_NAME` (and, optionally, `run_features`/`run_after`) and a registration call — the runner builds the subcommand's help text from `HOOK_NAME` and creates/passes a shared project logger and a per-stage logger into `run_features`/`run_after` as `(repo, state_file, proj_logger, logger, hooks_args)` (`run_after` omits `hooks_args`), so stage modules no longer declare their own `DOC` or logger
-- `hupy init`'s hook-stub install step now renders each stub in-process from the demanded hook names (`hupy.stub.names_by_demand.get_hook_names_by_demand`) rather than copying bundled `hupy/assets/hook-stubs/` template files; its flag renamed **`--copy-hooks` → `--install-hook-stubs`**
-- `hupy verify` gains **`-u`/`--update-hook-stubs`** (sync installed hook stubs to demand: add missing, remove no-longer-demanded) and **`-f`/`--force`** (with `-u`, also regenerate already-installed demanded stubs); previously it only checked that every packaged stub existed
-- `hupy.stub.update_stubs`'s `install_hook_stubs`/`verify_hook_stubs` now take a `repo` directly and resolve its hooks directory internally via a new public `resolve_hooks_dir(repo)`, rather than requiring the caller to resolve it first; `get_hook_names_by_demand` likewise now takes a `repo`
-- `load_hupy_config` gains an `allows_file_not_found` flag, returning `None` instead of exiting when the config file is missing; any malformed content, not just a schema-validation failure, still exits
-- each hook stage's finish log now reads `"{stage} stage Finished"` at the `debug` level, previously `done` — a stage finishing is no longer, on its own, a signal worth surfacing; the `on_done` callback and post-commit's `run_done` hook it briefly grew are gone again
-- **chain-end detection** — a single `done`-level message now prints once per **chain** (the full stage sequence one git command triggers, e.g. `pre-commit` through `post-commit`) instead of once per stage: new `hupy/cli/chain_policy.py` decides, per stage, whether it's the one closing its chain (`is_chain_terminal`) and names the chain in the message (`get_chain_label`, e.g. `"Commit Chain Finished"`, `"Merge Chain Finished"`); a new `ChainSession` (nested on `HupyStateFile`, keyed by `os.getppid()`) tracks which git process owns the currently-running chain across its separate stage processes, and whether `prepare-commit-msg` detected an amend (`detect_amend`), so that `post-commit` correctly yields the close to a trailing `post-rewrite` rather than closing early
-- hook stubs now `exec` into `python` (`exec "{python}" -m hupy hook {hook_name} "$@"`) instead of forking it from bash, so `python`'s parent process is git itself rather than a throwaway per-stage shell — the stability the new chain-session tracking depends on; re-run `hupy init --install-hook-stubs --force` (or `hupy verify -u -f`) on an already-installed repo to pick this up
-- `hupy set skip-once`'s help text now describes its scope as "the current/next chain" rather than "next hook run", matching the fix below
 
 ### Deprecated
 
 ### Removed
 
-- bundled `hupy/assets/hook-stubs/*` template files — hook stub content is now rendered in-process rather than copied from disk
-- `hupy/cli/cli_skip_once.py`, `hupy/cli/cli_set_verbosity.py` — superseded by `hupy/cli/accessors/skip_once.py`, `hupy/cli/accessors/verbosity.py`, and the generic `hupy/cli/cli_accessors.py` runner
-
 ### Fixed
-
-- `hupy set skip-once` flags could leak past a chain that never runs `post-commit`: the reset was hardcoded to `post-commit`'s `run_after`, so a rebase-only (`pre-rebase` → `post-rewrite`), merge-only (`post-merge`), or patch-apply-only (`post-applypatch`) chain never spent the flags, silently skipping a module on some later, unrelated chain. The reset now fires at whichever stage actually closes the chain (see **chain-end detection** above), covering every chain type
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v1.0.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v2.0.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [2.0.0] - 2026-07-18
+
+### Added
+
+- **`hupy uninstall`** — reverses `hupy init`, removing managed hook stubs and `.hupy.config.jsonc`; dry-run by default, `-f`/`--force` to delete
+- **All seventeen git hook stages** now run under `hupy hook <stage>` (14 new), each with its own `hb` bracket section; Triage Tag Gating and Paper Trail also gate `pre-merge-commit`, since a conflict-free merge skips `pre-commit`
+- **Paper Trail (PT)** — require at least one file matching a configured glob to change alongside a commit, aborting it otherwise; runs in `pre-commit`, `pre-merge-commit`, and `pre-rebase`; see `docs/pt_doc.md`
+- **Demand-driven hook stubs** — a stage only gets a stub once its Hook Bracket is configured or it defines real hook logic; see `docs/stub_doc.md`
+- **`hupy get`/`set`/`unset`/`info` accessor commands** — a generic key-based layer over `hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, and `current-commit-type`
+- **`--version`** flag on the top-level `hupy` command; `hupy set verbosity` now also accepts `-v`/`-q` offsets
+- **HB command `timeout`** — an HB command can specify a `timeout` (seconds), failing the command on expiry per its `allow_failure`
+- **Hook argument passthrough** — hook stubs forward git's own arguments into `hupy hook <stage>` and onward into HB bracket commands and each stage's own logic
+- **Chain diagrams and demos** — `docs/chain_doc.md` gained Mermaid diagrams for every chain, and `examples/chain/` gained matching end-to-end demo scripts
+
+### Changed
+
+- **`hupy skip-once`/`so` → `hupy set skip-once`; `hupy set-verbosity`/`sv` → `hupy set verbosity`** — folded into the new accessor layer, each gaining a matching `hupy info <key>`
+- `hupy init`'s hook-stub install now renders stubs in-process instead of copying bundled templates; flag renamed **`--copy-hooks` → `--install-hook-stubs`**
+- `hupy verify` gains **`-u`/`--update-hook-stubs`** and **`-f`/`--force`** to sync stub drift, not just report it
+- hook stubs now `exec` into `python` instead of forking it, keeping git as the direct parent process for reliable per-chain state tracking — re-run `hupy init --install-hook-stubs --force` (or `hupy verify -u -f`) on an already-installed repo
+- HB bracket commands now run explicitly under `/bin/bash`, and every `hb` config section is optional, defaulting to empty
+- logging: per-stage finish messages moved to `debug`; a single `done`-level message now prints once per chain instead of once per stage
+
+### Removed
+
+- bundled `hupy/assets/hook-stubs/*` template files — stubs are now rendered in-process
+- `hupy skip-once`/`hupy set-verbosity` standalone subcommands — superseded by the accessor layer
+
+### Fixed
+
+- `hupy set skip-once` flags could leak past a chain that never runs `post-commit` (rebase-only, merge-only, or patch-apply-only chains); the reset now fires at whichever stage actually closes the chain
+
+[2.0.0]: https://github.com/kami-lel/hupy/compare/v1.0.0...v2.0.0
 
 
 
