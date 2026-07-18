@@ -61,6 +61,20 @@ class CommitType(Flag):  #######################################################
         """
         return _MERGE_TYPE_BY_BRANCH_PAIR.get((source, target), cls.OTHER_MERGE)
 
+    # Dunder Method  -----------------------------------------------------------
+
+    def __str__(self):
+        """
+        :return: the member's name without the class prefix
+        :rtype: str
+        :example:
+        >>> str(CommitType.VERSION_RELEASE | CommitType.RELEASE_CUT)
+        'VERSION_RELEASE|RELEASE_CUT'
+        """
+        if self._name_ is None:
+            return "{}({})".format(self.__class__.__name__, self._value_)
+        return self._name_
+
 
 _MERGE_TYPE_BY_BRANCH_PAIR = {
     (BranchType.FEATURE, BranchType.DEV): CommitType.FEATURE_LANDING,
