@@ -7,6 +7,7 @@ from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cli.cli_accessors import register_cli_accessors_parser
 from hupy.cli.cli_hook import register_cli_hook_parser
 from hupy.cli.cli_init import register_cli_init_parser
+from hupy.cli.cli_uninstall import register_cli_uninstall_parser
 from hupy.cli.cli_verify import register_cli_verify_parser
 
 __all__ = ("cli_parser", "cli_subparser")
@@ -35,6 +36,7 @@ cli_subparser = cli_parser.add_subparsers(title="subcommands")
 # register subparsers  #########################################################
 
 register_cli_init_parser(cli_subparser)
+register_cli_uninstall_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
 register_cli_accessors_parser(cli_subparser)
 register_cli_hook_parser(cli_subparser)
