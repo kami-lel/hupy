@@ -1,8 +1,9 @@
 """
 perform_paper_trail.py
 
-run the PT trails configured for a HUPy git hook: abort the commit
-if an applicable trail's glob matches no file changed in this commit
+run the Paper Trail entries configured for a HUPy git hook: abort
+the commit if an applicable paper trail's glob matches no file
+changed in this commit
 """
 
 import fnmatch
@@ -30,7 +31,7 @@ _renderer = AnsiRenderer(sys.stdout)
 
 def _is_trail_applicable(trail, commit_type):
     """
-    :param trail: a single PT trail
+    :param trail: a single configured paper trail
     :type trail: _PaperTrail
     :param commit_type: type of the current commit/merge
     :type commit_type: CommitType
@@ -47,9 +48,9 @@ def _is_trail_applicable(trail, commit_type):
 
 def _check_trail(heading, trail, changed_paths):
     """
-    :param heading: label for this trail, used in logs
+    :param heading: label for this paper trail, used in logs
     :type heading: str
-    :param trail: a single PT trail
+    :param trail: a single configured paper trail
     :type trail: _PaperTrail
     :param changed_paths: file paths changed by this hook invocation
     :type changed_paths: list[str]
@@ -65,9 +66,9 @@ def _check_trail(heading, trail, changed_paths):
 # Public API  ##################################################################
 def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
     """
-    run every PT trail configured for ``hook_name``, aborting the
-    commit if an applicable trail's glob matches no file changed in
-    this commit.
+    run every paper trail configured for ``hook_name``, aborting the
+    commit if an applicable paper trail's glob matches no file
+    changed in this commit.
 
 
     :param repo: git repository object
@@ -88,7 +89,7 @@ def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
     trails = load_hupy_config(repo).pt.trails
 
     if not trails:
-        logger.skip("no PT trails configured")
+        logger.skip("no Paper Trail entries configured")
         return
 
     changed_paths = get_changed_file_paths(repo, hook_name, hooks_args)
@@ -98,7 +99,7 @@ def perform_paper_trail(repo, state_file, hook_name, hooks_args=()):
         heading = trail.remark or _renderer.color(
             trail.glob, AnsiStyle.UNDERLINE
         )
-        logger.enter("PT trail: " + heading)
+        logger.enter("Paper Trail: " + heading)
 
         if not _is_trail_applicable(trail, commit_type):
             logger.skip("due to commit type filtered: {}".format(heading))

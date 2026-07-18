@@ -56,14 +56,15 @@
   },
   "pt": { // Paper Trail #######################################################
     // assert files matching a glob were changed in this commit;
-    // fails the commit if an applicable trail's glob matches nothing changed
+    // fails the commit if an applicable paper trail's glob matches nothing
+    // changed
     //
-    // a single PT entry ("trail") includes fields:
+    // a single PT entry ("paper trail") includes fields:
     //
     // - "glob": required, single file glob to match against files
     //   changed in this commit
     // - "allow_commit_types" (optional, list of string):
-    //   commit/merge types this trail applies to
+    //   commit/merge types this paper trail applies to
     // - "remark" (optional, string): description/name of entry,
     //   strictly used in logger
     //
@@ -128,7 +129,7 @@
     //
     // - "cmd": shell command to be ran (at repository root)
     // - "allow_commit_types" (optional, list of string):
-    //   commit/merge types this trail applies to;
+    //   commit/merge types this command applies to;
     //   v.s. same field in "pt"
     // - "allow_failure" (optional, boolean):
     //   allowing failed command proceeded with committing
