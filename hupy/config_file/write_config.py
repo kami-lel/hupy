@@ -14,7 +14,7 @@ from hupy.config_file.config_file_path import (
 )
 from hupy.kamilog import getLogger
 
-__all__ = ("create_default_config_file",)
+__all__ = ("create_default_config_file", "remove_config_file")
 
 logger = getLogger(PROJ_LOGGER_NAME)
 
@@ -42,3 +42,27 @@ def create_default_config_file(repo, force):
 
     logger.debug("HUPy config file written: {}".format(config_path))
     shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
+
+
+def remove_config_file(repo, force):
+    """
+    remove the HUPy config file (``.hupy.config.jsonc``) from
+    ``repo``'s working tree root.
+
+    when ``force`` is not set, the file is not deleted: its presence
+    is only reported via a warning (dry run).
+    """
+    logger.enter("remove HUPy config file")
+    config_path = get_config_file_path(repo)
+
+    if not config_path.exists():
+        logger.debug("no HUPy config file to remove: {}".format(config_path))
+        return
+
+    if force:
+        logger.warning("remove HUPy config file: {}".format(config_path))
+        config_path.unlink()
+    else:
+        logger.info(
+            "attempt remove config file: {}".format(config_path)
+        )
