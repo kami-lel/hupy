@@ -19,7 +19,7 @@ from hupy.state.state_file import HupyStateFile
 _REPO = SimpleNamespace(working_tree_dir="/repo")
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _result(returncode):

@@ -17,7 +17,7 @@ logger = getLogger(PT_LOGGER_NAME)
 logger.propagate = False
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _get_staged_file_paths(repo):

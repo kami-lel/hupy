@@ -16,7 +16,7 @@ from hupy.kamilog import (
 from __init__ import prepare_demo_repo, run_vg
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

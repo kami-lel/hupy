@@ -17,7 +17,7 @@ _PATTERN = r"(\d+\.\d+\.\d+)"
 _STATE_FILE = HupyStateFile()
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _grep(repo, pattern=_PATTERN, version_file=_VERSION_FILE):

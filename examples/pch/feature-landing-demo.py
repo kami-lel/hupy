@@ -20,7 +20,7 @@ from __init__ import prepare_demo_repo_by_scenario, run_pch
 _SCENARIO = "feature_landing_pass"
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

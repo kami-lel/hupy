@@ -33,7 +33,7 @@ def repo_dir(tmp_path):
     return dest
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _stage_fixture(repo_dir, filename, fixture_name):

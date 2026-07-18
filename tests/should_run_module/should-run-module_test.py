@@ -19,7 +19,7 @@ _REPO = object()
 _MODULE_ABBRS = ("vg", "ttg", "pch", "bdc", "hb")
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _run(module_abbr, is_disabled=False, skip_once=()):

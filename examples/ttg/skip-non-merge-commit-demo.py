@@ -19,7 +19,7 @@ _BUCKET = "non_merge_commit"
 _FILES = {"a.py": "tt_loud_only.py", "b.py": "tt_none.py"}
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

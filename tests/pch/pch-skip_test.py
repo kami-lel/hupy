@@ -18,7 +18,7 @@ _STATE_FILE = HupyStateFile()
 _SENTINEL = "unrelated commit message\n"
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _assert_skipped(repo_dir, bucket):

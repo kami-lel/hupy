@@ -21,7 +21,7 @@ _BUCKET = "feature_landing"
 _STATE_FILE = HupyStateFile()
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _run(repo_dir, files, ignored_path_globs):

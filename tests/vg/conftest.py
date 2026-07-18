@@ -21,7 +21,7 @@ _BUNDLE_PATH = Path(__file__).parent.parent / "fixtures" / "default_repo.bundle"
 SOURCE_BRANCH = "add-user-authentication"
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _clone_and_enter(dest_dir):

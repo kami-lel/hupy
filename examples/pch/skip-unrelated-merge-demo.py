@@ -19,7 +19,7 @@ from __init__ import prepare_demo_repo_by_scenario, run_pch
 _SCENARIO = "irrelevant_merge"
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

@@ -21,7 +21,7 @@ _REF = "HEAD"
 _STATE_FILE = HupyStateFile()
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _make_repo(repo_dir, version_content=None, version_file=_VERSION_FILE):

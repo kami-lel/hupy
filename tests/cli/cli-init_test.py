@@ -25,7 +25,7 @@ _STALE_VALID_CONFIG_CONTENT = _DEFAULT_CONFIG_CONTENT.replace(
 )
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _default_hooks_dir(git_repo_dir):

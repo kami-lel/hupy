@@ -20,7 +20,7 @@ _BUCKET = "version_release"
 _FILES = {"a.py": "tt_quiet_only.py", "b.py": "tt_quiet_only.py"}
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

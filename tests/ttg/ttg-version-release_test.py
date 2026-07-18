@@ -17,7 +17,7 @@ _STATE_FILE = HupyStateFile()
 _BUCKET = "version_release"
 
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _assert_gated(repo_dir, files):

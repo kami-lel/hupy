@@ -26,7 +26,7 @@ logger.propagate = False
 _renderer = AnsiRenderer(sys.stdout)
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _is_trail_applicable(trail, commit_type):

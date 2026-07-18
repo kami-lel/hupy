@@ -1,7 +1,5 @@
 # `hupy` (Hooks Utility Python) README
 
-<!-- Fixme helpers -> auxiliaries -->
-
 > a toolkit for enforcing commit quality via git hooks.
 
 > [!NOTE]

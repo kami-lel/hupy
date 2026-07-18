@@ -8,7 +8,7 @@ from config_fixture import load_config_fixture
 
 from hupy.cbm.branch_type import BranchType
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _classify(branch_name, **cbm_overrides):

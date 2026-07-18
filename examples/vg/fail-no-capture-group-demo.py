@@ -18,7 +18,7 @@ from __init__ import prepare_demo_repo, run_vg
 _PATTERN_NO_GROUP = r"\d+\.\d+\.\d+"
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():

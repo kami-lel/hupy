@@ -14,7 +14,7 @@ import pytest
 
 from hupy.stub.update_stubs import install_hook_stubs
 
-# helpers  ######################################################################
+# auxiliaries  #################################################################
 
 
 def _assert_installed(hooks_dir, stub_names):

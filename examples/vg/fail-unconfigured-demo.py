@@ -18,7 +18,7 @@ from __init__ import prepare_demo_repo, run_vg
 _VERSION_CONTENT = "1.2.3\n"
 
 
-# helpers  #####################################################################
+# auxiliaries  #################################################################
 
 
 def _prepare_demo_repo():
