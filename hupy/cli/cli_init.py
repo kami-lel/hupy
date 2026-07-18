@@ -16,6 +16,9 @@ from hupy.kamilog import (
     getLogger,
 )
 
+# TODO add uninstall fx
+
+
 # logger  ######################################################################
 
 INIT_LOGGER_NAME = PROJ_LOGGER_NAME + ".init"
