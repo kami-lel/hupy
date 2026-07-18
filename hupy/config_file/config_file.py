@@ -31,6 +31,31 @@ logger = getLogger(CONFIG_LOGGER_NAME)
 logger.propagate = False
 
 
+# auxiliaries  #################################################################
+
+
+def _merge_commit_type_names(names):
+    """
+    merge a list of ``CommitType`` member names into a single allow
+    list instance, warning and skipping any illegal name; shared by
+    every ``allow_commit_types`` validator (``_HbCmd``, ``_PaperTrail``)
+
+
+    :param names: commit type member names
+    :type names: list[str]
+    :return: the merged allow list instance
+    :rtype: CommitType
+    """
+    result = CommitType(0)
+    for name in names:
+        try:
+            result |= CommitType[name]
+        except KeyError:
+            logger.warning("illegal commit type name: {}".format(name))
+
+    return result
+
+
 # internal structures  #########################################################
 
 
@@ -93,6 +118,55 @@ class _Ttg(BaseModel):  # ======================================================
     ignored_path_globs: list[str]
 
 
+# Paper Trail  =================================================================
+class _PaperTrail(BaseModel):
+    """
+    a single PT entry: assert ``glob`` was changed by this commit
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    glob: str
+    allow_commit_types: CommitType = CommitType(0)
+    remark: str = ""
+
+    # validators  --------------------------------------------------------------
+
+    @field_validator("allow_commit_types", mode="before")
+    @classmethod
+    def _parse_allow_commit_types(cls, filters):
+        """
+        merge the config list of member names into a single
+        ``CommitType`` allow list instance; a non-list value (eg an
+        already-parsed instance) passes through to pydantic
+
+
+        :param filters: commit type member names, or a ready value
+        :type filters: list[str] or CommitType or int
+        :return: the merged allow list instance, or ``filters`` as-is
+        :rtype: CommitType or object
+        """
+        if not isinstance(filters, list):
+            return filters
+
+        return _merge_commit_type_names(filters)
+
+
+class _Pt(BaseModel):
+    """
+    configuration for the PT module (paper trail)
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    is_disabled: bool = False
+    trails: list[_PaperTrail] = Field(default_factory=list)
+
+
 class _Pch(BaseModel):  # ======================================================
     """
     configuration for the PCH module (pre-commit hook)
@@ -146,14 +220,7 @@ class _HbCmd(BaseModel):
         if not isinstance(filters, list):
             return filters
 
-        result = CommitType(0)
-        for name in filters:
-            try:
-                result |= CommitType[name]
-            except KeyError:
-                logger.warning("illegal commit type name: {}".format(name))
-
-        return result
+        return _merge_commit_type_names(filters)
 
 
 class _HbBracket(BaseModel):
@@ -255,6 +322,7 @@ class HupyConfigFile(BaseModel):  ##############################################
     cbm: _Cbm
     bdc: _Bdc
     ttg: _Ttg
+    pt: _Pt
     pch: _Pch
     hb: _Hb
 

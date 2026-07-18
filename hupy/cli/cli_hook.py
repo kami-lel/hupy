@@ -83,7 +83,7 @@ def _run_hook_stage(hook_name, args, *, features=None, after=None):
         perform_hook_brackets(repo, state_file, hook_name, True, args.hook_args)
 
         if features is not None:
-            features(repo, state_file, proj_logger, logger)
+            features(repo, state_file, proj_logger, logger, args.hook_args)
         else:
             logger.debug(HOOK_STAGE_NOOP)
 

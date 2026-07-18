@@ -54,6 +54,54 @@
     // glob patterns excluded from TT scanning
     "ignored_path_globs": []
   },
+  "pt": { // Paper Trail #######################################################
+    // assert files matching a glob were changed in this commit;
+    // fails the commit if an applicable paper trail's glob matches nothing
+    // changed
+    //
+    // a single PT entry ("paper trail") includes fields:
+    //
+    // - "glob": required, single file glob to match against files
+    //   changed in this commit
+    // - "allow_commit_types" (optional, list of string):
+    //   commit/merge types this paper trail applies to
+    // - "remark" (optional, string): description/name of entry,
+    //   strictly used in logger
+    //
+    // "allow_commit_types" include all commit types which
+    // this command should be ran, possible values:
+    //
+    // - non-merge commits
+    //   - "REGULAR_COMMIT",
+    //   - "OTHER_COMMIT",
+    // - merge commits:
+    //   - "FEATURE_LANDING"
+    //   - "VERSION_RELEASE"
+    //   - "SYNC_BACKPORT"
+    //   - "CATCH_UP"
+    //   - "HOTFIX_RELEASE"
+    //   - "HOTFIX_BACKPORT"
+    //   - "RELEASE_CUT"
+    //   - "RELEASE_BACKPORT"
+    //   - "OTHER_MERGE"
+    // - merge categories (union of merge subtypes above):
+    //   - "MERGE" (all merge commits)
+    //   - "RELEASE": VERSION_RELEASE | HOTFIX_RELEASE | RELEASE_CUT
+    //   - "BACKPORT": SYNC_BACKPORT | HOTFIX_BACKPORT | RELEASE_BACKPORT
+    //   - "INTEGRATION": RELEASE | FEATURE_LANDING
+    //
+    //
+    // disable PT
+    "is_disabled": false,
+    "trails": [
+      // example entry:
+      // {
+      //   "remark": "Changelog Entry Required on Feature Landing",
+      //   "glob": "CHANGELOG.md",
+      //   "allow_commit_types": ["FEATURE_LANDING"]
+      // }
+    ]
+  },
   "pch": { // Prepend Commit Header ############################################
     // adds a short header line to the top of the commit message
     //
@@ -79,35 +127,16 @@
     //
     // a single HB command entry include fields:
     //
-    // - "remark" (optional, string): description/name of entry,
-    //   strictly used in logger
     // - "cmd": shell command to be ran (at repository root)
-    // - "allow_commit_types" (optional, list of string): v.i.
+    // - "allow_commit_types" (optional, list of string):
+    //   commit/merge types this command applies to;
+    //   v.s. same field in "pt"
     // - "allow_failure" (optional, boolean):
     //   allowing failed command proceeded with committing
     // - "timeout" (optional, float): max seconds to let command run
+    // - "remark" (optional, string): description/name of entry,
+    //   strictly used in logger
     //
-    // "allow_commit_types" include all commit types which
-    // this command should be ran, possible values:
-    //
-    // - non-merge commits
-    //   - "REGULAR_COMMIT",
-    //   - "OTHER_COMMIT",
-    // - merge commits:
-    //   - "FEATURE_LANDING"
-    //   - "VERSION_RELEASE"
-    //   - "SYNC_BACKPORT"
-    //   - "CATCH_UP"
-    //   - "HOTFIX_RELEASE"
-    //   - "HOTFIX_BACKPORT"
-    //   - "RELEASE_CUT"
-    //   - "RELEASE_BACKPORT"
-    //   - "OTHER_MERGE"
-    // - merge categories (union of merge subtypes above):
-    //   - "MERGE" (all merge commits)
-    //   - "RELEASE": VERSION_RELEASE | HOTFIX_RELEASE | RELEASE_CUT
-    //   - "BACKPORT": SYNC_BACKPORT | HOTFIX_BACKPORT | RELEASE_BACKPORT
-    //   - "INTEGRATION": RELEASE | FEATURE_LANDING
     //
     // disable HB
     "is_disabled": false,

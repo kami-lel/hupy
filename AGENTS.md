@@ -53,6 +53,7 @@ python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/de
 
 - say **HUPy features**, or just **features** — never *core logic* — for a stage's own work (e.g. `run_core` → `run_features`)
 - say **HB commands**, or just **command** — never *HB entry*/*entries* — for a configured `hb` bracket item
+- say **Paper Trail** or **paper-trail**, never *trails*/*trail* — for a configured `pt` entry (singular or plural alike)
 
 ## Documentation Maintenance
 

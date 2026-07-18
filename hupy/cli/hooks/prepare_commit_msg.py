@@ -12,7 +12,7 @@ HOOK_NAME = "prepare-commit-msg"
 
 
 # Public API  ##################################################################
-def run_features(repo, state_file, proj_logger, logger):
+def run_features(repo, state_file, proj_logger, logger, hooks_args):
     """
     execute prepend commit header.
     """

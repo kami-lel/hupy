@@ -1,5 +1,7 @@
 # Hook Chain Documentation
 
+<!-- Todo make sure each feature occurs in all appr locations -->
+
 Running a single `git` command can trigger a sequence of hooks, with *HUPy* running its matching features at each one according to your settings. This project's term for that full sequence — every hook stage a given git operation triggers, start to finish — is a **chain**.
 
 Within each hook **stage**, execution always opens with *Leading Hook Bracket* and closes with *Trailing Hook Bracket*; q.v. [Hook Bracket](hb_doc.md) for details.
@@ -82,7 +84,8 @@ flowchart TD
         C[[pre-commit hook]] --> C1{{Leading Hook Bracket}}
         C1 --> E1[Ban Direct Commit]
         E1 --> E2[Triage Tag Gating]
-        E2 --> C2{{Trailing Hook Bracket}}
+        E2 --> E3[Paper Trail]
+        E3 --> C2{{Trailing Hook Bracket}}
     end
     B -->|F| C
 
@@ -114,7 +117,8 @@ flowchart TD
 
     subgraph prerebase [pre-rebase stage]
         prb[[pre-rebase hook]] --> lead0{{Leading Hook Bracket}}
-        lead0 --> trail0{{Trailing Hook Bracket}}
+        lead0 --> pt0[Paper Trail]
+        pt0 --> trail0{{Trailing Hook Bracket}}
     end
     R --> prb
 
@@ -129,7 +133,7 @@ flowchart TD
     O2 --> P
 ```
 
-[Ban Direct Commit](bdc_doc.md) blocks direct commits to protected branches, [Triage Tag Gating](ttg_doc.md) blocks merges that still carry unresolved triage tags, and [Prepend Commit Header](pch_doc.md) adds a header line to merge commit messages — see each doc for the full behavior.
+[Ban Direct Commit](bdc_doc.md) blocks direct commits to protected branches, [Triage Tag Gating](ttg_doc.md) blocks merges that still carry unresolved triage tags, [Paper Trail](pt_doc.md) requires configured files to have changed alongside the commit, and [Prepend Commit Header](pch_doc.md) adds a header line to merge commit messages — see each doc for the full behavior.
 
 
 
@@ -181,7 +185,8 @@ flowchart TD
     subgraph premerge [pre-merge-commit stage]
         C[[pre-merge-commit hook]] --> C1{{Leading Hook Bracket}}
         C1 --> Cttg[Triage Tag Gating]
-        Cttg --> C2{{Trailing Hook Bracket}}
+        Cttg --> Cpt[Paper Trail]
+        Cpt --> C2{{Trailing Hook Bracket}}
     end
     G -->|F| C
 
@@ -217,7 +222,7 @@ flowchart TD
     PM2 --> Z4([End])
 ```
 
-See [Triage Tag Gating](ttg_doc.md) for its merge-gating behavior, and [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
+See [Triage Tag Gating](ttg_doc.md) for its merge-gating behavior, [Paper Trail](pt_doc.md) for its changed-file requirement, and [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
 
 
 
@@ -387,4 +392,4 @@ Each hook below fires on its own trigger, independent of the Chains above — it
 ----
 
 > [!NOTE]
-> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `commit-msg`, `post-rewrite`, `pre-rebase`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `commit-msg`, `post-rewrite`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.

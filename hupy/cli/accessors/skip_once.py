@@ -9,7 +9,7 @@ define the ``skip-once`` accessor key's ``run_get``, ``run_set``,
 KEY = "skip-once"
 DOC = "temporary skip module(s) for the current/next chain"
 
-SKIPPABLE_MODULE = ("vg", "ttg", "pch", "bdc", "hb")
+SKIPPABLE_MODULE = ("vg", "ttg", "pt", "pch", "bdc", "hb")
 
 _MODULE_ABBR_TO_NAME = dict(
     zip(
@@ -18,6 +18,7 @@ _MODULE_ABBR_TO_NAME = dict(
         (
             "ver-grep",
             "triage-tag-gating",
+            "paper-trail",
             "prepend-commit-header",
             "ban-direct-commit",
             "hook-bracket",
