@@ -65,13 +65,14 @@ class CommitType(Flag):  #######################################################
 
     def __str__(self):
         """
-        :return: the member's name without the class prefix, eg
-                ``"VERSION_RELEASE|RELEASE_CUT"`` instead of
-                ``"CommitType.VERSION_RELEASE|RELEASE_CUT"``
+        :return: the member's name without the class prefix
         :rtype: str
+        :example:
+        >>> str(CommitType.VERSION_RELEASE | CommitType.RELEASE_CUT)
+        'VERSION_RELEASE|RELEASE_CUT'
         """
         if self._name_ is None:
-            return f"{self.__class__.__name__}({self._value_})"
+            return "{}({})".format(self.__class__.__name__, self._value_)
         return self._name_
 
 
