@@ -2,9 +2,9 @@
 changed_files.py
 
 resolve the set of file paths changed by the current hook
-invocation, per hook: staged files for ``pre-commit`` and
-``pre-merge-commit``, the about-to-be-replayed range for
-``pre-rebase``
+invocation, per hook: staged files for ``pre-commit``,
+``pre-merge-commit``, and ``pre-applypatch``, the about-to-be-replayed
+range for ``pre-rebase``
 """
 
 import git
