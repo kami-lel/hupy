@@ -33,12 +33,6 @@ hupy = "hupy.__main__:main"
 [project.optional-dependencies]
 dev = ["pytest"]
 
-[tool.pytest.ini_options]
-addopts = "-m 'not release'"
-markers = [
-    "release: tests that only run during a release",
-]
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["hupy*"]
@@ -46,4 +40,10 @@ include = ["hupy*"]
 [tool.setuptools.package-data]
 hupy = [
     "assets/.hupy.config.jsonc",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "release: requires an installed build matching the working tree version",
 ]
