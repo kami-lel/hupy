@@ -1,5 +1,7 @@
 # Hook Chain Documentation
 
+<!-- Todo make sure each feature occurs in all appr locations -->
+
 Running a single `git` command can trigger a sequence of hooks, with *HUPy* running its matching features at each one according to your settings. This project's term for that full sequence — every hook stage a given git operation triggers, start to finish — is a **chain**.
 
 Within each hook **stage**, execution always opens with *Leading Hook Bracket* and closes with *Trailing Hook Bracket*; q.v. [Hook Bracket](hb_doc.md) for details.
