@@ -13,8 +13,6 @@ from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME
 
-# TODO CLI expose Grep Ver
-
 # logger  ######################################################################
 
 logger = getLogger(VER_GREP_LOGGER_NAME)

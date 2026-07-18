@@ -1,9 +1,13 @@
 """
 cli-accessors_test.py
 
-tests for the ``branch-type`` accessor key's ``run_get`` in
-`cli/accessors/branch_type.py`
+tests for the ``branch-type`` and ``grep-ver`` accessor keys'
+``run_get`` in `cli/accessors/branch_type.py` and
+`cli/accessors/grep_ver.py`
 """
+
+import json
+from pathlib import Path
 
 import git
 import pytest
@@ -11,7 +15,8 @@ from prep_repo import prepare_repo_with_files
 
 from hupy import PROJ_LOGGER_NAME, kamilog
 from hupy.cbm.branch_type import BranchType
-from hupy.cli.accessors import branch_type
+from hupy.cli.accessors import branch_type, grep_ver
+from hupy.state.state_file import HupyStateFile
 
 logger = kamilog.getLogger(PROJ_LOGGER_NAME)
 
@@ -58,3 +63,25 @@ class TestBranchTypeRunGet:
 
         with pytest.raises(SystemExit):
             branch_type.run_get(repo, None, logger, None)
+
+
+class TestGrepVerRunGet:
+    def test_prints_grepped_version(self, repo_dir, capsys):
+        # non_merge_commit bucket wires vg to grep "setup.cfg", whose
+        # bundled version on main is 1.2.3 (see prep_repo.py)
+        repo = _clone_repo(repo_dir)
+
+        grep_ver.run_get(repo, HupyStateFile(), logger, None)
+
+        assert capsys.readouterr().out.strip() == "1.2.3"
+
+    def test_unconfigured_prints_empty(self, repo_dir, capsys):
+        repo = _clone_repo(repo_dir)
+        config_path = Path(repo_dir) / ".hupy.config.jsonc"
+        config = json.loads(config_path.read_text())
+        config["vg"]["version_file"] = ""
+        config_path.write_text(json.dumps(config))
+
+        grep_ver.run_get(repo, HupyStateFile(), logger, None)
+
+        assert capsys.readouterr().out.strip() == ""
