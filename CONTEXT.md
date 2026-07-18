@@ -8,11 +8,11 @@
 
 Package `HUPy` (import name `hupy`) · build `setuptools` · Python `>=3.10` · install `pip install -e ".[dev]"` · dependencies `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`.
 
-Implemented: `cbm`, `bdc`, `ttg`, `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`), `kamilog`. Not started: `ensure_file_edited` (a bash-era utility still to be ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py`).
+Implemented: `cbm`, `bdc`, `ttg`, `pt`, `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`), `kamilog`. Not started: `ensure_file_edited` (a bash-era utility still to be ported, per the `# todo reimplement ensure file modified` marker in `hupy/__init__.py`).
 
 ## Architecture
 
-Each utility is a standalone module in `hupy/`, callable from any git hook script. Cross-module edges: within `ttg`; `pch`/`ttg`/`bdc` → `cbm`; `cbm`/`ver_grep`/`bdc` → `config_file`; `bdc`/`ttg`/`pch` → `should_run_module`, which itself depends on `config_file` and `state`.
+Each utility is a standalone module in `hupy/`, callable from any git hook script. Cross-module edges: within `ttg`; `pch`/`ttg`/`bdc`/`pt` → `cbm`; `cbm`/`ver_grep`/`bdc` → `config_file`; `bdc`/`ttg`/`pch`/`pt` → `should_run_module`, which itself depends on `config_file` and `state`.
 
 | Module | Responsibility |
 |---|---|
@@ -26,6 +26,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 | `pch` | prepend header lines to in-progress merge commit messages; several stamp a version via `ver_grep` |
 | `ver_grep` | extract a branch's version string by regex over a configured version file at that branch's git tip; classify major/minor/patch bumps |
 | `ttg` | Triage Tag Gating — scan staged diffs for triage tags and abort commits that introduce them on protected branches |
+| `pt` | Paper Trail — assert at least one file matching a configured glob changed, aborting the commit/rebase otherwise |
 | `bdc` | Ban Direct Commit — block a commit made directly on a protected branch, while still allowing merges into it |
 | `hb` | Hook Bracket — run configured shell commands (`lead`/`trail`) around a hook stage, filtered by commit type |
 
