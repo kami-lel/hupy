@@ -22,6 +22,7 @@ logger.propagate = False
 _MODULE_ABBR_TO_NAME = {
     "vg": "VerGrep",
     "ttg": "Triage Tag Gating",
+    "pt": "Paper Trail",
     "pch": "Prepend Commit Header",
     "bdc": "Ban Direct Commit",
     "hb": "Hook Bracket",
