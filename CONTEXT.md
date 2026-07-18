@@ -16,7 +16,7 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 
 | Module | Responsibility |
 |---|---|
-| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hooks/`); `verify` (`cli_verify.py`); the generic `get`/`set`/`unset`/`info` accessor runner (`cli_accessors.py`) dispatching each key module under `accessors/` (`hupy-version`, `verbosity`, `skip-once`) |
+| `cli` | CLI entrypoint, parsing/dispatch (`cli_main.py`); `init` + repo loading (`cli_init.py`); the generic hook stage runner (`cli_hook.py`) dispatching the `hook` group's seventeen stage modules (`hooks/`); `verify` (`cli_verify.py`); the generic `get`/`set`/`unset`/`info` accessor runner (`cli_accessors.py`) dispatching each key module under `accessors/` (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) |
 | `cbm` | Commit/Branch/Merge — classify a branch name as a `BranchType` and an in-progress commit as a `CommitType` |
 | `config_file` | `HupyConfigFile` pydantic schema for `.hupy.config.jsonc`, cached JSON5 loading resolved against an open `git.Repo`, and default-config copying |
 | `state` | `HupyStateFile` pydantic schema for `hupy-state.json` (verbosity, one-time skips), path resolution inside `repo.git_dir`, atomic thread-/process-safe load-and-save |
@@ -65,10 +65,10 @@ Commit/Branch/Merge — classifies branch names and in-progress commits from git
 **Public API** (`hupy/cbm/__init__.py`): `BranchType`, `CommitType`, `get_current_commit_type(repo)`, `get_source_branch(repo)`, `get_target_branch(repo)` — all take an open `git.Repo`.
 
 - **`BranchType(Enum)`** — `FEATURE`/`DEV`/`MAIN`/`HOTFIX`/`RELEASE`/`USER`. `from_name(branch_name, repo)` classifies against the `cbm` config section in order: `dev_branch_name`→`DEV`, `main_branch_name`→`MAIN`, `hotfix_branch_prefix/`→`HOTFIX`, `release_branch_prefix/`→`RELEASE`, any other `/`→`USER`, else `FEATURE`.
-- **`CommitType(Flag)`** — level 1 `MERGE`/`OTHER_COMMIT`; level 2 (under `MERGE`) the eight merge types plus `OTHER_MERGE`. `decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE,DEV)`→`FEATURE_LANDING`, `(DEV,MAIN)`→`VERSION_RELEASE`, `(MAIN,DEV)`→`SYNC_BACKPORT`, `(DEV,FEATURE)`→`CATCH_UP`, `(HOTFIX,MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX,DEV)`→`HOTFIX_BACKPORT`, `(RELEASE,MAIN)`→`RELEASE_CUT`, `(RELEASE,DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full tables and Mermaid graphs.
+- **`CommitType(Flag)`** — level 1 `MERGE`/`OTHER_COMMIT`; level 2 (under `MERGE`) the eight merge types plus `OTHER_MERGE`. `decide_commit_type(source, target)` maps a `(BranchType, BranchType)` pair via `_MERGE_TYPE_BY_BRANCH_PAIR`: `(FEATURE,DEV)`→`FEATURE_LANDING`, `(DEV,MAIN)`→`VERSION_RELEASE`, `(MAIN,DEV)`→`SYNC_BACKPORT`, `(DEV,FEATURE)`→`CATCH_UP`, `(HOTFIX,MAIN)`→`HOTFIX_RELEASE`, `(HOTFIX,DEV)`→`HOTFIX_BACKPORT`, `(RELEASE,MAIN)`→`RELEASE_CUT`, `(RELEASE,DEV)`→`RELEASE_BACKPORT`; any other pair → `OTHER_MERGE`. See `docs/cbm_doc.md` for the full tables and Mermaid graphs. `__str__` returns the member's bare name without the `CommitType.` class prefix (`.name`, e.g. `"VERSION_RELEASE"`), or, for a non-canonical composite (`.name` is `None`), Python's own pipe-joined name (e.g. `"VERSION_RELEASE|RELEASE_CUT"`); `repr()` is untouched, still class-qualified.
 - **`get_current_commit_type(repo)`** in order: no `MERGE_HEAD`→`OTHER_COMMIT`; multi-line `MERGE_HEAD` (octopus)→`OTHER_MERGE`; SHA matching a remote tracking ref of the target (pull merge)→`OTHER_MERGE`; else classify source/target branches and `decide_commit_type`. Detached HEAD → `get_target_branch` returns `None`, handled without error.
 
-The three lookup functions cache per `repo.git_dir`, so repeated calls (e.g. from both `pch` and `ttg`) hit git once. Repo construction/error handling is the caller's job. Not yet its own CLI subcommand (`# todo consider expose commit type as part of cli`).
+The three lookup functions cache per `repo.git_dir`, so repeated calls (e.g. from both `pch` and `ttg`) hit git once. Repo construction/error handling is the caller's job. Exposed via `hupy get current-commit-type` (`accessors/commit_type.py`, see the `cli` module details below).
 
 ### `pch`
 
@@ -192,7 +192,7 @@ Hook Bracket — runs the `lead`/`trail` shell commands configured per hook stag
 
 ### `cli`
 
-Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. `--version` prints the installed package version directly. Six top-level subcommands, seventeen git hook stages nested under `hook`, three accessor keys nested under each of `get`/`set`/`unset`/`info`:
+Argument parser and entrypoint for `hupy`; a package (`hupy/cli/`) split by subcommand. `--version` prints the installed package version directly. Six top-level subcommands, seventeen git hook stages nested under `hook`, six accessor keys nested under `get`/`info`, and (only for the keys that support them) `set`/`unset`:
 
 ```
 hupy init
@@ -214,10 +214,10 @@ hupy hook fsmonitor-watchman
 hupy hook post-checkout
 hupy hook pre-push
 hupy verify
-hupy get {hupy-version,verbosity,skip-once}
+hupy get {hupy-version,verbosity,skip-once,branch-type,grep-ver,current-commit-type}
 hupy set {verbosity,skip-once}
 hupy unset {skip-once}
-hupy info {hupy-version,verbosity,skip-once}
+hupy info {hupy-version,verbosity,skip-once,branch-type,grep-ver,current-commit-type}
 ```
 
 - **`cli_main.py`** — main parser (`prog="hupy"`) and dispatch; imports each subcommand module's `register_*_parser`.
@@ -233,10 +233,13 @@ hupy info {hupy-version,verbosity,skip-once}
   - **`hook pre-rebase`** (`pre_rebase.py`) — `run_features`: `ban_direct_commit` alone — rejects rebasing a protected branch directly; Paper Trail was deliberately not added here (see the `pt` module details above for why a range-level check is the wrong fit).
   - **`hook pre-applypatch`** (`pre_applypatch.py`) — `run_features`: `ban_direct_commit` → `perform_paper_trail` — a `git am` patch lands as a direct commit on the current branch (no merge involved) with an inspectable staged file set, so both checks apply the same as in `pre-commit`.
   - The other eleven stages carry no logic of their own yet — each module is just `HOOK_NAME`, run through the `hb` brackets only.
-- **`get`/`set`/`unset`/`info`** (`cli_accessors.py`) — a generic accessor layer over `hupy-state.json` keys. `register_cli_accessors_parser` builds the four verb parsers, then for each key module in `_ACCESSORS = (hupy_ver, verbosity, skip_once)` nests a subparser named `mod.KEY` under every verb the module implements (`_register_accessor_op` checks `getattr(mod, "run_" + op_name, None)`); `set`/`unset` subparsers take a `VALUE` positional (`nargs="*"`). Dispatch (`_run_accessor`) opens the repo and state file, applies verbosity, and calls the module's `run_{get,set,unset,info}(repo, state_file, logger, args)`.
+- **`get`/`set`/`unset`/`info`** (`cli_accessors.py`) — a generic accessor layer over `hupy-state.json` keys (and, for the three read-only additions below, over live git/config state rather than persisted state). `register_cli_accessors_parser` builds the four verb parsers, then for each key module in `_ACCESSORS = (hupy_ver, verbosity, skip_once, branch_type, grep_ver, commit_type)` nests a subparser named `mod.KEY` under every verb the module implements (`_register_accessor_op` checks `getattr(mod, "run_" + op_name, None)`); `set`/`unset` subparsers take a `VALUE` positional (`nargs="*"`). Dispatch (`_run_accessor`) opens the repo and state file, applies verbosity, and calls the module's `run_{get,set,unset,info}(repo, state_file, logger, args)`.
   - **`hupy-version`** (`accessors/hupy_ver.py`) — read-only; `run_get` prints `importlib.metadata.version("HUPy")`. No `run_set`/`run_unset`, so `set`/`unset` don't get a `hupy-version` subcommand.
   - **`verbosity`** (`accessors/verbosity.py`) — `run_get` prints `state_file.hooks_logger_verbosity`; `run_set` takes `VALUE[0]` (int, or the `HupyStateFile` schema default `1` with no `VALUE`) then offsets it by that same invocation's `-v`/`-q` count (`base + args.verbose - args.quiet`) before persisting.
   - **`skip-once`** (`accessors/skip_once.py`) — flags modules to skip next round. `SKIPPABLE_MODULE = ("vg", "ttg", "pt", "pch", "bdc", "hb")`; `run_set`/`run_unset` accept abbr or kebab-case full name via `_resolve_abbrs`, then `skip_once.update(...)`/`.difference_update(...)`; `run_set` with no `VALUE` clears the set instead of erroring, `run_unset` with no `VALUE` errors.
+  - **`branch-type`** (`accessors/branch_type.py`) — read-only; `run_get` resolves the current branch via `get_target_branch(repo)`, errors (`SystemExit(1)`) on detached HEAD, then classifies it with `BranchType.from_name` against the `cbm` config section and prints `.name`.
+  - **`grep-ver`** (`accessors/grep_ver.py`) — read-only; `run_get` prints `ver_grep.grep_version(repo, state_file, "HEAD")`, empty when unconfigured, missing, or unmatched.
+  - **`current-commit-type`** (`accessors/commit_type.py`) — read-only; `run_get` prints `get_current_commit_type(repo)` (using `CommitType.__str__`, not `.name`, since `.name` is `None` for a non-canonical composite flag).
 - The packaged default config `hupy/assets/.hupy.config.jsonc` is bundled via `[tool.setuptools.package-data]`; hook stubs carry no bundled asset — they are rendered in-process by `hupy.stub.update_stubs` (see the `stub` module details above).
 
 **Known gaps**: `REPO_PATH`'s default (`os.getcwd()`) is bound at module-import time, not per call — tests pass `REPO_PATH` explicitly. `SKIPPABLE_MODULE`/name maps are duplicated between `accessors/skip_once.py` and `should_run_module.py` (different casing, same six abbrs), not yet factored out.
@@ -275,6 +278,9 @@ hupy/                             # installable package
       hupy_ver.py                     # `hupy-version` (get/info only)
       verbosity.py                    # `verbosity` (get/set/info)
       skip_once.py                    # `skip-once` (get/set/unset/info); SKIPPABLE_MODULE
+      branch_type.py                  # `branch-type` (get/info only)
+      grep_ver.py                     # `grep-ver` (get/info only)
+      commit_type.py                  # `current-commit-type` (get/info only)
     cli_hook.py                   # generic _run_hook_stage/_register_hook_stage + register_cli_hook_parser; proj_logger; dynamic doc
     hooks/                        # `hook` group: one module per git hook stage
       pre_commit.py                    # run_features: ban_direct_commit + perform_triage_tags_gating + perform_paper_trail
