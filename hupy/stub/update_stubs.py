@@ -232,6 +232,7 @@ def uninstall_hook_stubs(repo, hooks_dir=None, force=False):
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     if not hooks_dir.is_dir():
+        logger.error("hooks dir does not exist: {}".format(hooks_dir))
         return
 
     for target_path in sorted(hooks_dir.iterdir()):
