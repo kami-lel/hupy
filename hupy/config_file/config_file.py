@@ -59,7 +59,23 @@ def _merge_commit_type_names(names):
 # internal structures  #########################################################
 
 
-class _VerGrep(BaseModel):  # ==================================================
+# Version Grep  ===============================================================
+class _VersionOccurrence(BaseModel):
+    """
+    a single VG entry: assert the line matching ``glob`` inside
+    ``file`` still carries the repo's canonical version string
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # fields  ------------------------------------------------------------------
+
+    file: pathlib.Path
+    glob: str
+    remark: str = ""
+
+
+class _VerGrep(BaseModel):
     """
     configuration for version grep hook
     """
@@ -70,8 +86,9 @@ class _VerGrep(BaseModel):  # ==================================================
 
     is_disabled: bool
 
-    version_file: pathlib.Path
-    version_line_pattern: str
+    disable_version_uniformity: bool = False
+    allow_version_uniformity_failure: bool = False
+    version_occurrences: list[_VersionOccurrence] = Field(default_factory=list)
 
 
 class _Cbm(BaseModel):  # ======================================================

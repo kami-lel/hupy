@@ -23,14 +23,15 @@ _STATE_FILE = HupyStateFile()
 def _grep(repo, pattern=_PATTERN, version_file=_VERSION_FILE):
     """
     run ``grep_target_branch_version`` against a stubbed config
-    carrying ``version_file`` and ``pattern``, bypassing disk/git
-    config loading.
+    carrying a single canonical ``version_occurrences`` entry
+    (``version_file``/``pattern``), bypassing disk/git config loading.
     """
     config = load_config_fixture(
         overrides={
             "vg": {
-                "version_file": version_file,
-                "version_line_pattern": pattern,
+                "version_occurrences": [
+                    {"file": version_file, "glob": pattern}
+                ]
             }
         }
     )
@@ -93,7 +94,7 @@ class TestGrepTargetBranchVersionMatch:
 
 
 class TestGrepTargetBranchVersionNotConfigured:
-    def test_empty_version_file_returns_empty(
+    def test_empty_occurrences_list_returns_empty(
         self, make_merge_repo_with_version
     ):
         repo = make_merge_repo_with_version(
@@ -101,7 +102,13 @@ class TestGrepTargetBranchVersionNotConfigured:
             source_content="9.9.9\n",
             target_content="1.2.3\n",
         )
-        assert _grep(repo, version_file="") == ""
+        config = load_config_fixture(
+            overrides={"vg": {"version_occurrences": []}}
+        )
+        with mock.patch(
+            "hupy.ver_grep.ver_grep.load_hupy_config", return_value=config
+        ):
+            assert grep_target_branch_version(repo, _STATE_FILE) == ""
 
     def test_empty_pattern_returns_empty(self, make_merge_repo_with_version):
         repo = make_merge_repo_with_version(

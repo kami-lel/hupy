@@ -34,7 +34,7 @@ Cross-suite fixtures live in `tests/fixtures/`, not colocated with any package. 
 
 Within a suite, prefer a `@pytest.fixture` in that suite's `conftest.py` for anything built the same way every time a test needs it (a prepared repo, a parsed config) — pytest injects and tears it down automatically. Reserve a suite's `__init__.py` (making the suite directory a real package, imported by its test files via `from . import ...`) for plain functions called explicitly, multiple times or with varying arguments, inside a test body (e.g. `tests/pch/__init__.py`'s `read_commit_editmsg`/`write_commit_editmsg`, `tests/cli/__init__.py`'s `run_init_cli`, `tests/cbm/grct/__init__.py`'s repo builders). There are no more `*_helpers.py` modules.
 
-Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the git bundle (`tests/fixtures/default_repo.bundle`), constructs branches/commits/merge state, and copies the shipped `DEFAULT_CONFIG_ASSET` onto each repo as an untracked `.hupy.config.jsonc`, with `vg.version_file`/`version_line_pattern` pointed at the repo's `setup.cfg`. Also runnable standalone:
+Repo scenarios are built by `tests/fixtures/prep_repo.py`, which clones the git bundle (`tests/fixtures/default_repo.bundle`), constructs branches/commits/merge state, and copies the shipped `DEFAULT_CONFIG_ASSET` onto each repo as an untracked `.hupy.config.jsonc`, with `vg.version_occurrences` set to a single canonical entry pointed at the repo's `setup.cfg`. Also runnable standalone:
 
 ```bash
 python3 tests/fixtures/prep_repo.py --scenario version_release_pass --dest /tmp/demo_repo

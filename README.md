@@ -22,6 +22,7 @@
 - 🚫 **Ban Direct Commit** — tired of teammates pushing straight to `main`? block direct commits on protected branches while merges still sail through
 - 🛡️ **Triage Tag Gating** — stop a stray `TODO`/`FIXME`/`HACK`/`BUG` from sneaking onto a protected branch, gated by severity tier
 - 📝 **Paper Trail** — require a changelog entry, migration, or other companion file to actually change alongside the commit it belongs with
+- 🔢 **Version Uniformity** — catch a version bumped in one file but forgotten in another — a shipped config asset, a README badge — before it ever lands
 - ✏️ **Prepend Commit Header** — merge commits that write their own descriptive headers and stamp the version on every release, no manual typing
 - 🔗 **Hook Bracket** — wrap any git hook stage with your own lead/trail shell commands, without hand-rolling a custom hook script
 
@@ -65,6 +66,7 @@ Every feature reasons about commits the same way, via the shared [Commit, Branch
 - [Ban Direct Commit (BDC)](docs/bdc_doc.md) — keeps commits off protected branches unless they arrive through a merge
 - [Triage Tag Gating (TTG)](docs/ttg_doc.md) — gates `TODO`/`FIXME`/`HACK`/`BUG` markers by severity tier
 - [Paper Trail (PT)](docs/pt_doc.md) — requires configured files to have changed alongside the commit
+- [Version Grep (VG)](docs/vg_doc.md) — greps the canonical version and checks every other configured occurrence for Version Uniformity
 - [Prepend Commit Header (PCH)](docs/pch_doc.md) — writes merge headers and stamps release versions
 - [Hook Bracket (HB)](docs/hb_doc.md) — wraps any hook stage with your own lead/trail shell commands
 

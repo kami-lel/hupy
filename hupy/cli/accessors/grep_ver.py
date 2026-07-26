@@ -26,8 +26,8 @@ def run_info(repo, state_file, logger, args):
     """
     print("""{}
 
-print the captured group from vg.version_line_pattern
-matched against vg.version_file;
+print the captured group from the first entry in
+vg.version_occurrences (the canonical version source);
 
 empty when VerGrep is unconfigured, disabled, skipped,
 or the pattern doesn't match

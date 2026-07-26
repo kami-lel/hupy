@@ -7,6 +7,10 @@ missing or malformed config file, never writes `hupy-state.json`, and
 error paths for non-git targets
 """
 
+import json
+
+import git
+import json5
 import pytest
 
 from hupy.config_file.config_file_path import CONFIG_FILENAME
@@ -79,6 +83,29 @@ class TestVerifyConfigFile:
             run_verify_cli([str(git_repo_dir)])
 
         assert exc_info.value.code == 1
+
+
+class TestVerifyVersionUniformity:
+    def test_drifted_occurrence_does_not_change_exit_code(
+        self, git_repo_dir
+    ):
+        run_init_cli([str(git_repo_dir)])
+
+        repo = git.Repo(str(git_repo_dir))
+        (git_repo_dir / "VERSION").write_text("1.0.0\n")
+        (git_repo_dir / "OTHER").write_text("2.0.0\n")
+        repo.index.add(["VERSION", "OTHER"])
+        repo.index.commit("add version files")
+
+        config_path = git_repo_dir / CONFIG_FILENAME
+        config = json5.loads(config_path.read_text())
+        config["vg"]["version_occurrences"] = [
+            {"file": "VERSION", "glob": r"(\d+\.\d+\.\d+)"},
+            {"file": "OTHER", "glob": r"(\d+\.\d+\.\d+)"},
+        ]
+        config_path.write_text(json.dumps(config))
+
+        run_verify_cli([str(git_repo_dir)])
 
 
 class TestVerifyDoesNotWriteState:
