@@ -72,11 +72,6 @@ printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo"
 echo
 
-printf '%s\n' "stubs untouched by the plain re-init above"
-printf '%s\n' "pre-commit still hand-edited" | python3 -m hupy.kamilog cb center "-"
-tail -n1 "$hooks_dir/pre-commit"
-echo
-
 printf '%s\n' "hupy init -f --prune" | python3 -m hupy.kamilog cb center "#"
 printf '%s\n' "same drift, resolved with -f --prune"
 
