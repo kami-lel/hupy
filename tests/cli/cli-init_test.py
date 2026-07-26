@@ -227,10 +227,14 @@ class TestInitPruneFlag:
 
 
 class TestInitDryRunFlag:
-    def test_dry_run_creates_no_hooks_dir(self, git_repo_dir):
-        run_init_cli([str(git_repo_dir), "--only", "stubs", "-n"])
+    def test_dry_run_writes_no_stubs(self, git_repo_dir, stub_names):
+        custom_dir = git_repo_dir / "flag-hooks"
 
-        assert not _default_hooks_dir(git_repo_dir).exists()
+        run_init_cli(
+            [str(git_repo_dir), "--hooks-dir", str(custom_dir), "-n"]
+        )
+
+        assert not custom_dir.exists()
 
     def test_dry_run_writes_no_config_file(self, git_repo_dir):
         run_init_cli([str(git_repo_dir), "--only", "config", "-n"])

@@ -90,9 +90,8 @@ def _is_stub_current(target_path, hook_name):
 
 def _diff_hook_stubs(repo, hooks_dir):
     """
-    diff demanded hook names against the HUPy-managed stubs present in
-    ``hooks_dir``, without touching the file system; returns sorted
-    missing, stale, and unused hook names as a 3-tuple of lists
+    diff demanded hook names against ``hooks_dir``'s actual contents,
+    without touching the file system
     """
     demanded_set = set(get_hook_names_by_demand(repo))
 
@@ -100,17 +99,20 @@ def _diff_hook_stubs(repo, hooks_dir):
         installed_set = {
             p.name for p in hooks_dir.iterdir() if _is_managed_stub(p)
         }
+        present_names = {p.name for p in hooks_dir.iterdir()}
     else:
         installed_set = set()
+        present_names = set()
 
+    missing_names = sorted(demanded_set - present_names)
     stale_names = [
         hook_name
-        for hook_name in sorted(demanded_set & installed_set)
+        for hook_name in sorted(demanded_set & present_names)
         if not _is_stub_current(hooks_dir / hook_name, hook_name)
     ]
 
     return (
-        sorted(demanded_set - installed_set),
+        missing_names,
         stale_names,
         sorted(installed_set - demanded_set),
     )
