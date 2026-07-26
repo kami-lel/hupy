@@ -37,8 +37,11 @@ _STATE_FILE = HupyStateFile()
 
 def _write_config_file(dest_dir, version_file, version_line_pattern):
     config = json5.loads(DEFAULT_CONFIG_ASSET.read_text())
-    config["vg"]["version_file"] = version_file
-    config["vg"]["version_line_pattern"] = version_line_pattern
+    config["vg"]["version_occurrences"] = (
+        []
+        if not version_file and not version_line_pattern
+        else [{"file": version_file, "glob": version_line_pattern}]
+    )
     (pathlib.Path(dest_dir) / CONFIG_FILENAME).write_text(json.dumps(config))
 
 

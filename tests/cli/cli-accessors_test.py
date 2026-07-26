@@ -79,7 +79,7 @@ class TestGrepVerRunGet:
         repo = _clone_repo(repo_dir)
         config_path = Path(repo_dir) / ".hupy.config.jsonc"
         config = json.loads(config_path.read_text())
-        config["vg"]["version_file"] = ""
+        config["vg"]["version_occurrences"] = []
         config_path.write_text(json.dumps(config))
 
         grep_ver.run_get(repo, HupyStateFile(), logger, None)

@@ -143,10 +143,10 @@ def _setup_version_release(repo_dir, files):
 
 
 def _chdir_into_repo(repo_dir):
-    # HUPy resolves ``vg.version_file`` against the process cwd,
-    # so tests must chdir into the prepared repo for the bundled
-    # ``setup.cfg`` to be found; not restored after the test, since
-    # each test starts a fresh scenario repo anyway
+    # HUPy resolves ``vg.version_occurrences`` paths against the
+    # process cwd, so tests must chdir into the prepared repo for the
+    # bundled ``setup.cfg`` to be found; not restored after the test,
+    # since each test starts a fresh scenario repo anyway
     os.chdir(str(repo_dir))
 
 
@@ -160,8 +160,9 @@ def _write_config_file(repo_dir):
 
     # parse, configure vg section, write back
     config = json5.loads(config_path.read_text())
-    config["vg"]["version_file"] = "setup.cfg"
-    config["vg"]["version_line_pattern"] = r"version\s*=\s*(\S+)"
+    config["vg"]["version_occurrences"] = [
+        {"file": "setup.cfg", "glob": r"version\s*=\s*(\S+)"}
+    ]
     config_path.write_text(json.dumps(config))
 
 
