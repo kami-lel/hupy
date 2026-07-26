@@ -11,6 +11,7 @@ from hupy.config_file.load_config import load_hupy_config
 from hupy.state.state_file import HupyStateFile
 from hupy.stub.update_stubs import check_hook_stubs, resolve_hooks_dir
 from hupy.ver_grep.ver_grep import grep_version
+from hupy.ver_grep.version_uniformity import check_version_uniformity
 
 
 from hupy.kamilog import (
@@ -37,6 +38,8 @@ read-only inspection; reports on:
 - the config file (.hupy.config.jsonc) at repository root loads and
   validates against the schema
 - the version string can be grepped per the VerGrep config
+- every other configured version occurrence still carries that same
+  version (Version Uniformity)
 - the hook stubs installed in the repo's hooks directory match what
   is currently demanded
 
@@ -97,8 +100,12 @@ def _verify_main(args):
     load_hupy_config(repo)
     logger.pass_("config file verified")
 
-    version = grep_version(repo, HupyStateFile(), "HEAD")
+    state_file = HupyStateFile()
+
+    version = grep_version(repo, state_file, "HEAD")
     logger.pass_("VerGrep verified, grepped: {!r}".format(version))
+
+    check_version_uniformity(repo, state_file, "HEAD", is_report_only=True)
 
     hooks_dir = resolve_hooks_dir(repo)
     missing_names, stale_names, unused_names = check_hook_stubs(
