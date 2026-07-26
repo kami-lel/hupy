@@ -1,4 +1,4 @@
-"""initialize HUPy in the current repository"""
+"""set up HUPy in a repository, and bring an existing setup back into shape"""
 
 import argparse
 import os
@@ -7,8 +7,8 @@ import pathlib
 import git
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.config_file.write_config import create_default_config_file
-from hupy.stub.update_stubs import install_hook_stubs
+from hupy.config_file.write_config import sync_config_file
+from hupy.stub.update_stubs import sync_hook_stubs
 
 from hupy.kamilog import (
     add_verbose_arguments,
@@ -37,39 +37,49 @@ REPO_PATH_HELP = (
 
 _DESCRIPTION = __doc__ + """
 
-performs:
+converges the repository onto what HUPy currently demands:
 
-- install HUPy hook stub scripts into the repo's hooks directory
-  (core.hooksPath if configured, otherwise .git/hooks/;
+- installs the demanded hook stub scripts into the repo's hooks
+  directory (core.hooksPath if configured, otherwise .git/hooks/;
   override with --hooks-dir)
-- create a default HUPy config file (.hupy.config.jsonc) at repository root
+- creates the HUPy config file (.hupy.config.jsonc) at repository
+  root when it is absent
+
+safe to run repeatedly: files already correct are left untouched,
+missing files are written, and nothing is deleted or rewritten
+unless you ask for it.
 """
 
 
 # auxiliaries  #################################################################
 
 
-def _run_install_hook_stubs(args, repo):
+def _run_sync_hook_stubs(args, repo):
     """
-    step: write the demanded HUPy hook stub scripts into the repo's
-    hooks dir.
+    step: converge the repo's hooks dir onto the demanded HUPy hook
+    stub scripts
     """
-    install_hook_stubs(repo, hooks_dir=args.hooks_dir, force=args.force)
+    sync_hook_stubs(
+        repo,
+        hooks_dir=args.hooks_dir,
+        force=args.force,
+        prune=args.prune,
+        dry_run=args.dry_run,
+    )
 
 
-def _run_create_config_file(args, repo):
+def _run_sync_config_file(args, repo):
     """
-    step: create a default HUPy config file at repository root.
+    step: converge the repo's HUPy config file onto the default asset
     """
-    create_default_config_file(repo, args.force)
+    sync_config_file(repo, force=args.force, dry_run=args.dry_run)
 
 
-# registry mapping each init step to its arg dest and runner;  add a new
-# step by appending a (dest, runner) pair here
-_INIT_STEPS = [
-    ("install_hook_stubs", _run_install_hook_stubs),
-    ("create_config_file", _run_create_config_file),
-]
+# registry mapping each init step's --only value to its runner
+_INIT_STEPS = {
+    "stubs": _run_sync_hook_stubs,
+    "config": _run_sync_config_file,
+}
 
 
 def _init_main(args):
@@ -86,19 +96,17 @@ def _init_main(args):
     repo = load_git_repo(repo_path)
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    selected_steps = [
-        (dest, run_step)
-        for dest, run_step in _INIT_STEPS
-        if getattr(args, dest)
-    ]
-    # no step flag given: run every step (dft behavior)
-    if not selected_steps:
-        selected_steps = _INIT_STEPS
+    # no --only given: run every step (dft behavior)
+    selected_steps = (
+        [_INIT_STEPS[args.only]] if args.only else list(_INIT_STEPS.values())
+    )
 
     logger.enter("HUPy Initialization for: {}".format(repo_root))
 
-    for dest, run_step in selected_steps:
-        logger.debug("running init step: {}".format(dest))
+    if args.dry_run:
+        logger.note("dry run: reporting only, nothing is written or removed")
+
+    for run_step in selected_steps:
         run_step(args, repo)
 
     logger.done("HUPy Initialized for: {}".format(repo_root))
@@ -132,6 +140,7 @@ def register_cli_init_parser(cli_subparser):
     """
     init_parser = cli_subparser.add_parser(
         "init",
+        aliases=["i"],
         help=__doc__,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -147,6 +156,15 @@ def register_cli_init_parser(cli_subparser):
     )
 
     init_parser.add_argument(
+        "--only",
+        dest="only",
+        choices=("stubs", "config"),
+        default=None,
+        help="converge only the hook stubs, or only the HUPy config "
+        "file; default=both",
+    )
+
+    init_parser.add_argument(
         "--hooks-dir",
         dest="hooks_dir",
         metavar="HOOKS_DIR",
@@ -156,27 +174,31 @@ def register_cli_init_parser(cli_subparser):
     )
 
     init_parser.add_argument(
-        "--install-hook-stubs",
-        dest="install_hook_stubs",
-        action="store_true",
-        default=False,
-        help="only install the hook stub scripts",
-    )
-
-    init_parser.add_argument(
-        "--create-config-file",
-        dest="create_config_file",
-        action="store_true",
-        default=False,
-        help="only create the HUPy config file",
-    )
-
-    init_parser.add_argument(
         "-f",
         "--force",
+        dest="force",
         action="store_true",
         default=False,
-        help="override an existing hook stub and/or HUPy config file",
+        help="rewrite a hook stub or HUPy config file that already "
+        "exists but differs from what HUPy demands",
+    )
+
+    init_parser.add_argument(
+        "--prune",
+        dest="prune",
+        action="store_true",
+        default=False,
+        help="remove installed hook stubs that are no longer demanded",
+    )
+
+    init_parser.add_argument(
+        "-n",
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        default=False,
+        help="report what would be written, removed, or rewritten, "
+        "and change nothing",
     )
 
     add_verbose_arguments(init_parser)

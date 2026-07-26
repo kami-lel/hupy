@@ -1,8 +1,8 @@
 """
 __init__.py
 
-helpers for invoking the `init` CLI subcommand in isolation, and for
-inspecting/seeding the resulting git config
+helpers for invoking the `init`/`verify` CLI subcommands in
+isolation, and for inspecting/seeding the resulting git config
 """
 
 from argparse import ArgumentParser
@@ -10,6 +10,7 @@ from argparse import ArgumentParser
 import git
 
 from hupy.cli.cli_init import register_cli_init_parser
+from hupy.cli.cli_verify import register_cli_verify_parser
 
 # Public API  ##################################################################
 
@@ -23,6 +24,18 @@ def run_init_cli(args_list):
     subparsers = parser.add_subparsers()
     register_cli_init_parser(subparsers)
     args = parser.parse_args(["init"] + args_list)
+    args.func(args)
+
+
+def run_verify_cli(args_list):
+    """
+    parse ``args_list`` against a standalone ``verify`` subparser and
+    dispatch it, mirroring how ``hupy.cli`` wires the real command.
+    """
+    parser = ArgumentParser()
+    subparsers = parser.add_subparsers()
+    register_cli_verify_parser(subparsers)
+    args = parser.parse_args(["verify"] + args_list)
     args.func(args)
 
 

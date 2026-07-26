@@ -1,18 +1,44 @@
 # hupy CHANGELOG
 
+<!-- fixme update kamilog version & use color in examples/cli/ -->
+
 [^format]
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## [Unreleased]
 
 ### Added
 
+- **`hupy init` `--only {stubs,config}`, `--prune`, `-n`/`--dry-run`** — converge only the hook stubs or only the config file, remove installed stubs no longer demanded, or report every intended action without writing anything
+- **`hupy init` alias `i`**, mirroring `verify`'s `v`
+
 ### Changed
+
+- **`hupy init` is now convergent** — a repeat run no longer aborts with `SystemExit(1)` on a pre-existing hook stub or config file; it converges instead: missing files are always written, files already correct are left untouched, and a drifted or no-longer-demanded file is only touched under `-f`/`--force` or `--prune`
+- **`hupy verify` is now strictly read-only** — it never writes or deletes a file (including `hupy-state.json`, no longer opened during a verify run) and never repairs anything; run `hupy init` to fix what it reports
+- **`init`/`verify` warnings reworded** — each now leads with the file path and trails the `--force`/`--prune` hint in parentheses; "hook stub no longer demanded" is now **"prunable hook stub"** throughout
 
 ### Deprecated
 
 ### Removed
 
+- **`hupy init --install-hook-stubs`/`--create-config-file`** — use `hupy init --only stubs`/`--only config`
+- **`hupy verify -u`/`--update-hook-stubs` and `-f`/`--force`** — `verify` no longer writes anything; use `hupy init` (`verify -u` → `hupy init`, `verify -u -f` → `hupy init -f --prune`) to sync
+
 ### Fixed
+
+- **a foreign or hand-written file at a demanded hook name is no longer silently overwritten** by `hupy init` — it's now treated the same as a drifted stub, requiring `-f`/`--force` to replace
 
 ### Security
 

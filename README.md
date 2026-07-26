@@ -58,7 +58,7 @@ See [Installation Documentation](docs/install_doc.md) for cloning, package insta
 Clone the repo and install the package per [Installation](docs/install_doc.md), then run `hupy init` inside your repository to drop in the hook stubs. From there the hooks are **fully automatic** — every `git commit` fires them, and git hands each one to the matching *HUPy* feature:
 
 - [Hook Chain](docs/chain_doc.md) — the diagram of how each stage runs and hands off to the next
-- [Hook Stub](docs/stub_doc.md) — how `hupy init`/`hupy verify` decide which stubs to install, and how a repeat `hupy verify` keeps them, the config, and the version grep in sync afterward
+- [Hook Stub](docs/stub_doc.md) — how `hupy init`/`hupy verify` decide which stubs to install, and how a repeat `hupy init` keeps them and the config file in sync afterward
 
 Every feature reasons about commits the same way, via the shared [Commit, Branch & Merge (CBM)](docs/cbm_doc.md) classification of branches and merge types, then layers its own behavior on top:
 
