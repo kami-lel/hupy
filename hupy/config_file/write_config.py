@@ -47,8 +47,8 @@ def sync_config_file(repo, force=False, dry_run=False):
     if config_path.exists():
         if not force:
             logger.warning(
-                "HUPy config file already exists,\n"
-                "use --force to override: {}".format(config_path)
+                "HUPy config file already exists: {}\n"
+                "(use --force to override)".format(config_path)
             )
             return
 

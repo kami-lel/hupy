@@ -155,8 +155,8 @@ def _report_unused_stubs(hooks_dir, unused_names):
     """
     for hook_name in unused_names:
         logger.warning(
-            "hook stub no longer demanded, use --prune to remove: "
-            "{}".format(hooks_dir / hook_name)
+            "prunable hook stub: {}\n"
+            "(use --prune to remove)".format(hooks_dir / hook_name)
         )
 
 
@@ -207,8 +207,8 @@ def _report_stale_stubs(hooks_dir, stale_names):
     """
     for hook_name in stale_names:
         logger.warning(
-            "hook stub differs from what HUPy renders, use --force to "
-            "rewrite: {}".format(hooks_dir / hook_name)
+            "hook stub differs: {}\n"
+            "(use --force to rewrite)".format(hooks_dir / hook_name)
         )
 
 
