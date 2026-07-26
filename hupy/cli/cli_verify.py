@@ -69,7 +69,7 @@ def _report_hook_stub_drift(
 
     for hook_name in unused_names:
         logger.warning(
-            "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
+            "prunable hook stub: {}".format(hooks_dir / hook_name)
         )
 
     if missing_names or stale_names or unused_names:
