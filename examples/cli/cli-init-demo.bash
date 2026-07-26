@@ -63,7 +63,7 @@ _run_hupy_init "$demo_repo" --only config
 echo
 
 printf '%s\n' "hupy init" | python3 -m hupy.kamilog cb center "#"
-printf '%s\n' "pre-commit hand-edited (drifted), unused pre-push added"
+printf '%s\n' "pre-commit stub hand-edited (drifted), pre-push stub added (unused)"
 printf '\n# hand-edited\n' >> "$hooks_dir/pre-commit"
 printf '#!/usr/bin/env bash\nexec "python3" -m hupy hook pre-push "$@"\n' \
     > "$hooks_dir/pre-push"
@@ -74,12 +74,21 @@ echo
 
 printf '%s\n' "hupy init -f --prune" | python3 -m hupy.kamilog cb center "#"
 printf '%s\n' "same drift, resolved with -f --prune"
+printf '%s\n' "pre-commit rewritten, pre-push removed"
+
+printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "-"
+for entry in "$hooks_dir"/*; do
+    case "$entry" in
+        *.sample) continue ;;
+    esac
+    printf '%s\n' "$(basename "$entry")"
+done
+echo
 
 printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo" -f --prune
 echo
 
-printf '%s\n' "pre-commit rewritten, pre-push removed"
 printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "-"
 for entry in "$hooks_dir"/*; do
     case "$entry" in
