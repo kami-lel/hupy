@@ -1,5 +1,5 @@
 {
-  "hupy_version": "2.0.0",
+  "hupy_version": "2.1.0",
   "vg": {
     "is_disabled": false,
     "disable_version_uniformity": false,
@@ -11,7 +11,6 @@
         "glob": "^version = \"(.*)\""
       },
       {
-        // Fixme use this or pytest?
         "remark": "shipped config asset's hupy_version",
         "file": "hupy/assets/.hupy.config.jsonc",
         "glob": "\"hupy_version\": \"(.*)\""

@@ -1,7 +1,7 @@
 # hupy CHANGELOG
 
 <!--
-fixme update kamilog version & use color in examples/cli/
+Fixme update kamilog version & use color in examples/cli/
 -->
 
 [^format]
@@ -22,32 +22,54 @@ fixme update kamilog version & use color in examples/cli/
 
 ### Added
 
-- **`hupy init` `--only {stubs,config}`, `--prune`, `-n`/`--dry-run`** — converge only the hook stubs or only the config file, remove installed stubs no longer demanded, or report every intended action without writing anything
-- **`hupy init` alias `i`**, mirroring `verify`'s `v`
-- **VerGrep gains Version Uniformity** — `vg.version_occurrences` lists every place a repo's version string should appear; the first entry is canonical, every other entry is checked against it and blocks the commit on drift (or only warns, under `vg.disable_version_uniformity`/`vg.allow_version_uniformity_failure`). Runs alongside Paper Trail in `pre-commit`, `pre-merge-commit`, and `pre-applypatch`, and is reported (never enforced) by `hupy verify`
-
 ### Changed
-
-- **`hupy init` is now convergent** — a repeat run no longer aborts with `SystemExit(1)` on a pre-existing hook stub or config file; it converges instead: missing files are always written, files already correct are left untouched, and a drifted or no-longer-demanded file is only touched under `-f`/`--force` or `--prune`
-- **`hupy verify` is now strictly read-only** — it never writes or deletes a file (including `hupy-state.json`, no longer opened during a verify run) and never repairs anything; run `hupy init` to fix what it reports
-- **`init`/`verify` warnings reworded** — each now leads with the file path and trails the `--force`/`--prune` hint in parentheses; "hook stub no longer demanded" is now **"prunable hook stub"** throughout
 
 ### Deprecated
 
 ### Removed
 
-- **`hupy init --install-hook-stubs`/`--create-config-file`** — use `hupy init --only stubs`/`--only config`
-- **`hupy verify -u`/`--update-hook-stubs` and `-f`/`--force`** — `verify` no longer writes anything; use `hupy init` (`verify -u` → `hupy init`, `verify -u -f` → `hupy init -f --prune`) to sync
-- **`vg.version_file`/`vg.version_line_pattern`** — superseded by `vg.version_occurrences`' first entry; **breaking**, update any existing `.hupy.config.jsonc`
-
 ### Fixed
-
-- **a foreign or hand-written file at a demanded hook name is no longer silently overwritten** by `hupy init` — it's now treated the same as a drifted stub, requiring `-f`/`--force` to replace
-- **Version Uniformity drift now actually aborts `pre-commit`/`pre-merge-commit`/`pre-applypatch`** — occurrence checks were collected but never raised `SystemExit(1)` during hooks, so a drifted occurrence only logged and let the commit through
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v2.0.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v2.1.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [2.1.0] - 2026-07-27
+
+### Added
+
+- **Version Uniformity** — hupy can now check that a version number appears consistently everywhere it's supposed to (a config asset, a README badge, and so on), and blocks the commit when one place was missed
+- **`hupy init` gains `--only`, `--prune`, and `--dry-run`** — converge just the hook stubs or just the config file, clean up stub files that are no longer needed, or preview what would happen without changing anything
+
+### Changed
+
+- **`hupy init` is now safe to run anytime** — a repeat run fills in whatever's missing and leaves everything already correct alone, only touching a drifted or unneeded file when you explicitly ask it to
+- **`hupy verify` is now a pure read-only check** — it reports problems but never fixes them; run `hupy init` to act on what it finds
+- clearer, more consistent warning messages across `init` and `verify`
+
+### Removed
+
+- older `init`/`verify` flags now covered by the options above; **breaking** — see `hupy init -h`/`hupy verify -h` for the replacements
+- the old `vg.version_file`/`vg.version_line_pattern` config fields, replaced by `vg.version_occurrences`; **breaking**, update any existing `.hupy.config.jsonc`
+
+### Fixed
+
+- a hand-written file sitting at a hook's expected location is no longer silently overwritten by `hupy init`
+- a version mismatch caught by Version Uniformity now actually blocks the commit, instead of only warning about it
+
+[2.1.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v2.1.0
 
 
 
