@@ -42,16 +42,6 @@ _run_verify() {
     python3 -m hupy verify "$repo_dir" "${_VERBOSITY_ARGS[@]}" "$@"
 }
 
-_list_hooks_dir() {
-    local hooks_dir="$1"
-    for entry in "$hooks_dir"/*; do
-        case "$entry" in
-            *.sample) continue ;;
-        esac
-        printf '%s\n' "$(basename "$entry")"
-    done
-}
-
 _drift_hooks_dir() {
     local hooks_dir="$1"
     rm -f "$hooks_dir/pre-commit"
@@ -79,39 +69,31 @@ EOF
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tthree hupy verify runs, each on its own freshly prepared repo\n"
-printf "expected:\t1 PASS, 2 WARNS but exits 0, 3 FAILS (config)\n"
 echo
 
-printf '%s\n' "1. clean repo: every check passes"
-printf '%s\n' "hupy verify" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "clean repo" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "clean repo: every check passes"
 demo_repo_1="$(_prepare_demo_repo)"
+
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_verify "$demo_repo_1"
 echo
 
-printf '%s\n' "2. pre-commit stub removed, unused pre-push stub added"
-printf '%s\n' "hupy verify" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "drifted hooks" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "pre-commit stub removed, unused pre-push stub added"
+printf '%s\n' "— verify never writes or removes a file"
 demo_repo_2="$(_prepare_demo_repo)"
 hooks_dir_2="$demo_repo_2/.git/hooks"
 _drift_hooks_dir "$hooks_dir_2"
 
-printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "="
-_list_hooks_dir "$hooks_dir_2"
-echo
-
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_verify "$demo_repo_2"
 echo
 
-printf '%s\n' "stubs after — verify never writes or removes a file"
-printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "="
-_list_hooks_dir "$hooks_dir_2"
-echo
-
-printf '%s\n' "3. config file's vg field dropped, a missing required field"
-printf '%s\n' "hupy verify" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "malformed config" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "config file's vg field dropped, a missing required field"
 demo_repo_3="$(_prepare_demo_repo)"
 _drop_config_field "$demo_repo_3/.hupy.config.jsonc" vg
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_verify "$demo_repo_3"
