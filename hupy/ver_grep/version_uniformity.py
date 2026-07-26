@@ -95,7 +95,7 @@ def check_version_uniformity(
             if is_soft:
                 logger.warning(message)
             else:
-                logger.fail(message)
+                logger.error(message)
             continue
 
         if found_version != canonical_version:
@@ -108,7 +108,7 @@ def check_version_uniformity(
             if is_soft:
                 logger.warning(message)
             else:
-                logger.fail(message)
+                logger.error(message)
             continue
 
         logger.succ("version matched: {}".format(heading))
