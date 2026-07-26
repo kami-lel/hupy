@@ -27,6 +27,7 @@
 
 - **`hupy init` is now convergent** — a repeat run no longer aborts with `SystemExit(1)` on a pre-existing hook stub or config file; it converges instead: missing files are always written, files already correct are left untouched, and a drifted or no-longer-demanded file is only touched under `-f`/`--force` or `--prune`
 - **`hupy verify` is now strictly read-only** — it never writes or deletes a file (including `hupy-state.json`, no longer opened during a verify run) and never repairs anything; run `hupy init` to fix what it reports
+- **`init`/`verify` warnings reworded** — each now leads with the file path and trails the `--force`/`--prune` hint in parentheses; "hook stub no longer demanded" is now **"prunable hook stub"** throughout
 
 ### Deprecated
 
