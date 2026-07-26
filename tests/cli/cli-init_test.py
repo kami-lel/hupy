@@ -3,7 +3,8 @@ cli-init_test.py
 
 end-to-end tests for the `init` CLI subcommand: default (.git/hooks)
 target, honoring a pre-configured `core.hooksPath`, `--hooks-dir`
-override, `-f`/`--force` re-runs, subdirectory resolution, config-file
+override, `--only` step selection, convergent repeat runs,
+`-f`/`--force` and `--prune`, subdirectory resolution, config-file
 writing, and error paths for non-git or nonexistent targets
 """
 
@@ -110,21 +111,17 @@ class TestInitWritesConfigFile:
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
 
-class TestInitStepFlags:
-    def test_install_hook_stubs_flag_skips_config_file(
-        self, git_repo_dir, stub_names
-    ):
-        run_init_cli([str(git_repo_dir), "--install-hook-stubs"])
+class TestInitOnlyFlag:
+    def test_only_stubs_skips_config_file(self, git_repo_dir, stub_names):
+        run_init_cli([str(git_repo_dir), "--only", "stubs"])
 
         hooks_dir = _default_hooks_dir(git_repo_dir)
         for name in stub_names:
             assert (hooks_dir / name).exists()
         assert not (git_repo_dir / CONFIG_FILENAME).exists()
 
-    def test_create_config_file_flag_skips_hooks(
-        self, git_repo_dir, stub_names
-    ):
-        run_init_cli([str(git_repo_dir), "--create-config-file"])
+    def test_only_config_skips_hooks(self, git_repo_dir, stub_names):
+        run_init_cli([str(git_repo_dir), "--only", "config"])
 
         config_path = git_repo_dir / CONFIG_FILENAME
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
@@ -133,18 +130,11 @@ class TestInitStepFlags:
         for name in stub_names:
             assert not (hooks_dir / name).exists()
 
-    def test_both_flags_together_create_hooks_and_config(
-        self, git_repo_dir, stub_names
-    ):
-        run_init_cli(
-            [str(git_repo_dir), "--install-hook-stubs", "--create-config-file"]
-        )
+    def test_invalid_only_value_raises_system_exit(self, git_repo_dir):
+        with pytest.raises(SystemExit) as exc_info:
+            run_init_cli([str(git_repo_dir), "--only", "nonsense"])
 
-        hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in stub_names:
-            assert (hooks_dir / name).exists()
-        config_path = git_repo_dir / CONFIG_FILENAME
-        assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
+        assert exc_info.value.code == 2
 
     def test_no_flags_create_both_hooks_and_config(
         self, git_repo_dir, stub_names
@@ -158,14 +148,36 @@ class TestInitStepFlags:
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
 
-class TestInitForceReRun:
-    def test_rerun_without_force_raises_system_exit(self, git_repo_dir):
+class TestInitConvergentRepeatRun:
+    def test_repeat_run_without_force_leaves_correct_files_untouched(
+        self, git_repo_dir, stub_names
+    ):
+        run_init_cli([str(git_repo_dir)])
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        config_path = git_repo_dir / CONFIG_FILENAME
+        before_hooks_mtime = (hooks_dir / stub_names[0]).stat().st_mtime_ns
+        before_config_mtime = config_path.stat().st_mtime_ns
+
         run_init_cli([str(git_repo_dir)])
 
-        with pytest.raises(SystemExit) as exc_info:
-            run_init_cli([str(git_repo_dir)])
+        assert (hooks_dir / stub_names[0]).stat().st_mtime_ns == (
+            before_hooks_mtime
+        )
+        assert config_path.stat().st_mtime_ns == before_config_mtime
 
-        assert exc_info.value.code == 1
+    def test_repeat_run_without_force_reports_but_keeps_stale_content(
+        self, git_repo_dir, stub_names
+    ):
+        run_init_cli([str(git_repo_dir)])
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        (hooks_dir / stub_names[0]).write_text("stale content")
+        config_path = git_repo_dir / CONFIG_FILENAME
+        config_path.write_text(_STALE_VALID_CONFIG_CONTENT)
+
+        run_init_cli([str(git_repo_dir)])
+
+        assert (hooks_dir / stub_names[0]).read_text() == "stale content"
+        assert config_path.read_text() == _STALE_VALID_CONFIG_CONTENT
 
     def test_rerun_with_force_overrides_stale_hooks_and_config(
         self, git_repo_dir, stub_names
@@ -181,21 +193,49 @@ class TestInitForceReRun:
         assert (hooks_dir / stub_names[0]).read_text() != "stale content"
         assert config_path.read_text() == _DEFAULT_CONFIG_CONTENT
 
-    def test_config_conflict_alone_still_raises_after_hooks_succeed(
+
+class TestInitPruneFlag:
+    def test_unused_stub_survives_without_prune(
         self, git_repo_dir, stub_names
     ):
-        (git_repo_dir / CONFIG_FILENAME).write_text(_STALE_VALID_CONFIG_CONTENT)
-
-        with pytest.raises(SystemExit) as exc_info:
-            run_init_cli([str(git_repo_dir)])
-
-        assert exc_info.value.code == 1
+        run_init_cli([str(git_repo_dir)])
         hooks_dir = _default_hooks_dir(git_repo_dir)
-        for name in stub_names:
-            assert (hooks_dir / name).exists()
-        assert (
-            git_repo_dir / CONFIG_FILENAME
-        ).read_text() == _STALE_VALID_CONFIG_CONTENT
+        unused_path = hooks_dir / "unused-hook"
+        unused_path.write_text(
+            '#!/usr/bin/env bash\nexec "python" -m hupy hook unused-hook '
+            '"$@"\n'
+        )
+
+        run_init_cli([str(git_repo_dir)])
+
+        assert unused_path.exists()
+
+    def test_unused_stub_is_removed_with_prune(
+        self, git_repo_dir, stub_names
+    ):
+        run_init_cli([str(git_repo_dir)])
+        hooks_dir = _default_hooks_dir(git_repo_dir)
+        unused_path = hooks_dir / "unused-hook"
+        unused_path.write_text(
+            '#!/usr/bin/env bash\nexec "python" -m hupy hook unused-hook '
+            '"$@"\n'
+        )
+
+        run_init_cli([str(git_repo_dir), "--prune"])
+
+        assert not unused_path.exists()
+
+
+class TestInitDryRunFlag:
+    def test_dry_run_creates_no_hooks_dir(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir), "--only", "stubs", "-n"])
+
+        assert not _default_hooks_dir(git_repo_dir).exists()
+
+    def test_dry_run_writes_no_config_file(self, git_repo_dir):
+        run_init_cli([str(git_repo_dir), "--only", "config", "-n"])
+
+        assert not (git_repo_dir / CONFIG_FILENAME).exists()
 
 
 class TestInitErrors:
