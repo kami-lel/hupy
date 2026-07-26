@@ -22,6 +22,7 @@
 
 - **`hupy init` `--only {stubs,config}`, `--prune`, `-n`/`--dry-run`** — converge only the hook stubs or only the config file, remove installed stubs no longer demanded, or report every intended action without writing anything
 - **`hupy init` alias `i`**, mirroring `verify`'s `v`
+- **VerGrep gains Version Uniformity** — `vg.version_occurrences` lists every place a repo's version string should appear; the first entry is canonical, every other entry is checked against it and blocks the commit on drift (or only warns, under `vg.disable_version_uniformity`/`vg.allow_version_uniformity_failure`). Runs alongside Paper Trail in `pre-commit`, `pre-merge-commit`, and `pre-applypatch`, and is reported (never enforced) by `hupy verify`
 
 ### Changed
 
@@ -35,6 +36,7 @@
 
 - **`hupy init --install-hook-stubs`/`--create-config-file`** — use `hupy init --only stubs`/`--only config`
 - **`hupy verify -u`/`--update-hook-stubs` and `-f`/`--force`** — `verify` no longer writes anything; use `hupy init` (`verify -u` → `hupy init`, `verify -u -f` → `hupy init -f --prune`) to sync
+- **`vg.version_file`/`vg.version_line_pattern`** — superseded by `vg.version_occurrences`' first entry; **breaking**, update any existing `.hupy.config.jsonc`
 
 ### Fixed
 
