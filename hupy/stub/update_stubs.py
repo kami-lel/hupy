@@ -133,9 +133,9 @@ def _begin_hooks_action(action_label, hooks_dir, is_dry_run=False):
     hooks_dir.mkdir(parents=True, exist_ok=True)
 
 
-def _remove_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
+def _prune_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
     """
-    delete each prunable stub in ``unused_names``
+    prune each prunable stub in ``unused_names``
     """
     for hook_name in unused_names:
         target_path = hooks_dir / hook_name
@@ -150,13 +150,13 @@ def _remove_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
 
 def _report_unused_stubs(hooks_dir, unused_names):
     """
-    warn about installed stubs no longer demanded, left in place
-    because pruning was not asked for
+    warn about prunable stubs left in place because pruning was not
+    asked for
     """
     for hook_name in unused_names:
         logger.warning(
             "prunable hook stub: {}\n"
-            "(use --prune to remove)".format(hooks_dir / hook_name)
+            "(use --prune)".format(hooks_dir / hook_name)
         )
 
 
@@ -245,8 +245,8 @@ def sync_hook_stubs(
     demanded-but-missing stubs are always written. a stub already
     present and matching what HUPy renders is left alone, so repeat
     runs are silent; one that has drifted is only rewritten under
-    ``force``, and one no longer demanded is only removed under
-    ``prune`` — both are reported otherwise. ``dry_run`` reports every
+    ``force``, and a prunable one is only removed under ``prune`` —
+    both are reported otherwise. ``dry_run`` reports every
     intended action and touches nothing.
 
 
@@ -257,7 +257,7 @@ def sync_hook_stubs(
     :type hooks_dir: pathlib.Path, optional
     :param force: whether rewrite installed stubs that have drifted
     :type force: bool, optional
-    :param prune: whether remove installed stubs no longer demanded
+    :param prune: whether prune installed stubs no longer demanded
     :type prune: bool, optional
     :param dry_run: whether report intended actions without writing
     :type dry_run: bool, optional
@@ -277,7 +277,7 @@ def sync_hook_stubs(
         _report_stale_stubs(hooks_dir, stale_names)
 
     if prune:
-        _remove_unused_stubs(hooks_dir, unused_names, is_dry_run=dry_run)
+        _prune_unused_stubs(hooks_dir, unused_names, is_dry_run=dry_run)
     else:
         _report_unused_stubs(hooks_dir, unused_names)
 
@@ -331,8 +331,8 @@ def check_hook_stubs(repo, hooks_dir=None):
     :param hooks_dir: directory the hook stub scripts are checked in;
             defaults to ``resolve_hooks_dir(repo)``
     :type hooks_dir: pathlib.Path, optional
-    :return: sorted demanded-but-missing, drifted, and no-longer-
-            demanded hook names
+    :return: sorted demanded-but-missing, drifted, and prunable hook
+            names
     :rtype: tuple[list[str], list[str], list[str]]
     """
     hooks_dir = hooks_dir or resolve_hooks_dir(repo)
