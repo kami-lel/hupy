@@ -135,16 +135,16 @@ def _begin_hooks_action(action_label, hooks_dir, is_dry_run=False):
 
 def _remove_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
     """
-    delete each no-longer-demanded stub in ``unused_names``
+    delete each prunable stub in ``unused_names``
     """
     for hook_name in unused_names:
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would remove unused stub: {}".format(target_path))
+            logger.info("would prune stub: {}".format(target_path))
             continue
 
-        logger.warning("remove unused hook stub: {}".format(target_path))
+        logger.warning("prune hook stub: {}".format(target_path))
         target_path.unlink()
 
 
