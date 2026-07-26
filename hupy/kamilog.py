@@ -8,7 +8,11 @@ Q.v. https://github.com/kami-lel/kamilog for Project Main Page
 Q.v. https://github.com/kami-lel/kamilog/tree/main/docs for Documentation
 """
 
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    RawDescriptionHelpFormatter,
+)
 import logging
 import os
 import sys
@@ -18,6 +22,7 @@ from enum import Flag, IntEnum, auto
 from logging import FileHandler, Formatter, StreamHandler
 
 __all__ = (
+    "kamilog_cli_main",
     "getLogger",
     "KamiLogger",
     "add_verbose_arguments",
@@ -60,7 +65,7 @@ __all__ = (
 
 
 # metadata  ####################################################################
-__version__ = "2.8.0"
+__version__ = "2.8.1-alpha"
 __author__ = "kamiLeL"
 
 
@@ -154,6 +159,32 @@ class AnsiStyle(Flag):  # =====================================================
 
     BOLD = auto()
     UNDERLINE = auto()
+
+    # Public API  **************************************************************
+
+    @classmethod
+    def parse(cls, raw):
+        """
+        parse a comma-separated list of ``AnsiStyle`` member names into a
+        single combined ``AnsiStyle`` value.
+
+
+        :param raw: comma-separated member names, eg ``"RED,BOLD"``
+        :type raw: str
+        :return: combined style
+        :rtype: AnsiStyle
+        :raises ValueError: if ``raw`` contains an unknown member name
+        """
+        style = cls(0)
+        for name in raw.split(","):
+            name = name.strip().upper()
+            try:
+                style |= cls[name]
+            except KeyError:
+                raise ValueError(
+                    "unknown AnsiStyle member {!r}".format(name)
+                )
+        return style
 
 
 class AnsiRenderer:  # =========================================================
@@ -1155,11 +1186,11 @@ verbosity threshold decides which records actually print
 
 
 example:
-  echo 'disk full' | python kamilog.py logger error"""
+  echo 'disk full' | kamilog logger error
+  echo 'disk full' | kamilog logger error my_module"""
 
 # level Name to numeric level, keyed lowercase
 _LOGGER_LEVEL_MAP = {
-    "notset": NOTSET,
     "debug": DEBUG,
     "enter": ENTER,
     "skip": SKIP,
@@ -1193,6 +1224,7 @@ def _logger_parser_main(args):
     level = _LOGGER_LEVEL_MAP[args.level.lower()]  # resolve Level name
     datefmt = _LOGGER_TIME_FORMAT_MAP[args.time_format]  # resolve Time fmt
     logger = getLogger(
+        args.name,
         datefmt=datefmt,
         disable_color=args.no_color,
         disable_diff_only_compression=args.no_diff_only,
@@ -1200,7 +1232,14 @@ def _logger_parser_main(args):
     set_logging_level_by_namespace(
         args, verbosity=args.verbosity, logger=logger
     )
-    for line in sys.stdin.read().splitlines():  # log each stdin Line
+    raw = sys.stdin.read()
+    lines = raw.splitlines()
+    last_idx = len(lines) - 1
+    suppress_final = _calc_line_end(args, raw) == ""
+    for i, line in enumerate(lines):  # log each stdin Line
+        if suppress_final and i == last_idx:  # trim only the final break
+            for handler in logger.handlers:
+                handler.terminator = ""
         logger.log(level, line)
 
 
@@ -1210,6 +1249,7 @@ def _register_logger_parser(cli_subparser):
     """
     logger_parser = cli_subparser.add_parser(
         "logger",
+        parents=[_no_color_parser],
         help=_LOGGER_HELP,
         description=_LOGGER_DESCRIPTION,
         formatter_class=RawDescriptionHelpFormatter,
@@ -1220,6 +1260,13 @@ def _register_logger_parser(cli_subparser):
         "level",
         choices=list(_LOGGER_LEVEL_MAP),
         help="log level name",
+    )
+    logger_parser.add_argument(
+        "name",
+        nargs="?",
+        default=None,
+        metavar="LOGGER_NAME",
+        help="logger name; default=root logger",
     )
     logger_parser.add_argument(
         "-t",
@@ -1238,12 +1285,6 @@ def _register_logger_parser(cli_subparser):
     )
     add_verbose_arguments(logger_parser)
 
-    logger_parser.add_argument(
-        "-C",
-        "--no-color",
-        action="store_true",
-        help="disable ANSI color output",
-    )
     logger_parser.add_argument(
         "-D",
         "--no-diff-only",
@@ -1722,6 +1763,60 @@ def gen_comment_banner_zero(
     return "\n".join(formatted_lines)
 
 
+# shared parsers  ==============================================================
+
+_common_parser = ArgumentParser(add_help=False)
+_newline_group = _common_parser.add_mutually_exclusive_group()
+_newline_group.add_argument(
+    "-n",
+    "--newline",
+    dest="newline",
+    action="store_true",
+    default=None,
+    help="always append a trailing newline after output",
+)
+_newline_group.add_argument(
+    "-N",
+    "--no-newline",
+    dest="newline",
+    action="store_false",
+    default=None,
+    help="never append a trailing newline after output",
+)
+_no_color_parser = ArgumentParser(add_help=False, parents=[_common_parser])
+_no_color_parser.add_argument(
+    "-C",
+    "--no-color",
+    action="store_true",
+    help="disable ANSI color output",
+)
+
+_line_width_parser = ArgumentParser(add_help=False, parents=[_no_color_parser])
+_line_width_parser.add_argument(
+    "-w",
+    "--line-width",
+    type=int,
+    default=80,
+    metavar="LINE_WIDTH",
+    help="total character width of output line; default 80",
+)
+
+
+def _calc_line_end(args, stdin_content=""):
+    """
+    decide the trailing-newline ``end`` string for output.
+
+    ``-n/--newline`` forces a Newline, ``-N/--no-newline`` forces none;
+    otherwise auto-detect from ``stdin_content``: a stdin already ending
+    in a newline gets none appended, a stdin missing one gets one appended
+    """
+    if args.newline is True:
+        return "\n"
+    if args.newline is False:
+        return ""
+    return "" if stdin_content.endswith("\n") else "\n"
+
+
 # comment banner parser  =======================================================
 
 _COMMENT_BANNER_HELP = "print stdin content padded to line width"
@@ -1730,8 +1825,10 @@ _COMMENT_BANNER_HELP = "print stdin content padded to line width"
 def _comment_banner_parser_main(args):
     mode_map = {"center": "c", "left": "l", "right": "r"}
     mode = mode_map.get(args.mode, args.mode)
-    file = sys.stderr if args.stderr else sys.stdout
-    content = sys.stdin.readline().rstrip("\n")  # single line from stdin
+    file = sys.stdout
+    renderer = AnsiRenderer(file, is_disabled=args.no_color)
+    raw = sys.stdin.readline()  # single line from stdin
+    content = raw.rstrip("\n")
     padding = int(args.padding) if args.padding in "12345" else args.padding
     line = _gen_comment_banner_generic(
         mode,
@@ -1739,8 +1836,9 @@ def _comment_banner_parser_main(args):
         padding,
         line_width=args.line_width,
         file=file,
+        renderer=renderer,
     )
-    print(line, file=file)
+    print(line, file=file, end=_calc_line_end(args, raw))
 
 
 def _register_comment_banner_parser(cli_subparser):
@@ -1749,12 +1847,13 @@ def _register_comment_banner_parser(cli_subparser):
     """
     comment_banner_parser = cli_subparser.add_parser(
         "comment_banner",
+        parents=[_line_width_parser],
         help=_COMMENT_BANNER_HELP,
         description=(
             _COMMENT_BANNER_HELP
             + "\n\ncontent is read from stdin, as a single line\n\n"
             "example:\n"
-            "  echo 'hello world' | python kamilog.py cb c '=' -w 20"
+            "  echo 'hello world' | kamilog cb c '=' -w 20"
         ),
         formatter_class=RawDescriptionHelpFormatter,
         aliases=["cb"],
@@ -1772,20 +1871,6 @@ def _register_comment_banner_parser(cli_subparser):
         metavar="PADDING",
         help="fill char, or int 1~5 for CB1~CB5 preset (1:#/2:=/3:*/4:+/5:-)",
     )
-    comment_banner_parser.add_argument(
-        "-w",
-        "--line-width",
-        type=int,
-        default=80,
-        metavar="LINE_WIDTH",
-        help="total character width of output line; default 80",
-    )
-    comment_banner_parser.add_argument(
-        "-e",
-        "--stderr",
-        action="store_true",
-        help="print to stderr (instead of stdout)",
-    )
 
     comment_banner_parser.set_defaults(func=_comment_banner_parser_main)
 
@@ -1796,14 +1881,17 @@ _CB0_HELP = "print multi-line boxed comment banner (CB0)"
 
 
 def _comment_banner_zero_parser_main(args):
-    file = sys.stderr if args.stderr else sys.stdout
-    lines = sys.stdin.read().splitlines()  # all lines from stdin
+    file = sys.stdout
+    renderer = AnsiRenderer(file, is_disabled=args.no_color)
+    raw = sys.stdin.read()  # all lines from stdin
+    lines = raw.splitlines()
     banner = gen_comment_banner_zero(
         lines,
         line_width=args.line_width,
         file=file,
+        renderer=renderer,
     )
-    print(banner, file=file)
+    print(banner, file=file, end=_calc_line_end(args, raw))
 
 
 def _register_comment_banner_zero_parser(cli_subparser):
@@ -1812,30 +1900,16 @@ def _register_comment_banner_zero_parser(cli_subparser):
     """
     comment_banner_zero_parser = cli_subparser.add_parser(
         "comment_banner_zero",
+        parents=[_line_width_parser],
         help=_CB0_HELP,
         description=(
             _CB0_HELP
             + "\n\nlines are read from stdin, one banner line per stdin line"
             "\n\nexample:\n"
-            "  printf 'line 1\\nline 2\\n' | python kamilog.py cb0 -w 20"
+            "  printf 'line 1\\nline 2\\n' | kamilog cb0 -w 20"
         ),
         formatter_class=RawDescriptionHelpFormatter,
         aliases=["cb0"],
-    )
-
-    comment_banner_zero_parser.add_argument(
-        "-w",
-        "--line-width",
-        type=int,
-        default=80,
-        metavar="LINE_WIDTH",
-        help="total character width of output line; default 80",
-    )
-    comment_banner_zero_parser.add_argument(
-        "-e",
-        "--stderr",
-        action="store_true",
-        help="print to stderr (instead of stdout)",
     )
 
     comment_banner_zero_parser.set_defaults(
@@ -1843,10 +1917,121 @@ def _register_comment_banner_zero_parser(cli_subparser):
     )
 
 
+# color parser  ================================================================
+
+_COLOR_HELP = "print stdin content with ANSI style applied"
+
+_COLOR_DESCRIPTION = _COLOR_HELP + """
+
+content is read from stdin, as a single line
+
+ANSI STYLE:
+
+BOLD UNDERLINE
+
+RED YELLOW GREEN CYAN BLUE MAGENTA
+BRIGHT_RED BRIGHT_YELLOW ~~ (8 bright colors)
+BLACK GREY WHITE BRIGHT_WHITE
+
+BG_RED BG_BRIGHT_RED BG_BLACK (16 background colors)
+
+example:
+  echo 'hello world' | kamilog color RED BOLD"""
+
+
+def _parse_ansi_style(raw):
+    """
+    argparse ``type`` adapter for ``AnsiStyle.parse``, mapping an unknown
+    member name to ``ArgumentTypeError`` instead of ``ValueError``
+    """
+    try:
+        return AnsiStyle.parse(raw)
+    except ValueError as e:
+        raise ArgumentTypeError(str(e))
+
+
+def _print_colored_stdin_line(args, style):
+    """
+    read a single stdin line, apply ``style``, and print the result,
+    honoring ``-n/-N`` via ``args``
+    """
+    file = sys.stdout
+    renderer = AnsiRenderer(file)
+    raw = sys.stdin.readline()  # single line from stdin
+    content = raw.rstrip("\n")
+    colored = renderer.color(content, style)
+    print(colored, file=file, end=_calc_line_end(args, raw))
+
+
+def _color_parser_main(args):
+    style = AnsiStyle(0)
+    for s in args.style:
+        style |= s
+    _print_colored_stdin_line(args, style)
+
+
+def _register_color_parser(cli_subparser):
+    """
+    register the ``color`` subcommand on ``cli_subparser``
+    """
+    color_parser = cli_subparser.add_parser(
+        "color",
+        parents=[_common_parser],
+        help=_COLOR_HELP,
+        description=_COLOR_DESCRIPTION,
+        formatter_class=RawDescriptionHelpFormatter,
+        aliases=["c"],
+    )
+
+    color_parser.add_argument(
+        "style",
+        metavar="STYLE",
+        nargs="+",
+        type=_parse_ansi_style,
+        help= "1+ ANSI styles, v.s.",
+    )
+
+    color_parser.set_defaults(func=_color_parser_main)
+
+
+# color-grey parser  ===========================================================
+
+_COLOR_GREY_HELP = "print stdin content in grey"
+
+_COLOR_GREY_DESCRIPTION = _COLOR_GREY_HELP + """
+
+equivalent to `color GREY`
+
+content is read from stdin, as a single line
+
+example:
+  echo 'hello world' | kamilog color-grey"""
+
+
+def _color_grey_parser_main(args):
+    _print_colored_stdin_line(args, AnsiStyle.GREY)
+
+
+def _register_color_grey_parser(cli_subparser):
+    """
+    register the ``color-grey`` subcommand on ``cli_subparser``
+    """
+    color_grey_parser = cli_subparser.add_parser(
+        "color-grey",
+        parents=[_common_parser],
+        help=_COLOR_GREY_HELP,
+        description=_COLOR_GREY_DESCRIPTION,
+        formatter_class=RawDescriptionHelpFormatter,
+        aliases=["cg"],
+    )
+
+    color_grey_parser.set_defaults(func=_color_grey_parser_main)
+
+
 # CLI main parser  #############################################################
 
 _cli_parser = ArgumentParser(
-    prog="kamilog",
+    prog="kamilog[.py]",
     description="kamilog CLI: utilities for formatted output and logging",
 )
 _cli_parser.set_defaults(func=lambda _: _cli_parser.print_help())
@@ -1855,6 +2040,8 @@ _cli_subparser = _cli_parser.add_subparsers(title="subcommands")
 
 # register subcommands
 
+_register_color_parser(_cli_subparser)
+_register_color_grey_parser(_cli_subparser)
 _register_comment_banner_parser(_cli_subparser)
 _register_comment_banner_zero_parser(_cli_subparser)
 _register_logger_parser(_cli_subparser)
@@ -1862,6 +2049,14 @@ _register_logger_parser(_cli_subparser)
 
 # Entry Point  #################################################################
 
-if __name__ == "__main__":
+
+def kamilog_cli_main():
+    """
+    run the kamilog CLI, dispatching to the parsed subcommand's handler.
+    """
     parsed_args = _cli_parser.parse_args()
     parsed_args.func(parsed_args)
+
+
+if __name__ == "__main__":
+    kamilog_cli_main()
