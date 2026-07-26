@@ -1,6 +1,7 @@
 # hupy CHANGELOG
 
 <!--
+FIXME wait for newly updated kamilog
 FIXME use color in examples/cli/
 BUG ver grep not HEAD, local workspace
 -->

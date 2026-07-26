@@ -56,7 +56,7 @@ _run_hupy_init "$demo_repo"
 echo
 
 printf '%s\n' "hupy init --only config" | python3 -m hupy.kamilog cb center "#"
-printf '%s\n' "repeat init, config-only: already correct, left untouched"
+printf '%s\n' "repeat init, config-only: already correct, left untouched" | python3 -m hupy.kamilog cg
 
 printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo" --only config
