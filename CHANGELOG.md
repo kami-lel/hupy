@@ -1,6 +1,8 @@
 # hupy CHANGELOG
 
-<!-- fixme update kamilog version & use color in examples/cli/ -->
+<!--
+fixme update kamilog version & use color in examples/cli/
+-->
 
 [^format]
 
@@ -41,6 +43,7 @@
 ### Fixed
 
 - **a foreign or hand-written file at a demanded hook name is no longer silently overwritten** by `hupy init` — it's now treated the same as a drifted stub, requiring `-f`/`--force` to replace
+- **Version Uniformity drift now actually aborts `pre-commit`/`pre-merge-commit`/`pre-applypatch`** — occurrence checks were collected but never raised `SystemExit(1)` during hooks, so a drifted occurrence only logged and let the commit through
 
 ### Security
 

@@ -71,9 +71,7 @@ def _report_hook_stub_drift(
         )
 
     for hook_name in unused_names:
-        logger.warning(
-            "prunable hook stub: {}".format(hooks_dir / hook_name)
-        )
+        logger.warning("prunable hook stub: {}".format(hooks_dir / hook_name))
 
     if missing_names or stale_names or unused_names:
         logger.note("run `hupy init` to bring the hooks dir back in shape")
@@ -103,7 +101,7 @@ def _verify_main(args):
     state_file = HupyStateFile()
 
     version = grep_version(repo, state_file, "HEAD")
-    logger.pass_("VerGrep verified, grepped: {!r}".format(version))
+    logger.pass_("canonical version grepped: {!r}".format(version))
 
     check_version_uniformity(repo, state_file, "HEAD", is_report_only=True)
 
