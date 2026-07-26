@@ -20,10 +20,67 @@ logger.propagate = False
 renderer = AnsiRenderer(sys.stdout)
 
 
+# auxiliaries  #################################################################
+
+
+def grep_occurrence(repo, ref, occurrence):
+    """
+    grep the version string out of a single configured occurrence's
+    file, at a given git ref
+
+
+    :param repo: git repository to read the file from
+    :type repo: git.Repo
+    :param ref: git ref to read the file at
+    :type ref: str
+    :param occurrence: a single configured version occurrence
+    :type occurrence: _VersionOccurrence
+    :return: the captured version; or
+            "" if the file is missing at ``ref``, no line matches
+            ``occurrence.glob``, or the match lacks a capture group
+            (each case is warned before returning)
+    :rtype: str
+    """
+    try:
+        content = repo.git.show(
+            "{}:{}".format(ref, occurrence.file.as_posix())
+        )
+    except git.GitCommandError:
+        logger.warning(
+            "missing file on {}: {}".format(ref, occurrence.file)
+        )
+        return ""
+
+    for line in content.splitlines():
+        match = re.search(occurrence.glob, line)
+        if match:
+            logger.debug("matched line on {}:\n{}".format(ref, line))
+            if not match.groups():  # pattern lacks a capture group
+                logger.warning(
+                    "missing capture group in version pattern:\n{}".format(
+                        occurrence.glob
+                    )
+                )
+                return ""
+
+            version = match.group(1)
+            logger.debug("version grepped on {}:\t{!r}".format(ref, version))
+            return version
+
+    logger.warning(
+        "version pattern line missing in file on {}: {}".format(
+            ref, occurrence.file
+        )
+    )
+
+    return ""
+
+
 # Public API  ##################################################################
 def grep_version(repo, state_file, ref):
     """
-    grep the version string from a version file at a given git ref
+    grep the repo's canonical version string, from the first entry in
+    ``vg.version_occurrences``, at a given git ref
 
 
     :param repo: git repository to read the version file from
@@ -40,53 +97,16 @@ def grep_version(repo, state_file, ref):
     if not should_run_module(repo, state_file, "vg"):
         return ""
 
-    # get version file path & pattern  -----------------------------------------
+    # get canonical occurrence  -------------------------------------------------
     config = load_hupy_config(repo)
 
-    version_file = config.vg.version_file
-    logger.debug("version_file:\t{}".format(version_file))
-    pattern = config.vg.version_line_pattern
-    logger.debug("version_line_pattern:\t{}".format(pattern))
-
-    if str(version_file) in ("", ".") or not pattern.strip():
+    occurrences = config.vg.version_occurrences
+    if not occurrences:
         logger.warning(
-            "unconfigured:\nmust set {}, {} to enable".format(
-                renderer.color("version_file", AnsiStyle.BOLD),
-                renderer.color("version_line_pattern", AnsiStyle.BOLD),
+            "unconfigured:\nmust set {} to enable".format(
+                renderer.color("version_occurrences", AnsiStyle.BOLD),
             )
         )
         return ""
 
-    # load version file  -------------------------------------------------------
-    try:
-        content = repo.git.show("{}:{}".format(ref, version_file.as_posix()))
-    except git.GitCommandError:
-        logger.warning(
-            "missing version file on {}: {}".format(ref, version_file)
-        )
-        return ""
-
-    # grep version from content  -----------------------------------------------
-    for line in content.splitlines():
-        match = re.search(pattern, line)
-        if match:
-            logger.debug("matched line on {}:\n{}".format(ref, line))
-            if not match.groups():  # pattern lacks a capture group
-                logger.warning(
-                    "missing capture group in version pattern:\n{}".format(
-                        pattern
-                    )
-                )
-                return ""
-
-            version = match.group(1)
-            logger.debug("version grepped on {}:\t{!r}".format(ref, version))
-            return version
-
-    logger.warning(
-        "version pattern line missing in file on {}: {}".format(
-            ref, version_file
-        )
-    )
-
-    return ""
+    return grep_occurrence(repo, ref, occurrences[0])
