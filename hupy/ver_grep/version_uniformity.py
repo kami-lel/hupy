@@ -71,7 +71,7 @@ def check_version_uniformity(
 
     occurrences = config.vg.version_occurrences
     if len(occurrences) < 2:
-        logger.skip("contains only canonical entry")
+        logger.skip("for only canonical entry detected")
         return
 
     logger.enter("Version Uniformity")

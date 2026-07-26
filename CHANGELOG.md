@@ -1,7 +1,6 @@
 # hupy CHANGELOG
 
 <!--
-HACK use demos to mpv uiux
 fixme update kamilog version & use color in examples/cli/
 -->
 
