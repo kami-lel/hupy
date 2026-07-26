@@ -2,16 +2,19 @@
   "hupy_version": "2.0.0",
   "vg": {
     "is_disabled": false,
-    "version_file": "pyproject.toml",
-    "version_line_pattern": "^version = \"(.*)\"",
     "disable_version_uniformity": false,
     "allow_version_uniformity_failure": false,
     "version_occurrences": [
       {
+        "remark": "canonical version",
+        "file": "pyproject.toml",
+        "glob": "^version = \"(.*)\""
+      },
+      {
         // Fixme use this or pytest?
         "remark": "shipped config asset's hupy_version",
         "file": "hupy/assets/.hupy.config.jsonc",
-        "glob": "*\"hupy_version\":*"
+        "glob": "\"hupy_version\": \"(.*)\""
       }
     ]
   },

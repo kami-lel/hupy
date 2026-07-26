@@ -13,12 +13,6 @@
     //
     // disable VerGrep
     "is_disabled": false,
-    // file path which version string can be found,
-    // relative to repo root
-    "version_file": "",
-    // regex pattern to match line containing version string;
-    // first capture group `( )` is version
-    "version_line_pattern": "",
     // Version Uniformity: assert the version also appears correctly
     // in every configured occurrence below
     //
@@ -26,19 +20,28 @@
     "disable_version_uniformity": false,
     // let a drifted occurrence warn instead of blocking the commit
     "allow_version_uniformity_failure": false,
+    // the FIRST entry is the canonical version source (what VerGrep
+    // greps); every entry after it is checked for uniformity against
+    // that canonical value
+    //
     // a single occurrence entry includes fields:
     //
     // - "file": required, file path relative to repo root
-    // - "glob": required, glob matched against each line of "file";
-    //   the version must appear on a line the glob matches
+    // - "glob": required, regex matched line-by-line against "file";
+    //   first capture group `( )` is the version on that line
     // - "remark" (optional, string): description/name of entry,
     //   strictly used in logger
     "version_occurrences": [
-      // example entry:
+      // example entries:
+      // {
+      //   "remark": "canonical version",
+      //   "file": "pyproject.toml",
+      //   "glob": "^version = \"(.*)\""
+      // },
       // {
       //   "remark": "README badge",
       //   "file": "README.md",
-      //   "glob": "*version-*-blue*"
+      //   "glob": "version-(\\S+)-blue"
       // }
     ]
   },

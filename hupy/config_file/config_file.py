@@ -86,9 +86,6 @@ class _VerGrep(BaseModel):
 
     is_disabled: bool
 
-    version_file: pathlib.Path
-    version_line_pattern: str
-
     disable_version_uniformity: bool = False
     allow_version_uniformity_failure: bool = False
     version_occurrences: list[_VersionOccurrence] = Field(default_factory=list)
