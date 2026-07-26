@@ -156,7 +156,7 @@ Reads a branch's version string by regex over the canonical entry of `vg.version
 - The two branch-version grep functions take `repo`/`state_file`, gate on `should_run_module(repo, state_file, "vg")`, load the `vg` config, resolve their branch via `cbm`, and delegate to `grep_version`/`grep_occurrence`. `grep_version` itself: empty `version_occurrences` → `warning` ("unconfigured") + return `""`; else `grep_occurrence` against the first entry.
 - **`check_version_uniformity`** (`version_uniformity.py`) — early return if `should_run_module(..., "vg")` is `False`, `vg.disable_version_uniformity`, or fewer than two `version_occurrences` (nothing beyond the canonical entry to compare). Greps the canonical version via `grep_version`; if empty, returns (already warned). Checks every remaining occurrence via `grep_occurrence`, collecting — not raising on the first — a failure message for each: file missing at `ref`, no matching line, or a captured value that differs from canonical. If any failures, each logs as `fail` (aborting with `SystemExit(1)` after the loop) unless `is_report_only` or `vg.allow_version_uniformity_failure`, in which case each only `warning`s and nothing raises.
 - **`decide_version_update_type`** — parses `major.minor.patch` cores (ignoring suffixes), returns `"x"`/`"y"`/`"z"` for major/minor/patch or `""` if unparsable or not a bump. Not yet wired into `pch`; available for future use.
-- Own logger `VER_GREP_LOGGER_NAME` (`"HU.VerGrep"`), propagation disabled.
+- Own logger `VER_GREP_LOGGER_NAME` (`"HU.VG"`), propagation disabled.
 
 ### `ttg`
 
@@ -260,7 +260,7 @@ Customized logging vendored from [github.com/kami-lel/kamilog](https://github.co
 - **`AnsiColor`/`AnsiRenderer`** — TTY-aware 16-color ANSI (no-op off a TTY).
 - **`getLogger(name, *, datefmt=DATEFMT_TIME, relative_to=None)`** — factory returning a `KamiLogger` with stdout (<WARNING) and stderr (≥WARNING) handlers pre-attached.
 - **`add_verbose_arguments(parser)`**; **`set_logging_level_by_namespace(...)`** (verbosity offset atop a base); **`set_logging_level_by_verbosity(...)`**.
-- The `hook` stages call `set_logging_level_by_namespace(args, verbosity=state_file.hooks_logger_verbosity)`, targeting the shared `"HU"` root; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.CBM"`, `"HU.config-file"`, `"HU.VerGrep"`, `"HU.BDC"`, `"HU.state"`) set `propagate = False` and inherit the level.
+- The `hook` stages call `set_logging_level_by_namespace(args, verbosity=state_file.hooks_logger_verbosity)`, targeting the shared `"HU"` root; child loggers (`"HU.TTG"`, `"HU.PCH"`, `"HU.CBM"`, `"HU.config-file"`, `"HU.VG"`, `"HU.BDC"`, `"HU.state"`) set `propagate = False` and inherit the level.
 - **comment banners** — `gen_comment_banner_centered/left_just/right_just(...)` and `gen_comment_banner_zero(...)`; CLI `python -m hupy.kamilog cb/cb0` reads stdin and prints padded/boxed banners. Known gap: the CLI's `padding` is read as a raw string, so the int `1`–`5` presets don't resolve — pass the literal character.
 
 Custom levels (numeric): `ENTER` 15, `SKIP` 16, `SUCC` 17, `PASS` 21, `DONE` 25, `FAIL` 45.

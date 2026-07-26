@@ -62,12 +62,15 @@ def _check_occurrence(repo, ref, canonical_version, occurrence):
             heading, found_version, canonical_version
         )
 
+    # FIXME change wording
     logger.pass_("uniform: {}".format(heading))
     return None
 
 
 # Public API  ##################################################################
-def check_version_uniformity(repo, state_file, ref="HEAD", is_report_only=False):
+def check_version_uniformity(
+    repo, state_file, ref="HEAD", is_report_only=False
+):
     """
     assert every configured version occurrence beyond the canonical
     first entry still carries the same version; aborts the commit if
