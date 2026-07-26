@@ -4,7 +4,7 @@
 
 ## Lead And Trail
 
-For each hook — `pre-commit`, `prepare-commit-msg`, and `post-commit` — you configure two lists of commands:
+For each of the seventeen git hook stages — every stage in the [Hook Chain](chain_doc.md), including the [Standalone Hooks](chain_doc.md#standalone-hooks) — you configure two lists of commands:
 
 - **lead** commands run *before* HUPy's own checks
 - **trail** commands run *after* HUPy's own checks
