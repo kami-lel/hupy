@@ -8,8 +8,8 @@ from hupy.cli.cli_init import (
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
-from hupy.state.open_state import open_state_file
-from hupy.stub.update_stubs import verify_hook_stubs
+from hupy.state.state_file import HupyStateFile
+from hupy.stub.update_stubs import check_hook_stubs, resolve_hooks_dir
 from hupy.ver_grep.ver_grep import grep_version
 
 
@@ -28,19 +28,52 @@ logger.propagate = False
 
 # constants  ###################################################################
 
-_VERIFY_DOC = "verify HUPy is setup for the repository"
+_VERIFY_DOC = "check that HUPy is correctly set up for a repository"
 
 _DESCRIPTION = _VERIFY_DOC + """
 
-check that HUPy is correctly set up, verifying:
+read-only inspection; reports on:
 
-- config file (.hupy.config.jsonc) at repository root loads and validates against the schema
-- version string can be grepped per the VerGrep config
-- verify hook stubs installed in the repo's hooks directory match what's currently demanded
+- the config file (.hupy.config.jsonc) at repository root loads and
+  validates against the schema
+- the version string can be grepped per the VerGrep config
+- the hook stubs installed in the repo's hooks directory match what
+  is currently demanded
+
+writes nothing and repairs nothing; run `hupy init` to fix what is
+reported. exits nonzero only when the config file is missing or
+malformed — hook stub drift is reported but does not affect the exit
+code.
 """
 
 
 # auxiliaries  #################################################################
+
+
+def _report_hook_stub_drift(
+    hooks_dir, missing_names, stale_names, unused_names
+):
+    """
+    warn about every demanded-but-missing, drifted, and no-longer-
+    demanded hook stub, pointing at ``hupy init`` as the repair
+    """
+    for hook_name in missing_names:
+        logger.warning("missing hook stub: {}".format(hooks_dir / hook_name))
+
+    for hook_name in stale_names:
+        logger.warning(
+            "hook stub differs from what HUPy renders: {}".format(
+                hooks_dir / hook_name
+            )
+        )
+
+    for hook_name in unused_names:
+        logger.warning(
+            "hook stub no longer demanded: {}".format(hooks_dir / hook_name)
+        )
+
+    if missing_names or stale_names or unused_names:
+        logger.note("run `hupy init` to bring the hooks dir back in shape")
 
 
 def _verify_main(args):
@@ -61,18 +94,23 @@ def _verify_main(args):
 
     logger.enter("HUPy verify: {}".format(repo_root))
 
-    with open_state_file(repo) as state_file:
-        load_hupy_config(repo)
-        logger.pass_("config file verified")
-        version = grep_version(repo, state_file, "HEAD")
-        logger.pass_("VerGrep verified, grepped: {!r}".format(version))
+    load_hupy_config(repo)
+    logger.pass_("config file verified")
 
-        verify_hook_stubs(
-            repo,
-            force=args.force,
-            update=args.update_hook_stubs,
+    version = grep_version(repo, HupyStateFile(), "HEAD")
+    logger.pass_("VerGrep verified, grepped: {!r}".format(version))
+
+    hooks_dir = resolve_hooks_dir(repo)
+    missing_names, stale_names, unused_names = check_hook_stubs(
+        repo, hooks_dir=hooks_dir
+    )
+
+    if missing_names or stale_names or unused_names:
+        _report_hook_stub_drift(
+            hooks_dir, missing_names, stale_names, unused_names
         )
-        logger.pass_("hook stubs verified/updated")
+    else:
+        logger.pass_("hook stubs verified")
 
     logger.done("HUPy verification completed: {}".format(repo_root))
 
@@ -97,26 +135,6 @@ def register_cli_verify_parser(cli_subparser):
         type=pathlib.Path,
         default=pathlib.Path(os.getcwd()),
         help=REPO_PATH_HELP,
-    )
-
-    verify_parser.add_argument(
-        "-u",
-        "--update-hook-stubs",
-        dest="update_hook_stubs",
-        action="store_true",
-        default=False,
-        help=(
-            "instead of just verify, perform hooks stub sync: "
-            "add missing hook stubs and remove ones no longer demanded"
-        ),
-    )
-
-    verify_parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        default=False,
-        help="with -u, also refresh already-installed hook stubs",
     )
 
     add_verbose_arguments(verify_parser)
