@@ -1,5 +1,7 @@
 # hupy CHANGELOG
 
+<!-- Fixme update kamilog version & use color in examples/cli/ -->
+
 [^format]
 
 ## [Unreleased]

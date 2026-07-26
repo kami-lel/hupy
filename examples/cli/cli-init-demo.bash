@@ -43,45 +43,49 @@ _run_hupy_init() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tconvergent init on a freshly created, empty repository\n"
-printf "expected:\tevery section PASS; init never aborts on drift\n"
 echo
 
 demo_repo="$(_prepare_empty_repo)"
 hooks_dir="$demo_repo/.git/hooks"
 
-printf '%s\n' "1. first-time init on the empty repo"
 printf '%s\n' "hupy init" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "first-time init on the empty repo"
+
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo"
 echo
 
-printf '%s\n' "2. repeat init, config-only: already correct, left untouched"
 printf '%s\n' "hupy init --only config" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "repeat init, config-only: already correct, left untouched"
+
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo" --only config
 echo
 
-printf '%s\n' "3. pre-commit hand-edited (drifted), unused pre-push added"
 printf '%s\n' "hupy init" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "pre-commit hand-edited (drifted), unused pre-push added"
 printf '\n# hand-edited\n' >> "$hooks_dir/pre-commit"
 printf '#!/usr/bin/env bash\nexec "python3" -m hupy hook pre-push "$@"\n' \
     > "$hooks_dir/pre-push"
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo"
 echo
 
 printf '%s\n' "stubs untouched by the plain re-init above"
-printf '%s\n' "pre-commit still hand-edited" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "pre-commit still hand-edited" | python3 -m hupy.kamilog cb center "-"
 tail -n1 "$hooks_dir/pre-commit"
 echo
 
-printf '%s\n' "4. same drift, resolved with -f --prune"
 printf '%s\n' "hupy init -f --prune" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "same drift, resolved with -f --prune"
+
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
 _run_hupy_init "$demo_repo" -f --prune
 echo
 
 printf '%s\n' "pre-commit rewritten, pre-push removed"
-printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "-"
 for entry in "$hooks_dir"/*; do
     case "$entry" in
         *.sample) continue ;;
