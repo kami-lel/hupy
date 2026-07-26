@@ -101,8 +101,7 @@ def _verify_main(args):
     state_file = HupyStateFile()
 
     version = grep_version(repo, state_file, "HEAD")
-    # FIXME use the correct wording
-    logger.pass_("HU.VG verified, grepped: {!r}".format(version))
+    logger.pass_("canonical version grepped: {!r}".format(version))
 
     check_version_uniformity(repo, state_file, "HEAD", is_report_only=True)
 
