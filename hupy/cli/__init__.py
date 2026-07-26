@@ -5,4 +5,4 @@ command-line interface for HUPy
 """
 
 
-# FIXME verify & creation two commands not clear
+# HACK use demo to check interaction
