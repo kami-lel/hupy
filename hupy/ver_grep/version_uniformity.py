@@ -37,36 +37,6 @@ def _heading(occurrence):
     )
 
 
-# FIXME rewrite the perform logic
-def _check_occurrence(repo, ref, canonical_version, occurrence):
-    """
-    :param repo: git repository object
-    :type repo: git.Repo
-    :param ref: git ref to read the occurrence's file at
-    :type ref: str
-    :param canonical_version: the version grepped from the canonical
-            occurrence
-    :type canonical_version: str
-    :param occurrence: a single configured version occurrence to check
-    :type occurrence: _VersionOccurrence
-    :return: ``None`` if uniform, else a failure message
-    :rtype: str or None
-    """
-    heading = _heading(occurrence)
-    found_version = grep_occurrence(repo, ref, occurrence)
-
-    if not found_version:
-        return "unreadable: {}".format(heading)
-
-    if found_version != canonical_version:
-        return "drifted: {}\nfound {!r}, expected {!r}".format(
-            heading, found_version, canonical_version
-        )
-
-    logger.pass_("uniform: {}".format(heading))
-    return None
-
-
 # Public API  ##################################################################
 def check_version_uniformity(
     repo, state_file, ref="HEAD", is_report_only=False
@@ -101,7 +71,7 @@ def check_version_uniformity(
 
     occurrences = config.vg.version_occurrences
     if len(occurrences) < 2:
-        logger.skip("no occurrences configured beyond the canonical entry")
+        logger.skip("contains only canonical entry")
         return
 
     logger.enter("Version Uniformity")
@@ -110,26 +80,48 @@ def check_version_uniformity(
     if not canonical_version:
         return  # grep_version already warned
 
-    failures = [
-        message
-        for occurrence in occurrences[1:]
-        if (
-            message := _check_occurrence(
-                repo, ref, canonical_version, occurrence
-            )
-        )
-        is not None
-    ]
+    is_soft = is_report_only or config.vg.allow_version_uniformity_failure
+    failure_count = 0
 
-    if not failures:
+    logger.debug("canonical version: {!r}".format(canonical_version))
+
+    for occurrence in occurrences[1:]:
+        heading = _heading(occurrence)
+        found_version = grep_occurrence(repo, ref, occurrence)
+
+        if not found_version:
+            failure_count += 1
+            message = "unreadable: {}".format(heading)
+            if is_soft:
+                logger.warning(message)
+            else:
+                logger.fail(message)
+            continue
+
+        if found_version != canonical_version:
+            failure_count += 1
+            message = (
+                "version mismatched: {}\n(found: {} != canonical: {})".format(
+                    heading, found_version, canonical_version
+                )
+            )
+            if is_soft:
+                logger.warning(message)
+            else:
+                logger.fail(message)
+            continue
+
+        logger.succ("version matched: {}".format(heading))
+
+    if not failure_count:
+        logger.pass_("Version Uniformity")
         return
 
-    is_soft = is_report_only or config.vg.allow_version_uniformity_failure
-    for message in failures:
-        if is_soft:
-            logger.warning(message)
-        else:
-            logger.fail(message)
-
-    if not is_soft:
+    message = "{} occurrence(s) mismatched from canonical version".format(
+        failure_count
+    )
+    if is_soft:
+        logger.warning(message)
+    else:
+        logger.fail(message)
         raise SystemExit(1)
