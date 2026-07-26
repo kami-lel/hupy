@@ -37,6 +37,7 @@ def _heading(occurrence):
     )
 
 
+# BUG occurrences not ran during hooks
 def _check_occurrence(repo, ref, canonical_version, occurrence):
     """
     :param repo: git repository object
