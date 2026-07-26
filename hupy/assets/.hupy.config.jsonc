@@ -18,7 +18,29 @@
     "version_file": "",
     // regex pattern to match line containing version string;
     // first capture group `( )` is version
-    "version_line_pattern": ""
+    "version_line_pattern": "",
+    // Version Uniformity: assert the version also appears correctly
+    // in every configured occurrence below
+    //
+    // disable Version Uniformity (VerGrep itself stays enabled)
+    "disable_version_uniformity": false,
+    // let a drifted occurrence warn instead of blocking the commit
+    "allow_version_uniformity_failure": false,
+    // a single occurrence entry includes fields:
+    //
+    // - "file": required, file path relative to repo root
+    // - "glob": required, glob matched against each line of "file";
+    //   the version must appear on a line the glob matches
+    // - "remark" (optional, string): description/name of entry,
+    //   strictly used in logger
+    "version_occurrences": [
+      // example entry:
+      // {
+      //   "remark": "README badge",
+      //   "file": "README.md",
+      //   "glob": "*version-*-blue*"
+      // }
+    ]
   },
   "cbm": { // ##################################################################
     // exact name of main branch

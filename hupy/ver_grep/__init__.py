@@ -6,10 +6,6 @@ configured version file
 """
 
 
-# TODO vg allow multiple entries
-
-
-
 from hupy import PROJ_LOGGER_NAME
 
 VER_GREP_LOGGER_NAME = PROJ_LOGGER_NAME + ".VerGrep"
