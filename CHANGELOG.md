@@ -1,9 +1,5 @@
 # hupy CHANGELOG
 
-<!--
-BUG ver grep not HEAD, local workspace
--->
-
 [^format]
 
 
@@ -70,6 +66,7 @@ BUG ver grep not HEAD, local workspace
 - a hand-written file sitting at a hook's expected location is no longer silently overwritten by `hupy init`
 - a version mismatch caught by Version Uniformity now actually blocks the commit, instead of only warning about it
 - `kamilog`'s `-n`/`-N` flags no longer discard stdin's own trailing newline
+- `hupy verify` and `hupy get grep-ver` now grep the version from the local worktree instead of the last commit, so an edited-but-uncommitted (or staged-but-uncommitted) version file is picked up right away
 
 [2.1.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v2.1.0
 
