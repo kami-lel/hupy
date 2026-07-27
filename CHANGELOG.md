@@ -25,6 +25,8 @@ todo add UT for Paper Trail
 
 ### Changed
 
+- `hupy uninstall` now takes a single `--only {stubs,config}` flag, replacing the separate `--uninstall-hook-stubs`/`--remove-config-file` flags, and gains the `u` alias — matching `hupy init`'s `--only`/registry-dispatch pattern and the `i`/`v` aliases already on `init`/`verify`
+
 ### Deprecated
 
 ### Removed
