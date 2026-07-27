@@ -28,7 +28,7 @@
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v2.1.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.0.0...dev
 
 
 
@@ -42,7 +42,7 @@
 
 
 
-## [2.1.0] - 2026-07-27
+## [3.0.0] - 2026-07-27
 
 ### Added
 
@@ -68,7 +68,7 @@
 - `kamilog`'s `-n`/`-N` flags no longer discard stdin's own trailing newline
 - `hupy verify` and `hupy get grep-ver` now grep the version from the local worktree instead of the last commit, so an edited-but-uncommitted (or staged-but-uncommitted) version file is picked up right away
 
-[2.1.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v2.1.0
+[3.0.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v3.0.0
 
 
 
