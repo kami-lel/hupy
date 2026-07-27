@@ -4,7 +4,7 @@ grep_ver.py
 define the ``grep-ver`` accessor key's ``run_get`` and ``run_info``
 """
 
-from hupy.ver_grep.ver_grep import grep_version
+from hupy.ver_grep.ver_grep import WORKTREE, grep_version
 
 # constants  ###################################################################
 KEY = "grep-ver"
@@ -14,10 +14,10 @@ DOC = "get current repository version string grepped"
 # Public API  ##################################################################
 def run_get(repo, state_file, logger, args):
     """
-    print the version grepped from HEAD's version file, or an empty
-    line if unconfigured, missing, or unmatched.
+    print the version grepped from the worktree's version file, or an
+    empty line if unconfigured, missing, or unmatched.
     """
-    print(grep_version(repo, state_file, "HEAD"))
+    print(grep_version(repo, state_file, WORKTREE))
 
 
 def run_info(repo, state_file, logger, args):

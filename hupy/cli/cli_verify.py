@@ -10,7 +10,7 @@ from hupy.cli.cli_init import (
 from hupy.config_file.load_config import load_hupy_config
 from hupy.state.state_file import HupyStateFile
 from hupy.stub.update_stubs import check_hook_stubs, resolve_hooks_dir
-from hupy.ver_grep.ver_grep import grep_version
+from hupy.ver_grep.ver_grep import WORKTREE, grep_version
 from hupy.ver_grep.version_uniformity import check_version_uniformity
 
 
@@ -100,10 +100,10 @@ def _verify_main(args):
 
     state_file = HupyStateFile()
 
-    version = grep_version(repo, state_file, "HEAD")
+    version = grep_version(repo, state_file, WORKTREE)
     logger.pass_("canonical version grepped: {!r}".format(version))
 
-    check_version_uniformity(repo, state_file, "HEAD", is_report_only=True)
+    check_version_uniformity(repo, state_file, WORKTREE, is_report_only=True)
 
     hooks_dir = resolve_hooks_dir(repo)
     missing_names, stale_names, unused_names = check_hook_stubs(

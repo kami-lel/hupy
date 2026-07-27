@@ -2,6 +2,7 @@
 ver_grep.py
 """
 
+import pathlib
 import re
 import sys
 
@@ -19,8 +20,37 @@ logger = getLogger(VER_GREP_LOGGER_NAME)
 logger.propagate = False
 renderer = AnsiRenderer(sys.stdout)
 
+# constants  ###################################################################
+
+# sentinel `ref` value meaning "the local worktree file on disk", not
+# a git ref
+WORKTREE = None
+
 
 # auxiliaries  #################################################################
+
+
+def _read_occurrence_file(repo, ref, occurrence):
+    """
+    read a single configured occurrence's file content, either off the
+    local worktree (when ``ref is WORKTREE``) or from the git object
+    database at ``ref``
+    """
+    if ref is WORKTREE:
+        path = pathlib.Path(repo.working_tree_dir) / occurrence.file
+        try:
+            return path.read_text()
+        except FileNotFoundError:
+            logger.warning(
+                "missing file in worktree: {}".format(occurrence.file)
+            )
+            return ""
+
+    try:
+        return repo.git.show("{}:{}".format(ref, occurrence.file.as_posix()))
+    except git.GitCommandError:
+        logger.warning("missing file on {}: {}".format(ref, occurrence.file))
+        return ""
 
 
 def grep_occurrence(repo, ref, occurrence):
@@ -31,8 +61,9 @@ def grep_occurrence(repo, ref, occurrence):
 
     :param repo: git repository to read the file from
     :type repo: git.Repo
-    :param ref: git ref to read the file at
-    :type ref: str
+    :param ref: git ref to read the file at, or ``WORKTREE`` to read
+            the on-disk worktree file instead
+    :type ref: str or None
     :param occurrence: a single configured version occurrence
     :type occurrence: _VersionOccurrence
     :return: the captured version; or
@@ -41,14 +72,8 @@ def grep_occurrence(repo, ref, occurrence):
             (each case is warned before returning)
     :rtype: str
     """
-    try:
-        content = repo.git.show(
-            "{}:{}".format(ref, occurrence.file.as_posix())
-        )
-    except git.GitCommandError:
-        logger.warning(
-            "missing file on {}: {}".format(ref, occurrence.file)
-        )
+    content = _read_occurrence_file(repo, ref, occurrence)
+    if not content:
         return ""
 
     for line in content.splitlines():
@@ -87,8 +112,9 @@ def grep_version(repo, state_file, ref):
     :type repo: git.Repo
     :param state_file:
     :type state_file: HupyStateFile
-    :param ref: git ref to read the version file at
-    :type ref: str
+    :param ref: git ref to read the version file at, or ``WORKTREE``
+            to read the on-disk worktree file instead
+    :type ref: str or None
     :return: the grepped version; or
             "" if unconfigured, missing, or unmatched
     :rtype: str
@@ -97,7 +123,7 @@ def grep_version(repo, state_file, ref):
     if not should_run_module(repo, state_file, "vg"):
         return ""
 
-    # get canonical occurrence  -------------------------------------------------
+    # get canonical occurrence  ------------------------------------------------
     config = load_hupy_config(repo)
 
     occurrences = config.vg.version_occurrences
