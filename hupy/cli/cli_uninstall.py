@@ -42,6 +42,27 @@ what would be removed
 # auxiliaries  #################################################################
 
 
+def _run_uninstall_hook_stubs(args, repo):
+    """
+    step: remove HUPy-managed hook stub scripts from the repo's hooks dir
+    """
+    uninstall_hook_stubs(repo, force=args.force)
+
+
+def _run_remove_config_file(args, repo):
+    """
+    step: remove the HUPy config file from the repo root
+    """
+    remove_config_file(repo, args.force)
+
+
+# registry mapping each uninstall step's --only value to its runner
+_UNINSTALL_STEPS = {
+    "stubs": _run_uninstall_hook_stubs,
+    "config": _run_remove_config_file,
+}
+
+
 def _uninstall_main(args):
     """
     dispatch for the ``uninstall`` subcommand.
@@ -56,19 +77,20 @@ def _uninstall_main(args):
     repo = load_git_repo(repo_path)
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    # no step flag given: run both steps (dft behavior)
-    run_both = not (args.uninstall_hook_stubs or args.remove_config_file)
+    # no --only given: run every step (dft behavior)
+    selected_steps = (
+        [_UNINSTALL_STEPS[args.only]]
+        if args.only
+        else list(_UNINSTALL_STEPS.values())
+    )
 
     logger.enter("HUPy Uninstallation for: {}".format(repo_root))
 
     if not args.force:
         logger.note("dry run: use --force to actually remove listed files")
 
-    if run_both or args.uninstall_hook_stubs:
-        uninstall_hook_stubs(repo, force=args.force)
-
-    if run_both or args.remove_config_file:
-        remove_config_file(repo, args.force)
+    for run_step in selected_steps:
+        run_step(args, repo)
 
     if args.force:
         logger.done("HUPy Uninstalled for: {}".format(repo_root))
@@ -85,6 +107,7 @@ def register_cli_uninstall_parser(cli_subparser):
     """
     uninstall_parser = cli_subparser.add_parser(
         "uninstall",
+        aliases=["u"],
         help=__doc__,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -100,19 +123,12 @@ def register_cli_uninstall_parser(cli_subparser):
     )
 
     uninstall_parser.add_argument(
-        "--uninstall-hook-stubs",
-        dest="uninstall_hook_stubs",
-        action="store_true",
-        default=False,
-        help="only remove the HUPy-managed hook stub scripts",
-    )
-
-    uninstall_parser.add_argument(
-        "--remove-config-file",
-        dest="remove_config_file",
-        action="store_true",
-        default=False,
-        help="only remove the HUPy config file",
+        "--only",
+        dest="only",
+        choices=("stubs", "config"),
+        default=None,
+        help="remove only the hook stubs, or only the HUPy config "
+        "file; default=both",
     )
 
     uninstall_parser.add_argument(
