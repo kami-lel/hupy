@@ -41,8 +41,10 @@ _run_ttg() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tFeature Landing, multiple files (steady + quiet, no loud)\n"
-printf "expected:\tPASS\n"
+printf "scenario:\tFeature Landing, multiple files (steady + quiet, no loud)\n" \
+    | python3 -m hupy.kamilog cg
+printf "expected:\tPASS\n" \
+    | python3 -m hupy.kamilog cg
 echo
 
 printf '%s\n' "pre-commit" | python3 -m hupy.kamilog cb center "#"

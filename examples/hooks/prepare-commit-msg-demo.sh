@@ -42,11 +42,13 @@ _run_pch() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tVersion Release merge (develop into main)\n"
-printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n"
+printf "scenario:\tVersion Release merge (develop into main)\n" \
+    | python3 -m hupy.kamilog cg
+printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n" \
+    | python3 -m hupy.kamilog cg
 echo
 
-printf '%s\n' "print out" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "#"
 demo_repo="$(_prepare_demo_repo)"
 editmsg="$demo_repo/.git/COMMIT_EDITMSG"
 before_file="$demo_repo/.git/COMMIT_EDITMSG.before"

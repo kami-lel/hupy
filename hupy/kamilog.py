@@ -1235,11 +1235,11 @@ def _logger_parser_main(args):
     raw = sys.stdin.read()
     lines = raw.splitlines()
     last_idx = len(lines) - 1
-    suppress_final = _calc_line_end(args, raw) == ""
+    final_end = _calc_line_end(args, raw)  # final record's own break
     for i, line in enumerate(lines):  # log each stdin Line
-        if suppress_final and i == last_idx:  # trim only the final break
+        if i == last_idx:  # only the final break is adjustable
             for handler in logger.handlers:
-                handler.terminator = ""
+                handler.terminator = final_end
         logger.log(level, line)
 
 
@@ -1804,17 +1804,16 @@ _line_width_parser.add_argument(
 
 def _calc_line_end(args, stdin_content=""):
     """
-    decide the trailing-newline ``end`` string for output.
-
-    ``-n/--newline`` forces a Newline, ``-N/--no-newline`` forces none;
-    otherwise auto-detect from ``stdin_content``: a stdin already ending
-    in a newline gets none appended, a stdin missing one gets one appended
+    decide the trailing-newline ``end`` string: stdin's own newline,
+    if any, plus one when ``-n`` and none when ``-N``; with neither
+    flag the output ends in exactly one newline
     """
+    kept = "\n" if stdin_content.endswith("\n") else ""
     if args.newline is True:
-        return "\n"
+        return kept + "\n"
     if args.newline is False:
-        return ""
-    return "" if stdin_content.endswith("\n") else "\n"
+        return kept
+    return "\n"
 
 
 # comment banner parser  =======================================================

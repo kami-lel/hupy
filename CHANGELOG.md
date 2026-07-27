@@ -1,8 +1,6 @@
 # hupy CHANGELOG
 
 <!--
-Fixme wait for newly updated kamilog
-Fixme use color in examples/cli/
 Bug ver grep not HEAD, local workspace
 -->
 
@@ -60,6 +58,7 @@ Bug ver grep not HEAD, local workspace
 - **`hupy init` is now safe to run anytime** — a repeat run fills in whatever's missing and leaves everything already correct alone, only touching a drifted or unneeded file when you explicitly ask it to
 - **`hupy verify` is now a pure read-only check** — it reports problems but never fixes them; run `hupy init` to act on what it finds
 - clearer, more consistent warning messages across `init` and `verify`
+- tidier `examples/` demo output formatting
 
 ### Removed
 
@@ -70,6 +69,7 @@ Bug ver grep not HEAD, local workspace
 
 - a hand-written file sitting at a hook's expected location is no longer silently overwritten by `hupy init`
 - a version mismatch caught by Version Uniformity now actually blocks the commit, instead of only warning about it
+- `kamilog`'s `-n`/`-N` flags no longer discard stdin's own trailing newline
 
 [2.1.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v2.1.0
 

@@ -72,7 +72,8 @@ printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
 echo
 
 printf '%s\n' "clean repo" | python3 -m hupy.kamilog cb center "#"
-printf '%s\n' "clean repo: every check passes"
+printf '%s\n' "clean repo: every check passes" \
+    | python3 -m hupy.kamilog cg
 demo_repo_1="$(_prepare_demo_repo)"
 
 printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
@@ -80,8 +81,10 @@ _run_verify "$demo_repo_1"
 echo
 
 printf '%s\n' "drifted hooks" | python3 -m hupy.kamilog cb center "#"
-printf '%s\n' "pre-commit stub removed, unused pre-push stub added"
-printf '%s\n' "— verify never writes or removes a file"
+printf '%s\n' "pre-commit stub removed, unused pre-push stub added" \
+    | python3 -m hupy.kamilog cg
+printf '%s\n' "— verify never writes or removes a file" \
+    | python3 -m hupy.kamilog cg
 demo_repo_2="$(_prepare_demo_repo)"
 hooks_dir_2="$demo_repo_2/.git/hooks"
 _drift_hooks_dir "$hooks_dir_2"
@@ -91,7 +94,8 @@ _run_verify "$demo_repo_2"
 echo
 
 printf '%s\n' "malformed config" | python3 -m hupy.kamilog cb center "#"
-printf '%s\n' "config file's vg field dropped, a missing required field"
+printf '%s\n' "config file's vg field dropped, a missing required field" \
+    | python3 -m hupy.kamilog cg
 demo_repo_3="$(_prepare_demo_repo)"
 _drop_config_field "$demo_repo_3/.hupy.config.jsonc" vg
 

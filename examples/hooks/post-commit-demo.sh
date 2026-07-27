@@ -33,7 +33,7 @@ _prepare_demo_repo() {
 _run_skip_once() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy skip-once "$@" "${_VERBOSITY_ARGS[@]}")
+    (cd "$repo_dir" && python3 -m hupy set skip-once "$@" "${_VERBOSITY_ARGS[@]}")
 }
 
 _run_post_commit() {
@@ -47,8 +47,10 @@ _run_post_commit() {
 
 
 printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
-printf "scenario:\tplain non-merge commit, bdc+ttg flagged for one-time skip\n"
-printf "expected:\tskip_once cleared from hupy-state.json\n"
+printf "scenario:\tplain non-merge commit, bdc+ttg flagged for one-time skip\n" \
+    | python3 -m hupy.kamilog cg
+printf "expected:\tskip_once cleared from hupy-state.json\n" \
+    | python3 -m hupy.kamilog cg
 echo
 
 demo_repo="$(_prepare_demo_repo)"
