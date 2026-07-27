@@ -13,7 +13,7 @@ from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME
-from .ver_grep import grep_occurrence, grep_version
+from .ver_grep import WORKTREE, grep_occurrence, grep_version
 
 # logger  ######################################################################
 
@@ -39,7 +39,7 @@ def _heading(occurrence):
 
 # Public API  ##################################################################
 def check_version_uniformity(
-    repo, state_file, ref="HEAD", is_report_only=False
+    repo, state_file, ref=WORKTREE, is_report_only=False
 ):
     """
     assert every configured version occurrence beyond the canonical
@@ -54,8 +54,9 @@ def check_version_uniformity(
     :param state_file: the open HUPy state file, as yielded by
             ``open_state_file``
     :type state_file: HupyStateFile
-    :param ref: git ref to check occurrences at; default="HEAD"
-    :type ref: str, optional
+    :param ref: git ref to check occurrences at, or ``WORKTREE`` to
+            check the on-disk worktree files instead; default=WORKTREE
+    :type ref: str or None, optional
     :param is_report_only: downgrade every failure to a warning
             instead of aborting; default=False
     :type is_report_only: bool, optional

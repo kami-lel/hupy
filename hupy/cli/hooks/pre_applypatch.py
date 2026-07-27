@@ -7,6 +7,7 @@ by the generic hook stage runner in ``cli_hook.py``
 
 from hupy.bdc.ban_direct_commit import ban_direct_commit
 from hupy.pt.perform_paper_trail import perform_paper_trail
+from hupy.ver_grep.ver_grep import WORKTREE
 from hupy.ver_grep.version_uniformity import check_version_uniformity
 
 # constants  ###################################################################
@@ -20,4 +21,4 @@ def run_features(repo, state_file, proj_logger, logger, hooks_args):
     """
     ban_direct_commit(repo, state_file)
     perform_paper_trail(repo, state_file, HOOK_NAME)
-    check_version_uniformity(repo, state_file)
+    check_version_uniformity(repo, state_file, WORKTREE)

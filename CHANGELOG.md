@@ -1,7 +1,6 @@
 # hupy CHANGELOG
 
 <!--
-Bug during version release, version uniformity grepped from HEAD
 todo script to update config file w/ package update
 todo add UT for Paper Trail
 -->
@@ -31,6 +30,8 @@ todo add UT for Paper Trail
 ### Removed
 
 ### Fixed
+
+- `check_version_uniformity`'s git hooks (`pre-commit`, `pre-merge-commit`, `pre-applypatch`) no longer check version uniformity against `HEAD` — `ref` now defaults to `WORKTREE`, matching `hupy verify`'s already-correct behavior, so an edited-but-uncommitted version file is caught right away
 
 ### Security
 
