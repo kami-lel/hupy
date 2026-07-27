@@ -12,7 +12,7 @@ from config_fixture import load_config_fixture
 from prep_repo import _write_config_file
 
 from hupy.state.state_file import HupyStateFile
-from hupy.ver_grep.ver_grep import grep_version
+from hupy.ver_grep.ver_grep import WORKTREE, grep_version
 
 _VERSION_FILE = "VERSION"
 _PATTERN = r"(\d+\.\d+\.\d+)"
@@ -97,6 +97,27 @@ class TestGrepVersionMatch:
 
         assert _grep(repo, ref="v1") == "1.0.0"
         assert _grep(repo, ref="v2") == "2.0.0"
+
+
+class TestGrepVersionWorktree:
+    def test_reads_uncommitted_worktree_content(self, repo_dir):
+        repo = _make_repo(repo_dir, "1.0.0\n")
+        (repo_dir / _VERSION_FILE).write_text("2.0.0\n")  # uncommitted
+
+        assert _grep(repo, ref="HEAD") == "1.0.0"
+        assert _grep(repo, ref=WORKTREE) == "2.0.0"
+
+    def test_reads_staged_but_uncommitted_worktree_content(self, repo_dir):
+        repo = _make_repo(repo_dir, "1.0.0\n")
+        (repo_dir / _VERSION_FILE).write_text("2.0.0\n")
+        repo.index.add([_VERSION_FILE])  # staged, not committed
+
+        assert _grep(repo, ref="HEAD") == "1.0.0"
+        assert _grep(repo, ref=WORKTREE) == "2.0.0"
+
+    def test_missing_version_file_on_disk_returns_empty(self, repo_dir):
+        repo = _make_repo(repo_dir)  # no version file on disk at all
+        assert _grep(repo, ref=WORKTREE) == ""
 
 
 class TestGrepVersionNotConfigured:
