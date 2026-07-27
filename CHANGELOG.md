@@ -31,6 +31,8 @@ todo add UT for Paper Trail
 
 ### Fixed
 
+- `check_version_uniformity`'s git hooks (`pre-commit`, `pre-merge-commit`, `pre-applypatch`) no longer check version uniformity against `HEAD` — `ref` now defaults to `WORKTREE`, matching `hupy verify`'s already-correct behavior, so an edited-but-uncommitted version file is caught right away
+
 ### Security
 
 [unreleased]: https://github.com/kami-lel/hupy/compare/v3.0.0...dev
