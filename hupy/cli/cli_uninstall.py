@@ -15,7 +15,7 @@ from hupy.kamilog import (
     getLogger,
 )
 
-# Fixme change pattern to use --only
+# FIXME change pattern to use --only
 
 # logger  ######################################################################
 
