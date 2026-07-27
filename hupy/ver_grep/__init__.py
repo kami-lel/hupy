@@ -5,6 +5,7 @@ extract a repo's version string by regex-matching a line in a
 configured version file
 """
 
+# Bug vg uniform test always check HEAD thus wrong
 
 from hupy import PROJ_LOGGER_NAME
 
