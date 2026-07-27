@@ -1,7 +1,7 @@
 # hupy CHANGELOG
 
 <!--
-Bug ver grep not HEAD, local workspace
+BUG ver grep not HEAD, local workspace
 -->
 
 [^format]
