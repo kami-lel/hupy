@@ -83,7 +83,8 @@ flowchart TD
         C1 --> E1[Ban Direct Commit]
         E1 --> E2[Triage Tag Gating]
         E2 --> E3[Paper Trail]
-        E3 --> C2{{Trailing Hook Bracket}}
+        E3 --> E4[Version Uniformity]
+        E4 --> C2{{Trailing Hook Bracket}}
     end
     B -->|F| C
 
@@ -131,7 +132,7 @@ flowchart TD
     O2 --> P
 ```
 
-[Ban Direct Commit](bdc_doc.md) blocks direct commits to protected branches, [Triage Tag Gating](ttg_doc.md) blocks merges that still carry unresolved triage tags, [Paper Trail](pt_doc.md) requires configured files to have changed alongside the commit, and [Prepend Commit Header](pch_doc.md) adds a header line to merge commit messages — see each doc for the full behavior.
+[Ban Direct Commit](bdc_doc.md) blocks direct commits to protected branches, [Triage Tag Gating](ttg_doc.md) blocks merges that still carry unresolved triage tags, [Paper Trail](pt_doc.md) requires configured files to have changed alongside the commit, [Version Uniformity](vg_doc.md#version-uniformity) blocks a version string that drifted between its configured occurrences, and [Prepend Commit Header](pch_doc.md) adds a header line to merge commit messages — see each doc for the full behavior.
 
 
 
@@ -184,7 +185,8 @@ flowchart TD
         C[[pre-merge-commit hook]] --> C1{{Leading Hook Bracket}}
         C1 --> Cttg[Triage Tag Gating]
         Cttg --> Cpt[Paper Trail]
-        Cpt --> C2{{Trailing Hook Bracket}}
+        Cpt --> Cvu[Version Uniformity]
+        Cvu --> C2{{Trailing Hook Bracket}}
     end
     G -->|F| C
 
@@ -220,7 +222,7 @@ flowchart TD
     PM2 --> Z4([End])
 ```
 
-See [Triage Tag Gating](ttg_doc.md) for its merge-gating behavior, [Paper Trail](pt_doc.md) for its changed-file requirement, and [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
+See [Triage Tag Gating](ttg_doc.md) for its merge-gating behavior, [Paper Trail](pt_doc.md) for its changed-file requirement, [Version Uniformity](vg_doc.md#version-uniformity) for its cross-file version check, and [Prepend Commit Header](pch_doc.md) for its merge-commit header logic.
 
 
 
@@ -300,7 +302,10 @@ flowchart TD
 
     subgraph preapplypatch [pre-applypatch stage]
         preap[[pre-applypatch hook]] --> lead5{{Leading Hook Bracket}}
-        lead5 --> trail5{{Trailing Hook Bracket}}
+        lead5 --> bdc5[Ban Direct Commit]
+        bdc5 --> pt5[Paper Trail]
+        pt5 --> vu5[Version Uniformity]
+        vu5 --> trail5{{Trailing Hook Bracket}}
     end
     trail4 --> preap
 
@@ -312,6 +317,8 @@ flowchart TD
     end
     applied --> postap
 ```
+
+An incoming patch is gated the same way a local commit is: [Ban Direct Commit](bdc_doc.md) keeps it off a protected branch, [Paper Trail](pt_doc.md) requires its companion files to have changed with it, and [Version Uniformity](vg_doc.md#version-uniformity) rejects a version string the patch left drifted between occurrences.
 
 
 
@@ -390,4 +397,4 @@ Each hook below fires on its own trigger, independent of the Chains above — it
 ----
 
 > [!NOTE]
-> `applypatch-msg`, `pre-applypatch`, `post-applypatch`, `commit-msg`, `post-rewrite`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.
+> `applypatch-msg`, `post-applypatch`, `commit-msg`, `post-rewrite`, `pre-auto-gc`, `post-index-change`, `sendemail-validate`, `fsmonitor-watchman`, `post-checkout`, `post-merge`, and `pre-push` currently run only their [Hook Bracket](hb_doc.md) *lead*/*trail* commands — no dedicated *HUPy* feature is wired into them yet.

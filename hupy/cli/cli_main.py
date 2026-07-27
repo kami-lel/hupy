@@ -40,6 +40,3 @@ register_cli_uninstall_parser(cli_subparser)
 register_cli_verify_parser(cli_subparser)
 register_cli_accessors_parser(cli_subparser)
 register_cli_hook_parser(cli_subparser)
-
-
-# todo dry run feature in CLI

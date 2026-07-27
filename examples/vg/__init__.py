@@ -28,6 +28,7 @@ from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from hupy.ver_grep import VER_GREP_LOGGER_NAME  # noqa: E402
 from hupy.ver_grep.ver_grep import grep_version  # noqa: E402
+from hupy.ver_grep.version_uniformity import check_version_uniformity  # noqa: E402
 
 _STATE_FILE = HupyStateFile()
 
@@ -37,8 +38,11 @@ _STATE_FILE = HupyStateFile()
 
 def _write_config_file(dest_dir, version_file, version_line_pattern):
     config = json5.loads(DEFAULT_CONFIG_ASSET.read_text())
-    config["vg"]["version_file"] = version_file
-    config["vg"]["version_line_pattern"] = version_line_pattern
+    config["vg"]["version_occurrences"] = (
+        []
+        if not version_file and not version_line_pattern
+        else [{"file": version_file, "glob": version_line_pattern}]
+    )
     (pathlib.Path(dest_dir) / CONFIG_FILENAME).write_text(json.dumps(config))
 
 
@@ -77,3 +81,41 @@ def run_vg(repo_dir, ref="HEAD", verbosity=1):
     set_logging_level_by_verbosity(verbosity, logger_name=VER_GREP_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     return grep_version(repo, _STATE_FILE, ref)
+
+
+def prepare_uniformity_demo_repo(
+    occurrences,
+    files,
+    disable_version_uniformity=False,
+    allow_version_uniformity_failure=False,
+):
+    """
+    init a fresh repo with a HUPy config carrying `occurrences` as
+    `vg.version_occurrences`, and every `{filename: content}` pair in
+    `files` committed in one initial commit.
+    """
+    dest_dir = tempfile.mkdtemp(prefix="vg_uniformity_demo_")
+    repo = git.Repo.init(dest_dir)
+
+    config = json5.loads(DEFAULT_CONFIG_ASSET.read_text())
+    config["vg"]["version_occurrences"] = occurrences
+    config["vg"]["disable_version_uniformity"] = disable_version_uniformity
+    config["vg"]["allow_version_uniformity_failure"] = (
+        allow_version_uniformity_failure
+    )
+    (pathlib.Path(dest_dir) / CONFIG_FILENAME).write_text(json.dumps(config))
+
+    for filename, content in files.items():
+        path = pathlib.Path(dest_dir) / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+    repo.index.add(list(files))
+    repo.index.commit("initial commit")
+
+    return dest_dir
+
+
+def run_uniformity(repo_dir, ref="HEAD", verbosity=1):
+    set_logging_level_by_verbosity(verbosity, logger_name=VER_GREP_LOGGER_NAME)
+    repo = git.Repo(repo_dir, search_parent_directories=True)
+    check_version_uniformity(repo, _STATE_FILE, ref)

@@ -12,7 +12,7 @@ from config_fixture import load_config_fixture
 from prep_repo import _write_config_file
 
 from hupy.state.state_file import HupyStateFile
-from hupy.ver_grep.ver_grep import grep_version
+from hupy.ver_grep.ver_grep import WORKTREE, grep_version
 
 _VERSION_FILE = "VERSION"
 _PATTERN = r"(\d+\.\d+\.\d+)"
@@ -45,15 +45,16 @@ def _make_repo(repo_dir, version_content=None, version_file=_VERSION_FILE):
 
 def _grep(repo, ref=_REF, pattern=_PATTERN, version_file=_VERSION_FILE):
     """
-    run ``grep_version`` against a stubbed config carrying
-    ``version_file`` and ``pattern``, bypassing disk/git config
-    loading.
+    run ``grep_version`` against a stubbed config carrying a single
+    canonical ``version_occurrences`` entry (``version_file``/
+    ``pattern``), bypassing disk/git config loading.
     """
     config = load_config_fixture(
         overrides={
             "vg": {
-                "version_file": version_file,
-                "version_line_pattern": pattern,
+                "version_occurrences": [
+                    {"file": version_file, "glob": pattern}
+                ]
             }
         }
     )
@@ -98,20 +99,43 @@ class TestGrepVersionMatch:
         assert _grep(repo, ref="v2") == "2.0.0"
 
 
+class TestGrepVersionWorktree:
+    def test_reads_uncommitted_worktree_content(self, repo_dir):
+        repo = _make_repo(repo_dir, "1.0.0\n")
+        (repo_dir / _VERSION_FILE).write_text("2.0.0\n")  # uncommitted
+
+        assert _grep(repo, ref="HEAD") == "1.0.0"
+        assert _grep(repo, ref=WORKTREE) == "2.0.0"
+
+    def test_reads_staged_but_uncommitted_worktree_content(self, repo_dir):
+        repo = _make_repo(repo_dir, "1.0.0\n")
+        (repo_dir / _VERSION_FILE).write_text("2.0.0\n")
+        repo.index.add([_VERSION_FILE])  # staged, not committed
+
+        assert _grep(repo, ref="HEAD") == "1.0.0"
+        assert _grep(repo, ref=WORKTREE) == "2.0.0"
+
+    def test_missing_version_file_on_disk_returns_empty(self, repo_dir):
+        repo = _make_repo(repo_dir)  # no version file on disk at all
+        assert _grep(repo, ref=WORKTREE) == ""
+
+
 class TestGrepVersionNotConfigured:
     def test_default_unconfigured_returns_empty(self, repo_dir):
-        # neither `version_file` nor `version_line_pattern` is
-        # stubbed, so the shipped default config's empty values apply
+        # `version_occurrences` isn't stubbed, so the shipped default
+        # config's empty list applies
         repo = _make_repo(repo_dir, "1.2.3\n")
         assert grep_version(repo, _STATE_FILE, _REF) == ""
 
-    def test_empty_version_file_returns_empty(self, repo_dir):
+    def test_empty_occurrences_list_returns_empty(self, repo_dir):
         repo = _make_repo(repo_dir, "1.2.3\n")
-        assert _grep(repo, version_file="") == ""
-
-    def test_dot_version_file_returns_empty(self, repo_dir):
-        repo = _make_repo(repo_dir, "1.2.3\n")
-        assert _grep(repo, version_file=".") == ""
+        config = load_config_fixture(
+            overrides={"vg": {"version_occurrences": []}}
+        )
+        with mock.patch(
+            "hupy.ver_grep.ver_grep.load_hupy_config", return_value=config
+        ):
+            assert grep_version(repo, _STATE_FILE, _REF) == ""
 
     def test_empty_pattern_returns_empty(self, repo_dir):
         repo = _make_repo(repo_dir, "1.2.3\n")

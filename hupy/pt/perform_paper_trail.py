@@ -6,6 +6,8 @@ the commit if an applicable paper trail's glob matches no file
 changed in this commit
 """
 
+# todo add UT for Paper Trail
+
 import fnmatch
 import sys
 

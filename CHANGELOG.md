@@ -2,6 +2,18 @@
 
 [^format]
 
+
+
+
+
+
+
+
+
+
+
+
+
 ## [Unreleased]
 
 ### Added
@@ -16,7 +28,47 @@
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v2.0.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.0.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [3.0.0] - 2026-07-27
+
+### Added
+
+- **Version Uniformity** — hupy can now check that a version number appears consistently everywhere it's supposed to (a config asset, a README badge, and so on), and blocks the commit when one place was missed
+- **`hupy init` gains `--only`, `--prune`, and `--dry-run`** — converge just the hook stubs or just the config file, clean up stub files that are no longer needed, or preview what would happen without changing anything
+
+### Changed
+
+- **`hupy init` is now safe to run anytime** — a repeat run fills in whatever's missing and leaves everything already correct alone, only touching a drifted or unneeded file when you explicitly ask it to
+- **`hupy verify` is now a pure read-only check** — it reports problems but never fixes them; run `hupy init` to act on what it finds
+- clearer, more consistent warning messages across `init` and `verify`
+- tidier `examples/` demo output formatting
+
+### Removed
+
+- older `init`/`verify` flags now covered by the options above; **breaking** — see `hupy init -h`/`hupy verify -h` for the replacements
+- the old `vg.version_file`/`vg.version_line_pattern` config fields, replaced by `vg.version_occurrences`; **breaking**, update any existing `.hupy.config.jsonc`
+
+### Fixed
+
+- a hand-written file sitting at a hook's expected location is no longer silently overwritten by `hupy init`
+- a version mismatch caught by Version Uniformity now actually blocks the commit, instead of only warning about it
+- `kamilog`'s `-n`/`-N` flags no longer discard stdin's own trailing newline
+- `hupy verify` and `hupy get grep-ver` now grep the version from the local worktree instead of the last commit, so an edited-but-uncommitted (or staged-but-uncommitted) version file is picked up right away
+
+[3.0.0]: https://github.com/kami-lel/hupy/compare/v2.0.0...v3.0.0
 
 
 
