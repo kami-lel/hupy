@@ -15,8 +15,6 @@ from hupy.kamilog import (
     getLogger,
 )
 
-# FIXME change pattern to use --only
-
 # logger  ######################################################################
 
 UNINSTALL_LOGGER_NAME = PROJ_LOGGER_NAME + ".uninstall"
