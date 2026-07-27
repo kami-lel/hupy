@@ -1,5 +1,11 @@
 # hupy CHANGELOG
 
+<!--
+Bug during version release, version uniformity grepped from HEAD
+todo script to update config file w/ package update
+todo add UT for Paper Trail
+-->
+
 [^format]
 
 
