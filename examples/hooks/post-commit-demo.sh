@@ -33,7 +33,7 @@ _prepare_demo_repo() {
 _run_skip_once() {
     local repo_dir="$1"
     shift
-    (cd "$repo_dir" && python3 -m hupy skip-once "$@" "${_VERBOSITY_ARGS[@]}")
+    (cd "$repo_dir" && python3 -m hupy set skip-once "$@" "${_VERBOSITY_ARGS[@]}")
 }
 
 _run_post_commit() {

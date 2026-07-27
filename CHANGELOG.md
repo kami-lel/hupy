@@ -1,7 +1,6 @@
 # hupy CHANGELOG
 
 <!--
-FIXME use color in examples/cli/
 Bug ver grep not HEAD, local workspace
 -->
 
