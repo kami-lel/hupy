@@ -25,19 +25,39 @@ todo add UT for Paper Trail
 
 ### Changed
 
-- `hupy uninstall` now takes a single `--only {stubs,config}` flag, replacing the separate `--uninstall-hook-stubs`/`--remove-config-file` flags, and gains the `u` alias — matching `hupy init`'s `--only`/registry-dispatch pattern and the `i`/`v` aliases already on `init`/`verify`
-
 ### Deprecated
 
 ### Removed
 
 ### Fixed
 
-- `check_version_uniformity`'s git hooks (`pre-commit`, `pre-merge-commit`, `pre-applypatch`) no longer check version uniformity against `HEAD` — `ref` now defaults to `WORKTREE`, matching `hupy verify`'s already-correct behavior, so an edited-but-uncommitted version file is caught right away
-
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v3.0.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.1.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [3.1.0] - 2026-07-27
+
+### Changed
+
+- `hupy uninstall` now takes a single `--only {stubs,config}` flag instead of separate `--uninstall-hook-stubs`/`--remove-config-file` flags, and gains the `u` alias — **breaking**, matching `hupy init`'s existing `--only` option and its `i`/`v` aliases
+
+### Fixed
+
+- git hooks (`pre-commit`, `pre-merge-commit`, `pre-applypatch`) now catch a version mismatch as soon as it's edited on disk, instead of waiting for it to be committed first
+
+[3.1.0]: https://github.com/kami-lel/hupy/compare/v3.0.0...v3.1.0
 
 
 
