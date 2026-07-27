@@ -107,6 +107,7 @@ def register_cli_uninstall_parser(cli_subparser):
     """
     uninstall_parser = cli_subparser.add_parser(
         "uninstall",
+        aliases=["u"],
         help=__doc__,
         description=_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -122,19 +123,12 @@ def register_cli_uninstall_parser(cli_subparser):
     )
 
     uninstall_parser.add_argument(
-        "--uninstall-hook-stubs",
-        dest="uninstall_hook_stubs",
-        action="store_true",
-        default=False,
-        help="only remove the HUPy-managed hook stub scripts",
-    )
-
-    uninstall_parser.add_argument(
-        "--remove-config-file",
-        dest="remove_config_file",
-        action="store_true",
-        default=False,
-        help="only remove the HUPy config file",
+        "--only",
+        dest="only",
+        choices=("stubs", "config"),
+        default=None,
+        help="remove only the hook stubs, or only the HUPy config "
+        "file; default=both",
     )
 
     uninstall_parser.add_argument(
