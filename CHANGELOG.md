@@ -1,6 +1,7 @@
 # hupy CHANGELOG
 
 <!--
+Bug version uniformity should be ran during release, or configurable
 todo script to update config file w/ package update
 todo add UT for Paper Trail
 -->
