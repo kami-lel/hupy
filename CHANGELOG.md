@@ -26,16 +26,16 @@ todo add UT for Paper Trail
 
 ### Added
 
-- run-mode badges on log lines: `hupy init` tags `dry` under `--dry-run` and `force` under `--force`, `hupy uninstall` tags `undo` plus `dry` or `force`, `hupy verify` tags `chk`; demos tag `sbx`
+- run-mode badges on log lines: `init` → `dry`/`force`, `uninstall` → `undo` w/ `dry`/`force`, `verify` → `chk`, demos → `sbx`
 
 ### Changed
 
-- vendored `kamilog` updated to 2.10.0
-- file work (config file, hook stubs, `COMMIT_EDITMSG` rewrite) and hook bracket commands now log as fixed-wording deeds (`create`, `overwrite`, `copy`, `delete`, `chmod`, `run`, `skip`), with a `fail to ...` line on error; the "would ..." wording of dry runs is replaced by the `dry` badge
-- a hook bracket command allowed to fail now logs its failure as a warning tagged `keep`
+- vendored `kamilog` → 2.10.0
+- file work (config file, hook stubs, `COMMIT_EDITMSG` rewrite) & HB commands log as fixed-wording deeds (`create`, `overwrite`, `copy`, `delete`, `chmod`, `run`, `skip`), `fail to ...` on error; dry-run "would ..." wording → `dry` badge
+- HB command w/ `allow_failure` logs failure as warning tagged `keep`
 
 > [!WARNING]
-> console log lines no longer carry the `HH:MM:SS` timestamp, following the `kamilog` 2.10.0 default
+> console log lines lose `HH:MM:SS` timestamp, per `kamilog` 2.10.0 default
 
 ### Deprecated
 

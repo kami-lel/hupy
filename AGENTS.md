@@ -55,6 +55,12 @@ python3 tests/fixtures/prep_repo.py --demo-bucket hotfix_backport --dest /tmp/de
 - say **HB commands**, or just **command** — never *HB entry*/*entries* — for a configured `hb` bracket item
 - say **Paper Trail** or **paper-trail**, never *trails*/*trail* — for a configured `pt` entry (singular or plural alike)
 
+## Logging Conventions
+
+- log file and command work through `kamilog` deeds (`logger.track.<deed>(...)` around the real action), never hand-worded sentences
+- set a run mode with `hupy.cli.cli_init.set_run_badges`, never by prefixing messages; clear it in a `finally`
+- vendored `hupy/kamilog.py` is a byte copy of a released kamilog tag: never edit it here
+
 ## Documentation Maintenance
 
 - update `AGENTS.md` when commands, conventions, or constraints change
