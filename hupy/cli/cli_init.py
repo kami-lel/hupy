@@ -1,6 +1,7 @@
 """set up HUPy in a repository, and bring an existing setup back into shape"""
 
 import argparse
+import logging
 import os
 import pathlib
 
@@ -82,6 +83,20 @@ _INIT_STEPS = {
 }
 
 
+def _set_run_badges(badges=None):
+    """
+    set run-wide ``badges`` on the ``HU`` logger and every ``HU.*``
+    logger, since badges do not inherit b/t loggers; no ``badges``
+    clears them
+    """
+    for name, inst in logging.root.manager.loggerDict.items():
+        is_proj = name == PROJ_LOGGER_NAME or name.startswith(
+            PROJ_LOGGER_NAME + "."
+        )
+        if is_proj and hasattr(inst, "set_badges"):
+            inst.set_badges(badges)
+
+
 def _init_main(args):
     """
     dispatch for the ``init`` subcommand.
@@ -101,15 +116,20 @@ def _init_main(args):
         [_INIT_STEPS[args.only]] if args.only else list(_INIT_STEPS.values())
     )
 
-    logger.enter("HUPy Initialization for: {}".format(repo_root))
+    badges = (["dry"] if args.dry_run else []) + (
+        ["force"] if args.force else []
+    )
+    _set_run_badges(badges)
 
-    if args.dry_run:
-        logger.note("dry run: reporting only, nothing is written or removed")
+    try:
+        logger.enter("HUPy Initialization for: {}".format(repo_root))
 
-    for run_step in selected_steps:
-        run_step(args, repo)
+        for run_step in selected_steps:
+            run_step(args, repo)
 
-    logger.done("HUPy Initialized for: {}".format(repo_root))
+        logger.done("HUPy Initialized for: {}".format(repo_root))
+    finally:
+        _set_run_badges()
 
 
 # Public API  ##################################################################

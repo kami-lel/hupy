@@ -5,7 +5,11 @@ import os
 import pathlib
 
 from hupy import PROJ_LOGGER_NAME
-from hupy.cli.cli_init import load_git_repo, REPO_PATH_HELP
+from hupy.cli.cli_init import (
+    load_git_repo,
+    REPO_PATH_HELP,
+    _set_run_badges,
+)
 from hupy.config_file.write_config import remove_config_file
 from hupy.stub.update_stubs import uninstall_hook_stubs
 
@@ -84,18 +88,23 @@ def _uninstall_main(args):
         else list(_UNINSTALL_STEPS.values())
     )
 
-    logger.enter("HUPy Uninstallation for: {}".format(repo_root))
+    _set_run_badges(["undo", "force" if args.force else "dry"])
 
-    if not args.force:
-        logger.note("dry run: use --force to actually remove listed files")
+    try:
+        logger.enter("HUPy Uninstallation for: {}".format(repo_root))
 
-    for run_step in selected_steps:
-        run_step(args, repo)
+        if not args.force:
+            logger.note("use --force to actually remove listed files")
 
-    if args.force:
-        logger.done("HUPy Uninstalled for: {}".format(repo_root))
-    else:
-        logger.done("dry run in: {}".format(repo_root))
+        for run_step in selected_steps:
+            run_step(args, repo)
+
+        if args.force:
+            logger.done("HUPy Uninstalled for: {}".format(repo_root))
+        else:
+            logger.done("nothing removed in: {}".format(repo_root))
+    finally:
+        _set_run_badges()
 
 
 # Public API  ##################################################################
