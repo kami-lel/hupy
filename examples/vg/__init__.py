@@ -24,6 +24,7 @@ from hupy.config_file.config_file_path import (  # noqa: E402
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
+from hupy.cli.cli_init import set_run_badges  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from hupy.ver_grep import VER_GREP_LOGGER_NAME  # noqa: E402
@@ -78,6 +79,7 @@ def prepare_demo_repo(
 
 
 def run_vg(repo_dir, ref="HEAD", verbosity=1):
+    set_run_badges(["sbx"])
     set_logging_level_by_verbosity(verbosity, logger_name=VER_GREP_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     return grep_version(repo, _STATE_FILE, ref)
@@ -116,6 +118,7 @@ def prepare_uniformity_demo_repo(
 
 
 def run_uniformity(repo_dir, ref="HEAD", verbosity=1):
+    set_run_badges(["sbx"])
     set_logging_level_by_verbosity(verbosity, logger_name=VER_GREP_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     check_version_uniformity(repo, _STATE_FILE, ref)

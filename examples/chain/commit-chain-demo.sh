@@ -28,7 +28,9 @@ _prepare_demo_repo() {
     dest="$(mktemp -d -t hooks_demo_XXXXXX)"
     python3 "$_PREP_REPO_PY" --scenario feature_landing_pass --dest "$dest" \
         > /dev/null
-    cp "$dest/.git/MERGE_MSG" "$dest/.git/COMMIT_EDITMSG"
+    python3 -m hupy.kamilog deed cp-file \
+        "$dest/.git/MERGE_MSG" "$dest/.git/COMMIT_EDITMSG" \
+        -- cp "$dest/.git/MERGE_MSG" "$dest/.git/COMMIT_EDITMSG" >&2
     echo "$dest"
 }
 

@@ -21,6 +21,7 @@ from config_fixture import load_config_fixture  # noqa: E402
 from hupy.config_file import CONFIG_LOGGER_NAME  # noqa: E402
 from hupy.config_file.config_file_path import get_config_file_path  # noqa: E402
 from hupy.hb import perform_hook_brackets  # noqa: E402
+from hupy.cli.cli_init import set_run_badges  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from prep_repo import prepare_repo_with_files as _prepare_bucket_repo  # noqa: E402
@@ -61,6 +62,7 @@ def prepare_demo_repo(hb_overrides):
 
 
 def run_hb(repo_dir, hook_name, is_lead, verbosity=1):
+    set_run_badges(["sbx"])
     set_logging_level_by_verbosity(verbosity)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     try:

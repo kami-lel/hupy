@@ -83,7 +83,7 @@ _INIT_STEPS = {
 }
 
 
-def _set_run_badges(badges=None):
+def set_run_badges(badges=None):
     """
     set run-wide ``badges`` on the ``HU`` logger and every ``HU.*``
     logger, since badges do not inherit b/t loggers; no ``badges``
@@ -119,7 +119,7 @@ def _init_main(args):
     badges = (["dry"] if args.dry_run else []) + (
         ["force"] if args.force else []
     )
-    _set_run_badges(badges)
+    set_run_badges(badges)
 
     try:
         logger.enter("HUPy Initialization for: {}".format(repo_root))
@@ -129,7 +129,7 @@ def _init_main(args):
 
         logger.done("HUPy Initialized for: {}".format(repo_root))
     finally:
-        _set_run_badges()
+        set_run_badges()
 
 
 # Public API  ##################################################################

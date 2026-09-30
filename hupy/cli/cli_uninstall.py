@@ -8,7 +8,7 @@ from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
     load_git_repo,
     REPO_PATH_HELP,
-    _set_run_badges,
+    set_run_badges,
 )
 from hupy.config_file.write_config import remove_config_file
 from hupy.stub.update_stubs import uninstall_hook_stubs
@@ -88,7 +88,7 @@ def _uninstall_main(args):
         else list(_UNINSTALL_STEPS.values())
     )
 
-    _set_run_badges(["undo", "force" if args.force else "dry"])
+    set_run_badges(["undo", "force" if args.force else "dry"])
 
     try:
         logger.enter("HUPy Uninstallation for: {}".format(repo_root))
@@ -104,7 +104,7 @@ def _uninstall_main(args):
         else:
             logger.done("nothing removed in: {}".format(repo_root))
     finally:
-        _set_run_badges()
+        set_run_badges()
 
 
 # Public API  ##################################################################

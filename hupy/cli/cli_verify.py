@@ -5,7 +5,7 @@ import pathlib
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
     REPO_PATH_HELP,
-    _set_run_badges,
+    set_run_badges,
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
@@ -94,7 +94,7 @@ def _verify_main(args):
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    _set_run_badges(["chk"])
+    set_run_badges(["chk"])
 
     try:
         logger.enter("HUPy verify: {}".format(repo_root))
@@ -125,7 +125,7 @@ def _verify_main(args):
 
         logger.done("HUPy verification completed: {}".format(repo_root))
     finally:
-        _set_run_badges()
+        set_run_badges()
 
 
 # Public API  ##################################################################

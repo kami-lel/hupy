@@ -17,6 +17,7 @@ _REPO_ROOT = _PKG_DIR.parent.parent
 
 sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
+from hupy.cli.cli_init import set_run_badges  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from hupy.ttg import TTG_LOGGER_NAME  # noqa: E402
@@ -33,6 +34,7 @@ def prepare_demo_repo(bucket, files):
 
 
 def run_ttg(repo_dir, verbosity=1):
+    set_run_badges(["sbx"])
     set_logging_level_by_verbosity(verbosity, logger_name=TTG_LOGGER_NAME)
     repo = git.Repo(repo_dir, search_parent_directories=True)
     try:

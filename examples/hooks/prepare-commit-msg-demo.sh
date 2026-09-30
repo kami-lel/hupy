@@ -52,8 +52,10 @@ printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "#"
 demo_repo="$(_prepare_demo_repo)"
 editmsg="$demo_repo/.git/COMMIT_EDITMSG"
 before_file="$demo_repo/.git/COMMIT_EDITMSG.before"
-cp "$demo_repo/.git/MERGE_MSG" "$editmsg"
-cp "$editmsg" "$before_file"
+python3 -m hupy.kamilog deed cp-file "$demo_repo/.git/MERGE_MSG" "$editmsg" \
+    -- cp "$demo_repo/.git/MERGE_MSG" "$editmsg"
+python3 -m hupy.kamilog deed cp-file "$editmsg" "$before_file" \
+    -- cp "$editmsg" "$before_file"
 
 printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "="
 _run_pch "$demo_repo"

@@ -18,6 +18,7 @@ _REPO_ROOT = _PKG_DIR.parent.parent
 
 sys.path.insert(0, str(_REPO_ROOT / "tests" / "fixtures"))
 
+from hupy.cli.cli_init import set_run_badges  # noqa: E402
 from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.pch import prepend_commit_header  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
@@ -41,6 +42,7 @@ def prepare_demo_repo_by_bucket(demo_bucket):
 
 
 def run_pch(repo_dir, verbosity=1):
+    set_run_badges(["sbx"])
     set_logging_level_by_verbosity(verbosity)
     cwd = os.getcwd()
     os.chdir(repo_dir)
