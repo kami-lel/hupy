@@ -16,7 +16,7 @@ from hupy.state.state_file import HupyStateFile
 
 _REPO = object()
 
-_MODULE_ABBRS = ("vg", "ttg", "pch", "bdc", "hb")
+_MODULE_ABBRS = ("vg", "ttg", "pch", "bdc", "hb", "pt")
 
 
 # auxiliaries  #################################################################
