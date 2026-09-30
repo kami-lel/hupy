@@ -224,14 +224,13 @@ def prepend_commit_header(repo, state_file):
     directory = os.path.dirname(commit_editmsg_path) or "."
     fd, tmp_path = tempfile.mkstemp(dir=directory, prefix="commit-msg.")
 
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write("\n".join(content_lines))
-            f.write("\n")
-            f.write("\n".join(comment_lines))
-        os.replace(tmp_path, commit_editmsg_path)
-    except BaseException:
-        os.unlink(tmp_path)
-        raise
-
-    logger.pass_("commit header prepended")
+    with logger.track.owr_file(commit_editmsg_path):
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write("\n".join(content_lines))
+                f.write("\n")
+                f.write("\n".join(comment_lines))
+            os.replace(tmp_path, commit_editmsg_path)
+        except BaseException:
+            os.unlink(tmp_path)
+            raise

@@ -5,6 +5,7 @@ import pathlib
 from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_init import (
     REPO_PATH_HELP,
+    _set_run_badges,
     load_git_repo,
 )
 from hupy.config_file.load_config import load_hupy_config
@@ -93,31 +94,38 @@ def _verify_main(args):
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
-    logger.enter("HUPy verify: {}".format(repo_root))
+    _set_run_badges(["chk"])
 
-    load_hupy_config(repo)
-    logger.pass_("config file verified")
+    try:
+        logger.enter("HUPy verify: {}".format(repo_root))
 
-    state_file = HupyStateFile()
+        load_hupy_config(repo)
+        logger.pass_("config file verified")
 
-    version = grep_version(repo, state_file, WORKTREE)
-    logger.pass_("canonical version grepped: {!r}".format(version))
+        state_file = HupyStateFile()
 
-    check_version_uniformity(repo, state_file, WORKTREE, is_report_only=True)
+        version = grep_version(repo, state_file, WORKTREE)
+        logger.pass_("canonical version grepped: {!r}".format(version))
 
-    hooks_dir = resolve_hooks_dir(repo)
-    missing_names, stale_names, unused_names = check_hook_stubs(
-        repo, hooks_dir=hooks_dir
-    )
-
-    if missing_names or stale_names or unused_names:
-        _report_hook_stub_drift(
-            hooks_dir, missing_names, stale_names, unused_names
+        check_version_uniformity(
+            repo, state_file, WORKTREE, is_report_only=True
         )
-    else:
-        logger.pass_("hook stubs verified")
 
-    logger.done("HUPy verification completed: {}".format(repo_root))
+        hooks_dir = resolve_hooks_dir(repo)
+        missing_names, stale_names, unused_names = check_hook_stubs(
+            repo, hooks_dir=hooks_dir
+        )
+
+        if missing_names or stale_names or unused_names:
+            _report_hook_stub_drift(
+                hooks_dir, missing_names, stale_names, unused_names
+            )
+        else:
+            logger.pass_("hook stubs verified")
+
+        logger.done("HUPy verification completed: {}".format(repo_root))
+    finally:
+        _set_run_badges()
 
 
 # Public API  ##################################################################
