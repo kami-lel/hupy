@@ -23,4 +23,4 @@ Beyond the first entry, every configured occurrence is checked for **Version Uni
 | `disable_version_uniformity` | turn the check off; VG itself keeps running |
 | `allow_version_uniformity_failure` | downgrade a drifted occurrence to a warning instead of blocking the commit |
 
-Version Uniformity runs in the pre-commit, pre-merge-commit, and pre-applypatch stages — see the [Hook Chain](chain_doc.md) for where each fits — and is also reported (never enforced) by `hupy verify`.
+Version Uniformity is enforced only on a **release merge** — a merge into `main` (Version Release, Hotfix Release, or Release Cut, see [Commit, Branch & Merge](cbm_doc.md)) — so a version bump in progress never blocks an ordinary commit. It runs in the pre-commit and pre-merge-commit stages, the two places a merge commit can be created — see the [Hook Chain](chain_doc.md) for where each fits — and is also reported on demand (never enforced, on any commit type) by `hupy verify`.
