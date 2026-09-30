@@ -24,19 +24,49 @@ todo script to update config file w/ package update
 
 ### Changed
 
-- Version Uniformity enforced only on release merges (into `main`), no longer blocking ordinary commits mid version bump; `hupy verify` still reports it on demand
-
 ### Deprecated
 
 ### Removed
-
-- Version Uniformity from the `pre-applypatch` stage, as a patch is never a release merge
 
 ### Fixed
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v3.1.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.0...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [3.2.0] - 2026-09-30
+
+### Added
+
+- run-mode badges on log lines: `hupy init` tags `dry` under `--dry-run` and `force` under `--force`, `hupy uninstall` tags `undo` plus `dry` or `force`, `hupy verify` tags `chk`; demos tag `sbx`
+
+### Changed
+
+- vendored `kamilog` updated to 2.10.0
+- file work (config file, hook stubs, `COMMIT_EDITMSG` rewrite) and hook bracket commands now log as fixed-wording deeds (`create`, `overwrite`, `copy`, `delete`, `chmod`, `run`, `skip`), with a `fail to ...` line on error; the "would ..." wording of dry runs is replaced by the `dry` badge
+- a hook bracket command allowed to fail now logs its failure as a warning tagged `keep`
+- Version Uniformity now enforced only on release merges (into `main`), no longer blocking ordinary commits mid version bump; `hupy verify` still reports it on demand
+
+> [!WARNING]
+> console log lines no longer carry the `HH:MM:SS` timestamp, following the `kamilog` 2.10.0 default
+
+### Removed
+
+- Version Uniformity from the `pre-applypatch` stage, as a patch is never a release merge
+
+[3.2.0]: https://github.com/kami-lel/hupy/compare/v3.1.0...v3.2.0
 
 
 
