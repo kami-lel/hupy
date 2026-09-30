@@ -25,7 +25,7 @@ _STUB_TEMPLATE = """#!/usr/bin/env bash
 exec "{python}" -m hupy hook {hook_name} "$@"
 """
 
-_STUB_MODE = 0o755
+_STUB_MODE = "755"
 
 
 # auxiliaries  #################################################################
@@ -39,20 +39,20 @@ def _render_stub_content(hook_name):
     return _STUB_TEMPLATE.format(python=sys.executable, hook_name=hook_name)
 
 
-def _write_stub(target_path, hook_name, is_overwrite=False, is_update=False):
+def _write_stub(target_path, hook_name, is_overwrite=False):
     """
     render and write the stub script for ``hook_name`` at ``target_path``,
     then mark it executable.
     """
-    target_path.write_text(_render_stub_content(hook_name), encoding="utf-8")
-    target_path.chmod(_STUB_MODE)
+    track = logger.track.owr_file if is_overwrite else logger.track.create_file
 
-    if is_overwrite:
-        logger.warning("overwrite hook stub: {}".format(target_path))
-    elif is_update:
-        logger.info("hook stub added: {}".format(target_path))
-    else:
-        logger.debug("hook stub installed: {}".format(target_path))
+    with track(target_path):
+        target_path.write_text(
+            _render_stub_content(hook_name), encoding="utf-8"
+        )
+
+    with logger.track.chmod_file(target_path, _STUB_MODE):
+        target_path.chmod(int(_STUB_MODE, 8))
 
 
 def _is_managed_stub(target_path):
@@ -127,10 +127,13 @@ def _begin_hooks_action(action_label, hooks_dir, is_dry_run=False):
     logger.debug("hooks dir: {}".format(hooks_dir))
 
     if is_dry_run:
-        logger.note("dry run: no file is written or removed")
+        if not hooks_dir.is_dir():
+            logger.create_dir(hooks_dir)
         return
 
-    hooks_dir.mkdir(parents=True, exist_ok=True)
+    if not hooks_dir.is_dir():
+        with logger.track.create_dir(hooks_dir):
+            hooks_dir.mkdir(parents=True, exist_ok=True)
 
 
 def _prune_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
@@ -141,11 +144,11 @@ def _prune_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would prune stub: {}".format(target_path))
+            logger.rm_file(target_path)
             continue
 
-        logger.warning("prune hook stub: {}".format(target_path))
-        target_path.unlink()
+        with logger.track.rm_file(target_path):
+            target_path.unlink()
 
 
 def _report_unused_stubs(hooks_dir, unused_names):
@@ -154,10 +157,8 @@ def _report_unused_stubs(hooks_dir, unused_names):
     asked for
     """
     for hook_name in unused_names:
-        logger.warning(
-            "prunable hook stub: {}\n"
-            "(use --prune)".format(hooks_dir / hook_name)
-        )
+        logger.skip_file(hooks_dir / hook_name)
+        logger.note("prunable hook stub: use --prune")
 
 
 def _add_missing_stubs(hooks_dir, missing_names, is_dry_run=False):
@@ -168,10 +169,10 @@ def _add_missing_stubs(hooks_dir, missing_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would add hook stub: {}".format(target_path))
+            logger.create_file(target_path)
             continue
 
-        _write_stub(target_path, hook_name, is_update=True)
+        _write_stub(target_path, hook_name)
 
 
 def _uninstall_managed_stub(target_path, force):
@@ -180,10 +181,10 @@ def _uninstall_managed_stub(target_path, force):
     that it would be removed (dry run).
     """
     if force:
-        logger.warning("remove hook stub: {}".format(target_path))
-        target_path.unlink()
+        with logger.track.rm_file(target_path):
+            target_path.unlink()
     else:
-        logger.info("attempt remove stub: {}".format(target_path))
+        logger.rm_file(target_path)
 
 
 def _refresh_stale_stubs(hooks_dir, stale_names, is_dry_run=False):
@@ -194,7 +195,7 @@ def _refresh_stale_stubs(hooks_dir, stale_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would rewrite stale stub: {}".format(target_path))
+            logger.owr_file(target_path)
             continue
 
         _write_stub(target_path, hook_name, is_overwrite=True)
@@ -206,10 +207,8 @@ def _report_stale_stubs(hooks_dir, stale_names):
     asked for
     """
     for hook_name in stale_names:
-        logger.warning(
-            "hook stub differs: {}\n"
-            "(use --force to rewrite)".format(hooks_dir / hook_name)
-        )
+        logger.skip_file(hooks_dir / hook_name)
+        logger.note("hook stub differs: use --force to rewrite")
 
 
 # Public API  ##################################################################

@@ -46,30 +46,24 @@ def sync_config_file(repo, force=False, dry_run=False):
 
     if config_path.exists():
         if not force:
-            logger.warning(
-                "HUPy config file already exists: {}\n"
-                "(use --force to override)".format(config_path)
-            )
+            logger.skip_file(config_path)
+            logger.note("use --force to override")
             return
 
         if dry_run:
-            logger.info(
-                "would overwrite HUPy config file: {}".format(config_path)
-            )
+            logger.owr_file(config_path)
             return
 
-        logger.warning(
-            "overwrite existing HUPy config file: {}".format(config_path)
-        )
-        shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
+        with logger.track.owr_file(config_path):
+            shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
         return
 
     if dry_run:
-        logger.info("would write HUPy config file: {}".format(config_path))
+        logger.cp_file(DEFAULT_CONFIG_ASSET, config_path)
         return
 
-    logger.debug("HUPy config file written: {}".format(config_path))
-    shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
+    with logger.track.cp_file(DEFAULT_CONFIG_ASSET, config_path):
+        shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
 
 
 def remove_config_file(repo, force):
@@ -88,9 +82,7 @@ def remove_config_file(repo, force):
         return
 
     if force:
-        logger.warning("remove HUPy config file: {}".format(config_path))
-        config_path.unlink()
+        with logger.track.rm_file(config_path):
+            config_path.unlink()
     else:
-        logger.info(
-            "attempt remove config file: {}".format(config_path)
-        )
+        logger.rm_file(config_path)
