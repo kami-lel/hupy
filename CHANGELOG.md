@@ -26,9 +26,13 @@ todo script to update config file w/ package update
 
 ### Changed
 
+- Version Uniformity enforced only on release merges (into `main`), no longer blocking ordinary commits mid version bump; `hupy verify` still reports it on demand
+
 ### Deprecated
 
 ### Removed
+
+- Version Uniformity from the `pre-applypatch` stage, as a patch is never a release merge
 
 ### Fixed
 
