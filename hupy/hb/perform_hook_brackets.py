@@ -11,6 +11,7 @@ import sys
 
 
 from hupy.kamilog import (
+    WARNING,
     AnsiRenderer,
     AnsiStyle,
     getLogger,
@@ -57,7 +58,7 @@ def _is_hb_cmd_applicable(hb_cmd, commit_type):
     return bool(hb_cmd.allow_commit_types & commit_type)
 
 
-def _run_hb_cmd(repo, heading, hb_cmd, hooks_args):
+def _run_hb_cmd(repo, hb_cmd, hooks_args):
     """
     :param repo: git repository object
     :type repo: git.Repo
@@ -66,41 +67,39 @@ def _run_hb_cmd(repo, heading, hb_cmd, hooks_args):
     :param hooks_args: raw arguments forwarded by the git hook invocation
     :type hooks_args: list[str]
     """
-    logger.info("run HB: {}".format(heading))
     cmd = " ".join([hb_cmd.cmd, *(shlex.quote(arg) for arg in hooks_args)])
     logger.debug("command:\n{}\n{}".format(cmd, _START_LINE))
 
-    try:
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            cwd=repo.working_tree_dir,
-            check=False,
-            executable="/bin/bash",
-            env=os.environ.copy(),
-            timeout=hb_cmd.timeout,
-        )
-    except subprocess.TimeoutExpired as e:
-        logger.debug(_END_LINE)
+    # a tolerated failure logs as a warning, tagged so it reads as ignored
+    deed_kwargs = (
+        {"err_level": WARNING, "badges": "keep"} if hb_cmd.allow_failure else {}
+    )
+    exit_code = 0
 
-        if hb_cmd.allow_failure:
-            logger.warning("HB timed out, but ignored: {}".format(heading))
-            return
-
-        logger.fail("HB timed out: {}".format(heading))
-        raise SystemExit(1) from e
+    with logger.track.run_command(cmd, **deed_kwargs) as act:
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                cwd=repo.working_tree_dir,
+                check=False,
+                executable="/bin/bash",
+                env=os.environ.copy(),
+                timeout=hb_cmd.timeout,
+            )
+        except subprocess.TimeoutExpired:
+            act.fail("timeout")
+            exit_code = 1
+        else:
+            if result.returncode:
+                act.fail("exit {}".format(result.returncode))
+                exit_code = result.returncode
 
     logger.debug(_END_LINE)
 
-    if result.returncode == 0:
-        logger.pass_("HB succeeded: {}".format(heading))
-
-    elif hb_cmd.allow_failure:
-        logger.warning("HB failed, but ignored: {}".format(heading))
-
-    else:
-        logger.fail("HB failed: {}".format(heading))
-        raise SystemExit(result.returncode)
+    # the abort stays outside the deed block: it is a decision, not a failure
+    if exit_code and not hb_cmd.allow_failure:
+        raise SystemExit(exit_code)
 
 
 # Public API  ##################################################################
@@ -151,4 +150,4 @@ def perform_hook_brackets(repo, state_file, hook_name, is_lead, hooks_args=()):
             logger.skip("due to commit type filtered: {}".format(heading))
             continue
 
-        _run_hb_cmd(repo, heading, hb_cmd, hooks_args)
+        _run_hb_cmd(repo, hb_cmd, hooks_args)
