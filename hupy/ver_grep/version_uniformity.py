@@ -8,6 +8,8 @@ configured occurrence
 
 import sys
 
+from hupy.cbm import CommitType
+from hupy.cbm.get_current_commit_type import get_current_commit_type
 from hupy.should_run_module import should_run_module
 from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.config_file.load_config import load_hupy_config
@@ -43,10 +45,13 @@ def check_version_uniformity(
 ):
     """
     assert every configured version occurrence beyond the canonical
-    first entry still carries the same version; aborts the commit if
-    any occurrence has drifted, unless ``is_report_only`` or
+    first entry still carries the same version; enforced only on a
+    release merge (a merge into main), so a version bump in progress
+    never blocks an ordinary commit. aborts the commit if any
+    occurrence has drifted, unless ``is_report_only`` or
     ``vg.allow_version_uniformity_failure`` is set, in which case
-    every failure only warns
+    every failure only warns. ``is_report_only`` also bypasses the
+    release-merge gate
 
 
     :param repo: git repository object
@@ -73,6 +78,13 @@ def check_version_uniformity(
     occurrences = config.vg.version_occurrences
     if len(occurrences) < 2:
         logger.skip("for only canonical entry detected")
+        return
+
+    # ``&`` not ``in``: ``RELEASE`` is a union, ``in`` needs every bit
+    if not is_report_only and not (
+        get_current_commit_type(repo) & CommitType.RELEASE
+    ):
+        logger.skip("not a release merge")
         return
 
     logger.enter("Version Uniformity")

@@ -11,6 +11,7 @@ import pytest
 
 from config_fixture import load_config_fixture
 
+from hupy.cbm import CommitType
 from hupy.state.state_file import HupyStateFile
 from hupy.ver_grep.version_uniformity import check_version_uniformity
 
@@ -46,10 +47,12 @@ def _check(
     allow_version_uniformity_failure=False,
     is_report_only=False,
     ref=_REF,
+    commit_type=CommitType.VERSION_RELEASE,
 ):
     """
     run ``check_version_uniformity`` against a stubbed config carrying
-    ``occurrences``, bypassing disk/git config loading.
+    ``occurrences``, bypassing disk/git config loading, under a stubbed
+    ``commit_type`` (a release merge by default).
     """
     config = load_config_fixture(
         overrides={
@@ -69,6 +72,9 @@ def _check(
         return_value=config,
     ), mock.patch(
         "hupy.ver_grep.ver_grep.load_hupy_config", return_value=config
+    ), mock.patch(
+        "hupy.ver_grep.version_uniformity.get_current_commit_type",
+        return_value=commit_type,
     ):
         return check_version_uniformity(
             repo, _STATE_FILE, ref, is_report_only=is_report_only
@@ -221,3 +227,61 @@ class TestVersionUniformitySoftFailure:
             {"file": "README.md", "glob": r"version-(\S+)-blue"},
         ]
         assert _check(repo, occurrences, is_report_only=True) is None
+
+
+class TestVersionUniformityReleaseGate:
+    _OCCURRENCES = [
+        _CANONICAL,
+        {"file": "README.md", "glob": r"version-(\S+)-blue"},
+    ]
+
+    @staticmethod
+    def _make_drifted_repo(repo_dir):
+        return _make_repo(
+            repo_dir,
+            {
+                "pyproject.toml": 'version = "1.2.3"\n',
+                "README.md": "badge: version-9.9.9-blue\n",
+            },
+        )
+
+    @pytest.mark.parametrize(
+        "commit_type",
+        [
+            CommitType.REGULAR_COMMIT,
+            CommitType.FEATURE_LANDING,
+            CommitType.SYNC_BACKPORT,
+            CommitType.OTHER_MERGE,
+        ],
+    )
+    def test_non_release_skips_despite_drift(self, repo_dir, commit_type):
+        repo = self._make_drifted_repo(repo_dir)
+        assert (
+            _check(repo, self._OCCURRENCES, commit_type=commit_type) is None
+        )
+
+    @pytest.mark.parametrize(
+        "commit_type",
+        [
+            CommitType.VERSION_RELEASE,
+            CommitType.HOTFIX_RELEASE,
+            CommitType.RELEASE_CUT,
+        ],
+    )
+    def test_release_enforces_drift(self, repo_dir, commit_type):
+        repo = self._make_drifted_repo(repo_dir)
+        with pytest.raises(SystemExit):
+            _check(repo, self._OCCURRENCES, commit_type=commit_type)
+
+    def test_report_only_ignores_gate(self, repo_dir):
+        repo = self._make_drifted_repo(repo_dir)
+        with mock.patch(
+            "hupy.ver_grep.version_uniformity.get_current_commit_type"
+        ) as gate:
+            _check(
+                repo,
+                self._OCCURRENCES,
+                is_report_only=True,
+                commit_type=CommitType.REGULAR_COMMIT,
+            )
+        gate.assert_not_called()
