@@ -7,14 +7,15 @@
 // #############################################################################
 {
   // HUPy version, do not edit
-  "hupy_version": "3.1.0",
+  "hupy_version": "3.2.0",
   "vg": { // VerGrep  ##########################################################
     // grep repo's version string
     //
     // disable VerGrep
     "is_disabled": false,
-    // Version Uniformity: assert the version also appears correctly
-    // in every configured occurrence below
+    // Version Uniformity: on a release merge (into main), assert the
+    // version also appears correctly in every configured occurrence
+    // below
     //
     // disable Version Uniformity (VerGrep itself stays enabled)
     "disable_version_uniformity": false,

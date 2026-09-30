@@ -304,8 +304,7 @@ flowchart TD
         preap[[pre-applypatch hook]] --> lead5{{Leading Hook Bracket}}
         lead5 --> bdc5[Ban Direct Commit]
         bdc5 --> pt5[Paper Trail]
-        pt5 --> vu5[Version Uniformity]
-        vu5 --> trail5{{Trailing Hook Bracket}}
+        pt5 --> trail5{{Trailing Hook Bracket}}
     end
     trail4 --> preap
 
@@ -318,7 +317,7 @@ flowchart TD
     applied --> postap
 ```
 
-An incoming patch is gated the same way a local commit is: [Ban Direct Commit](bdc_doc.md) keeps it off a protected branch, [Paper Trail](pt_doc.md) requires its companion files to have changed with it, and [Version Uniformity](vg_doc.md#version-uniformity) rejects a version string the patch left drifted between occurrences.
+An incoming patch is gated the same way a local commit is: [Ban Direct Commit](bdc_doc.md) keeps it off a protected branch, [Paper Trail](pt_doc.md) requires its companion files to have changed with it. [Version Uniformity](vg_doc.md#version-uniformity) does not run here, since a patch is never a release merge.
 
 
 

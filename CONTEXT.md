@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-07-27. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
+*Last updated: 2026-09-30. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
 
 ## Project Overview
 
@@ -60,14 +60,14 @@ Key decisions:
 - **`state`** — `HupyStateFile` (`hooks_logger_verbosity`, `skip_once`, `chain_session`) resolved inside `.git/`, loaded/saved via `open_state_file(repo)` (thread- and process-safe, atomic).
 - **`should_run_module`** — single run/skip gate combining config `is_disabled` and state `skip_once`, used by `bdc`/`ttg`/`pt`/`pch`/`hb`/`vg`.
 - **`stub`** — `sync_hook_stubs`/`check_hook_stubs`/`uninstall_hook_stubs` classify each demanded name's file as missing/stale/unused and act (or just report) accordingly; `get_hook_names_by_demand` is the sole source of truth for which stages need a stub.
-- **`ver_grep`** — greps a version string from a configured file occurrence, at a git ref or the on-disk `WORKTREE`; `check_version_uniformity` compares every other configured occurrence against the canonical one and can hard-fail a commit.
+- **`ver_grep`** — greps a version string from a configured file occurrence, at a git ref or the on-disk `WORKTREE`; `check_version_uniformity` compares every other configured occurrence against the canonical one and hard-fails only a release merge (`CommitType.RELEASE`); `hupy verify` reports regardless of commit type.
 - **`ttg`** — detects triage tags in staged diff additions (tier- and comment-aware), gates by commit type (`FEATURE_LANDING` → Loud tags, `VERSION_RELEASE` → Loud+Steady), reports and aborts on a match.
 - **`pt`** — requires at least one staged file to match a configured glob per merge/commit type; runs in `pre-commit`/`pre-merge-commit`/`pre-applypatch`, deliberately not `pre-rebase` (a rebase replays existing commits rather than introducing new content).
 - **`bdc`** — blocks a commit landing directly on a protected branch (`main`/`dev`/configured names) while allowing merges; wired into `pre-commit`, `pre-rebase`, `pre-applypatch`.
 - **`hb`** — runs configured `lead`/`trail` shell commands around a hook stage, filtered by commit type, via `subprocess.run(..., shell=True, executable="/bin/bash")`.
 - **`cli`** — `cli_main.py` dispatches eight top-level subcommands (`init`, `uninstall`, `hook <stage>` × 17, `verify`, `get`/`set`/`unset`/`info` accessors). `cli_hook.py`'s generic `_run_hook_stage` runner opens state, applies verbosity, adopts the chain session by parent PID, runs the `hb` lead bracket → stage's `run_features` → `hb` trail bracket → `run_after`, then closes the chain (`state_file.reset_for_next_chain()`) on whichever stage `chain_policy.is_chain_terminal` names for that chain type. Accessors (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) share one generic get/set/unset/info runner in `cli_accessors.py`.
   - **Known gap**: `chain_policy.detect_amend(hook_args)` over-predicts an amend for git's `-c <commit>`/`-C <commit>` (not just `--amend`), so `post-commit` occasionally yields its chain-close to a `post-rewrite` that never fires — cosmetic (self-corrects next chain), marked `# fixme` in-code (Quiet tier).
-- **`kamilog`** — vendored logging (v2.3.1) adding `.enter()`/`.skip()`/`.succ()`/`.pass_()`/`.done()`/`.fail()` levels, ANSI color, and comment-banner helpers; shared `"HU"` root logger, per-module children with `propagate = False`.
+- **`kamilog`** — vendored logging (v2.9.0) adding `.enter()`/`.skip()`/`.succ()`/`.pass_()`/`.done()`/`.fail()` levels, ANSI color, and comment-banner helpers; shared `"HU"` root logger, per-module children with `propagate = False`.
 
 ## Annotation Markers
 
@@ -90,7 +90,7 @@ hupy/                    # installable package
   ttg/                   # Triage Tag Gating
   pt/                    # Paper Trail
   ver_grep/              # version grepping & Version Uniformity
-docs/                    # ttg_doc, pt_doc, cbm_doc, chain_doc, stub_doc
+docs/                    # per-module guides (bdc, cbm, chain, hb, install, pch, pt, stub, ttg, vg)
 examples/                # bash/py demo scripts per module + full-chain demos
 tests/                   # pytest suite, mirrors hupy/ layout; fixtures/ holds shared repo scenarios
 .hupy.config.jsonc       # this repo dogfoods hupy on itself
@@ -101,4 +101,3 @@ pyproject.toml
 
 - **Fixtures** — `tests/conftest.py` provides `repo_dir`; `tests/fixtures/prep_repo.py` builds scenario repos from a git bundle; `tests/fixtures/config_fixture.py` deep-merges overrides onto the shipped default config.
 - **Test file naming** — mirrors source: `hupy/<pkg>/<mod>.py` → `tests/<pkg>/<pkg>-<mod>_test.py`.
-- **Coverage notes** — the six newer merge types have only `examples/pch/*-demo.py` scripts, no dedicated `tests/pch/` assertions yet.

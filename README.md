@@ -22,7 +22,7 @@
 - 🚫 **Ban Direct Commit** — tired of teammates pushing straight to `main`? block direct commits on protected branches while merges still sail through
 - 🛡️ **Triage Tag Gating** — stop a stray `TODO`/`FIXME`/`HACK`/`BUG` from sneaking onto a protected branch, gated by severity tier
 - 📝 **Paper Trail** — require a changelog entry, migration, or other companion file to actually change alongside the commit it belongs with
-- 🔢 **Version Uniformity** — catch a version bumped in one file but forgotten in another — a shipped config asset, a README badge — before it ever lands
+- 🔢 **Version Uniformity** — catch a version bumped in one file but forgotten in another — a shipped config asset, a README badge — before a release merge lands
 - ✏️ **Prepend Commit Header** — merge commits that write their own descriptive headers and stamp the version on every release, no manual typing
 - 🔗 **Hook Bracket** — wrap any git hook stage with your own lead/trail shell commands, without hand-rolling a custom hook script
 
