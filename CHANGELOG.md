@@ -1,8 +1,9 @@
 # hupy CHANGELOG
 
 <!--
+TODO use deed from kamilog
+
 Todo add UT for Paper Trail
-Todo use deed from kamilog
 Bug version uniformity should be ran during release, or configurable
 
 todo script to update config file w/ package update
