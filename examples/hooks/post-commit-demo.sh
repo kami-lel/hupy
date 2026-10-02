@@ -46,27 +46,27 @@ _run_post_commit() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tplain non-merge commit, bdc+ttg flagged for one-time skip\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 printf "expected:\tskip_once cleared from hupy-state.json\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 echo
 
 demo_repo="$(_prepare_demo_repo)"
 state_file="$demo_repo/.git/hupy-state.json"
 
-printf '%s\n' "skip-once" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "skip-once" | kamilog cb center "#"
 _run_skip_once "$demo_repo" bdc ttg
 echo
 
-printf '%s\n' "hupy-state.json before post-commit" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "hupy-state.json before post-commit" | kamilog cb center "="
 cat "$state_file"
 echo
 
-printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "post-commit" | kamilog cb center "#"
 _run_post_commit "$demo_repo"
 echo
 
-printf '%s\n' "hupy-state.json after post-commit" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "hupy-state.json after post-commit" | kamilog cb center "="
 cat "$state_file"

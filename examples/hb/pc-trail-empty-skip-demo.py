@@ -8,7 +8,7 @@ expected result: the trail bracket is skipped
 
 import pathlib
 
-from hupy.kamilog import (
+from kamilog import (
     gen_comment_banner_zero,
 )
 from __init__ import prepare_demo_repo, run_hb

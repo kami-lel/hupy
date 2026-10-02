@@ -40,13 +40,13 @@ _run_ttg() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tFeature Landing, multiple files (steady + quiet, no loud)\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 printf "expected:\tPASS\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 echo
 
-printf '%s\n' "pre-commit" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "pre-commit" | kamilog cb center "#"
 demo_repo="$(_prepare_demo_repo)"
 _run_ttg "$demo_repo"

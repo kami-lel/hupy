@@ -41,30 +41,30 @@ _run_pch() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tVersion Release merge (develop into main)\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 printf "expected:\tPASS, header prepended to COMMIT_EDITMSG\n" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 echo
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "OUTPUT" | kamilog cb center "#"
 demo_repo="$(_prepare_demo_repo)"
 editmsg="$demo_repo/.git/COMMIT_EDITMSG"
 before_file="$demo_repo/.git/COMMIT_EDITMSG.before"
 cp "$demo_repo/.git/MERGE_MSG" "$editmsg"
 cp "$editmsg" "$before_file"
 
-printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "prepare-commit-msg" | kamilog cb center "="
 _run_pch "$demo_repo"
 echo
 
-printf '%s\n' "COMMIT_EDITMSG content" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "COMMIT_EDITMSG content" | kamilog cb center "#"
 echo
 
-printf '%s\n' "before PCH" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "before PCH" | kamilog cb center "="
 cat "$before_file"
 echo
 
-printf '%s\n' "after PCH" | python3 -m hupy.kamilog cb center "="
+printf '%s\n' "after PCH" | kamilog cb center "="
 cat "$editmsg"

@@ -11,7 +11,7 @@ a.py and b.py's Loud tags are reported, c.py's Quiet tag is not)
 
 import pathlib
 
-from hupy.kamilog import (
+from kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )

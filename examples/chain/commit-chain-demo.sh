@@ -61,7 +61,7 @@ _run_post_commit() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tFeature Landing merge (add-user-authentication into develop)\n"
 printf "expected:\tPASS\n"
 echo
@@ -69,14 +69,14 @@ echo
 demo_repo="$(_prepare_demo_repo)"
 _set_verbosity "$demo_repo"
 
-printf '%s\n' "pre-commit" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "pre-commit" | kamilog cb center "-"
 _run_pre_commit "$demo_repo"
 
-printf '%s\n' "prepare-commit-msg" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "prepare-commit-msg" | kamilog cb center "-"
 _run_prepare_commit_msg "$demo_repo"
 
-printf '%s\n' "commit-msg" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "commit-msg" | kamilog cb center "-"
 _run_commit_msg "$demo_repo"
 
-printf '%s\n' "post-commit" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "post-commit" | kamilog cb center "-"
 _run_post_commit "$demo_repo"

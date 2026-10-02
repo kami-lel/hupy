@@ -42,46 +42,46 @@ _run_hupy_init() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 echo
 
 demo_repo="$(_prepare_empty_repo)"
 hooks_dir="$demo_repo/.git/hooks"
 
-printf '%s\n' "hupy init" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "hupy init" | kamilog cb center "#"
 printf '%s\n' "first-time init on the empty repo" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "OUTPUT" | kamilog cb center "-"
 _run_hupy_init "$demo_repo"
 echo
 
-printf '%s\n' "hupy init --only config" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "hupy init --only config" | kamilog cb center "#"
 printf '%s\n' "repeat init, config-only: already correct, left untouched" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "OUTPUT" | kamilog cb center "-"
 _run_hupy_init "$demo_repo" --only config
 echo
 
-printf '%s\n' "hupy init" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "hupy init" | kamilog cb center "#"
 printf '%s\n' "pre-commit stub hand-edited (drifted), pre-push stub added (unused)" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 printf '\n# hand-edited\n' >> "$hooks_dir/pre-commit"
 printf '#!/usr/bin/env bash\nexec "python3" -m hupy hook pre-push "$@"\n' \
     > "$hooks_dir/pre-push"
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "OUTPUT" | kamilog cb center "-"
 _run_hupy_init "$demo_repo"
 echo
 
-printf '%s\n' "hupy init -f --prune" | python3 -m hupy.kamilog cb center "#"
+printf '%s\n' "hupy init -f --prune" | kamilog cb center "#"
 printf '%s\n' "same drift, resolved with -f --prune" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 printf '%s\n' "pre-commit rewritten, pre-push removed" \
-    | python3 -m hupy.kamilog cg
+    | kamilog cg
 
-printf '%s\n' "stubs before" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "stubs before" | kamilog cb center "-"
 for entry in "$hooks_dir"/*; do
     case "$entry" in
         *.sample) continue ;;
@@ -90,11 +90,11 @@ for entry in "$hooks_dir"/*; do
 done
 echo
 
-printf '%s\n' "OUTPUT" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "OUTPUT" | kamilog cb center "-"
 _run_hupy_init "$demo_repo" -f --prune
 echo
 
-printf '%s\n' "stubs after" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "stubs after" | kamilog cb center "-"
 for entry in "$hooks_dir"/*; do
     case "$entry" in
         *.sample) continue ;;
