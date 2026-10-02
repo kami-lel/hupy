@@ -1,14 +1,14 @@
 # hupy CONTEXT
 
-*Last updated: 2026-09-30. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
+*Last updated: 2026-10-02. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
 
 ## Project Overview
 
 **hupy** (Hooks Utility Python) is a Python reimplementation of the bash `hooks_utility.sh` — a toolkit of utilities called from git hook scripts to enforce commit quality and branch hygiene.
 
-Package `HUPy` (import name `hupy`) · build `setuptools` · Python `>=3.10` · install `pip install -e ".[dev]"` · dependencies `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`.
+Package `HUPy` (import name `hupy`) · build `setuptools` · Python `>=3.10` · install `pip install -e ".[dev]"` · dependencies `GitPython>=3.1`, `pydantic>=2`, `json5>=0.9`, `kamilog` (pulled from `git+https://github.com/kami-lel/kamilog.git`, unpinned — always the latest default-branch `HEAD`).
 
-Implemented: `cbm`, `bdc`, `ttg`, `pt` (Paper Trail), `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`, `uninstall`), `kamilog`.
+Implemented: `cbm`, `bdc`, `ttg`, `pt` (Paper Trail), `pch`, `ver_grep`, `config_file`, `state`, `should_run_module`, `stub`, `cli` (incl. `init`, `uninstall`).
 
 ## Architecture
 
@@ -22,7 +22,6 @@ Each utility is a standalone module in `hupy/`, callable from any git hook scrip
 | `state` | pydantic schema + atomic I/O for `hupy-state.json` (verbosity, one-time skips) |
 | `should_run_module` | combines a module's config `is_disabled` flag with its `skip_once` state flag into one run/skip decision |
 | `stub` | render, write, and sync git hook stub scripts in a repo's hooks directory |
-| `kamilog` | vendored logging with extra levels, ANSI color, diff compression, comment banners |
 | `pch` | prepend header lines to in-progress merge commit messages, stamping the version via `ver_grep` |
 | `ver_grep` | extract/compare a branch's version string across configured file occurrences (Version Uniformity) |
 | `ttg` | Triage Tag Gating — scan staged diffs for triage tags, abort commits that introduce them on protected branches |
@@ -67,7 +66,7 @@ Key decisions:
 - **`hb`** — runs configured `lead`/`trail` shell commands around a hook stage, filtered by commit type, via `subprocess.run(..., shell=True, executable="/bin/bash")`.
 - **`cli`** — `cli_main.py` dispatches eight top-level subcommands (`init`, `uninstall`, `hook <stage>` × 17, `verify`, `get`/`set`/`unset`/`info` accessors). `cli_hook.py`'s generic `_run_hook_stage` runner opens state, applies verbosity, adopts the chain session by parent PID, runs the `hb` lead bracket → stage's `run_features` → `hb` trail bracket → `run_after`, then closes the chain (`state_file.reset_for_next_chain()`) on whichever stage `chain_policy.is_chain_terminal` names for that chain type. Accessors (`hupy-version`, `verbosity`, `skip-once`, `branch-type`, `grep-ver`, `current-commit-type`) share one generic get/set/unset/info runner in `cli_accessors.py`.
   - **Known gap**: `chain_policy.detect_amend(hook_args)` over-predicts an amend for git's `-c <commit>`/`-C <commit>` (not just `--amend`), so `post-commit` occasionally yields its chain-close to a `post-rewrite` that never fires — cosmetic (self-corrects next chain), marked `# fixme` in-code (Quiet tier).
-- **`kamilog`** — vendored logging (v2.9.0) adding `.enter()`/`.skip()`/`.succ()`/`.pass_()`/`.done()`/`.fail()` levels, ANSI color, and comment-banner helpers; shared `"HU"` root logger, per-module children with `propagate = False`.
+- **`kamilog`** — external dependency (`pip install`-ed from GitHub, unpinned `HEAD`, not vendored) adding `.enter()`/`.skip()`/`.succ()`/`.pass_()`/`.done()`/`.fail()` levels, ANSI color, and comment-banner helpers; shared `"HU"` root logger, per-module children with `propagate = False`.
 
 ## Annotation Markers
 
@@ -85,7 +84,6 @@ hupy/                    # installable package
   should_run_module.py   # shared run/skip gate
   stub/                  # git hook stub generation & sync
   assets/.hupy.config.jsonc  # default config, commented; copied verbatim
-  kamilog.py             # vendored logging
   pch/                   # prepend commit header
   ttg/                   # Triage Tag Gating
   pt/                    # Paper Trail
