@@ -1,8 +1,9 @@
 # hupy CHANGELOG
 
 <!--
-todo script to update config file w/ package update
 Todo utilize kamilog new flags etc.
+Hack rm install as own doc
+todo script to update config file w/ package update
 -->
 
 [^format]
