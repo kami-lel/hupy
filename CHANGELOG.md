@@ -24,8 +24,6 @@ todo script to update config file w/ package update
 
 ### Changed
 
-- `kamilog` is no longer vendored as `hupy/kamilog.py`; it is now a regular dependency installed from `git+https://github.com/kami-lel/kamilog.git` (unpinned, always the latest default-branch `HEAD`)
-
 ### Deprecated
 
 ### Removed
@@ -34,7 +32,27 @@ todo script to update config file w/ package update
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.0...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.1...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [3.2.1] - 2026-10-02
+
+### Changed
+
+- `kamilog` unvendored: now an external dependency pulled from GitHub rather than a copy at `hupy/kamilog.py`
+
+[3.2.1]: https://github.com/kami-lel/hupy/compare/v3.2.0...v3.2.1
 
 
 
