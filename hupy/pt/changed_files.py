@@ -9,7 +9,7 @@ invocation: the staged files for ``pre-commit``,
 import git
 
 from hupy.pt import PT_LOGGER_NAME
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 
 # logger  ######################################################################
 logger = getLogger(PT_LOGGER_NAME)

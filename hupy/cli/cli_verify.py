@@ -14,7 +14,7 @@ from hupy.ver_grep.ver_grep import WORKTREE, grep_version
 from hupy.ver_grep.version_uniformity import check_version_uniformity
 
 
-from hupy.kamilog import (
+from kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
     getLogger,

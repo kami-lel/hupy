@@ -9,7 +9,7 @@ changed in this commit
 import fnmatch
 import sys
 
-from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
+from kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.cbm.get_current_commit_type import get_current_commit_type
 from hupy.config_file.load_config import load_hupy_config
 from hupy.should_run_module import should_run_module

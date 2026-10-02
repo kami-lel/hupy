@@ -9,7 +9,7 @@ from hupy.cli.cli_init import load_git_repo, REPO_PATH_HELP
 from hupy.config_file.write_config import remove_config_file
 from hupy.stub.update_stubs import uninstall_hook_stubs
 
-from hupy.kamilog import (
+from kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
     getLogger,

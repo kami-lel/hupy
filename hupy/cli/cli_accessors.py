@@ -8,7 +8,9 @@ subcommand beneath ``get``/``set``/``unset``/``info``
 
 import os
 
-from hupy import PROJ_LOGGER_NAME, kamilog
+import kamilog
+
+from hupy import PROJ_LOGGER_NAME
 from hupy.cli.accessors import (
     branch_type,
     commit_type,

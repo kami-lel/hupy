@@ -10,7 +10,7 @@ from hupy import PROJ_LOGGER_NAME
 from hupy.config_file.write_config import sync_config_file
 from hupy.stub.update_stubs import sync_hook_stubs
 
-from hupy.kamilog import (
+from kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
     getLogger,

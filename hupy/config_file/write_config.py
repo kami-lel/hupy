@@ -12,7 +12,7 @@ from hupy.config_file.config_file_path import (
     DEFAULT_CONFIG_ASSET,
     get_config_file_path,
 )
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 
 __all__ = ("sync_config_file", "remove_config_file")
 

@@ -8,7 +8,7 @@ import re
 
 import git
 
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.ttg import TTG_LOGGER_NAME
 from .comment_style import get_comment_prefix_for_file
 from .triage_tag_type import TriageTagType

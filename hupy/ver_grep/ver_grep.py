@@ -9,7 +9,7 @@ import sys
 import git
 
 from hupy.should_run_module import should_run_module
-from hupy.kamilog import AnsiRenderer, AnsiStyle, getLogger
+from kamilog import AnsiRenderer, AnsiStyle, getLogger
 from hupy.config_file.load_config import load_hupy_config
 
 from . import VER_GREP_LOGGER_NAME

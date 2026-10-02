@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 
-from hupy.kamilog import (
+from kamilog import (
     AnsiRenderer,
     AnsiStyle,
     getLogger,

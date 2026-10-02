@@ -7,7 +7,7 @@ branch's version bumps relative to a target branch's version
 
 import re
 
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from . import VER_GREP_LOGGER_NAME
 
 # logger  ######################################################################

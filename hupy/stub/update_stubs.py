@@ -10,7 +10,7 @@ substitution involved
 import pathlib
 import sys
 
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.stub import STUB_LOGGER_NAME
 from hupy.stub.names_by_demand import get_hook_names_by_demand
 

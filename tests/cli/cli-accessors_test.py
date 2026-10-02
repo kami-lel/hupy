@@ -10,10 +10,11 @@ import json
 from pathlib import Path
 
 import git
+import kamilog
 import pytest
 from prep_repo import prepare_repo_with_files
 
-from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy import PROJ_LOGGER_NAME
 from hupy.cbm.branch_type import BranchType
 from hupy.cli.accessors import branch_type, grep_ver
 from hupy.state.state_file import HupyStateFile
