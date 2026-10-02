@@ -2,6 +2,7 @@
 
 <!--
 todo script to update config file w/ package update
+Todo utilize kamilog new flags etc.
 -->
 
 [^format]
@@ -24,6 +25,8 @@ todo script to update config file w/ package update
 
 ### Changed
 
+- `kamilog` unvendored: now an external dependency pulled from GitHub rather than a copy at `hupy/kamilog.py`
+
 ### Deprecated
 
 ### Removed
@@ -33,26 +36,6 @@ todo script to update config file w/ package update
 ### Security
 
 [unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.1...dev
-
-
-
-
-
-
-
-
-
-
-
-
-
-## [3.2.1] - 2026-10-02
-
-### Changed
-
-- `kamilog` unvendored: now an external dependency pulled from GitHub rather than a copy at `hupy/kamilog.py`
-
-[3.2.1]: https://github.com/kami-lel/hupy/compare/v3.2.0...v3.2.1
 
 
 
