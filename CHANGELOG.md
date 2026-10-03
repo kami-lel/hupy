@@ -23,11 +23,7 @@ todo script to update config file w/ package update
 
 ### Added
 
-- native `kamilog` badges (`force`, `dry`, `new`, `owr`, `edit`, `del`, `chk`, `stale`) threaded onto existing log calls in `cli` (init/uninstall), `ver_grep` (verify), `pch`, and `stub`, surfacing each run's mode at a glance instead of only in message text
-
 ### Changed
-
-- `kamilog` unvendored: now an external dependency pulled from GitHub rather than a copy at `hupy/kamilog.py`
 
 ### Deprecated
 
@@ -37,7 +33,31 @@ todo script to update config file w/ package update
 
 ### Security
 
-[unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.1...dev
+[unreleased]: https://github.com/kami-lel/hupy/compare/v3.2.2...dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+## [3.2.2] - 2026-10-03
+
+### Added
+
+- badges on hook log lines (`cli`, `ver_grep`, `pch`, `stub`), showing each run's mode at a glance
+
+### Changed
+
+- `kamilog` now an external dependency, no longer vendored in `hupy/`
+
+[3.2.2]: https://github.com/kami-lel/hupy/compare/v3.2.1...v3.2.2
 
 
 

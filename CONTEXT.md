@@ -1,6 +1,6 @@
 # hupy CONTEXT
 
-*Last updated: 2026-10-02. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
+*Last updated: 2026-10-03. This file describes the current architecture, not its evolution — for the full change history see `CHANGELOG.md`.*
 
 ## Project Overview
 
