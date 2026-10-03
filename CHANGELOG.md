@@ -23,7 +23,7 @@ todo script to update config file w/ package update
 
 ### Added
 
-- native `kamilog` badges (`force`, `dry`, `new`, `owr`, `del`, `chk`, `stale`) threaded onto existing log calls in `cli` (init/uninstall), `ver_grep` (verify), `pch`, and `stub`, surfacing each run's mode at a glance instead of only in message text
+- native `kamilog` badges (`force`, `dry`, `new`, `owr`, `edit`, `del`, `chk`, `stale`) threaded onto existing log calls in `cli` (init/uninstall), `ver_grep` (verify), `pch`, and `stub`, surfacing each run's mode at a glance instead of only in message text
 
 ### Changed
 

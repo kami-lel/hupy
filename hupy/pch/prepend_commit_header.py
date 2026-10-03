@@ -234,4 +234,4 @@ def prepend_commit_header(repo, state_file):
         os.unlink(tmp_path)
         raise
 
-    logger.pass_("commit header prepended", badges="owr")
+    logger.pass_("commit header prepended", badges="edit")
