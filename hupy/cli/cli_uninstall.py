@@ -84,6 +84,9 @@ def _uninstall_main(args):
         else list(_UNINSTALL_STEPS.values())
     )
 
+    persistent_badges = ["force"] if args.force else ["dry"]
+    logger.set_persistent_badges(persistent_badges)
+
     logger.enter("HUPy Uninstallation for: {}".format(repo_root))
 
     if not args.force:

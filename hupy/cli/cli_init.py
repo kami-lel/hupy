@@ -101,6 +101,13 @@ def _init_main(args):
         [_INIT_STEPS[args.only]] if args.only else list(_INIT_STEPS.values())
     )
 
+    persistent_badges = []
+    if args.dry_run:
+        persistent_badges.append("dry")
+    if args.force:
+        persistent_badges.append("force")
+    logger.set_persistent_badges(persistent_badges)
+
     logger.enter("HUPy Initialization for: {}".format(repo_root))
 
     if args.dry_run:
