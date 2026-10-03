@@ -93,6 +93,8 @@ def _verify_main(args):
 
     repo_root = pathlib.Path(repo.working_tree_dir)
 
+    logger.set_persistent_badges(["chk"])
+
     logger.enter("HUPy verify: {}".format(repo_root))
 
     load_hupy_config(repo)
