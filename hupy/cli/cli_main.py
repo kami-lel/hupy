@@ -3,7 +3,9 @@
 from argparse import ArgumentParser
 from importlib.metadata import version as get_hupy_version
 
-from hupy import PROJ_LOGGER_NAME, kamilog
+import kamilog
+
+from hupy import PROJ_LOGGER_NAME
 from hupy.cli.cli_accessors import register_cli_accessors_parser
 from hupy.cli.cli_hook import register_cli_hook_parser
 from hupy.cli.cli_init import register_cli_init_parser

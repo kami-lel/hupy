@@ -11,7 +11,7 @@ expected result: header prepended to COMMIT_EDITMSG
 import pathlib
 import shutil
 
-from hupy.kamilog import (
+from kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )

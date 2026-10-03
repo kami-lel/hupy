@@ -12,7 +12,7 @@ from hupy.config_file.config_file_path import (
     DEFAULT_CONFIG_ASSET,
     get_config_file_path,
 )
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 
 __all__ = ("sync_config_file", "remove_config_file")
 
@@ -54,21 +54,28 @@ def sync_config_file(repo, force=False, dry_run=False):
 
         if dry_run:
             logger.info(
-                "would overwrite HUPy config file: {}".format(config_path)
+                "would overwrite HUPy config file: {}".format(config_path),
+                badges=["dry", "owr"],
             )
             return
 
         logger.warning(
-            "overwrite existing HUPy config file: {}".format(config_path)
+            "overwrite existing HUPy config file: {}".format(config_path),
+            badges="owr",
         )
         shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
         return
 
     if dry_run:
-        logger.info("would write HUPy config file: {}".format(config_path))
+        logger.info(
+            "would write HUPy config file: {}".format(config_path),
+            badges=["dry", "new"],
+        )
         return
 
-    logger.debug("HUPy config file written: {}".format(config_path))
+    logger.debug(
+        "HUPy config file written: {}".format(config_path), badges="new"
+    )
     shutil.copyfile(DEFAULT_CONFIG_ASSET, config_path)
 
 
@@ -88,9 +95,12 @@ def remove_config_file(repo, force):
         return
 
     if force:
-        logger.warning("remove HUPy config file: {}".format(config_path))
+        logger.warning(
+            "remove HUPy config file: {}".format(config_path), badges="del"
+        )
         config_path.unlink()
     else:
         logger.info(
-            "attempt remove config file: {}".format(config_path)
+            "attempt remove config file: {}".format(config_path),
+            badges=["dry", "del"],
         )

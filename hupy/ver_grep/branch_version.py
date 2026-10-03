@@ -12,7 +12,7 @@ from hupy.cbm.get_current_commit_type import (
     get_source_branch,
     get_target_branch,
 )
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from . import VER_GREP_LOGGER_NAME
 from .ver_grep import grep_version
 

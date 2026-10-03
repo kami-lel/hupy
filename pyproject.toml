@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "HUPy"
-version = "3.2.0"
+version = "3.2.2"
 description = "Hooks Utility Python: git hook utilities for commit quality enforcement"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -20,7 +20,12 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Version Control :: Git",
 ]
-dependencies = ["GitPython>=3.1", "pydantic>=2", "json5>=0.9"]
+dependencies = [
+    "GitPython>=3.1",
+    "pydantic>=2",
+    "json5>=0.9",
+    "kamilog @ git+https://github.com/kami-lel/kamilog.git",
+]
 
 [project.urls]
 Homepage = "https://github.com/kami-lel/hupy"

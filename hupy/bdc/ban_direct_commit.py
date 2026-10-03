@@ -5,7 +5,7 @@ block commits made directly on protected branches
 """
 
 from hupy.config_file.load_config import load_hupy_config
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.should_run_module import should_run_module
 from hupy.cbm import CommitType
 from hupy.cbm.get_current_commit_type import (

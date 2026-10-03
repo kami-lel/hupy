@@ -13,7 +13,7 @@ import threading
 
 from pydantic import ValidationError
 
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.state import STATE_LOGGER_NAME
 from hupy.state.state_file import HupyStateFile
 from hupy.state.state_file_path import get_state_file_path

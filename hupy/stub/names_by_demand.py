@@ -9,7 +9,7 @@ import pkgutil
 
 import hupy.cli.hooks as _hook_pkg
 from hupy.config_file.load_config import load_hupy_config
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.stub import STUB_LOGGER_NAME
 
 __all__ = ("get_hook_names_by_demand",)

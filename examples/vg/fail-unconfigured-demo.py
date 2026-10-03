@@ -9,7 +9,7 @@ expected result: fail, empty string returned
 
 import pathlib
 
-from hupy.kamilog import (
+from kamilog import (
     gen_comment_banner_centered,
     gen_comment_banner_zero,
 )

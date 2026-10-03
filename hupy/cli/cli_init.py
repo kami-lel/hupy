@@ -10,7 +10,7 @@ from hupy import PROJ_LOGGER_NAME
 from hupy.config_file.write_config import sync_config_file
 from hupy.stub.update_stubs import sync_hook_stubs
 
-from hupy.kamilog import (
+from kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
     getLogger,
@@ -100,6 +100,13 @@ def _init_main(args):
     selected_steps = (
         [_INIT_STEPS[args.only]] if args.only else list(_INIT_STEPS.values())
     )
+
+    persistent_badges = []
+    if args.dry_run:
+        persistent_badges.append("dry")
+    if args.force:
+        persistent_badges.append("force")
+    logger.set_persistent_badges(persistent_badges)
 
     logger.enter("HUPy Initialization for: {}".format(repo_root))
 

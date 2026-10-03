@@ -50,7 +50,7 @@ _run_post_rewrite() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tplain non-merge commit, rebased\n"
 printf "expected:\tPASS\n"
 echo
@@ -58,8 +58,8 @@ echo
 demo_repo="$(_prepare_demo_repo)"
 _set_verbosity "$demo_repo"
 
-printf '%s\n' "pre-rebase" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "pre-rebase" | kamilog cb center "-"
 _run_pre_rebase "$demo_repo"
 
-printf '%s\n' "post-rewrite" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "post-rewrite" | kamilog cb center "-"
 _run_post_rewrite "$demo_repo"

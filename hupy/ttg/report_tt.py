@@ -8,7 +8,7 @@ import re
 import sys
 
 from hupy.ttg import TTG_LOGGER_NAME
-from hupy.kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
+from kamilog import AnsiRenderer, getLogger, gen_comment_banner_centered
 from .detect_tt import _TT_PATTERN
 
 # logger  ######################################################################

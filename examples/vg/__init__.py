@@ -24,7 +24,7 @@ from hupy.config_file.config_file_path import (  # noqa: E402
     CONFIG_FILENAME,
     DEFAULT_CONFIG_ASSET,
 )
-from hupy.kamilog import set_logging_level_by_verbosity  # noqa: E402
+from kamilog import set_logging_level_by_verbosity  # noqa: E402
 from hupy.state.state_file import HupyStateFile  # noqa: E402
 from hupy.ver_grep import VER_GREP_LOGGER_NAME  # noqa: E402
 from hupy.ver_grep.ver_grep import grep_version  # noqa: E402

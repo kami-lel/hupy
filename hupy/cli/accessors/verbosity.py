@@ -5,7 +5,8 @@ define the ``verbosity`` accessor key's ``run_get``, ``run_set``,
 and ``run_info``
 """
 
-from hupy import kamilog
+import kamilog
+
 from hupy.state.state_file import HupyStateFile
 
 

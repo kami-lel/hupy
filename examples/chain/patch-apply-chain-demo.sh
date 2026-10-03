@@ -56,7 +56,7 @@ _run_post_applypatch() {
 # demo  ########################################################################
 
 
-printf '%s\n' "$(basename "$0")" | python3 -m hupy.kamilog cb0
+printf '%s\n' "$(basename "$0")" | kamilog cb0
 printf "scenario:\tplain non-merge commit, applied as a patch\n"
 printf "expected:\tPASS\n"
 echo
@@ -64,11 +64,11 @@ echo
 demo_repo="$(_prepare_demo_repo)"
 _set_verbosity "$demo_repo"
 
-printf '%s\n' "applypatch-msg" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "applypatch-msg" | kamilog cb center "-"
 _run_applypatch_msg "$demo_repo"
 
-printf '%s\n' "pre-applypatch" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "pre-applypatch" | kamilog cb center "-"
 _run_pre_applypatch "$demo_repo"
 
-printf '%s\n' "post-applypatch" | python3 -m hupy.kamilog cb center "-"
+printf '%s\n' "post-applypatch" | kamilog cb center "-"
 _run_post_applypatch "$demo_repo"

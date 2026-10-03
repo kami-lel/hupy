@@ -9,7 +9,7 @@ import re
 import tempfile
 
 from hupy.config_file.load_config import load_hupy_config
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.should_run_module import should_run_module
 from hupy.ver_grep import (
     decide_version_update_type,
@@ -234,4 +234,4 @@ def prepend_commit_header(repo, state_file):
         os.unlink(tmp_path)
         raise
 
-    logger.pass_("commit header prepended")
+    logger.pass_("commit header prepended", badges="edit")

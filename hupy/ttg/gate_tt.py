@@ -5,7 +5,7 @@ implement triage tag (TT) gating
 block commits that introduce triage tags on protected branches
 """
 
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 from hupy.config_file.load_config import load_hupy_config
 from hupy.should_run_module import should_run_module
 from hupy.ttg import TTG_LOGGER_NAME

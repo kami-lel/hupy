@@ -9,7 +9,7 @@ from hupy.cli.cli_init import load_git_repo, REPO_PATH_HELP
 from hupy.config_file.write_config import remove_config_file
 from hupy.stub.update_stubs import uninstall_hook_stubs
 
-from hupy.kamilog import (
+from kamilog import (
     add_verbose_arguments,
     set_logging_level_by_namespace,
     getLogger,
@@ -83,6 +83,9 @@ def _uninstall_main(args):
         if args.only
         else list(_UNINSTALL_STEPS.values())
     )
+
+    persistent_badges = ["force"] if args.force else ["dry"]
+    logger.set_persistent_badges(persistent_badges)
 
     logger.enter("HUPy Uninstallation for: {}".format(repo_root))
 

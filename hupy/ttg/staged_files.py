@@ -9,7 +9,7 @@ import fnmatch
 import git
 
 from hupy.ttg import TTG_LOGGER_NAME
-from hupy.kamilog import getLogger
+from kamilog import getLogger
 
 # logger  ######################################################################
 logger = getLogger(TTG_LOGGER_NAME)

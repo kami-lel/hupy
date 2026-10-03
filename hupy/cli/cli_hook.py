@@ -8,8 +8,9 @@ define the generic git hook stage runner and
 
 import os
 
+import kamilog
 
-from hupy import PROJ_LOGGER_NAME, kamilog
+from hupy import PROJ_LOGGER_NAME
 from hupy.cli.chain_policy import (
     adopt_session,
     detect_amend,
