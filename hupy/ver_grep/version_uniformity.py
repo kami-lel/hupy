@@ -87,7 +87,9 @@ def check_version_uniformity(
         logger.skip("not a release merge")
         return
 
-    logger.enter("Version Uniformity")
+    chk_badges = ["chk"] if is_report_only else []
+
+    logger.enter("Version Uniformity", badges=chk_badges)
 
     canonical_version = grep_version(repo, state_file, ref)
     if not canonical_version:
@@ -96,7 +98,10 @@ def check_version_uniformity(
     is_soft = is_report_only or config.vg.allow_version_uniformity_failure
     failure_count = 0
 
-    logger.debug("canonical version: {!r}".format(canonical_version))
+    logger.debug(
+        "canonical version: {!r}".format(canonical_version),
+        badges=chk_badges,
+    )
 
     for occurrence in occurrences[1:]:
         heading = _heading(occurrence)
@@ -106,7 +111,7 @@ def check_version_uniformity(
             failure_count += 1
             message = "unreadable: {}".format(heading)
             if is_soft:
-                logger.warning(message)
+                logger.warning(message, badges=chk_badges)
             else:
                 logger.error(message)
             continue
@@ -119,22 +124,22 @@ def check_version_uniformity(
                 )
             )
             if is_soft:
-                logger.warning(message)
+                logger.warning(message, badges=chk_badges)
             else:
                 logger.error(message)
             continue
 
-        logger.succ("version matched: {}".format(heading))
+        logger.succ("version matched: {}".format(heading), badges=chk_badges)
 
     if not failure_count:
-        logger.pass_("Version Uniformity")
+        logger.pass_("Version Uniformity", badges=chk_badges)
         return
 
     message = "{} occurrence(s) mismatched from canonical version".format(
         failure_count
     )
     if is_soft:
-        logger.warning(message)
+        logger.warning(message, badges=chk_badges)
     else:
         logger.fail(message)
         raise SystemExit(1)

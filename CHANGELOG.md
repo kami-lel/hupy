@@ -1,9 +1,9 @@
 # hupy CHANGELOG
 
 <!--
-Todo utilize kamilog new flags etc.
 todo script to update config file w/ package update
 -->
+
 
 [^format]
 
@@ -22,6 +22,8 @@ todo script to update config file w/ package update
 ## [Unreleased]
 
 ### Added
+
+- native `kamilog` badges (`force`, `dry`, `new`, `owr`, `del`, `chk`, `stale`) threaded onto existing log calls in `cli` (init/uninstall), `ver_grep` (verify), `pch`, and `stub`, surfacing each run's mode at a glance instead of only in message text
 
 ### Changed
 

@@ -48,11 +48,15 @@ def _write_stub(target_path, hook_name, is_overwrite=False, is_update=False):
     target_path.chmod(_STUB_MODE)
 
     if is_overwrite:
-        logger.warning("overwrite hook stub: {}".format(target_path))
+        logger.warning(
+            "overwrite hook stub: {}".format(target_path), badges="stale"
+        )
     elif is_update:
-        logger.info("hook stub added: {}".format(target_path))
+        logger.info("hook stub added: {}".format(target_path), badges="new")
     else:
-        logger.debug("hook stub installed: {}".format(target_path))
+        logger.debug(
+            "hook stub installed: {}".format(target_path), badges="new"
+        )
 
 
 def _is_managed_stub(target_path):
@@ -141,10 +145,15 @@ def _prune_unused_stubs(hooks_dir, unused_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would prune stub: {}".format(target_path))
+            logger.info(
+                "would prune stub: {}".format(target_path),
+                badges=["dry", "del"],
+            )
             continue
 
-        logger.warning("prune hook stub: {}".format(target_path))
+        logger.warning(
+            "prune hook stub: {}".format(target_path), badges="del"
+        )
         target_path.unlink()
 
 
@@ -156,7 +165,8 @@ def _report_unused_stubs(hooks_dir, unused_names):
     for hook_name in unused_names:
         logger.warning(
             "prunable hook stub: {}\n"
-            "(use --prune)".format(hooks_dir / hook_name)
+            "(use --prune)".format(hooks_dir / hook_name),
+            badges="chk",
         )
 
 
@@ -168,7 +178,10 @@ def _add_missing_stubs(hooks_dir, missing_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would add hook stub: {}".format(target_path))
+            logger.info(
+                "would add hook stub: {}".format(target_path),
+                badges=["dry", "new"],
+            )
             continue
 
         _write_stub(target_path, hook_name, is_update=True)
@@ -180,10 +193,15 @@ def _uninstall_managed_stub(target_path, force):
     that it would be removed (dry run).
     """
     if force:
-        logger.warning("remove hook stub: {}".format(target_path))
+        logger.warning(
+            "remove hook stub: {}".format(target_path), badges="del"
+        )
         target_path.unlink()
     else:
-        logger.info("attempt remove stub: {}".format(target_path))
+        logger.info(
+            "attempt remove stub: {}".format(target_path),
+            badges=["dry", "del"],
+        )
 
 
 def _refresh_stale_stubs(hooks_dir, stale_names, is_dry_run=False):
@@ -194,7 +212,10 @@ def _refresh_stale_stubs(hooks_dir, stale_names, is_dry_run=False):
         target_path = hooks_dir / hook_name
 
         if is_dry_run:
-            logger.info("would rewrite stale stub: {}".format(target_path))
+            logger.info(
+                "would rewrite stale stub: {}".format(target_path),
+                badges=["dry", "stale"],
+            )
             continue
 
         _write_stub(target_path, hook_name, is_overwrite=True)
@@ -208,7 +229,8 @@ def _report_stale_stubs(hooks_dir, stale_names):
     for hook_name in stale_names:
         logger.warning(
             "hook stub differs: {}\n"
-            "(use --force to rewrite)".format(hooks_dir / hook_name)
+            "(use --force to rewrite)".format(hooks_dir / hook_name),
+            badges="chk",
         )
 
 
@@ -337,7 +359,7 @@ def check_hook_stubs(repo, hooks_dir=None):
     """
     hooks_dir = hooks_dir or resolve_hooks_dir(repo)
 
-    logger.enter("check hook stubs")
-    logger.debug("hooks dir: {}".format(hooks_dir))
+    logger.enter("check hook stubs", badges="chk")
+    logger.debug("hooks dir: {}".format(hooks_dir), badges="chk")
 
     return _diff_hook_stubs(repo, hooks_dir)
